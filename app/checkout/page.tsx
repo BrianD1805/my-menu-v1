@@ -16,7 +16,8 @@ type Product = {
 export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [tenantSlug, setTenantSlug] = useState("demo");
+  const [tenantSlug, setTenantSlug] = useState("");
+  const [tenantResolved, setTenantResolved] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -29,16 +30,24 @@ export default function CheckoutPage() {
     setItems(cart);
 
     const host = window.location.host;
+
     if (host.startsWith("demo.localhost")) {
       setTenantSlug("demo");
+      setTenantResolved(true);
       return;
     }
 
     const hostWithoutPort = host.split(":")[0];
     const parts = hostWithoutPort.split(".");
+
     if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
       setTenantSlug(parts[0]);
+      setTenantResolved(true);
+      return;
     }
+
+    setTenantSlug("orduva");
+    setTenantResolved(true);
   }, []);
 
   useEffect(() => {
@@ -50,10 +59,10 @@ export default function CheckoutPage() {
       }
     }
 
-    if (tenantSlug) {
+    if (tenantResolved && tenantSlug) {
       void loadProducts();
     }
-  }, [tenantSlug]);
+  }, [tenantResolved, tenantSlug]);
 
   const cartRows = useMemo(() => {
     return items
@@ -96,6 +105,8 @@ export default function CheckoutPage() {
     localStorage.setItem("cart", JSON.stringify(nextItems));
   }
 
+  const PAUSE_WHATSAPP_FOR_TESTING = true;
+
   async function placeOrder() {
     if (!customerName.trim()) {
       window.alert("Please enter customer name");
@@ -135,6 +146,12 @@ export default function CheckoutPage() {
     if (!res.ok) {
       window.alert(data.error || "Failed to place order");
       setLoading(false);
+      return;
+    }
+
+    if (PAUSE_WHATSAPP_FOR_TESTING) {
+      setLoading(false);
+      window.alert(`Order created successfully. WhatsApp handoff is temporarily paused for testing. Order ID: ${data.orderId}`);
       return;
     }
 
@@ -198,7 +215,7 @@ export default function CheckoutPage() {
             disabled={loading || !cartRows.length}
             className="rounded-xl bg-black px-5 py-3 text-white disabled:opacity-50"
           >
-            {loading ? "Placing order..." : "Place order via WhatsApp"}
+            {loading ? "Placing order..." : "Create order (WhatsApp paused)"}
           </button>
         </div>
 

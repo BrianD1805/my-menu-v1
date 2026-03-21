@@ -14,7 +14,7 @@ export async function resolveTenantSlug(): Promise<string> {
     return parts[0];
   }
 
-  return "demo";
+  return "orduva";
 }
 
 export async function getTenantBySlug(slug: string) {
@@ -43,5 +43,5 @@ export function resolveTenantSlugFromRequest(req: Request): string {
     return parts[0];
   }
 
-  return "demo";
+  return "orduva";
 }
