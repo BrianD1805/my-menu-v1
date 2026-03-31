@@ -18,8 +18,8 @@ export default function WhatsAppButton({ phone, message }: Props) {
   if (!phone || !message) return null;
 
   function openWhatsApp() {
-    const cleanedPhone = cleanPhone(phone);
-    const encodedMessage = encodeURIComponent(message);
+    const cleanedPhone = cleanPhone(phone ?? '');
+    const encodedMessage = encodeURIComponent(message ?? '');
 
     const appUrl = `whatsapp://send?phone=${cleanedPhone}&text=${encodedMessage}`;
     const webUrl = `https://web.whatsapp.com/send?phone=${cleanedPhone}&text=${encodedMessage}`;
