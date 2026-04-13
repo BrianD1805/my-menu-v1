@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { db } from "./db";
 
 export function resolveTenantSlugFromHost(host: string): string {
@@ -14,12 +13,6 @@ export function resolveTenantSlugFromHost(host: string): string {
   return "orduva";
 }
 
-export async function resolveTenantSlug(): Promise<string> {
-  const h = await headers();
-  const host = h.get("host") || "";
-  return resolveTenantSlugFromHost(host);
-}
-
 export async function getTenantBySlug(slug: string) {
   const { data, error } = await db
     .from("tenants")
@@ -32,9 +25,4 @@ export async function getTenantBySlug(slug: string) {
   }
 
   return data;
-}
-
-export function resolveTenantSlugFromRequest(req: Request): string {
-  const host = req.headers.get("host") || "";
-  return resolveTenantSlugFromHost(host);
 }

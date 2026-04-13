@@ -1,6 +1,7 @@
 import ProductCard from "@/components/menu/ProductCard";
 import { db } from "@/lib/db";
-import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant";
+import { getTenantBySlug } from "@/lib/tenant";
+import { resolveTenantSlug } from "@/lib/tenant-server";
 
 export default async function HomePage() {
   const slug = await resolveTenantSlug();

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { resolveTenantSlugFromRequest } from "@/lib/tenant";
+import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 
 const allowedStatuses = [
   "new",
