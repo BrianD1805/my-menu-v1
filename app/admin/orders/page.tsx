@@ -2,8 +2,7 @@ import OrderStatusForm from "@/components/admin/OrderStatusForm";
 import StatusBadge from "@/components/admin/StatusBadge";
 import WhatsAppButton from "@/components/admin/WhatsAppButton";
 import { db } from "@/lib/db";
-import { getTenantBySlug } from "@/lib/tenant";
-import { resolveTenantSlug } from "@/lib/tenant-server";
+import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default async function AdminOrdersPage() {
