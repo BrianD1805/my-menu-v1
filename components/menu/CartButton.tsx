@@ -25,10 +25,7 @@ export default function CartButton({ tenantSlug }: Props) {
     return subscribeToCartUpdates(tenantSlug, refreshCount);
   }, [tenantSlug]);
 
-  const label = useMemo(() => {
-    if (count === 0) return "Go to checkout";
-    return `Go to checkout (${count})`;
-  }, [count]);
+  const label = useMemo(() => "Go to checkout", []);
 
   return (
     <a href="/checkout" className="inline-flex items-center gap-3 rounded-xl bg-green-600 px-5 py-3 text-white">
