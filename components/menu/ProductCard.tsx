@@ -1,10 +1,13 @@
 "use client";
 
+import { readCart, writeCart } from "@/lib/cart";
+
 type Props = {
   id: string;
   name: string;
   description?: string | null;
   price: number;
+  tenantSlug: string;
 };
 
 type StoredCartItem = {
@@ -12,9 +15,9 @@ type StoredCartItem = {
   quantity: number;
 };
 
-export default function ProductCard({ id, name, description, price }: Props) {
+export default function ProductCard({ id, name, description, price, tenantSlug }: Props) {
   function addToCart() {
-    const existing = JSON.parse(localStorage.getItem("cart") || "[]") as StoredCartItem[];
+    const existing = readCart<StoredCartItem>(tenantSlug);
     const found = existing.find((x) => x.productId === id);
 
     const updated = found
@@ -23,7 +26,7 @@ export default function ProductCard({ id, name, description, price }: Props) {
         )
       : [...existing, { productId: id, quantity: 1 }];
 
-    localStorage.setItem("cart", JSON.stringify(updated));
+    writeCart(tenantSlug, updated);
     window.alert("Added to cart");
   }
 

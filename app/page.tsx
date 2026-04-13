@@ -50,6 +50,7 @@ export default async function HomePage() {
                   name={product.name}
                   description={product.description}
                   price={Number(product.price)}
+                  tenantSlug={slug}
                 />
               ))}
             </div>

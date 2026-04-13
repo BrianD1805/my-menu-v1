@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { clearCart, readCart, writeCart } from "@/lib/cart";
+import { resolveTenantSlugFromHost } from "@/lib/tenant";
 
 type CartItem = {
   productId: string;
@@ -26,29 +28,15 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
-    setItems(cart);
-
-    const host = window.location.host;
-
-    if (host.startsWith("demo.localhost")) {
-      setTenantSlug("demo");
-      setTenantResolved(true);
-      return;
-    }
-
-    const hostWithoutPort = host.split(":")[0];
-    const parts = hostWithoutPort.split(".");
-
-    if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
-      setTenantSlug(parts[0]);
-      setTenantResolved(true);
-      return;
-    }
-
-    setTenantSlug("orduva");
+    const slug = resolveTenantSlugFromHost(window.location.host);
+    setTenantSlug(slug);
     setTenantResolved(true);
   }, []);
+
+  useEffect(() => {
+    if (!tenantResolved || !tenantSlug) return;
+    setItems(readCart<CartItem>(tenantSlug));
+  }, [tenantResolved, tenantSlug]);
 
   useEffect(() => {
     async function loadProducts() {
@@ -102,7 +90,7 @@ export default function CheckoutPage() {
           );
 
     setItems(nextItems);
-    localStorage.setItem("cart", JSON.stringify(nextItems));
+    writeCart(tenantSlug, nextItems);
   }
 
   const PAUSE_WHATSAPP_FOR_TESTING = true;
@@ -149,13 +137,14 @@ export default function CheckoutPage() {
       return;
     }
 
+    clearCart(tenantSlug);
+    setItems([]);
+
     if (PAUSE_WHATSAPP_FOR_TESTING) {
       setLoading(false);
       window.alert(`Order created successfully. WhatsApp handoff is temporarily paused for testing. Order ID: ${data.orderId}`);
       return;
     }
-
-    localStorage.removeItem("cart");
 
     if (data.whatsappUrl) {
       window.location.href = data.whatsappUrl;
