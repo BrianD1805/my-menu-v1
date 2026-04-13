@@ -1,3 +1,4 @@
+import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
@@ -27,9 +28,7 @@ export default async function HomePage() {
           <p className="mt-1 text-gray-600">Order directly from this restaurant&apos;s live menu.</p>
         </div>
         <div className="flex gap-3">
-          <a href="/checkout" className="rounded-xl bg-green-600 px-5 py-3 text-white">
-            Go to checkout
-          </a>
+          <CartButton tenantSlug={slug} />
         </div>
       </div>
 

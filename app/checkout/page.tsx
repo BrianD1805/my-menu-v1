@@ -290,7 +290,7 @@ export default function CheckoutPage() {
     <main className="mx-auto min-h-screen max-w-3xl p-6">
       <h1 className="mb-2 text-3xl font-bold">Checkout</h1>
       <p className="mb-6 text-gray-600">
-        Enter the customer details below, review the order, and confirm when ready.
+        Please enter your details below, review your order, and confirm when you're ready.
       </p>
 
       <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
