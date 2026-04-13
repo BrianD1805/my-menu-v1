@@ -22,10 +22,35 @@ export default async function AdminOrdersPage() {
       ? await db.from("order_items").select("*").in("order_id", orderIds)
       : { data: [] };
 
+  const totalOrders = orders?.length || 0;
+  const activeOrders = (orders || []).filter((order) => !["completed", "cancelled"].includes(order.status)).length;
+  const completedOrders = (orders || []).filter((order) => order.status === "completed").length;
+
   return (
     <main className="mx-auto min-h-screen max-w-5xl p-6">
-      <h1 className="mb-2 text-3xl font-bold">Admin Orders</h1>
-      <p className="mb-6 text-gray-600">Tenant: {tenant.name}</p>
+      <div className="mb-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <p className="text-sm uppercase tracking-wide text-gray-500">Tenant Admin</p>
+        <h1 className="mt-2 text-3xl font-bold">{tenant.name} Orders</h1>
+        <p className="mt-2 max-w-2xl text-gray-600">
+          This admin view is scoped to <span className="font-semibold">{tenant.name}</span> only. It should be
+          used by this restaurant&apos;s staff to manage their own incoming orders.
+        </p>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl bg-gray-50 p-4">
+            <p className="text-sm text-gray-500">Total orders</p>
+            <p className="mt-1 text-2xl font-bold">{totalOrders}</p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-4">
+            <p className="text-sm text-gray-500">Active orders</p>
+            <p className="mt-1 text-2xl font-bold">{activeOrders}</p>
+          </div>
+          <div className="rounded-2xl bg-gray-50 p-4">
+            <p className="text-sm text-gray-500">Completed orders</p>
+            <p className="mt-1 text-2xl font-bold">{completedOrders}</p>
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-4">
         {orders?.map((order) => {
@@ -87,7 +112,11 @@ export default async function AdminOrdersPage() {
           );
         })}
 
-        {!orders?.length ? <p>No orders yet.</p> : null}
+        {!orders?.length ? (
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">
+            No orders yet for {tenant.name}.
+          </div>
+        ) : null}
       </div>
     </main>
   );
