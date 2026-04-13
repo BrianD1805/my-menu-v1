@@ -15,6 +15,18 @@ type Product = {
   price: number;
 };
 
+type SuccessState = {
+  orderId: string;
+  customerName: string;
+  customerPhone: string;
+  orderType: "delivery" | "collection";
+  customerAddress: string;
+  notes: string;
+  total: number;
+  itemCount: number;
+  whatsappPaused: boolean;
+};
+
 export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -26,6 +38,8 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const [orderType, setOrderType] = useState<"delivery" | "collection">("delivery");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successState, setSuccessState] = useState<SuccessState | null>(null);
 
   useEffect(() => {
     const slug = resolveTenantSlugFromHost(window.location.host);
@@ -93,74 +107,200 @@ export default function CheckoutPage() {
     writeCart(tenantSlug, nextItems);
   }
 
+  function resetCheckoutForNewOrder() {
+    setSuccessState(null);
+    setCustomerName("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+    setNotes("");
+    setOrderType("delivery");
+    setErrorMessage("");
+  }
+
   const PAUSE_WHATSAPP_FOR_TESTING = true;
 
   async function placeOrder() {
+    setErrorMessage("");
+
     if (!customerName.trim()) {
-      window.alert("Please enter customer name");
+      setErrorMessage("Please enter customer name.");
       return;
     }
 
     if (!customerPhone.trim()) {
-      window.alert("Please enter phone number");
+      setErrorMessage("Please enter phone number.");
       return;
     }
 
     if (!items.length) {
-      window.alert("Your cart is empty");
+      setErrorMessage("Your cart is empty.");
       return;
     }
 
     setLoading(true);
 
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        tenantSlug,
-        customerName,
-        customerPhone,
-        customerAddress,
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          tenantSlug,
+          customerName,
+          customerPhone,
+          customerAddress,
+          orderType,
+          notes,
+          items
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(data.error || "Failed to place order.");
+        setLoading(false);
+        return;
+      }
+
+      clearCart(tenantSlug);
+      setItems([]);
+      setSuccessState({
+        orderId: data.orderId,
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim(),
         orderType,
-        notes,
-        items
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      window.alert(data.error || "Failed to place order");
+        customerAddress: customerAddress.trim(),
+        notes: notes.trim(),
+        total,
+        itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
+        whatsappPaused: PAUSE_WHATSAPP_FOR_TESTING
+      });
       setLoading(false);
-      return;
-    }
 
-    clearCart(tenantSlug);
-    setItems([]);
-
-    if (PAUSE_WHATSAPP_FOR_TESTING) {
+      if (!PAUSE_WHATSAPP_FOR_TESTING && data.whatsappUrl) {
+        window.location.href = data.whatsappUrl;
+      }
+    } catch {
+      setErrorMessage("Something went wrong while placing the order.");
       setLoading(false);
-      window.alert(`Order created successfully. WhatsApp handoff is temporarily paused for testing. Order ID: ${data.orderId}`);
-      return;
     }
+  }
 
-    if (data.whatsappUrl) {
-      window.location.href = data.whatsappUrl;
-      return;
-    }
+  if (successState) {
+    return (
+      <main className="mx-auto min-h-screen max-w-3xl p-6">
+        <div className="overflow-hidden rounded-[28px] border border-green-200 bg-white shadow-sm">
+          <div className="border-b border-green-100 bg-gradient-to-br from-green-50 via-white to-emerald-50 p-6 sm:p-8">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl">
+              ✓
+            </div>
+            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-green-700">
+              Order confirmed
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Thank you, {successState.customerName}.
+            </h1>
+            <p className="mt-3 max-w-2xl text-base text-gray-600">
+              Your order has been saved successfully and your cart has been cleared, ready for a fresh order.
+            </p>
+          </div>
 
-    window.alert(`Order placed: ${data.orderId}`);
-    window.location.href = "/";
+          <div className="grid gap-6 p-6 sm:p-8 md:grid-cols-[1.15fr_0.85fr]">
+            <section className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+              <div className="flex items-center justify-between gap-4 border-b border-gray-200 pb-4">
+                <div>
+                  <p className="text-sm text-gray-500">Order reference</p>
+                  <p className="font-semibold text-gray-900">{successState.orderId}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Order total</p>
+                  <p className="text-xl font-bold text-gray-900">£{successState.total.toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm text-gray-500">Order type</p>
+                  <p className="font-medium capitalize text-gray-900">{successState.orderType}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Items</p>
+                  <p className="font-medium text-gray-900">{successState.itemCount}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-medium text-gray-900">{successState.customerPhone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Address</p>
+                  <p className="font-medium text-gray-900">
+                    {successState.orderType === "collection"
+                      ? "Collection order"
+                      : successState.customerAddress || "No address supplied"}
+                  </p>
+                </div>
+              </div>
+
+              {successState.notes ? (
+                <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <p className="text-sm text-gray-500">Order notes</p>
+                  <p className="mt-1 text-gray-900">{successState.notes}</p>
+                </div>
+              ) : null}
+            </section>
+
+            <aside className="space-y-4">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                <p className="font-semibold">What happens next?</p>
+                <p className="mt-1 text-sm leading-6">
+                  Your order is safely recorded and visible in Admin Orders.
+                  {successState.whatsappPaused
+                    ? " WhatsApp handoff is still paused for testing, so this order stops here for now."
+                    : " WhatsApp handoff will continue automatically."}
+                </p>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4">
+                <button
+                  onClick={() => {
+                    resetCheckoutForNewOrder();
+                    window.location.href = "/";
+                  }}
+                  className="w-full rounded-xl bg-black px-5 py-3 text-white"
+                >
+                  Back to menu
+                </button>
+                <button
+                  onClick={() => resetCheckoutForNewOrder()}
+                  className="w-full rounded-xl border border-gray-300 bg-white px-5 py-3 text-gray-900"
+                >
+                  Start a new order
+                </button>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Checkout</h1>
+      <h1 className="mb-2 text-3xl font-bold">Checkout</h1>
+      <p className="mb-6 text-gray-600">
+        Enter the customer details below, review the order, and confirm when ready.
+      </p>
 
       <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          {errorMessage ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          ) : null}
+
           <input
             className="w-full rounded-xl border p-3"
             placeholder="Customer name"
@@ -204,8 +344,12 @@ export default function CheckoutPage() {
             disabled={loading || !cartRows.length}
             className="rounded-xl bg-black px-5 py-3 text-white disabled:opacity-50"
           >
-            {loading ? "Placing order..." : "Create order (WhatsApp paused)"}
+            {loading ? "Placing order..." : "Confirm order"}
           </button>
+
+          <p className="text-xs leading-5 text-gray-500">
+            Your order will be saved first, and the cart will only clear after a successful save.
+          </p>
         </div>
 
         <aside className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
