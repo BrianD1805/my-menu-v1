@@ -3,7 +3,6 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import WhatsAppButton from "@/components/admin/WhatsAppButton";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default async function AdminOrdersPage() {
   const slug = await resolveTenantSlug();
@@ -30,10 +29,6 @@ export default async function AdminOrdersPage() {
       <div className="space-y-4">
         {orders?.map((order) => {
           const items = (orderItems || []).filter((item) => item.order_id === order.id);
-          const whatsappUrl =
-            tenant.whatsapp_number && order.whatsapp_message
-              ? buildWhatsAppUrl(tenant.whatsapp_number, order.whatsapp_message)
-              : null;
 
           return (
             <div key={order.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -52,7 +47,7 @@ export default async function AdminOrdersPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <WhatsAppButton url={whatsappUrl} />
+                  <WhatsAppButton phone={tenant.whatsapp_number} message={order.whatsapp_message} />
                   <OrderStatusForm orderId={order.id} currentStatus={order.status} />
                 </div>
               </div>
