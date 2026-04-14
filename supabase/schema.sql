@@ -23,6 +23,7 @@ create table if not exists products (
   category_id uuid not null references categories(id) on delete cascade,
   name text not null,
   description text,
+  image_url text,
   price numeric(10,2) not null,
   is_active boolean not null default true,
   created_at timestamptz not null default now()

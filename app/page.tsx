@@ -1,4 +1,3 @@
-import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
@@ -25,16 +24,16 @@ export default async function HomePage() {
         <div>
           <p className="text-sm uppercase tracking-wide text-gray-500">Storefront</p>
           <h1 className="text-3xl font-bold">{tenant.name}</h1>
-          <p className="mt-1 text-gray-600">Order directly from this restaurant&apos;s live menu.</p>
+          <p className="mt-1 text-gray-600">Simple tenant-aware online ordering demo</p>
         </div>
         <div className="flex gap-3">
-          <CartButton tenantSlug={slug} />
+          <a href="/checkout" className="rounded-xl bg-green-600 px-5 py-3 text-white">
+            Go to checkout
+          </a>
+          <a href="/admin/orders" className="rounded-xl border px-5 py-3">
+            Admin orders
+          </a>
         </div>
-      </div>
-
-      <div className="mb-8 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-        You are viewing the customer-facing menu for <span className="font-semibold">{tenant.name}</span>.
-        Restaurant staff should manage orders from this tenant&apos;s own admin area, not from the public menu.
       </div>
 
       {categories?.map((category) => {
@@ -50,6 +49,7 @@ export default async function HomePage() {
                   id={product.id}
                   name={product.name}
                   description={product.description}
+                  imageUrl={product.image_url}
                   price={Number(product.price)}
                   tenantSlug={slug}
                 />

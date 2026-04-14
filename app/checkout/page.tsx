@@ -190,94 +190,144 @@ export default function CheckoutPage() {
 
   if (successState) {
     return (
-      <main className="mx-auto min-h-screen max-w-3xl p-6">
-        <div className="overflow-hidden rounded-[28px] border border-green-200 bg-white shadow-sm">
-          <div className="border-b border-green-100 bg-gradient-to-br from-green-50 via-white to-emerald-50 p-6 sm:p-8">
-            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-2xl">
-              ✓
-            </div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-green-700">
-              Order confirmed
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Thank you, {successState.customerName}.
-            </h1>
-            <p className="mt-3 max-w-2xl text-base text-gray-600">
-              Your order has been saved successfully and your cart has been cleared, ready for a fresh order.
-            </p>
-          </div>
+      <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center p-4 sm:p-6">
+        <div className="w-full overflow-hidden rounded-[32px] border border-emerald-100 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]">
+          <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-green-600 to-teal-600 px-6 py-8 text-white sm:px-8 sm:py-10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.18),transparent_24%)]" />
+            <div className="relative">
+              <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/18 text-3xl ring-1 ring-white/30 backdrop-blur-sm">
+                ✓
+              </div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+                Order confirmed
+              </p>
+              <h1 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+                Thanks, {successState.customerName}. Your order is in.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
+                We’ve saved your order successfully and cleared your cart, so you’re ready whenever you’d like to place another one.
+              </p>
 
-          <div className="grid gap-6 p-6 sm:p-8 md:grid-cols-[1.15fr_0.85fr]">
-            <section className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
-              <div className="flex items-center justify-between gap-4 border-b border-gray-200 pb-4">
-                <div>
-                  <p className="text-sm text-gray-500">Order reference</p>
-                  <p className="font-semibold text-gray-900">{successState.orderId}</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
+                  Ref: <span className="font-semibold">{successState.orderId}</span>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Order total</p>
-                  <p className="text-xl font-bold text-gray-900">£{successState.total.toFixed(2)}</p>
+                <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
+                  Total: <span className="font-semibold">£{successState.total.toFixed(2)}</span>
+                </div>
+                <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
+                  {successState.itemCount} item{successState.itemCount === 1 ? "" : "s"}
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-sm text-gray-500">Order type</p>
-                  <p className="font-medium capitalize text-gray-900">{successState.orderType}</p>
+          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_0.8fr]">
+            <section className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Order type</p>
+                  <p className="mt-2 text-base font-semibold capitalize text-gray-900">{successState.orderType}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Items</p>
-                  <p className="font-medium text-gray-900">{successState.itemCount}</p>
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Phone</p>
+                  <p className="mt-2 text-base font-semibold text-gray-900">{successState.customerPhone}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium text-gray-900">{successState.customerPhone}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Address</p>
-                  <p className="font-medium text-gray-900">
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:col-span-2 xl:col-span-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">{successState.orderType === "collection" ? "Collection" : "Delivery address"}</p>
+                  <p className="mt-2 text-base font-semibold text-gray-900">
                     {successState.orderType === "collection"
-                      ? "Collection order"
+                      ? "Collection order confirmed"
                       : successState.customerAddress || "No address supplied"}
                   </p>
                 </div>
               </div>
 
+              <div className="rounded-[28px] border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-4 border-b border-gray-100 pb-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">What happens next</p>
+                    <p className="mt-1 text-sm text-gray-600">A simple confirmation so the customer knows the order is safely through.</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                    Saved
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">1</div>
+                    <div>
+                      <p className="font-medium text-gray-900">Your order has been received</p>
+                      <p className="text-sm leading-6 text-gray-600">It has been saved successfully and is ready for the restaurant to review.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">2</div>
+                    <div>
+                      <p className="font-medium text-gray-900">Your cart is now empty</p>
+                      <p className="text-sm leading-6 text-gray-600">That keeps your next order clean and avoids old items carrying over.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">3</div>
+                    <div>
+                      <p className="font-medium text-gray-900">You can head back to the menu any time</p>
+                      <p className="text-sm leading-6 text-gray-600">
+                        {successState.whatsappPaused
+                          ? "WhatsApp handoff is still paused for now, so this confirmation page is the final step in the customer flow."
+                          : "The next handoff step will continue automatically."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {successState.notes ? (
-                <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                  <p className="text-sm text-gray-500">Order notes</p>
-                  <p className="mt-1 text-gray-900">{successState.notes}</p>
+                <div className="rounded-[28px] border border-gray-200 bg-gray-50 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Order notes</p>
+                  <p className="mt-3 text-sm leading-6 text-gray-700">{successState.notes}</p>
                 </div>
               ) : null}
             </section>
 
             <aside className="space-y-4">
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                <p className="font-semibold">What happens next?</p>
-                <p className="mt-1 text-sm leading-6">
-                  Your order is safely recorded and visible in Admin Orders.
-                  {successState.whatsappPaused
-                    ? " WhatsApp handoff is still paused for testing, so this order stops here for now."
-                    : " WhatsApp handoff will continue automatically."}
-                </p>
+              <div className="rounded-[28px] border border-emerald-100 bg-emerald-50 p-5 text-emerald-950">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Order summary</p>
+                <div className="mt-4 space-y-3 text-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-emerald-800/80">Reference</span>
+                    <span className="font-semibold">{successState.orderId}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-emerald-800/80">Items</span>
+                    <span className="font-semibold">{successState.itemCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-emerald-800/80">Total</span>
+                    <span className="text-lg font-bold">£{successState.total.toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4">
-                <button
-                  onClick={() => {
-                    resetCheckoutForNewOrder();
-                    window.location.href = "/";
-                  }}
-                  className="w-full rounded-xl bg-black px-5 py-3 text-white"
-                >
-                  Back to menu
-                </button>
-                <button
-                  onClick={() => resetCheckoutForNewOrder()}
-                  className="w-full rounded-xl border border-gray-300 bg-white px-5 py-3 text-gray-900"
-                >
-                  Start a new order
-                </button>
+              <div className="rounded-[28px] border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      resetCheckoutForNewOrder();
+                      window.location.href = "/";
+                    }}
+                    className="w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black"
+                  >
+                    Back to menu
+                  </button>
+                  <button
+                    onClick={() => resetCheckoutForNewOrder()}
+                    className="w-full rounded-2xl border border-gray-300 bg-white px-5 py-3.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
+                  >
+                    Start a new order
+                  </button>
+                </div>
               </div>
             </aside>
           </div>
@@ -290,7 +340,7 @@ export default function CheckoutPage() {
     <main className="mx-auto min-h-screen max-w-3xl p-6">
       <h1 className="mb-2 text-3xl font-bold">Checkout</h1>
       <p className="mb-6 text-gray-600">
-        Please enter your details below, review your order, and confirm when you're ready.
+        Enter the customer details below, review the order, and confirm when ready.
       </p>
 
       <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">

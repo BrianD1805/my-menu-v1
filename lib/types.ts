@@ -19,6 +19,7 @@ export type Product = {
   category_id: string;
   name: string;
   description: string | null;
+  image_url: string | null;
   price: number;
   is_active: boolean;
 };
