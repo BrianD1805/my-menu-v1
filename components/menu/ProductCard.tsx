@@ -42,20 +42,22 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-stretch gap-0">
-        <div className="flex w-32 shrink-0 items-center justify-center bg-gray-100 sm:w-36">
-          {hasImage ? (
-            <img
-              src={imageUrl!}
-              alt={name}
-              className="h-32 w-full object-contain p-3 sm:h-36"
-              loading="lazy"
-            />
-          ) : (
-            <div className="flex h-32 w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500 sm:h-36">
-              <div className="mb-1 text-2xl">🍽️</div>
-              <p className="text-xs font-medium text-gray-600">Image coming soon</p>
-            </div>
-          )}
+        <div className="w-28 shrink-0 p-3 sm:w-32">
+          <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
+            {hasImage ? (
+              <img
+                src={imageUrl!}
+                alt={name}
+                className="h-full w-full object-cover object-center"
+                loading="lazy"
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500">
+                <div className="mb-1 text-2xl">🍽️</div>
+                <p className="text-xs font-medium text-gray-600">Image coming soon</p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
