@@ -3,35 +3,39 @@
 import { useEffect, useMemo, useState } from "react";
 import { readCart, subscribeToCartUpdates } from "@/lib/cart";
 
-type CartItem = {
+type StoredCartItem = {
   productId: string;
   quantity: number;
 };
 
 type Props = {
   tenantSlug: string;
+  href?: string;
 };
 
-export default function CartButton({ tenantSlug }: Props) {
+function getItemCount(items: StoredCartItem[]) {
+  return items.reduce((total, item) => total + Math.max(0, item.quantity || 0), 0);
+}
+
+export default function CartButton({ tenantSlug, href = "/checkout" }: Props) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const refreshCount = () => {
-      const items = readCart<CartItem>(tenantSlug);
-      setCount(items.reduce((sum, item) => sum + item.quantity, 0));
-    };
-
-    refreshCount();
-    return subscribeToCartUpdates(tenantSlug, refreshCount);
+    const update = (items: StoredCartItem[]) => setCount(getItemCount(items));
+    update(readCart<StoredCartItem>(tenantSlug));
+    return subscribeToCartUpdates<StoredCartItem>(tenantSlug, update);
   }, [tenantSlug]);
 
-  const label = useMemo(() => "Go to checkout", []);
+  const badge = useMemo(() => (count > 99 ? "99+" : String(count)), [count]);
 
   return (
-    <a href="/checkout" className="inline-flex items-center gap-3 rounded-xl bg-green-600 px-5 py-3 text-white">
-      <span>{label}</span>
-      <span className="inline-flex min-w-[2rem] items-center justify-center rounded-full bg-white/20 px-2 py-1 text-sm font-semibold text-white">
-        {count}
+    <a
+      href={href}
+      className="inline-flex items-center gap-3 rounded-2xl bg-green-600 px-5 py-3 text-white shadow-sm transition hover:bg-green-700"
+    >
+      <span className="text-base font-semibold">Go to checkout</span>
+      <span className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-full bg-white/15 px-3 text-sm font-bold text-white">
+        {badge}
       </span>
     </a>
   );

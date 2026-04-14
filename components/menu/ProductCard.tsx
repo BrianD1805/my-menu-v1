@@ -41,34 +41,38 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="aspect-[4/3] w-full bg-gray-100">
-        {hasImage ? (
-          <img
-            src={imageUrl!}
-            alt={name}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-6 text-center text-gray-500">
-            <div className="mb-2 text-3xl">🍽️</div>
-            <p className="text-sm font-medium text-gray-600">Image coming soon</p>
+      <div className="flex items-stretch gap-0">
+        <div className="flex w-32 shrink-0 items-center justify-center bg-gray-100 sm:w-36">
+          {hasImage ? (
+            <img
+              src={imageUrl!}
+              alt={name}
+              className="h-32 w-full object-contain p-3 sm:h-36"
+              loading="lazy"
+            />
+          ) : (
+            <div className="flex h-32 w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500 sm:h-36">
+              <div className="mb-1 text-2xl">🍽️</div>
+              <p className="text-xs font-medium text-gray-600">Image coming soon</p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
+          <div>
+            <h3 className="text-lg font-semibold leading-tight">{name}</h3>
+            {description ? <p className="mt-1 text-sm text-gray-600">{description}</p> : null}
+            <p className="mt-3 font-medium">£{price.toFixed(2)}</p>
           </div>
-        )}
-      </div>
 
-      <div className="p-4">
-        <h3 className="text-lg font-semibold">{name}</h3>
-        {description ? <p className="mt-1 text-sm text-gray-600">{description}</p> : null}
-        <p className="mt-3 font-medium">£{price.toFixed(2)}</p>
-
-        <button
-          className="mt-4 rounded-xl bg-black px-4 py-2 text-white transition disabled:cursor-not-allowed disabled:opacity-80"
-          onClick={addToCart}
-          disabled={buttonState === "adding"}
-        >
-          {buttonState === "adding" ? "Adding..." : buttonState === "added" ? "1 added ✓" : "Add to order"}
-        </button>
+          <button
+            className="mt-4 w-fit rounded-xl bg-black px-4 py-2 text-white transition disabled:cursor-not-allowed disabled:opacity-80"
+            onClick={addToCart}
+            disabled={buttonState === "adding"}
+          >
+            {buttonState === "adding" ? "Adding..." : buttonState === "added" ? "1 added ✓" : "Add to order"}
+          </button>
+        </div>
       </div>
     </div>
   );
