@@ -121,7 +121,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               <p className="hidden text-2xl font-semibold tracking-tight text-gray-900 sm:block">£{price.toFixed(2)}</p>
 
               <button
-                className="ml-auto inline-flex min-h-11 min-w-[8.75rem] items-center justify-center whitespace-nowrap rounded-xl bg-black px-6 py-2.5 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-80 sm:min-w-0 sm:w-fit sm:px-5 sm:text-base"
+                className="ml-auto inline-flex min-h-11 min-w-[8.75rem] items-center justify-center whitespace-nowrap rounded-xl bg-gray-800/90 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-80 sm:min-w-0 sm:w-fit sm:px-5 sm:text-base"
                 onClick={addToCart}
                 disabled={buttonState === "adding"}
               >
@@ -199,7 +199,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     addToCart();
                     setDetailsOpen(false);
                   }}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-black px-6 py-2.5 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-80 sm:text-base"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-gray-800/90 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-80 sm:text-base"
                   disabled={buttonState === "adding"}
                 >
                   {buttonLabel()}
