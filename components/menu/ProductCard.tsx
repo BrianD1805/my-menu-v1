@@ -62,18 +62,23 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
         <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
           <div>
-            <h3 className="text-lg font-semibold leading-tight">{name}</h3>
-            {description ? <p className="mt-1 text-sm text-gray-600">{description}</p> : null}
-            <p className="mt-3 font-medium">£{price.toFixed(2)}</p>
+            <h3 className="text-lg font-semibold leading-tight sm:text-xl">{name}</h3>
+            {description ? (
+              <p className="mt-2 pr-2 text-sm leading-6 text-gray-600 sm:text-base">{description}</p>
+            ) : null}
           </div>
 
-          <button
-            className="mt-4 w-fit rounded-xl bg-black px-4 py-2 text-white transition disabled:cursor-not-allowed disabled:opacity-80"
-            onClick={addToCart}
-            disabled={buttonState === "adding"}
-          >
-            {buttonState === "adding" ? "Adding..." : buttonState === "added" ? "1 added ✓" : "Add to order"}
-          </button>
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <p className="text-2xl font-semibold tracking-tight text-gray-900">£{price.toFixed(2)}</p>
+
+            <button
+              className="ml-auto w-fit rounded-xl bg-black px-5 py-2.5 text-white transition disabled:cursor-not-allowed disabled:opacity-80"
+              onClick={addToCart}
+              disabled={buttonState === "adding"}
+            >
+              {buttonState === "adding" ? "Adding..." : buttonState === "added" ? "1 added ✓" : "Add to order"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
