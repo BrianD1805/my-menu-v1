@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 
 const PRODUCT_IMAGE_BUCKET = "product-images";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 
 async function getTenantId(tenantSlug: string) {
   const { data: tenant, error: tenantError } = await db
@@ -18,19 +19,19 @@ async function getTenantId(tenantSlug: string) {
   return { tenantId: tenant.id };
 }
 
-async function ensureProductBelongsToTenant(productId: string, tenantId: string) {
-  const { data: existingProduct, error: productLookupError } = await db
+async function getProductForTenant(productId: string, tenantId: string) {
+  const { data: product, error: productLookupError } = await db
     .from("products")
-    .select("id")
+    .select("id, image_url")
     .eq("id", productId)
     .eq("tenant_id", tenantId)
     .single();
 
-  if (productLookupError || !existingProduct) {
+  if (productLookupError || !product) {
     return { error: NextResponse.json({ error: "Product not found" }, { status: 404 }) };
   }
 
-  return { ok: true };
+  return { product };
 }
 
 async function ensureBucket() {
@@ -56,6 +57,27 @@ function sanitizeFilename(filename: string) {
     .replace(/[^a-z0-9.-]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function getStorageObjectPathFromPublicUrl(imageUrl: string | null | undefined) {
+  const value = (imageUrl || "").trim();
+  if (!value || !supabaseUrl) return null;
+
+  const publicBase = `${supabaseUrl}/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/`;
+  if (!value.startsWith(publicBase)) return null;
+
+  const objectPath = value.slice(publicBase.length);
+  return objectPath || null;
+}
+
+async function deleteStorageObjectIfManaged(imageUrl: string | null | undefined) {
+  const objectPath = getStorageObjectPathFromPublicUrl(imageUrl);
+  if (!objectPath) return;
+
+  const { error } = await db.storage.from(PRODUCT_IMAGE_BUCKET).remove([objectPath]);
+  if (error && !error.message.toLowerCase().includes("not found")) {
+    throw error;
+  }
 }
 
 export async function GET(req: Request) {
@@ -84,34 +106,46 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const body = await req.json();
-  const tenantSlug = body?.tenantSlug as string | undefined;
-  const productId = body?.productId as string | undefined;
-  const imageUrl = (body?.imageUrl as string | null | undefined) ?? null;
+  try {
+    const body = await req.json();
+    const tenantSlug = body?.tenantSlug as string | undefined;
+    const productId = body?.productId as string | undefined;
+    const imageUrl = (body?.imageUrl as string | null | undefined) ?? null;
+    const normalizedImageUrl = imageUrl && imageUrl.trim() ? imageUrl.trim() : null;
 
-  if (!tenantSlug || !productId) {
-    return NextResponse.json({ error: "Missing tenantSlug or productId" }, { status: 400 });
+    if (!tenantSlug || !productId) {
+      return NextResponse.json({ error: "Missing tenantSlug or productId" }, { status: 400 });
+    }
+
+    const tenantLookup = await getTenantId(tenantSlug);
+    if (tenantLookup.error) return tenantLookup.error;
+
+    const productLookup = await getProductForTenant(productId, tenantLookup.tenantId!);
+    if (productLookup.error) return productLookup.error;
+
+    const previousImageUrl = productLookup.product?.image_url || null;
+
+    const { data: product, error } = await db
+      .from("products")
+      .update({ image_url: normalizedImageUrl })
+      .eq("id", productId)
+      .eq("tenant_id", tenantLookup.tenantId)
+      .select("id, image_url")
+      .single();
+
+    if (error || !product) {
+      return NextResponse.json({ error: "Failed to update product image" }, { status: 500 });
+    }
+
+    if (previousImageUrl && previousImageUrl !== normalizedImageUrl) {
+      await deleteStorageObjectIfManaged(previousImageUrl);
+    }
+
+    return NextResponse.json({ product });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to update product image";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  const tenantLookup = await getTenantId(tenantSlug);
-  if (tenantLookup.error) return tenantLookup.error;
-
-  const productCheck = await ensureProductBelongsToTenant(productId, tenantLookup.tenantId!);
-  if (productCheck.error) return productCheck.error;
-
-  const { data: product, error } = await db
-    .from("products")
-    .update({ image_url: imageUrl && imageUrl.trim() ? imageUrl.trim() : null })
-    .eq("id", productId)
-    .eq("tenant_id", tenantLookup.tenantId)
-    .select("id, image_url")
-    .single();
-
-  if (error || !product) {
-    return NextResponse.json({ error: "Failed to update product image" }, { status: 500 });
-  }
-
-  return NextResponse.json({ product });
 }
 
 export async function POST(req: Request) {
@@ -136,8 +170,8 @@ export async function POST(req: Request) {
     const tenantLookup = await getTenantId(tenantSlug);
     if (tenantLookup.error) return tenantLookup.error;
 
-    const productCheck = await ensureProductBelongsToTenant(productId, tenantLookup.tenantId!);
-    if (productCheck.error) return productCheck.error;
+    const productLookup = await getProductForTenant(productId, tenantLookup.tenantId!);
+    if (productLookup.error) return productLookup.error;
 
     await ensureBucket();
 
@@ -160,6 +194,7 @@ export async function POST(req: Request) {
 
     const { data: publicUrlData } = db.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(objectPath);
     const publicUrl = publicUrlData.publicUrl;
+    const previousImageUrl = productLookup.product?.image_url || null;
 
     const { data: product, error: updateError } = await db
       .from("products")
@@ -171,6 +206,10 @@ export async function POST(req: Request) {
 
     if (updateError || !product) {
       return NextResponse.json({ error: "Image uploaded but product update failed" }, { status: 500 });
+    }
+
+    if (previousImageUrl && previousImageUrl !== publicUrl) {
+      await deleteStorageObjectIfManaged(previousImageUrl);
     }
 
     return NextResponse.json({ product });

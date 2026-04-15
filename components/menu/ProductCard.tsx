@@ -42,7 +42,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-stretch gap-0">
-        <div className="w-36 shrink-0 p-3 sm:w-40">
+        <div className="w-28 shrink-0 p-3 sm:w-44">
           <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
             {hasImage ? (
               <img
@@ -58,21 +58,25 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               </div>
             )}
           </div>
+
+          <p className="mt-2 text-center text-lg font-semibold tracking-tight text-gray-900 sm:hidden">
+            £{price.toFixed(2)}
+          </p>
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
           <div>
             <h3 className="text-lg font-semibold leading-tight sm:text-xl">{name}</h3>
             {description ? (
-              <p className="mt-2 pr-2 text-sm leading-6 text-gray-600 sm:text-base">{description}</p>
+              <p className="mt-2 pr-1 text-sm leading-6 text-gray-600 sm:pr-2 sm:text-base">{description}</p>
             ) : null}
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-4">
-            <p className="text-2xl font-semibold tracking-tight text-gray-900">£{price.toFixed(2)}</p>
+          <div className="mt-4 flex items-center justify-end gap-4 sm:justify-between">
+            <p className="hidden text-2xl font-semibold tracking-tight text-gray-900 sm:block">£{price.toFixed(2)}</p>
 
             <button
-              className="ml-auto w-fit rounded-xl bg-black px-5 py-2.5 text-white transition disabled:cursor-not-allowed disabled:opacity-80"
+              className="ml-auto inline-flex min-h-11 min-w-[8.75rem] items-center justify-center whitespace-nowrap rounded-xl bg-black px-6 py-2.5 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-80 sm:min-w-0 sm:w-fit sm:px-5 sm:text-base"
               onClick={addToCart}
               disabled={buttonState === "adding"}
             >
