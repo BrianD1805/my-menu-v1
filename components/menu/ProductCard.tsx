@@ -42,7 +42,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-stretch gap-0">
-        <div className="w-28 shrink-0 p-3 sm:w-32">
+        <div className="w-36 shrink-0 p-3 sm:w-40">
           <div className="aspect-square overflow-hidden rounded-xl bg-gray-100">
             {hasImage ? (
               <img
