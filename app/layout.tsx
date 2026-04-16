@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Multi-tenant online ordering demo"
 };
 
-const LIVE_VERSION = "Ver: 0.037";
+const LIVE_VERSION = "Ver: 0.041";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
