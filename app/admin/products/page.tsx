@@ -40,6 +40,9 @@ export default async function AdminProductsPage() {
           <a href="/admin/orders" className="rounded-xl border px-5 py-3">
             Admin orders
           </a>
+          <a href="/admin/categories" className="rounded-xl border px-5 py-3">
+            Admin categories
+          </a>
           <a href="/" className="rounded-xl border px-5 py-3">
             View storefront
           </a>
