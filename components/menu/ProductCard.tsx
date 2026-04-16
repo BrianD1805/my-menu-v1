@@ -61,7 +61,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     <>
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md h-full">
         <div className="flex items-stretch gap-0 h-full">
-          <div className="w-24 shrink-0 p-2.5 md:w-20 lg:w-20 xl:w-20">
+          <div className="w-24 shrink-0 p-2.5 md:w-24 lg:w-24 xl:w-24">
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
@@ -90,14 +90,14 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col justify-between p-3 md:p-2.5 lg:p-2.5">
+          <div className="flex min-w-0 flex-1 flex-col justify-between p-3.5 lg:p-3.5">
             <div>
               <button type="button" onClick={() => setDetailsOpen(true)} className="text-left">
-                <h3 className="text-base font-semibold leading-tight md:text-[15px] lg:text-[15px]">{name}</h3>
+                <h3 className="text-base font-semibold leading-tight lg:text-[15px] xl:text-base">{name}</h3>
               </button>
               {description ? (
                 <p
-                  className="mt-1.5 pr-0 text-[12px] leading-[1.35rem] text-gray-600"
+                  className="mt-1.5 pr-1 text-[13px] leading-5 text-gray-600"
                   style={{
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
@@ -111,17 +111,17 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               <button
                 type="button"
                 onClick={() => setDetailsOpen(true)}
-                className="mt-1 text-[11px] font-medium text-gray-500 underline decoration-gray-300 underline-offset-4 transition hover:text-gray-800"
+                className="mt-1.5 text-xs font-medium text-gray-500 underline decoration-gray-300 underline-offset-4 transition hover:text-gray-800"
               >
                 View details
               </button>
             </div>
 
-            <div className="mt-2.5 flex items-center justify-end gap-2 md:justify-between">
-              <p className="hidden text-base font-semibold tracking-tight text-gray-900 md:block">£{price.toFixed(2)}</p>
+            <div className="mt-3 flex items-center justify-end gap-3 md:justify-between">
+              <p className="hidden text-lg font-semibold tracking-tight text-gray-900 md:block">£{price.toFixed(2)}</p>
 
               <button
-                className="ml-auto inline-flex min-h-9 min-w-[6.75rem] items-center justify-center whitespace-nowrap rounded-xl bg-gray-700/85 px-3 py-2 text-[13px] font-medium text-white shadow-sm transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-80"
+                className="ml-auto inline-flex min-h-10 min-w-[7.75rem] items-center justify-center whitespace-nowrap rounded-xl bg-gray-700/85 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-80"
                 onClick={addToCart}
                 disabled={buttonState === "adding"}
               >
@@ -134,7 +134,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
       {detailsOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-3 backdrop-blur-[2px] sm:items-center sm:p-6 lg:p-8">
-          <div className="max-h-[94vh] w-full max-w-2xl overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-w-3xl lg:max-w-[52rem] xl:max-w-[56rem]">
+          <div className="max-h-[94vh] w-full max-w-2xl overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-w-3xl lg:max-w-[56rem] xl:max-w-[60rem]">
             <div className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-5 pt-5 sm:px-7 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
               <div className="flex items-start justify-between gap-4">
