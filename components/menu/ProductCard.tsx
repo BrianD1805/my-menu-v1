@@ -111,17 +111,17 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       </div>
 
       {detailsOpen ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 px-4 py-4 backdrop-blur-[2px] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <div className="flex min-h-[calc(100dvh-2rem)] items-center justify-center sm:min-h-[calc(100dvh-3rem)] lg:min-h-[calc(100dvh-4rem)]">
-            <div className="w-full max-w-4xl overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
-              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-7 sm:pb-7 sm:pt-6 lg:px-8 lg:pb-8 lg:pt-7">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-[2px]">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
+            <div className="my-auto w-full max-w-4xl overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
+              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-slate-400">View product</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Product details</p>
                     <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{name}</h3>
-                    <div className="mt-4 flex flex-wrap items-center gap-3">
-                      <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                    <div className="mt-4">
+                      <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         £{price.toFixed(2)}
                       </span>
                     </div>
@@ -129,7 +129,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   <button
                     type="button"
                     onClick={() => setDetailsOpen(false)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
                     aria-label="Close details"
                   >
                     ×
@@ -137,7 +137,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 </div>
               </div>
 
-              <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto px-5 py-5 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
+              <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
                 <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr] lg:items-start lg:gap-7">
                   <div className="overflow-hidden rounded-[24px] bg-slate-100 ring-1 ring-black/5">
                     {hasImage ? (
@@ -151,31 +151,27 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   </div>
 
                   <div className="space-y-4">
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 sm:p-6 lg:p-7">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Description</p>
+                    <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Description</p>
                       <p className="mt-3 text-[15px] leading-7 text-slate-700 lg:text-base">{fullDescription}</p>
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Price</p>
-                        <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">£{price.toFixed(2)}</p>
-                      </div>
-                      <div className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Ready to order</p>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">Add this item now or close this view and continue browsing the menu.</p>
-                      </div>
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Order note</p>
+                      <p className="mt-3 text-sm leading-6 text-slate-600">
+                        Add this item now, or close this window and continue browsing the menu.
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 bg-white px-5 py-5 sm:px-7 sm:py-6 lg:px-8 lg:py-7">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <button
                     type="button"
                     onClick={() => setDetailsOpen(false)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7"
                   >
                     Back to menu
                   </button>
@@ -185,7 +181,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       addToCart();
                       setDetailsOpen(false);
                     }}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-gray-700/85 px-7 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-80"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-gray-700/85 px-7 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-80 lg:px-8"
                     disabled={buttonState === "adding"}
                   >
                     {buttonLabel()}

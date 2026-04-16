@@ -438,9 +438,9 @@ export default function ProductManager({
       </div>
 
       {creating ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 px-4 py-4 backdrop-blur-[2px] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <div className="flex min-h-[calc(100dvh-2rem)] items-center justify-center sm:min-h-[calc(100dvh-3rem)] lg:min-h-[calc(100dvh-4rem)]">
-            <div className={modalShellClassName()}>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-[2px]">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
+            <div className={`${modalShellClassName()} my-auto`}>
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
@@ -460,7 +460,7 @@ export default function ProductManager({
                 </div>
               </div>
 
-              <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+              <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
                 <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6">
                   <div className="space-y-4 rounded-[26px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5 lg:p-6">
                     <div>
@@ -546,12 +546,12 @@ export default function ProductManager({
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 bg-white px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <button
                     type="button"
                     onClick={closeCreateModal}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 lg:px-7"
                   >
                     Cancel
                   </button>
@@ -559,7 +559,7 @@ export default function ProductManager({
                     type="button"
                     onClick={() => void createProduct()}
                     disabled={busyCrud === "create"}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-7 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60 lg:px-8"
                   >
                     {busyCrud === "create" ? "Creating..." : "Create product"}
                   </button>
@@ -571,9 +571,9 @@ export default function ProductManager({
       ) : null}
 
       {editingId && editingDraft ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 px-4 py-4 backdrop-blur-[2px] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-          <div className="flex min-h-[calc(100dvh-2rem)] items-center justify-center sm:min-h-[calc(100dvh-3rem)] lg:min-h-[calc(100dvh-4rem)]">
-            <div className={modalShellClassName()}>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-[2px]">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
+            <div className={`${modalShellClassName()} my-auto`}>
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
@@ -593,7 +593,7 @@ export default function ProductManager({
                 </div>
               </div>
 
-              <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+              <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
                 <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6">
                   <div className="space-y-4 rounded-[26px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5 lg:p-6">
                     <div>
@@ -676,12 +676,12 @@ export default function ProductManager({
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 bg-white px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <button
                     type="button"
                     onClick={cancelEdit}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 lg:px-7"
                   >
                     Cancel
                   </button>
@@ -689,7 +689,7 @@ export default function ProductManager({
                     type="button"
                     onClick={() => void updateProduct()}
                     disabled={busyCrud === editingId}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-7 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60 lg:px-8"
                   >
                     {busyCrud === editingId ? "Saving..." : "Save product"}
                   </button>
