@@ -1,3 +1,8 @@
+export type StoredCartItem = {
+  productId: string;
+  quantity: number;
+};
+
 const CART_UPDATED_EVENT = "orduva:cart-updated";
 
 export function getCartStorageKey(tenantSlug: string) {

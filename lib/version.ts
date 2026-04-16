@@ -1,1 +1,1 @@
-export const LIVE_VERSION = "Ver: 0.044";
+export const LIVE_VERSION = "Ver: 0.045";

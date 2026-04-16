@@ -27,14 +27,12 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     const existing = readCart<StoredCartItem>(tenantSlug);
     const found = existing.find((item) => item.id === id);
     const updated = found
-      ? existing.map((item) => (item.id === id ? { ...item, qty: item.qty + 1 } : item))
-      : [...existing, { id, name, price, qty: 1 }];
+      ? existing.map((item) => (item.productId === id ? { ...item, quantity: item.quantity + 1 } : item))
+      : [...existing, { productId: id, quantity: 1 }];
 
     writeCart(tenantSlug, updated);
 
     setButtonState("added");
-    window.dispatchEvent(new CustomEvent("cart-updated"));
-
     setTimeout(() => setButtonState("idle"), 1200);
   }
 
