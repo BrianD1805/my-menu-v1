@@ -20,7 +20,7 @@ export default async function HomePage() {
     .eq("is_active", true);
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl p-6">
+    <main className="mx-auto min-h-screen max-w-7xl p-6">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm uppercase tracking-wide text-gray-500">Storefront</p>
@@ -41,7 +41,7 @@ export default async function HomePage() {
         return (
           <section key={category.id} className="mb-10">
             <h2 className="mb-4 text-2xl font-semibold">{category.name}</h2>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {categoryProducts.map((product) => (
                 <ProductCard
                   key={product.id}
