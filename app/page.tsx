@@ -41,7 +41,7 @@ export default async function HomePage() {
         return (
           <section key={category.id} className="mb-10">
             <h2 className="mb-4 text-2xl font-semibold">{category.name}</h2>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {categoryProducts.map((product) => (
                 <ProductCard
                   key={product.id}
