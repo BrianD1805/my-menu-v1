@@ -32,7 +32,7 @@ export default async function AdminProductsPage() {
           <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="mt-1 text-gray-600">
-            Tenant: {tenant.name}. Add, edit, delete, and manage product images for this tenant.
+            Add, edit, delete, and manage live product images for {tenant.name}.
           </p>
         </div>
 
@@ -47,7 +47,7 @@ export default async function AdminProductsPage() {
       </div>
 
       <div className="mb-6 rounded-2xl border border-green-100 bg-green-50 p-4 text-sm text-green-900">
-        Manage the live product list for this tenant here. You can add new products, edit existing ones, change categories, update prices, delete products, and manage images.
+        Manage the live product list here. You can add new products, edit existing ones, change categories, update prices, delete products, and manage images.
       </div>
 
       <ProductManager tenantSlug={slug} products={productRows} categories={categories || []} />
