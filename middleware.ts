@@ -48,7 +48,7 @@ function parseBasicAuth(authHeader: string | null) {
 }
 
 function isProtectedAdminPath(pathname: string) {
-  return pathname.startsWith("/admin") || pathname.startsWith("/api/admin") || pathname === "/api/products";
+  return pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
 }
 
 export function middleware(request: NextRequest) {
@@ -80,5 +80,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*", "/api/products"],
+  matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
