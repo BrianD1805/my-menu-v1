@@ -40,6 +40,10 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="mb-2 block text-sm font-semibold text-slate-700">{children}</label>;
 }
 
+function modalShellClassName() {
+  return "w-full max-w-5xl overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]";
+}
+
 export default function ProductManager({
   tenantSlug,
   products: initialProducts,
@@ -64,19 +68,17 @@ export default function ProductManager({
   const [globalMessage, setGlobalMessage] = useState("");
   const [busyCrud, setBusyCrud] = useState<string | null>(null);
 
-  const sortedProducts = useMemo(
-    () => [...products].sort((a, b) => a.name.localeCompare(b.name)),
-    [products]
-  );
+  const sortedProducts = useMemo(() => [...products].sort((a, b) => a.name.localeCompare(b.name)), [products]);
+  const modalOpen = creating || !!editingId;
 
   useEffect(() => {
-    if (!editingId) return;
+    if (!modalOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [editingId]);
+  }, [modalOpen]);
 
   function categoryNameFor(id: string) {
     return categories.find((category) => category.id === id)?.name || null;
@@ -87,7 +89,20 @@ export default function ProductManager({
     setMessages((current) => ({ ...current, [id]: "" }));
   }
 
+  function openCreateModal() {
+    setCreating(true);
+    setEditingId(null);
+    setEditingDraft(null);
+    setGlobalMessage("");
+  }
+
+  function closeCreateModal() {
+    setCreating(false);
+    setNewDraft(emptyDraft(categories[0]?.id || ""));
+  }
+
   function startEdit(product: ProductRow) {
+    setCreating(false);
     setEditingId(product.id);
     setEditingDraft({
       name: product.name,
@@ -166,9 +181,7 @@ export default function ProductManager({
       const imageUrl = payload.product?.image_url || "";
       setDrafts((current) => ({ ...current, [productId]: imageUrl }));
       setProducts((current) =>
-        current.map((product) =>
-          product.id === productId ? { ...product, image_url: imageUrl || null } : product
-        )
+        current.map((product) => (product.id === productId ? { ...product, image_url: imageUrl || null } : product))
       );
       setMessages((current) => ({ ...current, [productId]: "Image uploaded" }));
     } catch (error) {
@@ -212,9 +225,8 @@ export default function ProductManager({
 
       setProducts((current) => [...current, product]);
       setDrafts((current) => ({ ...current, [product.id]: product.image_url || "" }));
-      setCreating(false);
-      setNewDraft(emptyDraft(categories[0]?.id || ""));
       setGlobalMessage("Product created");
+      closeCreateModal();
     } catch (error) {
       setGlobalMessage(error instanceof Error ? error.message : "Failed to create product");
     } finally {
@@ -296,100 +308,16 @@ export default function ProductManager({
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Manage products</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Add, edit, delete, and update images for your live products.
-              </p>
+              <p className="mt-1 text-sm text-gray-600">Add, edit, delete, and update images for your live products.</p>
             </div>
             <button
               type="button"
-              onClick={() => {
-                setCreating((current) => !current);
-                setGlobalMessage("");
-              }}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
+              onClick={openCreateModal}
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
             >
-              {creating ? "Close add product" : "Add new product"}
+              Add new product
             </button>
           </div>
-
-          {creating ? (
-            <div className="grid gap-4 rounded-3xl border border-green-100 bg-green-50 p-4 sm:p-5 md:grid-cols-2">
-              <div>
-                <FieldLabel>Product name</FieldLabel>
-                <input
-                  type="text"
-                  value={newDraft.name}
-                  onChange={(event) => setNewDraft((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Product name"
-                  className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                />
-              </div>
-              <div>
-                <FieldLabel>Price</FieldLabel>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={newDraft.price}
-                  onChange={(event) => setNewDraft((current) => ({ ...current, price: event.target.value }))}
-                  placeholder="Price"
-                  className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                />
-              </div>
-              <div>
-                <FieldLabel>Category</FieldLabel>
-                <select
-                  value={newDraft.categoryId}
-                  onChange={(event) => setNewDraft((current) => ({ ...current, categoryId: event.target.value }))}
-                  className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                >
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <FieldLabel>Status</FieldLabel>
-                <label className="flex min-h-[50px] items-center gap-3 rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={newDraft.isActive}
-                    onChange={(event) => setNewDraft((current) => ({ ...current, isActive: event.target.checked }))}
-                  />
-                  Active product
-                </label>
-              </div>
-              <div className="md:col-span-2">
-                <FieldLabel>Description</FieldLabel>
-                <textarea
-                  value={newDraft.description}
-                  onChange={(event) => setNewDraft((current) => ({ ...current, description: event.target.value }))}
-                  placeholder="Short description"
-                  rows={4}
-                  className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                />
-              </div>
-              <div className="md:col-span-2 flex flex-wrap gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => void createProduct()}
-                  disabled={busyCrud === "create"}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
-                >
-                  {busyCrud === "create" ? "Creating..." : "Create product"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCreating(false)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-white"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : null}
 
           {globalMessage ? <p className="mt-4 text-sm text-gray-600">{globalMessage}</p> : null}
         </section>
@@ -407,9 +335,7 @@ export default function ProductManager({
                     {hasImage ? (
                       <img src={currentUrl} alt={product.name} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs text-gray-500">
-                        No image yet
-                      </div>
+                      <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs text-gray-500">No image yet</div>
                     )}
                   </div>
 
@@ -418,14 +344,10 @@ export default function ProductManager({
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="text-xl font-semibold text-gray-900">{product.name}</h2>
                         {product.category_name ? (
-                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
-                            {product.category_name}
-                          </span>
+                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">{product.category_name}</span>
                         ) : null}
                         {!product.is_active ? (
-                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
-                            Inactive
-                          </span>
+                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">Inactive</span>
                         ) : null}
                       </div>
                       {product.description ? <p className="mt-1 text-sm text-gray-600">{product.description}</p> : null}
@@ -462,9 +384,7 @@ export default function ProductManager({
                         placeholder="https://example.com/product-image.jpg"
                         className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
                       />
-                      <p className="text-xs text-gray-500">
-                        Best results use a square image with the product kept inside the middle 80%.
-                      </p>
+                      <p className="text-xs text-gray-500">Best results use a square image with the product kept inside the middle 80%.</p>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
@@ -517,128 +437,263 @@ export default function ProductManager({
         </div>
       </div>
 
-      {editingId && editingDraft ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-3 backdrop-blur-[2px] sm:items-center sm:p-6 lg:p-8">
-          <div className="w-full max-w-4xl overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
-            <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-4 pb-5 pt-5 sm:px-6 lg:px-8 lg:pb-6 lg:pt-6">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Edit product</p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{editingDraft.name || "Product details"}</h3>
-                  <p className="mt-2 text-sm text-slate-600">Refine the product information, category, price, and visibility.</p>
+      {creating ? (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 px-4 py-4 backdrop-blur-[2px] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="flex min-h-[calc(100dvh-2rem)] items-center justify-center sm:min-h-[calc(100dvh-3rem)] lg:min-h-[calc(100dvh-4rem)]">
+            <div className={modalShellClassName()}>
+              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Add product</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Create a new product</h3>
+                    <p className="mt-2 text-sm text-slate-600">Add the product name, description, price, and category first. You can upload the image after saving.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:text-slate-900"
+                    aria-label="Close add product"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
-                  aria-label="Close edit product"
-                >
-                  ×
-                </button>
               </div>
-            </div>
 
-            <div className="max-h-[calc(100vh-140px)] overflow-y-auto px-3 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
-              <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="space-y-4 rounded-[26px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5 lg:p-6">
-                  <div>
-                    <FieldLabel>Product name</FieldLabel>
-                    <input
-                      type="text"
-                      value={editingDraft.name}
-                      onChange={(event) => setEditingDraft({ ...editingDraft, name: event.target.value })}
-                      className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                    />
-                  </div>
-
-                  <div>
-                    <FieldLabel>Description</FieldLabel>
-                    <textarea
-                      value={editingDraft.description}
-                      onChange={(event) => setEditingDraft({ ...editingDraft, description: event.target.value })}
-                      rows={7}
-                      className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-4 sm:p-5 lg:p-6">
-                  <div>
-                    <FieldLabel>Price</FieldLabel>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={editingDraft.price}
-                      onChange={(event) => setEditingDraft({ ...editingDraft, price: event.target.value })}
-                      className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                    />
-                  </div>
-
-                  <div>
-                    <FieldLabel>Category</FieldLabel>
-                    <select
-                      value={editingDraft.categoryId}
-                      onChange={(event) => setEditingDraft({ ...editingDraft, categoryId: event.target.value })}
-                      className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                    >
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <FieldLabel>Status</FieldLabel>
-                    <label className="flex min-h-[50px] items-center gap-3 rounded-2xl border border-gray-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+                <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6">
+                  <div className="space-y-4 rounded-[26px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5 lg:p-6">
+                    <div>
+                      <FieldLabel>Product name</FieldLabel>
                       <input
-                        type="checkbox"
-                        checked={editingDraft.isActive}
-                        onChange={(event) => setEditingDraft({ ...editingDraft, isActive: event.target.checked })}
+                        type="text"
+                        value={newDraft.name}
+                        onChange={(event) => setNewDraft((current) => ({ ...current, name: event.target.value }))}
+                        placeholder="Product name"
+                        className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
                       />
-                      Show this product live
-                    </label>
+                    </div>
+
+                    <div>
+                      <FieldLabel>Description</FieldLabel>
+                      <textarea
+                        value={newDraft.description}
+                        onChange={(event) => setNewDraft((current) => ({ ...current, description: event.target.value }))}
+                        placeholder="Short description"
+                        rows={7}
+                        className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                      />
+                    </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Current summary</p>
-                    <p className="mt-3 text-base font-semibold text-slate-900">{editingDraft.name || "Untitled product"}</p>
-                    <p className="mt-2 text-sm text-slate-600">
-                      {editingDraft.description?.trim() || "Add a short description to help customers understand the item."}
-                    </p>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                        £{Number(editingDraft.price || 0).toFixed(2)}
-                      </span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
-                        {categoryNameFor(editingDraft.categoryId) || "No category"}
-                      </span>
+                  <div className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-4 sm:p-5 lg:p-6">
+                    <div>
+                      <FieldLabel>Price</FieldLabel>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={newDraft.price}
+                        onChange={(event) => setNewDraft((current) => ({ ...current, price: event.target.value }))}
+                        placeholder="Price"
+                        className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                      />
+                    </div>
+
+                    <div>
+                      <FieldLabel>Category</FieldLabel>
+                      <select
+                        value={newDraft.categoryId}
+                        onChange={(event) => setNewDraft((current) => ({ ...current, categoryId: event.target.value }))}
+                        className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                      >
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <FieldLabel>Status</FieldLabel>
+                      <label className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-gray-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={newDraft.isActive}
+                          onChange={(event) => setNewDraft((current) => ({ ...current, isActive: event.target.checked }))}
+                        />
+                        Show this product live
+                      </label>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Preview</p>
+                      <p className="mt-3 text-base font-semibold text-slate-900">{newDraft.name || "Untitled product"}</p>
+                      <p className="mt-2 text-sm text-slate-600">
+                        {newDraft.description?.trim() || "Add a short description to help customers understand the item."}
+                      </p>
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                          £{Number(newDraft.price || 0).toFixed(2)}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
+                          {categoryNameFor(newDraft.categoryId) || "No category"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="border-t border-slate-100 bg-white px-3 py-4 sm:px-5 lg:px-6 lg:py-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void updateProduct()}
-                  disabled={busyCrud === editingId}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
-                >
-                  {busyCrud === editingId ? "Saving..." : "Save product"}
-                </button>
+              <div className="border-t border-slate-100 bg-white px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void createProduct()}
+                    disabled={busyCrud === "create"}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
+                  >
+                    {busyCrud === "create" ? "Creating..." : "Create product"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {editingId && editingDraft ? (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 px-4 py-4 backdrop-blur-[2px] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          <div className="flex min-h-[calc(100dvh-2rem)] items-center justify-center sm:min-h-[calc(100dvh-3rem)] lg:min-h-[calc(100dvh-4rem)]">
+            <div className={modalShellClassName()}>
+              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Edit product</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{editingDraft.name || "Product details"}</h3>
+                    <p className="mt-2 text-sm text-slate-600">Update the product details, category, price, and live visibility in one place.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:text-slate-900"
+                    aria-label="Close edit product"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-[calc(100dvh-10rem)] overflow-y-auto px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+                <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6">
+                  <div className="space-y-4 rounded-[26px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5 lg:p-6">
+                    <div>
+                      <FieldLabel>Product name</FieldLabel>
+                      <input
+                        type="text"
+                        value={editingDraft.name}
+                        onChange={(event) => setEditingDraft({ ...editingDraft, name: event.target.value })}
+                        className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                      />
+                    </div>
+
+                    <div>
+                      <FieldLabel>Description</FieldLabel>
+                      <textarea
+                        value={editingDraft.description}
+                        onChange={(event) => setEditingDraft({ ...editingDraft, description: event.target.value })}
+                        rows={7}
+                        className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-4 sm:p-5 lg:p-6">
+                    <div>
+                      <FieldLabel>Price</FieldLabel>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={editingDraft.price}
+                        onChange={(event) => setEditingDraft({ ...editingDraft, price: event.target.value })}
+                        className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                      />
+                    </div>
+
+                    <div>
+                      <FieldLabel>Category</FieldLabel>
+                      <select
+                        value={editingDraft.categoryId}
+                        onChange={(event) => setEditingDraft({ ...editingDraft, categoryId: event.target.value })}
+                        className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                      >
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <FieldLabel>Status</FieldLabel>
+                      <label className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-gray-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={editingDraft.isActive}
+                          onChange={(event) => setEditingDraft({ ...editingDraft, isActive: event.target.checked })}
+                        />
+                        Show this product live
+                      </label>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Preview</p>
+                      <p className="mt-3 text-base font-semibold text-slate-900">{editingDraft.name || "Untitled product"}</p>
+                      <p className="mt-2 text-sm text-slate-600">
+                        {editingDraft.description?.trim() || "Add a short description to help customers understand the item."}
+                      </p>
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                          £{Number(editingDraft.price || 0).toFixed(2)}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200">
+                          {categoryNameFor(editingDraft.categoryId) || "No category"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 bg-white px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void updateProduct()}
+                    disabled={busyCrud === editingId}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
+                  >
+                    {busyCrud === editingId ? "Saving..." : "Save product"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
