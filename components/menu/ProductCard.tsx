@@ -25,7 +25,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     setButtonState("adding");
 
     const existing = readCart<StoredCartItem>(tenantSlug);
-    const found = existing.find((item) => item.id === id);
+    const found = existing.find((item) => item.productId === id);
     const updated = found
       ? existing.map((item) => (item.productId === id ? { ...item, quantity: item.quantity + 1 } : item))
       : [...existing, { productId: id, quantity: 1 }];
