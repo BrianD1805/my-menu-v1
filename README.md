@@ -95,3 +95,18 @@ This v1 does not yet include:
 - product options and modifiers
 - image upload pipeline
 - official WhatsApp Business API integration
+
+## Basic admin protection
+
+Admin routes are protected with HTTP Basic Auth using these environment variables:
+
+- `ORDUVA_ADMIN_USERNAME`
+- `ORDUVA_ADMIN_PASSWORD`
+
+Protected paths:
+- `/admin/orders`
+- `/admin/products`
+- `/api/admin/*`
+- `/api/products`
+
+Set the same values locally in `.env.local` and in Netlify environment variables before testing admin screens.
