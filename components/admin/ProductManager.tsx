@@ -439,8 +439,8 @@ export default function ProductManager({
 
       {creating ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">
-          <div className="flex min-h-dvh items-center justify-center p-3 sm:p-5 lg:p-6 xl:p-8">
-            <div className={`${modalShellClassName()} my-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2.5rem)] lg:max-h-[calc(100dvh-3rem)]`}>
+          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
+            <div className={`${modalShellClassName()} my-auto max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-2.5rem)] lg:max-h-[calc(100dvh-3rem)]`}>
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
@@ -572,8 +572,8 @@ export default function ProductManager({
 
       {editingId && editingDraft ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">
-          <div className="flex min-h-dvh items-center justify-center p-3 sm:p-5 lg:p-6 xl:p-8">
-            <div className={`${modalShellClassName()} my-auto max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2.5rem)] lg:max-h-[calc(100dvh-3rem)]`}>
+          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
+            <div className={`${modalShellClassName()} my-auto max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-2.5rem)] lg:max-h-[calc(100dvh-3rem)]`}>
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
