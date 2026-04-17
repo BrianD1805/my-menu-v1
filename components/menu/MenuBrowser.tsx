@@ -104,10 +104,10 @@ export default function MenuBrowser({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6">
-        <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,#f8fcf8_0%,#eff5f0_58%,#e8f0e9_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.10)]">
-          <div className="mx-auto max-w-7xl px-4 py-3.5 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+    <div className="space-y-5 sm:space-y-6">
+      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-[#f4f8f4] before:content-['']">
+        <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,#f7fbf7_0%,#eef5ef_50%,#e6eee7_100%)] shadow-[0_22px_60px_rgba(15,23,42,0.10)]">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-emerald-100 bg-white/95 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:h-12 sm:w-12 sm:rounded-[20px]">
@@ -115,7 +115,7 @@ export default function MenuBrowser({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400 sm:text-[11px] sm:tracking-[0.28em]">Order online</p>
-                  <h1 className="truncate text-[1.42rem] font-semibold tracking-tight text-slate-900 sm:text-[1.8rem] lg:text-[2.05rem]">{tenantName}</h1>
+                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight text-slate-950 sm:text-[1.95rem] lg:text-[2.35rem]">{tenantName}</h1>
                 </div>
               </div>
 
@@ -141,9 +141,9 @@ export default function MenuBrowser({
 
       <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Welcome</p>
-        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]">Freshly made, ready to order</h2>
+        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]">Browse the menu</h2>
         <p className="mt-3 max-w-3xl text-[14px] leading-6 text-slate-600 sm:text-base sm:leading-7">
-          Explore the menu below, or use the search icon in the header to find something quickly.
+          Tap into the details for more information, or add favourites straight to your order.
         </p>
       </section>
 

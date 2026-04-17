@@ -1,12 +1,10 @@
-Orduva Ver-0.070 handover
+Orduva Ver-0.076 handover
 
 Included in this patch:
-- matching mobile storefront premium pass
-- mobile storefront header tightened and rebalanced
-- mobile hero/welcome section refined
-- mobile product cards rebuilt into a more premium stacked layout
-- larger product image on mobile
-- description removed from mobile cards
-- softer add-to-order tone on mobile to match desktop
-- spacing and category headers refined for smaller screens
-- live version bumped to Ver: 0.070
+- storefront product card reshaped into a neater oblong layout
+- title next to the image on desktop and mobile
+- smaller safer title sizing
+- price, View more, and Add to order in one tidy row underneath
+- no description on the main card
+- bigger image retained
+- fixed MenuBrowser sticky header JSX class quoting
