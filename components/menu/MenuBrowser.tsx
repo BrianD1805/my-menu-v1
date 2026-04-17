@@ -105,7 +105,7 @@ export default function MenuBrowser({
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-[#f4f8f4] before:content-['']">
+      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-[#f4f8f4] before:content-[""]">
         <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,#f7fbf7_0%,#eef5ef_50%,#e6eee7_100%)] shadow-[0_22px_60px_rgba(15,23,42,0.10)]">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="flex items-center justify-between gap-3">

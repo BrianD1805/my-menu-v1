@@ -1,5 +1,9 @@
-Orduva Ver-0.072 handover
+Orduva Ver-0.073 handover
 
-Included in this patch:
-- fixed MenuBrowser JSX syntax error caused by unescaped Tailwind content class in the sticky storefront header
-- version bumped to Ver: 0.072
+Rollback storefront layout to Ver-0.070 baseline, then reapply only the approved premium card refinements:
+- safe storefront card layout restored
+- bigger image
+- no card description
+- softer add to order button
+- cleaner title sizing and spacing
+- no risky card geometry changes
