@@ -127,6 +127,7 @@ export default function ProductManager({
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
+  const [searchOpen, setSearchOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const sortedProducts = useMemo(() => [...products].sort((a, b) => a.name.localeCompare(b.name)), [products]);
@@ -143,7 +144,7 @@ export default function ProductManager({
     });
   }, [searchQuery, selectedCategoryId, sortedProducts]);
   const hasActiveFilters = searchQuery.trim().length > 0 || selectedCategoryId !== "all";
-  const modalOpen = creating || !!editingId;
+  const modalOpen = creating || !!editingId || searchOpen;
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -350,83 +351,37 @@ export default function ProductManager({
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Manage products</h2>
-              <p className="mt-1 text-sm text-gray-600">Search the list, narrow it by category, then open a popup to add or edit full details.</p>
+              <p className="mt-1 text-sm text-gray-600">Keep the page clean, then use the popup tools to search, filter, add, or edit products.</p>
             </div>
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
-            >
-              Add new product
-            </button>
-          </div>
-
-          <div className="grid gap-3 lg:grid-cols-[1fr_240px_auto]">
-            <div>
-              <label className="sr-only" htmlFor="admin-product-search">Search products</label>
-              <div className="flex min-h-[52px] items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 shadow-sm transition focus-within:border-emerald-400 focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.10)]">
-                <span className="mr-3 text-lg text-slate-400">⌕</span>
-                <input
-                  id="admin-product-search"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search products, descriptions, or categories"
-                  className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                />
-                {searchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="ml-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-900"
-                    aria-label="Clear product search"
-                  >
-                    ×
-                  </button>
-                ) : null}
-              </div>
-            </div>
-
-            <div>
-              <label className="sr-only" htmlFor="admin-category-filter">Filter by category</label>
-              <select
-                id="admin-category-filter"
-                value={selectedCategoryId}
-                onChange={(event) => setSelectedCategoryId(event.target.value)}
-                className="min-h-[52px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
-              >
-                <option value="all">All categories</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-stretch">
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategoryId("all");
-                }}
-                className="inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:w-auto"
+                onClick={() => setSearchOpen(true)}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                Clear filters
+                <span className="text-base">⌕</span>
+                Search products
+              </button>
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="inline-flex min-h-12 items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
+              >
+                Add new product
               </button>
             </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
             <p>
-              {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"} shown
+              {sortedProducts.length} {sortedProducts.length === 1 ? "product" : "products"} in your list
             </p>
             {globalMessage ? <p>{globalMessage}</p> : null}
           </div>
         </section>
 
         <div className="space-y-4">
-          {filteredProducts.length ? filteredProducts.map((product) => {
+          {sortedProducts.length ? sortedProducts.map((product) => {
             const hasImage = !!product.image_url;
             return (
               <div key={product.id} className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
@@ -477,26 +432,149 @@ export default function ProductManager({
             );
           }) : (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
-              <p className="text-lg font-semibold text-slate-900">No matching products</p>
-              <p className="mt-2 text-sm text-slate-600">Try a different search term or clear the current category filter.</p>
-              {hasActiveFilters ? (
-                <div className="mt-5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSelectedCategoryId("all");
-                    }}
-                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Reset filters
-                  </button>
-                </div>
-              ) : null}
+              <p className="text-lg font-semibold text-slate-900">No products yet</p>
+              <p className="mt-2 text-sm text-slate-600">Add your first product to start building the menu.</p>
             </div>
           )}
         </div>
       </div>
+
+      {searchOpen ? (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">
+          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
+            <div className="my-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-3rem)]">
+              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/70 px-5 pb-5 pt-5 sm:px-6 lg:px-8">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Search products</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Find a product quickly</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Search by name, description, or category, then open the matching product straight into edit mode.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen(false)}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:text-slate-900"
+                    aria-label="Close search"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="mt-5 grid gap-3 md:grid-cols-[1fr_220px]">
+                  <div className="flex min-h-[54px] items-center rounded-2xl border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-emerald-400 focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.10)]">
+                    <span className="mr-3 text-lg text-slate-400">⌕</span>
+                    <input
+                      autoFocus
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search products, descriptions, or categories"
+                      className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                    />
+                    {searchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="ml-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-900"
+                        aria-label="Clear search"
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <select
+                    value={selectedCategoryId}
+                    onChange={(event) => setSelectedCategoryId(event.target.value)}
+                    className="min-h-[54px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                  >
+                    <option value="all">All categories</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+                <div className="mb-4 flex items-center justify-between gap-3 text-sm text-slate-600">
+                  <p>{filteredProducts.length} {filteredProducts.length === 1 ? "result" : "results"}</p>
+                  {hasActiveFilters ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedCategoryId("all");
+                      }}
+                      className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 px-4 py-2.5 font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Clear search
+                    </button>
+                  ) : null}
+                </div>
+
+                {filteredProducts.length ? (
+                  <div className="space-y-3">
+                    {filteredProducts.map((product) => {
+                      const hasImage = !!product.image_url;
+                      return (
+                        <div key={product.id} className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200">
+                              {hasImage ? (
+                                <img src={product.image_url!} alt={product.name} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center px-2 text-center text-[11px] font-medium text-slate-500">No image</div>
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="text-lg font-semibold text-slate-900">{product.name}</h4>
+                                {product.category_name ? (
+                                  <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold tracking-wide text-slate-500 ring-1 ring-slate-200">{product.category_name}</span>
+                                ) : null}
+                                {!product.is_active ? (
+                                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-700">Inactive</span>
+                                ) : null}
+                              </div>
+                              {product.description ? (
+                                <p className="mt-2 text-sm leading-6 text-slate-600">
+                                  {stripHtml(product.description).slice(0, 160)}{stripHtml(product.description).length > 160 ? "..." : ""}
+                                </p>
+                              ) : null}
+                              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                                <p className="text-sm font-semibold text-slate-900">£{Number(product.price).toFixed(2)}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSearchOpen(false);
+                                    startEdit(product);
+                                  }}
+                                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                >
+                                  Edit product
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-[26px] border border-dashed border-slate-300 bg-slate-50/60 p-8 text-center">
+                    <p className="text-lg font-semibold text-slate-900">No matching products</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Try another search term or switch the category filter.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {modalOpen && activeDraft ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">

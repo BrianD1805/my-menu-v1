@@ -32,7 +32,7 @@ export default async function AdminProductsPage() {
           <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="mt-1 text-gray-600">
-            Manage your live product list for {tenant.name}. Open the popup editor to add or update full product details, images, and rich descriptions.
+            Manage your live product list for {tenant.name}. Keep the page clean, then use the popup tools to search, filter, add, and edit products.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default async function AdminProductsPage() {
       </div>
 
       <div className="mb-6 rounded-2xl border border-green-100 bg-green-50 p-4 text-sm text-green-900">
-        This page is now a clean product list. Use the add/edit popup for full product details, image handling, and formatted descriptions.
+        This page keeps the product list clean. Use the popup tools for search, filtering, image handling, and full product editing.
       </div>
 
       <ProductManager tenantSlug={slug} products={productRows} categories={categories || []} />
