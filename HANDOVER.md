@@ -1,15 +1,24 @@
-Orduva Ver-0.061 handover
+Orduva Ver-0.062 handover
 
 Included in this patch:
-- finished the remaining Phase 1 admin/API tenant audit pass
-- moved admin product image update/upload into a protected admin route
-- added /api/admin/products/image for tenant-scoped product image changes
-- public /api/products is now read-only for storefront product loading
-- removed remaining client-side tenantSlug assumptions from admin product/category CRUD calls
-- admin product and category pages now rely on server-side tenant resolution only
-- live version bumped to Ver: 0.061
+- started Phase 2 owner login only foundation
+- added tenant owner login page at /admin/login
+- added session/cookie-based admin auth
+- admin pages now require tenant owner login
+- admin APIs now require tenant owner login
+- login is tenant-bound to the current host/tenant
+- added first-owner bootstrap flow on the login page using ADMIN_ACCESS_KEY
+- added Supabase SQL setup file for tenant_users table
+- visible version bumped to Ver: 0.062
 
-Why this matters:
-- image upload and image URL changes are no longer exposed on a public API path
-- admin CRUD no longer sends tenantSlug from the browser for trust decisions
-- this closes a major remaining Phase 1 tenant-safety gap before Phase 2 login
+Important setup before testing:
+1. Run SUPABASE_TENANT_OWNER_LOGIN_SETUP.sql in Supabase
+2. Make sure ADMIN_ACCESS_KEY is set in Netlify
+3. Add ORDUVA_AUTH_SECRET in Netlify for signed owner sessions
+4. Visit /admin/login on the tenant and use First owner setup once for that tenant
+
+What this enables:
+- one owner login per tenant foundation
+- tenant-specific admin sign-in
+- tenant owner only reaches that tenant's admin
+- logout flow

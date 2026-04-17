@@ -1,13 +1,13 @@
+import LogoutButton from "@/components/admin/LogoutButton";
 import OrderStatusForm from "@/components/admin/OrderStatusForm";
 import StatusBadge from "@/components/admin/StatusBadge";
 import WhatsAppButton from "@/components/admin/WhatsAppButton";
 import { db } from "@/lib/db";
-import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
+import { requireAdminPageUser } from "@/lib/admin-auth";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default async function AdminOrdersPage() {
-  const slug = await resolveTenantSlug();
-  const tenant = await getTenantBySlug(slug);
+  const { tenant, user } = await requireAdminPageUser();
 
   const { data: orders } = await db
     .from("orders")
@@ -24,8 +24,13 @@ export default async function AdminOrdersPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl p-6">
-      <h1 className="mb-2 text-3xl font-bold">Admin Orders</h1>
-      <p className="mb-6 text-gray-600">Showing orders for {tenant.name} only.</p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="mb-2 text-3xl font-bold">Admin Orders</h1>
+          <p className="text-gray-600">Signed in as {user.full_name || user.email}. Showing orders for {tenant.name} only.</p>
+        </div>
+        <LogoutButton className="rounded-xl border px-4 py-3 text-sm font-medium" />
+      </div>
 
       <div className="space-y-4">
         {orders?.map((order) => {

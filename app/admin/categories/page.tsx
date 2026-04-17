@@ -1,10 +1,10 @@
+import LogoutButton from "@/components/admin/LogoutButton";
 import CategoryManager from "@/components/admin/CategoryManager";
 import { db } from "@/lib/db";
-import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
+import { requireAdminPageUser } from "@/lib/admin-auth";
 
 export default async function AdminCategoriesPage() {
-  const slug = await resolveTenantSlug();
-  const tenant = await getTenantBySlug(slug);
+  const { tenant, user } = await requireAdminPageUser();
 
   const { data: categories } = await db
     .from("categories")
@@ -34,16 +34,17 @@ export default async function AdminCategoriesPage() {
         <div>
           <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
           <h1 className="text-3xl font-bold">Categories</h1>
-          <p className="mt-1 text-gray-600">Add, rename, reorder, and safely remove categories for {tenant.name} only.</p>
+          <p className="mt-1 text-gray-600">Signed in as {user.full_name || user.email}. Add, rename, reorder, and safely remove categories for {tenant.name} only.</p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <a href="/admin/products" className="rounded-xl border px-5 py-3">
             Admin products
           </a>
           <a href="/admin/orders" className="rounded-xl border px-5 py-3">
             Admin orders
           </a>
+          <LogoutButton className="rounded-xl border px-5 py-3" />
         </div>
       </div>
 

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { requireAdminApiUser } from "@/lib/admin-auth";
 
 export async function resolveAdminTenant(req: Request) {
+  const auth = await requireAdminApiUser(req);
+  if ((auth as { error?: NextResponse }).error) {
+    return auth as { error: NextResponse };
+  }
+
   const tenantSlug = resolveTenantSlugFromRequest(req);
 
   if (!tenantSlug) {
@@ -19,7 +25,7 @@ export async function resolveAdminTenant(req: Request) {
     return { error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }) };
   }
 
-  return { tenant };
+  return { tenant, user: (auth as { user: { id: string; email: string | null } }).user };
 }
 
 export async function getTenantCategoryForAdmin(categoryId: string, tenantId: string) {

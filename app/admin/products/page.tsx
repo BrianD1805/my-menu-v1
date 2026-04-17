@@ -1,10 +1,10 @@
+import LogoutButton from "@/components/admin/LogoutButton";
 import ProductManager from "@/components/admin/ProductManager";
 import { db } from "@/lib/db";
-import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
+import { requireAdminPageUser } from "@/lib/admin-auth";
 
 export default async function AdminProductsPage() {
-  const slug = await resolveTenantSlug();
-  const tenant = await getTenantBySlug(slug);
+  const { tenant, user } = await requireAdminPageUser();
 
   const { data: categories } = await db
     .from("categories")
@@ -32,11 +32,11 @@ export default async function AdminProductsPage() {
           <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="mt-1 text-gray-600">
-            Manage products for {tenant.name}. Products, categories, images, and edits are all tied to this tenant only.
+            Signed in as {user.full_name || user.email}. Manage products for {tenant.name}. Products, categories, images, and edits are all tied to this tenant only.
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <a href="/admin/orders" className="rounded-xl border px-5 py-3">
             Admin orders
           </a>
@@ -46,6 +46,7 @@ export default async function AdminProductsPage() {
           <a href="/" className="rounded-xl border px-5 py-3">
             View storefront
           </a>
+          <LogoutButton className="rounded-xl border px-5 py-3" />
         </div>
       </div>
 
