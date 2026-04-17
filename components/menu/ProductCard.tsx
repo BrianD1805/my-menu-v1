@@ -44,18 +44,18 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   return (
     <>
-      <div className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(246,249,247,0.98))] shadow-[0_18px_44px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_26px_64px_rgba(15,23,42,0.11)]">
+      <div className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(246,249,247,0.98))] shadow-[0_20px_52px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)]">
         <div className="flex h-full flex-col gap-5 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
-          <div className="flex items-start gap-4 sm:gap-5 lg:gap-6">
+          <div className="flex items-start gap-4 sm:gap-5">
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
-              className="block w-[9.75rem] shrink-0 text-left sm:w-[10.5rem] lg:w-[11.25rem]"
+              className="block w-[8.4rem] shrink-0 text-left sm:w-[9rem] lg:w-[10rem]"
               aria-label={`View details for ${name}`}
             >
-              <div className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_16px_36px_rgba(15,23,42,0.10)]">
+              <div className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
                 {hasImage ? (
-                  <img src={imageUrl!} alt={name} className="h-full w-full object-contain object-center p-3 sm:p-4" loading="lazy" />
+                  <img src={imageUrl!} alt={name} className="h-full w-full object-contain object-center p-4 sm:p-4.5 lg:p-5" loading="lazy" />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500">
                     <div className="mb-1 text-3xl">📦</div>
@@ -65,34 +65,32 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               </div>
             </button>
 
-            <div className="min-w-0 flex-1 pt-1 sm:pt-2">
+            <div className="min-w-0 flex-1 pt-2 sm:pt-3">
               <button type="button" onClick={() => setDetailsOpen(true)} className="block min-w-0 text-left">
-                <h3 className="text-[1.25rem] font-semibold leading-[1.14] tracking-tight text-slate-950 sm:text-[1.55rem] lg:text-[1.75rem] xl:text-[1.9rem] [display:-webkit-box] [-webkit-line-clamp:4] [-webkit-box-orient:vertical] overflow-hidden">
-                  {name}
-                </h3>
+                <h3 className="text-[1.05rem] font-semibold leading-[1.16] tracking-tight text-slate-950 sm:text-[1.3rem] lg:text-[1.58rem] xl:text-[1.72rem]">{name}</h3>
               </button>
             </div>
           </div>
 
-          <div className="mt-auto grid grid-cols-1 gap-3 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-3 lg:gap-4">
-            <div className="inline-flex min-h-[54px] items-center justify-center self-start rounded-[18px] bg-white px-5 py-3 text-[1.45rem] font-semibold tracking-tight text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:min-w-[8rem] sm:px-5 lg:min-h-[58px] lg:min-w-[8.5rem] lg:text-[1.58rem]">
+          <div className="grid grid-cols-[6.8rem_minmax(0,1fr)_minmax(0,1fr)] items-stretch gap-3 sm:grid-cols-[7.4rem_minmax(0,1fr)_minmax(0,1fr)] lg:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="inline-flex min-h-[5.5rem] items-center justify-center rounded-[20px] bg-white px-3 py-3 text-[1.05rem] font-semibold tracking-tight text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:min-h-[5.75rem] sm:text-[1.2rem] lg:min-h-[6rem] lg:text-[1.3rem]">
               £{price.toFixed(2)}
             </div>
 
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
-              className="inline-flex min-h-[54px] items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-[13px] font-semibold uppercase tracking-[0.22em] text-slate-500 transition active:scale-[0.99] hover:border-slate-300 hover:text-slate-800 sm:w-full lg:min-h-[56px]"
+              className="inline-flex min-h-[5.5rem] items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 transition hover:border-slate-300 hover:text-slate-800 sm:min-h-[5.75rem] sm:px-4 lg:min-h-[6rem]"
             >
-              View details
+              <span className="text-center leading-5">View details</span>
             </button>
 
             <button
-              className="inline-flex min-h-[54px] items-center justify-center whitespace-nowrap rounded-full border border-emerald-200/90 bg-[linear-gradient(180deg,#f6fbf7_0%,#eef7f0_100%)] px-5 py-3 text-[0.98rem] font-medium text-emerald-800 shadow-sm transition active:scale-[0.99] hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-w-[10.5rem] lg:min-h-[56px] lg:min-w-[11rem]"
+              className="inline-flex min-h-[5.5rem] min-w-0 items-center justify-center rounded-full border border-emerald-200/90 bg-[linear-gradient(180deg,#f4fbf5_0%,#ebf6ee_100%)] px-3 py-3 text-[0.92rem] font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[5.75rem] sm:px-4 sm:text-[0.96rem] lg:min-h-[6rem] lg:text-[1rem]"
               onClick={addToCart}
               disabled={buttonState === "adding"}
             >
-              {buttonLabel()}
+              <span className="truncate">{buttonLabel()}</span>
             </button>
           </div>
         </div>

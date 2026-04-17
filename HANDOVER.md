@@ -1,9 +1,11 @@
-Orduva Ver-0.073 handover
+Orduva Ver-0.075 handover
 
-Rollback storefront layout to Ver-0.070 baseline, then reapply only the approved premium card refinements:
-- safe storefront card layout restored
-- bigger image
-- no card description
-- softer add to order button
-- cleaner title sizing and spacing
-- no risky card geometry changes
+Included in this patch:
+- rebuilt storefront product cards from the last stable storefront baseline
+- fixed the sticky header JSX content class safely
+- larger product image without breaking the card width
+- removed card description
+- softened add to order button
+- corrected action row sizing so buttons fit on desktop and mobile
+- safer title sizing and spacing
+- live version bumped to Ver: 0.075
