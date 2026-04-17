@@ -303,7 +303,7 @@ export default function MenuBrowser({
                                   onClick={() => void addToCart(product.id)}
                                   className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
                                 >
-                                  {state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add to order"}
+                                  {state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add"}
                                 </button>
                               </div>
                             </div>

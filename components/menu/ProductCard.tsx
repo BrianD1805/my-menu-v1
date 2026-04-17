@@ -39,7 +39,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   function buttonLabel() {
     if (buttonState === "adding") return "Adding...";
     if (buttonState === "added") return "Added ✓";
-    return "Add to order";
+    return "Add";
   }
 
   return (
@@ -67,7 +67,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
             <div className="min-w-0">
               <button type="button" onClick={() => setDetailsOpen(true)} className="block min-w-0 text-left">
-                <h3 className="text-[1.15rem] font-semibold leading-[1.18] tracking-tight text-slate-950 sm:text-[1.45rem] lg:text-[1.62rem] xl:text-[1.72rem]">{name}</h3>
+                <h3 className="text-[1.1rem] font-semibold leading-[1.18] tracking-tight text-slate-950 sm:text-[1.32rem] lg:text-[1.4rem] xl:text-[1.48rem]">{name}</h3>
               </button>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     }}
                     className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 lg:px-8"
                   >
-                    {buttonState === "adding" ? "Adding..." : "Add to order"}
+                    {buttonState === "adding" ? "Adding..." : "Add"}
                   </button>
                 </div>
               </div>
