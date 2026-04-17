@@ -31,7 +31,7 @@ export default function CartButton({ tenantSlug, href = "/checkout" }: Props) {
   return (
     <a
       href={href}
-      className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3.5 text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] hover:border-slate-300 hover:bg-slate-50"
+      className="inline-flex h-11 min-w-11 items-center justify-center rounded-2xl border border-emerald-100 bg-white/95 px-3 text-slate-900 shadow-[0_10px_24px_rgba(15,23,42,0.07)] transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-white"
       aria-label={`Open cart with ${badge} item${count === 1 ? "" : "s"}`}
       title="Open cart"
     >
@@ -41,7 +41,7 @@ export default function CartButton({ tenantSlug, href = "/checkout" }: Props) {
           <circle cx="18" cy="20" r="1" />
           <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" />
         </svg>
-        <span className="absolute -right-3 -top-3 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-slate-900 px-1.5 text-[10px] font-bold text-white shadow-sm">
+        <span className="absolute -right-3 -top-3 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white shadow-sm">
           {badge}
         </span>
       </span>

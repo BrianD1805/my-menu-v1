@@ -12,20 +12,11 @@ type Props = {
   tenantSlug: string;
 };
 
-function stripHtml(value: string | null | undefined) {
-  return String(value || "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const hasImage = !!imageUrl;
-  const plainDescription = stripHtml(description);
   const fullDescription = description?.trim() || "<p>A fresh favourite from the menu, ready to add to your order.</p>";
 
   async function addToCart() {
@@ -47,68 +38,59 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   function buttonLabel() {
     if (buttonState === "adding") return "Adding...";
-    if (buttonState === "added") return "1 added ✓";
+    if (buttonState === "added") return "Added ✓";
     return "Add to order";
   }
 
   return (
     <>
-      <div className="h-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-        <div className="flex h-full items-stretch gap-0">
-          <div className="w-24 shrink-0 p-2.5 md:w-24 lg:w-24 xl:w-24">
+      <div className="h-full overflow-hidden rounded-[28px] border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(245,249,246,0.96))] shadow-[0_16px_42px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
+        <div className="flex h-full flex-col">
+          <div className="p-3 pb-0 sm:p-3 md:w-32 md:shrink-0 md:p-3 lg:w-36 xl:w-40">
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
               className="block w-full text-left"
               aria-label={`View details for ${name}`}
             >
-              <div className="aspect-square overflow-hidden rounded-xl bg-gray-100 ring-1 ring-black/5">
+              <div className="aspect-[1.18/1] overflow-hidden rounded-[22px] bg-gray-100 ring-1 ring-black/5 shadow-[0_12px_28px_rgba(15,23,42,0.08)] md:aspect-square">
                 {hasImage ? (
                   <img src={imageUrl!} alt={name} className="h-full w-full object-cover object-center" loading="lazy" />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500">
-                    <div className="mb-1 text-2xl">📦</div>
+                    <div className="mb-1 text-3xl">📦</div>
                     <p className="text-xs font-medium text-gray-600">Image coming soon</p>
                   </div>
                 )}
               </div>
             </button>
-
-            <p className="mt-1.5 text-center text-base font-semibold tracking-tight text-gray-900 md:hidden">£{price.toFixed(2)}</p>
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col justify-between p-3.5 lg:p-3.5">
+          <div className="flex min-w-0 flex-1 flex-col justify-between p-4 pt-3 sm:p-5 sm:pt-4 md:p-4 lg:p-4.5">
             <div>
-              <button type="button" onClick={() => setDetailsOpen(true)} className="text-left">
-                <h3 className="text-base font-semibold leading-tight lg:text-[15px] xl:text-base">{name}</h3>
-              </button>
-              {plainDescription ? (
-                <p
-                  className="mt-1.5 pr-1 text-[13px] leading-5 text-gray-600"
-                  style={{
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }}
+              <div className="flex items-start justify-between gap-3">
+                <button type="button" onClick={() => setDetailsOpen(true)} className="min-w-0 flex-1 text-left">
+                  <h3 className="text-[1.18rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[1.24rem] lg:text-[1.18rem] xl:text-[1.24rem]">{name}</h3>
+                </button>
+                <p className="shrink-0 text-[1.06rem] font-semibold tracking-tight text-slate-900 sm:text-[1.14rem] md:hidden">£{price.toFixed(2)}</p>
+              </div>
+
+              <div className="mt-3 flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDetailsOpen(true)}
+                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 transition hover:border-slate-300 hover:text-slate-800"
                 >
-                  {plainDescription}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => setDetailsOpen(true)}
-                className="mt-1.5 text-xs font-medium text-gray-500 underline decoration-gray-300 underline-offset-4 transition hover:text-gray-800"
-              >
-                View details
-              </button>
+                  View details
+                </button>
+              </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-end gap-3 md:justify-between">
-              <p className="hidden text-lg font-semibold tracking-tight text-gray-900 md:block">£{price.toFixed(2)}</p>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <p className="hidden text-[1.2rem] font-semibold tracking-tight text-slate-900 md:block">£{price.toFixed(2)}</p>
 
               <button
-                className="ml-auto inline-flex min-h-10 min-w-[7.75rem] items-center justify-center whitespace-nowrap rounded-xl bg-gray-700/85 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-80"
+                className="ml-auto inline-flex min-h-11 min-w-[7.2rem] items-center justify-center whitespace-nowrap rounded-2xl border border-emerald-200/90 bg-[linear-gradient(180deg,#eef9f0_0%,#e4f4e6_100%)] px-4 py-2.5 text-sm font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-80"
                 onClick={addToCart}
                 disabled={buttonState === "adding"}
               >
@@ -193,7 +175,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       addToCart();
                       setDetailsOpen(false);
                     }}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl bg-gray-700/85 px-7 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-80 lg:px-8"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-80 lg:px-8"
                     disabled={buttonState === "adding"}
                   >
                     {buttonLabel()}

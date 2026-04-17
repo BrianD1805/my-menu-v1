@@ -104,45 +104,46 @@ export default function MenuBrowser({
   }
 
   return (
-    <div className="space-y-5">
-      <div className="sticky top-3 z-30">
-        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.10)]">
-          <div className="h-1 bg-gradient-to-r from-slate-900 via-emerald-500 to-slate-700" />
-          <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4 lg:px-5">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white text-center shadow-sm">
-                <span className="text-[10px] font-bold leading-tight tracking-wide text-slate-600">{version.replace("Ver: ", "V ")}</span>
+    <div className="space-y-4 sm:space-y-5">
+      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6">
+        <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,#f8fcf8_0%,#eff5f0_58%,#e8f0e9_100%)] shadow-[0_18px_50px_rgba(15,23,42,0.10)]">
+          <div className="mx-auto max-w-7xl px-4 py-3.5 sm:px-5 sm:py-5 lg:px-6 lg:py-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-emerald-100 bg-white/95 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:h-12 sm:w-12 sm:rounded-[20px]">
+                  <span className="text-[10px] font-bold leading-tight tracking-[0.16em] text-slate-600">{version.replace("Ver: ", "V ")}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400 sm:text-[11px] sm:tracking-[0.28em]">Order online</p>
+                  <h1 className="truncate text-[1.42rem] font-semibold tracking-tight text-slate-900 sm:text-[1.8rem] lg:text-[2.05rem]">{tenantName}</h1>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{tenantName}</h1>
-                <p className="text-xs text-slate-500">Online ordering</p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSearchOpen(true)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] hover:border-slate-300 hover:bg-slate-50"
-                aria-label="Search menu"
-                title="Search menu"
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m20 20-3.5-3.5" />
-                </svg>
-              </button>
-              <CartButton tenantSlug={tenantSlug} />
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-100 bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.07)] transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-white sm:h-11 sm:w-11"
+                  aria-label="Search menu"
+                  title="Search menu"
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" />
+                  </svg>
+                </button>
+                <CartButton tenantSlug={tenantSlug} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <section className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-4 py-4 shadow-sm sm:px-5 sm:py-5 lg:px-6 lg:py-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Welcome</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[2rem]">Browse the menu</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
-          Tap the search icon to find something quickly, or scroll through the categories below.
+      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Welcome</p>
+        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]">Freshly made, ready to order</h2>
+        <p className="mt-3 max-w-3xl text-[14px] leading-6 text-slate-600 sm:text-base sm:leading-7">
+          Explore the menu below, or use the search icon in the header to find something quickly.
         </p>
       </section>
 
@@ -151,14 +152,14 @@ export default function MenuBrowser({
         if (!categoryProducts.length) return null;
 
         return (
-          <section key={category.id} className="mb-10">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-2xl font-semibold text-slate-900">{category.name}</h2>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold tracking-wide text-slate-600">
+          <section key={category.id} className="mb-8 sm:mb-10">
+            <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
+              <h2 className="text-[1.38rem] font-semibold tracking-tight text-slate-900 sm:text-[1.95rem]">{category.name}</h2>
+              <span className="rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]">
                 {categoryProducts.length} {categoryProducts.length === 1 ? "item" : "items"}
               </span>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
               {categoryProducts.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -300,7 +301,7 @@ export default function MenuBrowser({
                                 <button
                                   type="button"
                                   onClick={() => void addToCart(product.id)}
-                                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
                                 >
                                   {state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add to order"}
                                 </button>

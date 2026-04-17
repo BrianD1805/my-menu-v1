@@ -8,8 +8,9 @@ html {
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background: #fafafa;
+  background: linear-gradient(180deg, #eef4ef 0%, #f7f8f7 24%, #ffffff 100%);
   color: #111827;
+  overflow-x: clip;
 }
 
 

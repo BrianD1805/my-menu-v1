@@ -1,8 +1,12 @@
-Orduva Ver-0.068 handover
+Orduva Ver-0.070 handover
 
 Included in this patch:
-- polished the admin mobile shell/header layout
-- action buttons now collapse into a neat 2-column grid on mobile
-- admin navigation now collapses into a clean 2-column mobile grid
-- title, tenant context, and spacing are more compact on smaller screens
-- visible version bumped to Ver: 0.068
+- matching mobile storefront premium pass
+- mobile storefront header tightened and rebalanced
+- mobile hero/welcome section refined
+- mobile product cards rebuilt into a more premium stacked layout
+- larger product image on mobile
+- description removed from mobile cards
+- softer add-to-order tone on mobile to match desktop
+- spacing and category headers refined for smaller screens
+- live version bumped to Ver: 0.070
