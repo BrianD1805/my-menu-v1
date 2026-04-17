@@ -52,7 +52,7 @@ export default async function AdminOrdersPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <a href="/admin/products" className="rounded-xl border px-3 py-2 text-sm">Product images</a>
+                  <a href="/admin/products" className="rounded-xl border px-3 py-2 text-sm">Products</a>
                   <WhatsAppButton url={whatsappUrl} />
                   <OrderStatusForm orderId={order.id} currentStatus={order.status} />
                 </div>

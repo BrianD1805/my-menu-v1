@@ -1,34 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-
-async function getTenantId(tenantSlug: string) {
-  const { data: tenant, error } = await db
-    .from("tenants")
-    .select("id")
-    .eq("slug", tenantSlug)
-    .single();
-
-  if (error || !tenant) {
-    return { error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }) };
-  }
-
-  return { tenantId: tenant.id as string };
-}
-
-async function getCategoryForTenant(categoryId: string, tenantId: string) {
-  const { data: category, error } = await db
-    .from("categories")
-    .select("id")
-    .eq("id", categoryId)
-    .eq("tenant_id", tenantId)
-    .single();
-
-  if (error || !category) {
-    return { error: NextResponse.json({ error: "Category not found" }, { status: 404 }) };
-  }
-
-  return { category };
-}
+import { getTenantCategoryForAdmin, resolveAdminTenant } from "@/lib/admin-tenant";
 
 function normalizeName(value: unknown) {
   return String(value || "").trim();
@@ -43,21 +15,20 @@ function normalizeSortOrder(value: unknown) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const tenantSlug = String(body?.tenantSlug || "").trim();
     const name = normalizeName(body?.name);
     const sortOrder = normalizeSortOrder(body?.sortOrder);
 
-    if (!tenantSlug || !name) {
-      return NextResponse.json({ error: "Missing tenantSlug or name" }, { status: 400 });
+    if (!name) {
+      return NextResponse.json({ error: "Missing name" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
-    const tenantId = tenantLookup.tenantId!;
+    const tenant = tenantLookup.tenant!;
 
     const { data: category, error } = await db
       .from("categories")
-      .insert({ tenant_id: tenantId, name, sort_order: sortOrder })
+      .insert({ tenant_id: tenant.id, name, sort_order: sortOrder })
       .select("id, name, sort_order")
       .single();
 
@@ -75,27 +46,26 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const tenantSlug = String(body?.tenantSlug || "").trim();
     const categoryId = String(body?.categoryId || "").trim();
     const name = normalizeName(body?.name);
     const sortOrder = normalizeSortOrder(body?.sortOrder);
 
-    if (!tenantSlug || !categoryId || !name) {
-      return NextResponse.json({ error: "Missing tenantSlug, categoryId, or name" }, { status: 400 });
+    if (!categoryId || !name) {
+      return NextResponse.json({ error: "Missing categoryId or name" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
-    const tenantId = tenantLookup.tenantId!;
+    const tenant = tenantLookup.tenant!;
 
-    const categoryLookup = await getCategoryForTenant(categoryId, tenantId);
+    const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
     if (categoryLookup.error) return categoryLookup.error;
 
     const { data: category, error } = await db
       .from("categories")
       .update({ name, sort_order: sortOrder })
       .eq("id", categoryId)
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", tenant.id)
       .select("id, name, sort_order")
       .single();
 
@@ -113,24 +83,23 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const body = await req.json();
-    const tenantSlug = String(body?.tenantSlug || "").trim();
     const categoryId = String(body?.categoryId || "").trim();
 
-    if (!tenantSlug || !categoryId) {
-      return NextResponse.json({ error: "Missing tenantSlug or categoryId" }, { status: 400 });
+    if (!categoryId) {
+      return NextResponse.json({ error: "Missing categoryId" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
-    const tenantId = tenantLookup.tenantId!;
+    const tenant = tenantLookup.tenant!;
 
-    const categoryLookup = await getCategoryForTenant(categoryId, tenantId);
+    const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
     if (categoryLookup.error) return categoryLookup.error;
 
     const { count, error: countError } = await db
       .from("products")
       .select("id", { count: "exact", head: true })
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", tenant.id)
       .eq("category_id", categoryId);
 
     if (countError) {
@@ -148,7 +117,7 @@ export async function DELETE(req: Request) {
       .from("categories")
       .delete()
       .eq("id", categoryId)
-      .eq("tenant_id", tenantId);
+      .eq("tenant_id", tenant.id);
 
     if (error) {
       return NextResponse.json({ error: "Failed to delete category" }, { status: 500 });

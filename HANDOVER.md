@@ -1,6 +1,10 @@
-Orduva Ver-0.056 handover
+Orduva Ver-0.058 handover
 
-Fixes:
-- removed stray extra JSX closing fragment in components/menu/MenuBrowser.tsx
-- resolves Netlify build error on line 325
-- bumped live version to Ver: 0.056
+Included in this patch:
+- admin tenant hardening for Phase 1 foundation
+- admin product CRUD now resolves tenant server-side from request host
+- admin category CRUD now resolves tenant server-side from request host
+- admin image update/upload routes now resolve tenant server-side from request host
+- product and category references are checked against the current tenant only
+- admin copy cleaned up to reflect tenant-scoped behaviour
+- visible version bumped to Ver: 0.058

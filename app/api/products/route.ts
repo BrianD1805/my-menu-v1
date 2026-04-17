@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getTenantProductForAdmin, resolveAdminTenant } from "@/lib/admin-tenant";
 
 const PRODUCT_IMAGE_BUCKET = "product-images";
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -94,7 +95,7 @@ export async function GET(req: Request) {
   const { data: products, error } = await db
     .from("products")
     .select("id, name, description, image_url, price, is_active, category_id")
-    .eq("tenant_id", tenantLookup.tenantId)
+    .eq("tenant_id", tenant.id)
     .eq("is_active", true)
     .order("name", { ascending: true });
 
@@ -108,19 +109,19 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const tenantSlug = body?.tenantSlug as string | undefined;
     const productId = body?.productId as string | undefined;
     const imageUrl = (body?.imageUrl as string | null | undefined) ?? null;
     const normalizedImageUrl = imageUrl && imageUrl.trim() ? imageUrl.trim() : null;
 
-    if (!tenantSlug || !productId) {
-      return NextResponse.json({ error: "Missing tenantSlug or productId" }, { status: 400 });
+    if (!productId) {
+      return NextResponse.json({ error: "Missing productId" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
+    const tenant = tenantLookup.tenant!;
 
-    const productLookup = await getProductForTenant(productId, tenantLookup.tenantId!);
+    const productLookup = await getTenantProductForAdmin(productId, tenant.id);
     if (productLookup.error) return productLookup.error;
 
     const previousImageUrl = productLookup.product?.image_url || null;
@@ -129,7 +130,7 @@ export async function PATCH(req: Request) {
       .from("products")
       .update({ image_url: normalizedImageUrl })
       .eq("id", productId)
-      .eq("tenant_id", tenantLookup.tenantId)
+      .eq("tenant_id", tenant.id)
       .select("id, image_url")
       .single();
 
@@ -151,12 +152,11 @@ export async function PATCH(req: Request) {
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const tenantSlug = String(formData.get("tenantSlug") || "").trim();
     const productId = String(formData.get("productId") || "").trim();
     const file = formData.get("file");
 
-    if (!tenantSlug || !productId || !(file instanceof File)) {
-      return NextResponse.json({ error: "Missing tenantSlug, productId, or file" }, { status: 400 });
+    if (!productId || !(file instanceof File)) {
+      return NextResponse.json({ error: "Missing productId or file" }, { status: 400 });
     }
 
     if (!file.type.startsWith("image/")) {
@@ -167,10 +167,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Image must be 5MB or smaller" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
+    const tenant = tenantLookup.tenant!;
+    const tenantSlug = tenant.slug;
 
-    const productLookup = await getProductForTenant(productId, tenantLookup.tenantId!);
+    const productLookup = await getTenantProductForAdmin(productId, tenant.id);
     if (productLookup.error) return productLookup.error;
 
     await ensureBucket();
@@ -200,7 +202,7 @@ export async function POST(req: Request) {
       .from("products")
       .update({ image_url: publicUrl })
       .eq("id", productId)
-      .eq("tenant_id", tenantLookup.tenantId)
+      .eq("tenant_id", tenant.id)
       .select("id, image_url")
       .single();
 

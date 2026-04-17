@@ -32,7 +32,7 @@ export default async function AdminProductsPage() {
           <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="mt-1 text-gray-600">
-            Manage your live product list for {tenant.name}. Keep the page clean, then use the popup tools to search, filter, add, and edit products.
+            Manage products for {tenant.name}. Everything on this page is scoped to the current tenant, so products, categories, and edits stay inside this tenant admin only.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default async function AdminProductsPage() {
       </div>
 
       <div className="mb-6 rounded-2xl border border-green-100 bg-green-50 p-4 text-sm text-green-900">
-        This page keeps the product list clean. Use the popup tools for search, filtering, image handling, and full product editing.
+        This product list is tenant-specific. Use the popup tools to search, add, edit, and manage images for this tenant only.
       </div>
 
       <ProductManager tenantSlug={slug} products={productRows} categories={categories || []} />

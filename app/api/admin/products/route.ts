@@ -1,34 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-
-async function getTenantId(tenantSlug: string) {
-  const { data: tenant, error } = await db
-    .from("tenants")
-    .select("id")
-    .eq("slug", tenantSlug)
-    .single();
-
-  if (error || !tenant) {
-    return { error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }) };
-  }
-
-  return { tenantId: tenant.id as string };
-}
-
-async function getProductForTenant(productId: string, tenantId: string) {
-  const { data: product, error } = await db
-    .from("products")
-    .select("id")
-    .eq("id", productId)
-    .eq("tenant_id", tenantId)
-    .single();
-
-  if (error || !product) {
-    return { error: NextResponse.json({ error: "Product not found" }, { status: 404 }) };
-  }
-
-  return { product };
-}
+import { getTenantCategoryForAdmin, getTenantProductForAdmin, resolveAdminTenant } from "@/lib/admin-tenant";
 
 function normalizeName(value: unknown) {
   return String(value || "").trim();
@@ -61,7 +33,6 @@ function normalizeActive(value: unknown) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const tenantSlug = String(body?.tenantSlug || "").trim();
     const name = normalizeName(body?.name);
     const description = normalizeDescription(body?.description);
     const categoryId = normalizeCategory(body?.categoryId);
@@ -69,29 +40,21 @@ export async function POST(req: Request) {
     const isActive = normalizeActive(body?.isActive);
     const imageUrl = normalizeImageUrl(body?.imageUrl);
 
-    if (!tenantSlug || !name || !categoryId || price === null) {
-      return NextResponse.json({ error: "Missing tenantSlug, name, categoryId, or valid price" }, { status: 400 });
+    if (!name || !categoryId || price === null) {
+      return NextResponse.json({ error: "Missing name, categoryId, or valid price" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
-    const tenantId = tenantLookup.tenantId!;
+    const tenant = tenantLookup.tenant!;
 
-    const { data: category, error: categoryError } = await db
-      .from("categories")
-      .select("id")
-      .eq("id", categoryId)
-      .eq("tenant_id", tenantId)
-      .single();
-
-    if (categoryError || !category) {
-      return NextResponse.json({ error: "Category not found for tenant" }, { status: 400 });
-    }
+    const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
+    if (categoryLookup.error) return categoryLookup.error;
 
     const { data: product, error } = await db
       .from("products")
       .insert({
-        tenant_id: tenantId,
+        tenant_id: tenant.id,
         category_id: categoryId,
         name,
         description,
@@ -116,7 +79,6 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const tenantSlug = String(body?.tenantSlug || "").trim();
     const productId = String(body?.productId || "").trim();
     const name = normalizeName(body?.name);
     const description = normalizeDescription(body?.description);
@@ -125,27 +87,19 @@ export async function PATCH(req: Request) {
     const isActive = normalizeActive(body?.isActive);
     const imageUrl = normalizeImageUrl(body?.imageUrl);
 
-    if (!tenantSlug || !productId || !name || !categoryId || price === null) {
-      return NextResponse.json({ error: "Missing tenantSlug, productId, name, categoryId, or valid price" }, { status: 400 });
+    if (!productId || !name || !categoryId || price === null) {
+      return NextResponse.json({ error: "Missing productId, name, categoryId, or valid price" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
-    const tenantId = tenantLookup.tenantId!;
+    const tenant = tenantLookup.tenant!;
 
-    const productLookup = await getProductForTenant(productId, tenantId);
+    const productLookup = await getTenantProductForAdmin(productId, tenant.id);
     if (productLookup.error) return productLookup.error;
 
-    const { data: category, error: categoryError } = await db
-      .from("categories")
-      .select("id")
-      .eq("id", categoryId)
-      .eq("tenant_id", tenantId)
-      .single();
-
-    if (categoryError || !category) {
-      return NextResponse.json({ error: "Category not found for tenant" }, { status: 400 });
-    }
+    const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
+    if (categoryLookup.error) return categoryLookup.error;
 
     const { data: product, error } = await db
       .from("products")
@@ -158,7 +112,7 @@ export async function PATCH(req: Request) {
         is_active: isActive,
       })
       .eq("id", productId)
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", tenant.id)
       .select("id, name, description, image_url, price, is_active, category_id")
       .single();
 
@@ -176,25 +130,24 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const body = await req.json();
-    const tenantSlug = String(body?.tenantSlug || "").trim();
     const productId = String(body?.productId || "").trim();
 
-    if (!tenantSlug || !productId) {
-      return NextResponse.json({ error: "Missing tenantSlug or productId" }, { status: 400 });
+    if (!productId) {
+      return NextResponse.json({ error: "Missing productId" }, { status: 400 });
     }
 
-    const tenantLookup = await getTenantId(tenantSlug);
+    const tenantLookup = await resolveAdminTenant(req);
     if (tenantLookup.error) return tenantLookup.error;
-    const tenantId = tenantLookup.tenantId!;
+    const tenant = tenantLookup.tenant!;
 
-    const productLookup = await getProductForTenant(productId, tenantId);
+    const productLookup = await getTenantProductForAdmin(productId, tenant.id);
     if (productLookup.error) return productLookup.error;
 
     const { error } = await db
       .from("products")
       .delete()
       .eq("id", productId)
-      .eq("tenant_id", tenantId);
+      .eq("tenant_id", tenant.id);
 
     if (error) {
       return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
