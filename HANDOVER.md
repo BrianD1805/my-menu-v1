@@ -1,13 +1,15 @@
-Orduva Ver-0.060 handover
+Orduva Ver-0.061 handover
 
 Included in this patch:
-- admin tenant hardening for Phase 1 foundation
-- admin product CRUD now resolves tenant server-side from request host
-- admin category CRUD now resolves tenant server-side from request host
-- admin image update/upload routes now resolve tenant server-side from request host
-- product and category references are checked against the current tenant only
-- admin copy cleaned up to reflect tenant-scoped behaviour
-- visible version bumped to Ver: 0.060
+- finished the remaining Phase 1 admin/API tenant audit pass
+- moved admin product image update/upload into a protected admin route
+- added /api/admin/products/image for tenant-scoped product image changes
+- public /api/products is now read-only for storefront product loading
+- removed remaining client-side tenantSlug assumptions from admin product/category CRUD calls
+- admin product and category pages now rely on server-side tenant resolution only
+- live version bumped to Ver: 0.061
 
-- admin orders hardening added
-- public order create route now validates request tenant slug against the request host
+Why this matters:
+- image upload and image URL changes are no longer exposed on a public API path
+- admin CRUD no longer sends tenantSlug from the browser for trust decisions
+- this closes a major remaining Phase 1 tenant-safety gap before Phase 2 login

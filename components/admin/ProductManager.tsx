@@ -109,11 +109,9 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (value: 
 }
 
 export default function ProductManager({
-  tenantSlug,
   products: initialProducts,
   categories,
 }: {
-  tenantSlug: string;
   products: ProductRow[];
   categories: CategoryOption[];
 }) {
@@ -199,7 +197,6 @@ export default function ProductManager({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenantSlug,
           name: newDraft.name,
           description: newDraft.description,
           price: newDraft.price,
@@ -245,7 +242,6 @@ export default function ProductManager({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenantSlug,
           productId: editingId,
           name: editingDraft.name,
           description: editingDraft.description,
@@ -288,7 +284,7 @@ export default function ProductManager({
       const response = await fetch("/api/admin/products", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantSlug, productId }),
+        body: JSON.stringify({ productId }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to delete product");
@@ -311,11 +307,10 @@ export default function ProductManager({
 
     try {
       const formData = new FormData();
-      formData.append("tenantSlug", tenantSlug);
       formData.append("productId", editingId);
       formData.append("file", file);
 
-      const response = await fetch("/api/products", {
+      const response = await fetch("/api/admin/products/image", {
         method: "POST",
         body: formData,
       });

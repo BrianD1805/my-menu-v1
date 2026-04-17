@@ -19,10 +19,8 @@ function emptyDraft(nextSortOrder = 0): DraftState {
 }
 
 export default function CategoryManager({
-  tenantSlug,
   categories: initialCategories,
 }: {
-  tenantSlug: string;
   categories: CategoryRow[];
 }) {
   const [categories, setCategories] = useState<CategoryRow[]>(initialCategories);
@@ -60,7 +58,6 @@ export default function CategoryManager({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenantSlug,
           name: newDraft.name,
           sortOrder: newDraft.sortOrder,
         }),
@@ -86,7 +83,6 @@ export default function CategoryManager({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tenantSlug,
           categoryId: editingId,
           name: editingDraft.name,
           sortOrder: editingDraft.sortOrder,
@@ -117,7 +113,7 @@ export default function CategoryManager({
       const response = await fetch("/api/admin/categories", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantSlug, categoryId: category.id }),
+        body: JSON.stringify({ categoryId: category.id }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to delete category");

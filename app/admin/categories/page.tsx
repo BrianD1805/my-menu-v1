@@ -51,7 +51,7 @@ export default async function AdminCategoriesPage() {
         You can add and reorder categories here. Deleting a category is blocked if products still belong to it.
       </div>
 
-      <CategoryManager tenantSlug={slug} categories={categoryRows} />
+      <CategoryManager categories={categoryRows} />
     </main>
   );
 }
