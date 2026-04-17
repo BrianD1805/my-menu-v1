@@ -322,7 +322,6 @@ export default function MenuBrowser({
           </div>
         </div>
       ) : null}
-      ) : null}
     </div>
   );
 }

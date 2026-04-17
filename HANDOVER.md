@@ -1,8 +1,6 @@
-Orduva Ver-0.055
+Orduva Ver-0.056 handover
 
-- search popup resized and restyled to match other storefront popups
-- improved popup spacing and padding
-- cart count added inside search popup
-- modal background scroll locked while popup is open
-- popup inner scroll now contains overscroll at the bottom
-- version bumped to Ver: 0.055
+Fixes:
+- removed stray extra JSX closing fragment in components/menu/MenuBrowser.tsx
+- resolves Netlify build error on line 325
+- bumped live version to Ver: 0.056
