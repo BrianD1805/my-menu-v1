@@ -1,10 +1,5 @@
-Orduva Ver-0.071 handover
+Orduva Ver-0.072 handover
 
 Included in this patch:
-- premium storefront product card repositioning on desktop and mobile
-- larger product image
-- stronger heading hierarchy
-- card description removed from main card
-- softer add-to-order treatment
-- cleaner action row balance
-- storefront header enlarged slightly and top coverage improved
+- fixed MenuBrowser JSX syntax error caused by unescaped Tailwind content class in the sticky storefront header
+- version bumped to Ver: 0.072
