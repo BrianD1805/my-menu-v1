@@ -95,7 +95,7 @@ export async function GET(req: Request) {
   const { data: products, error } = await db
     .from("products")
     .select("id, name, description, image_url, price, is_active, category_id")
-    .eq("tenant_id", tenant.id)
+    .eq("tenant_id", tenantLookup.tenantId)
     .eq("is_active", true)
     .order("name", { ascending: true });
 
