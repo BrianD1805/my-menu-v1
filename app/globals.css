@@ -11,3 +11,9 @@ body {
   background: #fafafa;
   color: #111827;
 }
+
+
+.modal-scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}

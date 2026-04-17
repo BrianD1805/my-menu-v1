@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
-import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
+import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 
 type Category = {
   id: string;
@@ -28,10 +29,14 @@ function stripHtml(value: string | null | undefined) {
 
 export default function MenuBrowser({
   tenantSlug,
+  tenantName,
+  version,
   categories,
   products,
 }: {
   tenantSlug: string;
+  tenantName: string;
+  version: string;
   categories: Category[];
   products: Product[];
 }) {
@@ -39,6 +44,7 @@ export default function MenuBrowser({
   const [query, setQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
   const [buttonStateById, setButtonStateById] = useState<Record<string, "idle" | "adding" | "added">>({});
+  const [cartCount, setCartCount] = useState(0);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -51,6 +57,32 @@ export default function MenuBrowser({
       return haystack.includes(normalizedQuery);
     });
   }, [products, categories, query, activeCategoryId]);
+
+  useEffect(() => {
+    const getCount = (items: StoredCartItem[]) => items.reduce((total, item) => total + Math.max(0, item.quantity || 0), 0);
+    const update = (items: StoredCartItem[]) => setCartCount(getCount(items));
+
+    update(readCart<StoredCartItem>(tenantSlug));
+    return subscribeToCartUpdates<StoredCartItem>(tenantSlug, update);
+  }, [tenantSlug]);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyTouchAction = document.body.style.touchAction;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+
+    return () => {
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.touchAction = previousBodyTouchAction;
+    };
+  }, [searchOpen]);
 
   async function addToCart(productId: string) {
     if (buttonStateById[productId] === "adding") return;
@@ -72,26 +104,46 @@ export default function MenuBrowser({
   }
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-[28px] border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5 lg:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Browse the menu</p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Freshly prepared and ready to order</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Explore the menu by category, or use the search button when you want to find something quickly.
-            </p>
-          </div>
+    <div className="space-y-5">
+      <div className="sticky top-3 z-30">
+        <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/88 shadow-[0_18px_60px_rgba(15,23,42,0.10)] backdrop-blur-xl">
+          <div className="h-1 bg-gradient-to-r from-slate-900 via-emerald-500 to-slate-700" />
+          <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4 lg:px-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white text-center shadow-sm">
+                <span className="text-[10px] font-bold leading-tight tracking-wide text-slate-600">{version.replace("Ver: ", "V ")}</span>
+              </div>
+              <div className="min-w-0">
+                <h1 className="truncate text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{tenantName}</h1>
+                <p className="text-xs text-slate-500">Online ordering</p>
+              </div>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-          >
-            <span className="text-base">⌕</span>
-            Search menu
-          </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] hover:border-slate-300 hover:bg-slate-50"
+                aria-label="Search menu"
+                title="Search menu"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+              </button>
+              <CartButton tenantSlug={tenantSlug} />
+            </div>
+          </div>
         </div>
+      </div>
+
+      <section className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-4 py-4 shadow-sm sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Welcome</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[2rem]">Browse the menu</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
+          Tap the search icon to find something quickly, or scroll through the categories below.
+        </p>
       </section>
 
       {categories.map((category) => {
@@ -124,28 +176,41 @@ export default function MenuBrowser({
       })}
 
       {searchOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px] overscroll-none" onClick={() => setSearchOpen(false)}>
           <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
-            <div className="my-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-3rem)]">
-              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/70 px-5 pb-5 pt-5 sm:px-6 lg:px-8">
+            <div
+              className="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Search menu</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Find something quickly</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Type a product name, keyword, or choose a category. Results appear here without cluttering the page.</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">Find something quickly</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Search by product name, keyword, or narrow the results to a category.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setSearchOpen(false)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:text-slate-900"
-                    aria-label="Close search"
-                  >
-                    ×
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="9" cy="20" r="1" />
+                        <circle cx="18" cy="20" r="1" />
+                        <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" />
+                      </svg>
+                      <span>{cartCount}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSearchOpen(false)}
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                      aria-label="Close search"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 md:grid-cols-[1fr_220px]">
+                <div className="mt-5 grid gap-3 xl:grid-cols-[1fr_260px]">
                   <div className="flex min-h-[54px] items-center rounded-2xl border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-emerald-400 focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.10)]">
                     <span className="mr-3 text-lg text-slate-400">⌕</span>
                     <input
@@ -182,13 +247,16 @@ export default function MenuBrowser({
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8 xl:py-7">
                 <div className="mb-4 flex items-center justify-between gap-3 text-sm text-slate-600">
                   <p>{filteredProducts.length} {filteredProducts.length === 1 ? "result" : "results"}</p>
                   {(query.trim() || activeCategoryId !== "all") ? (
                     <button
                       type="button"
-                      onClick={() => { setQuery(""); setActiveCategoryId("all"); }}
+                      onClick={() => {
+                        setQuery("");
+                        setActiveCategoryId("all");
+                      }}
                       className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 px-4 py-2.5 font-medium text-slate-700 transition hover:bg-slate-50"
                     >
                       Clear search
@@ -221,13 +289,20 @@ export default function MenuBrowser({
                                 {stripHtml(product.description).slice(0, 140) || "Freshly prepared and ready to order."}
                               </p>
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                                <p className="text-sm font-semibold text-slate-900">£{Number(product.price).toFixed(2)}</p>
+                                <div className="flex items-center gap-3">
+                                  <p className="text-sm font-semibold text-slate-900">£{Number(product.price).toFixed(2)}</p>
+                                  {state === "added" ? (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                                      In cart: {cartCount}
+                                    </span>
+                                  ) : null}
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() => void addToCart(product.id)}
                                   className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
                                 >
-                                  {state === "adding" ? "Adding..." : state === "added" ? "1 added ✓" : "Add to order"}
+                                  {state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add to order"}
                                 </button>
                               </div>
                             </div>
@@ -246,6 +321,7 @@ export default function MenuBrowser({
             </div>
           </div>
         </div>
+      ) : null}
       ) : null}
     </div>
   );
