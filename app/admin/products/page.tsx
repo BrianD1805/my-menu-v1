@@ -37,6 +37,9 @@ export default async function AdminProductsPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
+          <a href="/admin" className="rounded-xl border px-5 py-3">
+            Admin home
+          </a>
           <a href="/admin/orders" className="rounded-xl border px-5 py-3">
             Admin orders
           </a>

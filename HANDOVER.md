@@ -1,10 +1,10 @@
-Orduva Ver-0.065 handover
+Orduva Ver-0.066 handover
 
 Included in this patch:
-- polished the owner login screen UI
-- made First owner setup much more obvious
-- added a clear split between owner sign-in and first owner setup
-- added session status check on /admin/login
-- if already signed in, login page now offers Continue to admin or Sign out
-- improved success/error/status messages
-- bumped live version to Ver: 0.065
+- added a premium admin welcome page at /admin
+- login and first-owner setup now redirect to /admin instead of /admin/orders
+- removed repeated Products / Categories navigation buttons from each order card
+- kept orders page focused on order actions only
+- added top-level admin navigation from the orders page header
+- added admin home links on products and categories pages
+- live version bumped to Ver: 0.066

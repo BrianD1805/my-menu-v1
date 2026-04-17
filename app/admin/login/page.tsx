@@ -83,7 +83,7 @@ export default function AdminLoginPage() {
       if (!response.ok) throw new Error(payload.error || "Login failed");
       setMessageTone("success");
       setMessage("Login successful. Opening your admin area...");
-      window.location.href = "/admin/orders";
+      window.location.href = "/admin";
     } catch (error) {
       setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Login failed");
@@ -107,7 +107,7 @@ export default function AdminLoginPage() {
       if (!response.ok) throw new Error(payload.error || "Bootstrap failed");
       setMessageTone("success");
       setMessage("First owner created successfully. Opening your admin area...");
-      window.location.href = "/admin/orders";
+      window.location.href = "/admin";
     } catch (error) {
       setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Bootstrap failed");
@@ -203,7 +203,7 @@ export default function AdminLoginPage() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <a
-                  href="/admin/orders"
+                  href="/admin"
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                 >
                   Open admin

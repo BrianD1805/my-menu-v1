@@ -23,13 +23,18 @@ export default async function AdminOrdersPage() {
       : { data: [] };
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl p-6">
+    <main className="mx-auto min-h-screen max-w-6xl p-6">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="mb-2 text-3xl font-bold">Admin Orders</h1>
           <p className="text-gray-600">Signed in as {user.full_name || user.email}. Showing orders for {tenant.name} only.</p>
         </div>
-        <LogoutButton className="rounded-xl border px-4 py-3 text-sm font-medium" />
+        <div className="flex flex-wrap gap-3">
+          <a href="/admin" className="rounded-2xl border px-4 py-3 text-sm font-medium">Admin home</a>
+          <a href="/admin/products" className="rounded-2xl border px-4 py-3 text-sm font-medium">Products</a>
+          <a href="/admin/categories" className="rounded-2xl border px-4 py-3 text-sm font-medium">Categories</a>
+          <LogoutButton className="rounded-2xl border px-4 py-3 text-sm font-medium" />
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -57,8 +62,6 @@ export default async function AdminOrdersPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <a href="/admin/products" className="rounded-xl border px-3 py-2 text-sm">Products</a>
-                  <a href="/admin/categories" className="rounded-xl border px-3 py-2 text-sm">Categories</a>
                   <WhatsAppButton url={whatsappUrl} />
                   <OrderStatusForm orderId={order.id} currentStatus={order.status} />
                 </div>
