@@ -106,7 +106,7 @@ export default function MenuBrowser({
   return (
     <div className="space-y-5">
       <div className="sticky top-3 z-30">
-        <div className="overflow-hidden rounded-[28px] border border-white/70 bg-white/88 shadow-[0_18px_60px_rgba(15,23,42,0.10)] backdrop-blur-xl">
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.10)]">
           <div className="h-1 bg-gradient-to-r from-slate-900 via-emerald-500 to-slate-700" />
           <div className="flex items-center justify-between gap-3 px-3 py-3 sm:px-4 lg:px-5">
             <div className="flex min-w-0 items-center gap-3">
@@ -177,9 +177,9 @@ export default function MenuBrowser({
 
       {searchOpen ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px] overscroll-none" onClick={() => setSearchOpen(false)}>
-          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
+          <div className="flex min-h-dvh items-center justify-center px-4 py-6 sm:px-5 sm:py-7 lg:px-6 lg:py-8 xl:px-8 xl:py-10">
             <div
-              className="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)]"
+              className="flex max-h-[calc(100dvh-3.25rem)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-h-[calc(100dvh-4rem)] sm:rounded-[28px] lg:max-h-[calc(100dvh-5rem)]"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
@@ -247,7 +247,7 @@ export default function MenuBrowser({
                 </div>
               </div>
 
-              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8 xl:py-7">
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4 sm:px-6 sm:pb-7 sm:pt-5 lg:px-7 lg:pb-8 lg:pt-6 xl:px-8 xl:pb-10 xl:pt-7">
                 <div className="mb-4 flex items-center justify-between gap-3 text-sm text-slate-600">
                   <p>{filteredProducts.length} {filteredProducts.length === 1 ? "result" : "results"}</p>
                   {(query.trim() || activeCategoryId !== "all") ? (
