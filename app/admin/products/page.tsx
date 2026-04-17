@@ -32,7 +32,7 @@ export default async function AdminProductsPage() {
           <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="mt-1 text-gray-600">
-            Manage products for {tenant.name}. Everything on this page is scoped to the current tenant, so products, categories, and edits stay inside this tenant admin only.
+            Manage products for {tenant.name}. Products, categories, images, and edits are all tied to this tenant only.
           </p>
         </div>
 

@@ -1,14 +1,29 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { CreateOrderInput } from "@/lib/types";
+import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as CreateOrderInput;
+    const requestTenantSlug = resolveTenantSlugFromRequest(req);
+
+    if (!requestTenantSlug) {
+      return NextResponse.json({ error: "Tenant could not be resolved from request" }, { status: 400 });
+    }
 
     if (!body.tenantSlug?.trim()) {
       return NextResponse.json({ error: "Missing tenant slug" }, { status: 400 });
+    }
+
+    const submittedTenantSlug = body.tenantSlug.trim();
+
+    if (submittedTenantSlug !== requestTenantSlug) {
+      return NextResponse.json(
+        { error: "Order tenant mismatch" },
+        { status: 400 }
+      );
     }
 
     if (!body.customerName?.trim()) {
@@ -30,7 +45,7 @@ export async function POST(req: Request) {
     const { data: tenant, error: tenantError } = await db
       .from("tenants")
       .select("*")
-      .eq("slug", body.tenantSlug)
+      .eq("slug", requestTenantSlug)
       .single();
 
     if (tenantError || !tenant) {
@@ -57,6 +72,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Products not found" }, { status: 400 });
     }
 
+    if (products.length !== productIds.length) {
+      return NextResponse.json(
+        { error: "One or more products do not belong to this tenant or are inactive" },
+        { status: 400 }
+      );
+    }
+
     let total = 0;
 
     const orderItems = body.items.map((item) => {
@@ -75,7 +97,7 @@ export async function POST(req: Request) {
         product_name: product.name,
         unit_price: unitPrice,
         quantity: item.quantity,
-        line_total: lineTotal
+        line_total: lineTotal,
       };
     });
 
@@ -90,7 +112,7 @@ export async function POST(req: Request) {
         order_type: body.orderType,
         status: "new",
         total,
-        notes: body.notes?.trim() || null
+        notes: body.notes?.trim() || null,
       })
       .select()
       .single();
@@ -101,7 +123,7 @@ export async function POST(req: Request) {
 
     const orderItemsWithOrderId = orderItems.map((item) => ({
       ...item,
-      order_id: order.id
+      order_id: order.id,
     }));
 
     const { error: itemsError } = await db.from("order_items").insert(orderItemsWithOrderId);
@@ -116,19 +138,19 @@ export async function POST(req: Request) {
       items: orderItems.map((item) => ({
         product_name: item.product_name,
         quantity: item.quantity,
-        line_total: item.line_total
-      }))
+        line_total: item.line_total,
+      })),
     });
 
     const whatsappUrl = buildWhatsAppUrl(tenant.whatsapp_number, message);
 
-    await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id);
+    await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
 
     return NextResponse.json({
       ok: true,
       orderId: order.id,
       whatsappUrl,
-      whatsappMessage: message
+      whatsappMessage: message,
     });
   } catch (error) {
     console.error(error);

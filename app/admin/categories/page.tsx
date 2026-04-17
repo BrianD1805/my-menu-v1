@@ -34,7 +34,7 @@ export default async function AdminCategoriesPage() {
         <div>
           <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
           <h1 className="text-3xl font-bold">Categories</h1>
-          <p className="mt-1 text-gray-600">Add, rename, reorder, and safely remove categories for {tenant.name}.</p>
+          <p className="mt-1 text-gray-600">Add, rename, reorder, and safely remove categories for {tenant.name} only.</p>
         </div>
 
         <div className="flex gap-3">

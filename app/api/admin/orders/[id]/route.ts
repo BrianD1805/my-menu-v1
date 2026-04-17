@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { resolveAdminTenant } from "@/lib/admin-tenant";
 
 const allowedStatuses = [
   "new",
@@ -8,7 +8,7 @@ const allowedStatuses = [
   "preparing",
   "ready",
   "completed",
-  "cancelled"
+  "cancelled",
 ];
 
 export async function PATCH(
@@ -23,16 +23,19 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    const tenantSlug = resolveTenantSlugFromRequest(req);
+    const tenantLookup = await resolveAdminTenant(req);
+    if (tenantLookup.error) return tenantLookup.error;
+    const tenant = tenantLookup.tenant!;
 
-    const { data: tenant, error: tenantError } = await db
-      .from("tenants")
-      .select("id")
-      .eq("slug", tenantSlug)
+    const { data: order, error: orderError } = await db
+      .from("orders")
+      .select("id, tenant_id")
+      .eq("id", id)
+      .eq("tenant_id", tenant.id)
       .single();
 
-    if (tenantError || !tenant) {
-      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+    if (orderError || !order) {
+      return NextResponse.json({ error: "Order not found for this tenant" }, { status: 404 });
     }
 
     const { data, error } = await db
@@ -44,7 +47,7 @@ export async function PATCH(
       .single();
 
     if (error || !data) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      return NextResponse.json({ error: "Failed to update order status" }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, order: data });

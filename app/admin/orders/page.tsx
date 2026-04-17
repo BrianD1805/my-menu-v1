@@ -25,7 +25,7 @@ export default async function AdminOrdersPage() {
   return (
     <main className="mx-auto min-h-screen max-w-5xl p-6">
       <h1 className="mb-2 text-3xl font-bold">Admin Orders</h1>
-      <p className="mb-6 text-gray-600">Tenant: {tenant.name}</p>
+      <p className="mb-6 text-gray-600">Showing orders for {tenant.name} only.</p>
 
       <div className="space-y-4">
         {orders?.map((order) => {
@@ -53,6 +53,7 @@ export default async function AdminOrdersPage() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <a href="/admin/products" className="rounded-xl border px-3 py-2 text-sm">Products</a>
+                  <a href="/admin/categories" className="rounded-xl border px-3 py-2 text-sm">Categories</a>
                   <WhatsAppButton url={whatsappUrl} />
                   <OrderStatusForm orderId={order.id} currentStatus={order.status} />
                 </div>
@@ -88,7 +89,7 @@ export default async function AdminOrdersPage() {
           );
         })}
 
-        {!orders?.length ? <p>No orders yet.</p> : null}
+        {!orders?.length ? <p>No orders yet for this tenant.</p> : null}
       </div>
     </main>
   );
