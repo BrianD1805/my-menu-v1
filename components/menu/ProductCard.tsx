@@ -44,18 +44,18 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   return (
     <>
-      <div className="h-full overflow-hidden rounded-[28px] border border-white/85 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(245,249,246,0.96))] shadow-[0_16px_42px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
-        <div className="flex h-full flex-col">
-          <div className="p-3 pb-0 sm:p-3 md:w-32 md:shrink-0 md:p-3 lg:w-36 xl:w-40">
+      <div className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(246,249,247,0.98))] shadow-[0_20px_52px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)]">
+        <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
+          <div className="flex items-start gap-4 sm:gap-5 lg:gap-6">
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
-              className="block w-full text-left"
+              className="block w-[10.5rem] shrink-0 text-left sm:w-[11.5rem] lg:w-[12.5rem]"
               aria-label={`View details for ${name}`}
             >
-              <div className="aspect-[1.18/1] overflow-hidden rounded-[22px] bg-gray-100 ring-1 ring-black/5 shadow-[0_12px_28px_rgba(15,23,42,0.08)] md:aspect-square">
+              <div className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
                 {hasImage ? (
-                  <img src={imageUrl!} alt={name} className="h-full w-full object-cover object-center" loading="lazy" />
+                  <img src={imageUrl!} alt={name} className="h-full w-full object-contain object-center p-3 sm:p-4" loading="lazy" />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500">
                     <div className="mb-1 text-3xl">📦</div>
@@ -64,39 +64,34 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 )}
               </div>
             </button>
-          </div>
 
-          <div className="flex min-w-0 flex-1 flex-col justify-between p-4 pt-3 sm:p-5 sm:pt-4 md:p-4 lg:p-4.5">
-            <div>
-              <div className="flex items-start justify-between gap-3">
-                <button type="button" onClick={() => setDetailsOpen(true)} className="min-w-0 flex-1 text-left">
-                  <h3 className="text-[1.18rem] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[1.24rem] lg:text-[1.18rem] xl:text-[1.24rem]">{name}</h3>
-                </button>
-                <p className="shrink-0 text-[1.06rem] font-semibold tracking-tight text-slate-900 sm:text-[1.14rem] md:hidden">£{price.toFixed(2)}</p>
-              </div>
-
-              <div className="mt-3 flex items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setDetailsOpen(true)}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 transition hover:border-slate-300 hover:text-slate-800"
-                >
-                  View details
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <p className="hidden text-[1.2rem] font-semibold tracking-tight text-slate-900 md:block">£{price.toFixed(2)}</p>
-
-              <button
-                className="ml-auto inline-flex min-h-11 min-w-[7.2rem] items-center justify-center whitespace-nowrap rounded-2xl border border-emerald-200/90 bg-[linear-gradient(180deg,#eef9f0_0%,#e4f4e6_100%)] px-4 py-2.5 text-sm font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-80"
-                onClick={addToCart}
-                disabled={buttonState === "adding"}
-              >
-                {buttonLabel()}
+            <div className="min-w-0 flex-1 pt-1 sm:pt-2">
+              <button type="button" onClick={() => setDetailsOpen(true)} className="block min-w-0 text-left">
+                <h3 className="text-[1.5rem] font-semibold leading-[1.2] tracking-tight text-slate-950 sm:text-[1.8rem] lg:text-[2rem] xl:text-[2.12rem]">{name}</h3>
               </button>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-3 lg:gap-4">
+            <div className="inline-flex min-h-[58px] items-center justify-center self-start rounded-[18px] bg-white px-5 py-3 text-[1.55rem] font-semibold tracking-tight text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:min-w-[8.5rem] sm:px-5 lg:min-h-[62px] lg:min-w-[9rem] lg:text-[1.7rem]">
+              £{price.toFixed(2)}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setDetailsOpen(true)}
+              className="inline-flex min-h-[56px] items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.22em] text-slate-500 transition hover:border-slate-300 hover:text-slate-800 sm:w-full lg:min-h-[58px]"
+            >
+              View details
+            </button>
+
+            <button
+              className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-full border border-emerald-200/90 bg-[linear-gradient(180deg,#f3fbf4_0%,#eaf7ec_100%)] px-6 py-3 text-[1.02rem] font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-w-[11rem] lg:min-h-[58px] lg:min-w-[11.5rem]"
+              onClick={addToCart}
+              disabled={buttonState === "adding"}
+            >
+              {buttonLabel()}
+            </button>
           </div>
         </div>
       </div>
@@ -132,7 +127,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start xl:gap-7">
                   <div className="overflow-hidden rounded-[24px] bg-slate-100 ring-1 ring-black/5">
                     {hasImage ? (
-                      <img src={imageUrl!} alt={name} className="h-72 w-full object-cover object-center sm:h-[24rem] lg:h-[24rem] xl:h-[26rem]" />
+                      <img src={imageUrl!} alt={name} className="h-72 w-full object-contain object-center bg-white p-4 sm:h-[24rem] lg:h-[24rem] xl:h-[26rem]" />
                     ) : (
                       <div className="flex h-72 w-full flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 sm:h-[24rem] lg:h-[24rem] xl:h-[26rem]">
                         <div className="mb-2 text-5xl">📦</div>
@@ -175,10 +170,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       addToCart();
                       setDetailsOpen(false);
                     }}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-80 lg:px-8"
-                    disabled={buttonState === "adding"}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 lg:px-8"
                   >
-                    {buttonLabel()}
+                    {buttonState === "adding" ? "Adding..." : "Add to order"}
                   </button>
                 </div>
               </div>
