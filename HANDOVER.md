@@ -1,14 +1,18 @@
-Orduva Ver-0.050 handover
+Orduva Ver-0.052 handover
 
 Included in this patch:
-- new /admin/categories screen
-- add category
-- edit category name
-- edit sort order
-- safe delete for categories
-- delete blocked if products still belong to that category
-- admin products page now links to admin categories
-- live version bumped to Ver: 0.050
+- customer-facing product search
+- customer-facing category filter pills
+- live filtering by product name, description, and category
+- polished empty-state and clear-filter behaviour on storefront
+- admin product search bar
+- admin category filter dropdown
+- combined search and category filtering on admin products page
+- clean empty-state and reset button on admin products page
+- live version bumped to Ver: 0.052
 
-Safe delete message:
-This category still has X products. Move or delete those products first.
+Notes:
+- Customer search checks product name, description, and category name.
+- Admin search checks product name, description, and category name.
+- Customer UI uses search plus category pills.
+- Admin UI uses search plus compact category dropdown.

@@ -1,5 +1,5 @@
 import CartButton from "@/components/menu/CartButton";
-import ProductCard from "@/components/menu/ProductCard";
+import MenuBrowser from "@/components/menu/MenuBrowser";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { LIVE_VERSION } from "@/lib/version";
@@ -41,28 +41,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {categories?.map((category) => {
-        const categoryProducts = products?.filter((p) => p.category_id === category.id) || [];
-
-        return (
-          <section key={category.id} className="mb-10">
-            <h2 className="mb-4 text-2xl font-semibold">{category.name}</h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {categoryProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  description={product.description}
-                  imageUrl={product.image_url}
-                  price={Number(product.price)}
-                  tenantSlug={slug}
-                />
-              ))}
-            </div>
-          </section>
-        );
-      })}
+      <MenuBrowser tenantSlug={slug} categories={categories || []} products={products || []} />
     </main>
   );
 }
