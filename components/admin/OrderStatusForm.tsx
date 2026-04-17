@@ -37,7 +37,7 @@ export default function OrderStatusForm({ orderId, currentStatus }: Props) {
   return (
     <div className="flex items-center gap-2">
       <select
-        className="rounded-xl border p-2"
+        className="admin-pressable rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 transition hover:border-slate-300 focus:border-slate-400 focus:outline-none"
         value={status}
         onChange={(e) => setStatus(e.target.value)}
       >
@@ -52,7 +52,7 @@ export default function OrderStatusForm({ orderId, currentStatus }: Props) {
       <button
         onClick={() => void updateStatus()}
         disabled={saving}
-        className="rounded-xl bg-black px-3 py-2 text-white disabled:opacity-50"
+        className="admin-pressable rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save"}
       </button>

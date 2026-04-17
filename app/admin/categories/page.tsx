@@ -1,7 +1,7 @@
-import LogoutButton from "@/components/admin/LogoutButton";
 import CategoryManager from "@/components/admin/CategoryManager";
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
+import AdminShell from "@/components/admin/AdminShell";
 
 export default async function AdminCategoriesPage() {
   const { tenant, user } = await requireAdminPageUser();
@@ -29,30 +29,18 @@ export default async function AdminCategoriesPage() {
   }));
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl p-6">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm uppercase tracking-wide text-gray-500">Admin</p>
-          <h1 className="text-3xl font-bold">Categories</h1>
-          <p className="mt-1 text-gray-600">Signed in as {user.full_name || user.email}. Add, rename, reorder, and safely remove categories for {tenant.name} only.</p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <a href="/admin/products" className="rounded-xl border px-5 py-3">
-            Admin products
-          </a>
-          <a href="/admin/orders" className="rounded-xl border px-5 py-3">
-            Admin orders
-          </a>
-          <LogoutButton className="rounded-xl border px-5 py-3" />
-        </div>
-      </div>
-
-      <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+    <AdminShell
+      tenantName={tenant.name}
+      signedInAs={user.full_name || user.email || "Owner"}
+      current="categories"
+      title="Categories"
+      description="Add, rename, reorder, and safely remove categories for this tenant only."
+    >
+      <div className="mb-6 rounded-[24px] border border-sky-100 bg-sky-50 p-4 text-sm text-sky-900">
         You can add and reorder categories here. Deleting a category is blocked if products still belong to it.
       </div>
 
       <CategoryManager categories={categoryRows} />
-    </main>
+    </AdminShell>
   );
 }

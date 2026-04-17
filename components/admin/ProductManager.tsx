@@ -80,19 +80,19 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (value: 
   return (
     <div className="rounded-[24px] border border-gray-300 bg-white">
       <div className="flex flex-wrap gap-2 border-b border-gray-200 bg-slate-50/80 p-3">
-        <button type="button" onClick={() => run("formatBlock", "<h2>")} className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+        <button type="button" onClick={() => run("formatBlock", "<h2>")} className="admin-pressable rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
           Heading
         </button>
-        <button type="button" onClick={() => run("formatBlock", "<h3>")} className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+        <button type="button" onClick={() => run("formatBlock", "<h3>")} className="admin-pressable rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
           Subheading
         </button>
-        <button type="button" onClick={() => run("bold")} className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+        <button type="button" onClick={() => run("bold")} className="admin-pressable rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
           Bold
         </button>
-        <button type="button" onClick={() => run("insertUnorderedList")} className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+        <button type="button" onClick={() => run("insertUnorderedList")} className="admin-pressable rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
           Bullets
         </button>
-        <button type="button" onClick={() => run("insertParagraph")} className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
+        <button type="button" onClick={() => run("insertParagraph")} className="admin-pressable rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">
           Paragraph
         </button>
       </div>

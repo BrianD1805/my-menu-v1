@@ -1,10 +1,8 @@
-Orduva Ver-0.066 handover
+Orduva Ver-0.068 handover
 
 Included in this patch:
-- added a premium admin welcome page at /admin
-- login and first-owner setup now redirect to /admin instead of /admin/orders
-- removed repeated Products / Categories navigation buttons from each order card
-- kept orders page focused on order actions only
-- added top-level admin navigation from the orders page header
-- added admin home links on products and categories pages
-- live version bumped to Ver: 0.066
+- polished the admin mobile shell/header layout
+- action buttons now collapse into a neat 2-column grid on mobile
+- admin navigation now collapses into a clean 2-column mobile grid
+- title, tenant context, and spacing are more compact on smaller screens
+- visible version bumped to Ver: 0.068

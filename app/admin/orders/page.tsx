@@ -1,9 +1,9 @@
-import LogoutButton from "@/components/admin/LogoutButton";
 import OrderStatusForm from "@/components/admin/OrderStatusForm";
 import StatusBadge from "@/components/admin/StatusBadge";
 import WhatsAppButton from "@/components/admin/WhatsAppButton";
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
+import AdminShell from "@/components/admin/AdminShell";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default async function AdminOrdersPage() {
@@ -23,20 +23,13 @@ export default async function AdminOrdersPage() {
       : { data: [] };
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="mb-2 text-3xl font-bold">Admin Orders</h1>
-          <p className="text-gray-600">Signed in as {user.full_name || user.email}. Showing orders for {tenant.name} only.</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <a href="/admin" className="rounded-2xl border px-4 py-3 text-sm font-medium">Admin home</a>
-          <a href="/admin/products" className="rounded-2xl border px-4 py-3 text-sm font-medium">Products</a>
-          <a href="/admin/categories" className="rounded-2xl border px-4 py-3 text-sm font-medium">Categories</a>
-          <LogoutButton className="rounded-2xl border px-4 py-3 text-sm font-medium" />
-        </div>
-      </div>
-
+    <AdminShell
+      tenantName={tenant.name}
+      signedInAs={user.full_name || user.email || "Owner"}
+      current="orders"
+      title="Admin Orders"
+      description="Manage incoming orders for this tenant only. Update status, open WhatsApp when needed, and keep service moving cleanly."
+    >
       <div className="space-y-4">
         {orders?.map((order) => {
           const items = (orderItems || []).filter((item) => item.order_id === order.id);
@@ -46,7 +39,7 @@ export default async function AdminOrdersPage() {
               : null;
 
           return (
-            <div key={order.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div key={order.id} className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
               <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="font-semibold">Order {order.id}</p>
@@ -73,7 +66,7 @@ export default async function AdminOrdersPage() {
 
               {order.notes ? <p className="mb-3 text-sm text-gray-700">Notes: {order.notes}</p> : null}
 
-              <div className="mb-3 rounded-xl bg-gray-50 p-3">
+              <div className="mb-3 rounded-[22px] bg-slate-50 p-4">
                 <p className="mb-2 text-sm font-semibold">Items</p>
                 <div className="space-y-2">
                   {items.map((item) => (
@@ -88,7 +81,7 @@ export default async function AdminOrdersPage() {
               </div>
 
               {order.whatsapp_message ? (
-                <details className="rounded-xl border p-3">
+                <details className="rounded-[22px] border border-slate-200 bg-white p-4">
                   <summary className="cursor-pointer text-sm font-medium">View WhatsApp message</summary>
                   <pre className="mt-3 whitespace-pre-wrap text-sm">{order.whatsapp_message}</pre>
                 </details>
@@ -99,6 +92,6 @@ export default async function AdminOrdersPage() {
 
         {!orders?.length ? <p>No orders yet for this tenant.</p> : null}
       </div>
-    </main>
+    </AdminShell>
   );
 }

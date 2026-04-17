@@ -159,7 +159,7 @@ export default function CategoryManager({
               type="button"
               onClick={createCategory}
               disabled={busyId === "create"}
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="admin-pressable inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busyId === "create" ? "Saving..." : "Add category"}
             </button>
@@ -173,7 +173,7 @@ export default function CategoryManager({
             <h2 className="text-xl font-semibold text-gray-900">Manage categories</h2>
             <p className="mt-1 text-sm text-gray-600">Rename, reorder, and safely remove categories.</p>
           </div>
-          <a href="/admin/products" className="rounded-xl border px-4 py-3 text-sm font-medium">
+          <a href="/admin/products" className="admin-pressable rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
             Back to products
           </a>
         </div>

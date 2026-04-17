@@ -16,7 +16,7 @@ export default function LogoutButton({ className = "" }: { className?: string })
   }
 
   return (
-    <button type="button" onClick={handleLogout} disabled={busy} className={className}>
+    <button type="button" onClick={handleLogout} disabled={busy} className={`admin-pressable ${className}`.trim()}>
       {busy ? "Logging out..." : "Logout"}
     </button>
   );
