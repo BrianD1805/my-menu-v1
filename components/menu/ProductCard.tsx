@@ -12,12 +12,21 @@ type Props = {
   tenantSlug: string;
 };
 
+function stripHtml(value: string | null | undefined) {
+  return String(value || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const hasImage = !!imageUrl;
-  const fullDescription = description?.trim() || "A fresh favourite from the menu, ready to add to your order.";
+  const plainDescription = stripHtml(description);
+  const fullDescription = description?.trim() || "<p>A fresh favourite from the menu, ready to add to your order.</p>";
 
   async function addToCart() {
     if (buttonState === "adding") return;
@@ -73,7 +82,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               <button type="button" onClick={() => setDetailsOpen(true)} className="text-left">
                 <h3 className="text-base font-semibold leading-tight lg:text-[15px] xl:text-base">{name}</h3>
               </button>
-              {description ? (
+              {plainDescription ? (
                 <p
                   className="mt-1.5 pr-1 text-[13px] leading-5 text-gray-600"
                   style={{
@@ -83,7 +92,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     overflow: "hidden",
                   }}
                 >
-                  {description}
+                  {plainDescription}
                 </p>
               ) : null}
               <button
@@ -153,7 +162,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   <div className="space-y-4 xl:space-y-5">
                     <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Description</p>
-                      <p className="mt-3 text-[15px] leading-7 text-slate-700 lg:text-base">{fullDescription}</p>
+                      <div
+                        className="mt-3 text-[15px] leading-7 text-slate-700 [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_p]:my-3"
+                        dangerouslySetInnerHTML={{ __html: fullDescription }}
+                      />
                     </div>
 
                     <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">

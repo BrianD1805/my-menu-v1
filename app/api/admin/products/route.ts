@@ -39,6 +39,11 @@ function normalizeDescription(value: unknown) {
   return text || null;
 }
 
+function normalizeImageUrl(value: unknown) {
+  const text = String(value || "").trim();
+  return text || null;
+}
+
 function normalizeCategory(value: unknown) {
   return String(value || "").trim();
 }
@@ -62,6 +67,7 @@ export async function POST(req: Request) {
     const categoryId = normalizeCategory(body?.categoryId);
     const price = normalizePrice(body?.price);
     const isActive = normalizeActive(body?.isActive);
+    const imageUrl = normalizeImageUrl(body?.imageUrl);
 
     if (!tenantSlug || !name || !categoryId || price === null) {
       return NextResponse.json({ error: "Missing tenantSlug, name, categoryId, or valid price" }, { status: 400 });
@@ -89,6 +95,7 @@ export async function POST(req: Request) {
         category_id: categoryId,
         name,
         description,
+        image_url: imageUrl,
         price,
         is_active: isActive,
       })
@@ -116,6 +123,7 @@ export async function PATCH(req: Request) {
     const categoryId = normalizeCategory(body?.categoryId);
     const price = normalizePrice(body?.price);
     const isActive = normalizeActive(body?.isActive);
+    const imageUrl = normalizeImageUrl(body?.imageUrl);
 
     if (!tenantSlug || !productId || !name || !categoryId || price === null) {
       return NextResponse.json({ error: "Missing tenantSlug, productId, name, categoryId, or valid price" }, { status: 400 });
@@ -145,6 +153,7 @@ export async function PATCH(req: Request) {
         name,
         description,
         category_id: categoryId,
+        image_url: imageUrl,
         price,
         is_active: isActive,
       })
