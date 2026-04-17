@@ -1,7 +1,10 @@
-Orduva Ver-0.064 handover
+Orduva Ver-0.065 handover
 
 Included in this patch:
-- fixed resolveAdminTenant union typing
-- admin category/product/order/image routes now use a safe type guard
-- preserves Ver-0.062 owner login foundation
-- version bumped to Ver: 0.064
+- polished the owner login screen UI
+- made First owner setup much more obvious
+- added a clear split between owner sign-in and first owner setup
+- added session status check on /admin/login
+- if already signed in, login page now offers Continue to admin or Sign out
+- improved success/error/status messages
+- bumped live version to Ver: 0.065
