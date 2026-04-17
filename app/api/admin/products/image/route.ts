@@ -64,11 +64,11 @@ export async function PATCH(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const productLookup = await getTenantProductForAdmin(productId, tenant.id);
-    if (productLookup.error) return productLookup.error;
+    if (!productLookup.ok) return productLookup.error;
 
     const previousImageUrl = productLookup.product?.image_url || null;
 
@@ -114,11 +114,11 @@ export async function POST(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const productLookup = await getTenantProductForAdmin(productId, tenant.id);
-    if (productLookup.error) return productLookup.error;
+    if (!productLookup.ok) return productLookup.error;
 
     await ensureBucket();
 

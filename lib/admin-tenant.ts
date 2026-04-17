@@ -3,16 +3,29 @@ import { db } from "@/lib/db";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { requireAdminApiUser } from "@/lib/admin-auth";
 
-export async function resolveAdminTenant(req: Request) {
+type TenantShape = { id: string; slug: string; name: string };
+type UserShape = { id: string; email: string | null };
+type CategoryShape = { id: string; tenant_id: string };
+type ProductShape = { id: string; tenant_id: string; category_id: string | null; image_url: string | null };
+
+type ResultError = { ok: false; error: NextResponse };
+type AdminTenantSuccess = { ok: true; tenant: TenantShape; user: UserShape };
+type AdminCategorySuccess = { ok: true; category: CategoryShape };
+type AdminProductSuccess = { ok: true; product: ProductShape };
+
+export type AdminTenantResult = AdminTenantSuccess | ResultError;
+export type AdminCategoryResult = AdminCategorySuccess | ResultError;
+export type AdminProductResult = AdminProductSuccess | ResultError;
+
+export async function resolveAdminTenant(req: Request): Promise<AdminTenantResult> {
   const auth = await requireAdminApiUser(req);
-  if ((auth as { error?: NextResponse }).error) {
-    return auth as { error: NextResponse };
+  if ("error" in auth) {
+    return { ok: false, error: auth.error };
   }
 
   const tenantSlug = resolveTenantSlugFromRequest(req);
-
   if (!tenantSlug) {
-    return { error: NextResponse.json({ error: "Tenant could not be resolved" }, { status: 400 }) };
+    return { ok: false, error: NextResponse.json({ error: "Tenant could not be resolved" }, { status: 400 }) };
   }
 
   const { data: tenant, error } = await db
@@ -22,13 +35,13 @@ export async function resolveAdminTenant(req: Request) {
     .single();
 
   if (error || !tenant) {
-    return { error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }) };
+    return { ok: false, error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }) };
   }
 
-  return { tenant, user: (auth as { user: { id: string; email: string | null } }).user };
+  return { ok: true, tenant, user: auth.user };
 }
 
-export async function getTenantCategoryForAdmin(categoryId: string, tenantId: string) {
+export async function getTenantCategoryForAdmin(categoryId: string, tenantId: string): Promise<AdminCategoryResult> {
   const { data: category, error } = await db
     .from("categories")
     .select("id, tenant_id")
@@ -37,13 +50,13 @@ export async function getTenantCategoryForAdmin(categoryId: string, tenantId: st
     .single();
 
   if (error || !category) {
-    return { error: NextResponse.json({ error: "Category not found for this tenant" }, { status: 404 }) };
+    return { ok: false, error: NextResponse.json({ error: "Category not found for this tenant" }, { status: 404 }) };
   }
 
-  return { category };
+  return { ok: true, category };
 }
 
-export async function getTenantProductForAdmin(productId: string, tenantId: string) {
+export async function getTenantProductForAdmin(productId: string, tenantId: string): Promise<AdminProductResult> {
   const { data: product, error } = await db
     .from("products")
     .select("id, tenant_id, category_id, image_url")
@@ -52,8 +65,8 @@ export async function getTenantProductForAdmin(productId: string, tenantId: stri
     .single();
 
   if (error || !product) {
-    return { error: NextResponse.json({ error: "Product not found for this tenant" }, { status: 404 }) };
+    return { ok: false, error: NextResponse.json({ error: "Product not found for this tenant" }, { status: 404 }) };
   }
 
-  return { product };
+  return { ok: true, product };
 }

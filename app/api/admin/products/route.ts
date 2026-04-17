@@ -45,11 +45,11 @@ export async function POST(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
-    if (categoryLookup.error) return categoryLookup.error;
+    if (!categoryLookup.ok) return categoryLookup.error;
 
     const { data: product, error } = await db
       .from("products")
@@ -92,14 +92,14 @@ export async function PATCH(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const productLookup = await getTenantProductForAdmin(productId, tenant.id);
-    if (productLookup.error) return productLookup.error;
+    if (!productLookup.ok) return productLookup.error;
 
     const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
-    if (categoryLookup.error) return categoryLookup.error;
+    if (!categoryLookup.ok) return categoryLookup.error;
 
     const { data: product, error } = await db
       .from("products")
@@ -137,11 +137,11 @@ export async function DELETE(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const productLookup = await getTenantProductForAdmin(productId, tenant.id);
-    if (productLookup.error) return productLookup.error;
+    if (!productLookup.ok) return productLookup.error;
 
     const { error } = await db
       .from("products")

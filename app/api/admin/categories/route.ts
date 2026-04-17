@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const { data: category, error } = await db
@@ -55,11 +55,11 @@ export async function PATCH(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
-    if (categoryLookup.error) return categoryLookup.error;
+    if (!categoryLookup.ok) return categoryLookup.error;
 
     const { data: category, error } = await db
       .from("categories")
@@ -90,11 +90,11 @@ export async function DELETE(req: Request) {
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const categoryLookup = await getTenantCategoryForAdmin(categoryId, tenant.id);
-    if (categoryLookup.error) return categoryLookup.error;
+    if (!categoryLookup.ok) return categoryLookup.error;
 
     const { count, error: countError } = await db
       .from("products")

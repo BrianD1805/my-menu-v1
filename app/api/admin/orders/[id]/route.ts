@@ -24,7 +24,7 @@ export async function PATCH(
     }
 
     const tenantLookup = await resolveAdminTenant(req);
-    if (tenantLookup.error) return tenantLookup.error;
+    if (!tenantLookup.ok) return tenantLookup.error;
     const tenant = tenantLookup.tenant!;
 
     const { data: order, error: orderError } = await db
