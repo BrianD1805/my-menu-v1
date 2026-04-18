@@ -14,12 +14,12 @@ export default async function AdminSettingsPage() {
       signedInAs={user.full_name || user.email || "Owner"}
       current="settings"
       title="Tenant settings"
-      description="Set the business identity, contact details, footer wording, and core currency display for this tenant without disturbing the accepted product card layout."
+      description="Set the business identity, contact details, footer wording, and advanced currency display for this tenant without disturbing the accepted product card layout."
       logoUrl={branding.logoUrl}
       accentColor={branding.accentColor}
     >
       <div className="mb-6 rounded-[24px] border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900">
-        This tenant-scoped settings layer now covers branding, contact details, storefront footer info, and currency display foundations.
+        This tenant-scoped settings layer now covers branding, contact details, storefront footer info, and advanced currency display foundations.
       </div>
 
       <TenantSettingsForm
@@ -41,6 +41,13 @@ export default async function AdminSettingsPage() {
           currencyName: settings?.currency_name || "Pounds Sterling",
           currencyCode: settings?.currency_code || "GBP",
           currencySymbol: settings?.currency_symbol || "£",
+          currencyDisplayMode: settings?.currency_display_mode || "symbol",
+          currencySymbolPosition: settings?.currency_symbol_position || "before",
+          currencyDecimalPlaces: String(settings?.currency_decimal_places ?? 2),
+          currencyUseThousandsSeparator: settings?.currency_use_thousands_separator ?? true,
+          currencyDecimalSeparator: settings?.currency_decimal_separator || ".",
+          currencyThousandsSeparator: settings?.currency_thousands_separator || ",",
+          currencySuffix: settings?.currency_suffix || "",
         }}
       />
     </AdminShell>

@@ -44,8 +44,16 @@ export async function GET(req: Request) {
   return NextResponse.json({
     products,
     settings: {
+      currencyName: branding.currencyName,
       currencyCode: branding.currencyCode,
       currencySymbol: branding.currencySymbol,
+      currencyDisplayMode: branding.currencyDisplayMode,
+      currencySymbolPosition: branding.currencySymbolPosition,
+      currencyDecimalPlaces: branding.currencyDecimalPlaces,
+      currencyUseThousandsSeparator: branding.currencyUseThousandsSeparator,
+      currencyDecimalSeparator: branding.currencyDecimalSeparator,
+      currencyThousandsSeparator: branding.currencyThousandsSeparator,
+      currencySuffix: branding.currencySuffix,
       displayName: branding.displayName,
       contactPhone: branding.contactPhone,
       contactEmail: branding.contactEmail,

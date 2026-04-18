@@ -139,7 +139,7 @@ export async function POST(req: Request) {
     const message = buildWhatsAppOrderMessage({
       tenantName: branding.displayName,
       order,
-      currencySymbol: branding.currencySymbol,
+      ...branding,
       items: orderItems.map((item) => ({
         product_name: item.product_name,
         quantity: item.quantity,

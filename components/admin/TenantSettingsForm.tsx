@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { FormEvent, useMemo, useState } from "react";
+import { formatMoney } from "@/lib/money";
 
 type FormState = {
   businessDisplayName: string;
@@ -20,15 +21,16 @@ type FormState = {
   currencyName: string;
   currencyCode: string;
   currencySymbol: string;
+  currencyDisplayMode: "symbol" | "code" | "code_symbol" | "symbol_code" | "none";
+  currencySymbolPosition: "before" | "after";
+  currencyDecimalPlaces: string;
+  currencyUseThousandsSeparator: boolean;
+  currencyDecimalSeparator: string;
+  currencyThousandsSeparator: string;
+  currencySuffix: string;
 };
 
-export default function TenantSettingsForm({
-  initial,
-  tenantName,
-}: {
-  initial: FormState;
-  tenantName: string;
-}) {
+export default function TenantSettingsForm({ initial, tenantName }: { initial: FormState; tenantName: string }) {
   const [form, setForm] = useState<FormState>(initial);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"idle" | "success" | "error" | "info">("idle");
@@ -39,7 +41,18 @@ export default function TenantSettingsForm({
   const previewSubheading = form.storefrontSubheading.trim() || "Tap into the details for more information, or add favourites straight to your order.";
   const footerBlurb = form.footerBlurb.trim() || "Thank you for ordering with us.";
   const footerNotice = form.footerNotice.trim() || "Prices and availability may change without notice.";
-  const currencySymbol = form.currencySymbol.trim() || "£";
+  const moneySettings = {
+    currencyName: form.currencyName.trim() || "Pounds Sterling",
+    currencyCode: form.currencyCode.trim() || "GBP",
+    currencySymbol: form.currencySymbol.trim() || "£",
+    currencyDisplayMode: form.currencyDisplayMode,
+    currencySymbolPosition: form.currencySymbolPosition,
+    currencyDecimalPlaces: Number(form.currencyDecimalPlaces || "0"),
+    currencyUseThousandsSeparator: form.currencyUseThousandsSeparator,
+    currencyDecimalSeparator: form.currencyDecimalSeparator || ".",
+    currencyThousandsSeparator: form.currencyThousandsSeparator || ",",
+    currencySuffix: form.currencySuffix,
+  };
 
   const messageClass = useMemo(() => {
     if (tone === "success") return "border-emerald-200 bg-emerald-50 text-emerald-800";
@@ -81,9 +94,9 @@ export default function TenantSettingsForm({
       <form onSubmit={onSubmit} className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-900">Branding, contact, footer, and currency</h2>
+          <h2 className="mt-2 text-2xl font-bold text-slate-900">Branding, contact, footer, and advanced currency</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Each tenant can now shape its own business identity, contact details, storefront footer details, and core currency display.
+            Each tenant can now shape its own business identity, contact details, storefront footer details, and advanced currency display.
           </p>
         </div>
 
@@ -119,8 +132,35 @@ export default function TenantSettingsForm({
           <div className="grid gap-4 md:grid-cols-3">
             <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Pounds Sterling" /></Field>
             <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="GBP" maxLength={3} /></Field>
-            <Field label="Currency symbol"><input value={form.currencySymbol} onChange={(e) => update("currencySymbol", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="£" maxLength={8} /></Field>
+            <Field label="Currency symbol"><input value={form.currencySymbol} onChange={(e) => update("currencySymbol", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="£" maxLength={12} /></Field>
           </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <Field label="Display mode">
+              <select value={form.currencyDisplayMode} onChange={(e) => update("currencyDisplayMode", e.target.value as FormState["currencyDisplayMode"])} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400">
+                <option value="symbol">Symbol only</option>
+                <option value="code">Code only</option>
+                <option value="code_symbol">Code + symbol</option>
+                <option value="symbol_code">Symbol + code</option>
+                <option value="none">No prefix</option>
+              </select>
+            </Field>
+            <Field label="Prefix position">
+              <select value={form.currencySymbolPosition} onChange={(e) => update("currencySymbolPosition", e.target.value as FormState["currencySymbolPosition"])} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400">
+                <option value="before">Before amount</option>
+                <option value="after">After amount</option>
+              </select>
+            </Field>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Field label="Decimal places"><input type="number" min={0} max={4} value={form.currencyDecimalPlaces} onChange={(e) => update("currencyDecimalPlaces", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" /></Field>
+            <Field label="Decimal separator"><input value={form.currencyDecimalSeparator} onChange={(e) => update("currencyDecimalSeparator", e.target.value.slice(0, 1))} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="." maxLength={1} /></Field>
+            <Field label="Thousands separator"><input value={form.currencyThousandsSeparator} onChange={(e) => update("currencyThousandsSeparator", e.target.value.slice(0, 1))} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="," maxLength={1} /></Field>
+            <Field label="Suffix"><input value={form.currencySuffix} onChange={(e) => update("currencySuffix", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="/-" maxLength={12} /></Field>
+          </div>
+          <label className="mt-4 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+            <input type="checkbox" checked={form.currencyUseThousandsSeparator} onChange={(e) => update("currencyUseThousandsSeparator", e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
+            Use thousands separator
+          </label>
         </Section>
 
         {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}
@@ -159,9 +199,11 @@ export default function TenantSettingsForm({
                 {form.contactEmail.trim() ? <p>Email: {form.contactEmail}</p> : null}
                 {form.contactAddress.trim() ? <p>Address: {form.contactAddress}</p> : null}
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                <span className="rounded-full bg-slate-100 px-3 py-1.5">{form.currencyCode.trim() || "GBP"}</span>
-                <span className="rounded-full bg-slate-100 px-3 py-1.5">{currencySymbol}12.50 sample</span>
+              <div className="mt-4 grid gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 sm:grid-cols-2">
+                <span className="rounded-full bg-slate-100 px-3 py-1.5">{moneySettings.currencyCode}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1.5 normal-case tracking-normal">100 → {formatMoney(100, moneySettings)}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1.5 normal-case tracking-normal">1000 → {formatMoney(1000, moneySettings)}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1.5 normal-case tracking-normal">295 → {formatMoney(295, moneySettings)}</span>
               </div>
               <p className="mt-4 text-xs leading-5 text-slate-500">{footerNotice}</p>
             </div>
@@ -169,7 +211,7 @@ export default function TenantSettingsForm({
         </div>
 
         <div className="rounded-[30px] border border-sky-100 bg-sky-50 p-5 text-sm leading-6 text-sky-900 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-6">
-          This tenant settings layer now covers branding, contact details, storefront footer content, and core currency display.
+          This tenant settings layer now covers branding, contact details, storefront footer content, and advanced currency display including code, symbol, suffix, decimal, and thousands separator control.
         </div>
       </div>
     </div>

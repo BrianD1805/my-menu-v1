@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveAdminTenant } from "@/lib/admin-tenant";
-import { normalizeColor, normalizeCurrencyCode, normalizeOptionalText } from "@/lib/tenant-settings";
+import {
+  normalizeBoolean,
+  normalizeColor,
+  normalizeCurrencyCode,
+  normalizeCurrencyDecimalPlaces,
+  normalizeCurrencyDisplayMode,
+  normalizeCurrencySymbolPosition,
+  normalizeOptionalText,
+  normalizeSeparator,
+} from "@/lib/tenant-settings";
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
 
 export async function GET(req: Request) {
   const tenantLookup = await resolveAdminTenant(req);
@@ -45,7 +54,14 @@ export async function PATCH(req: Request) {
       footer_notice: normalizeOptionalText(body?.footerNotice, 240),
       currency_name: normalizeOptionalText(body?.currencyName, 80),
       currency_code: normalizeCurrencyCode(body?.currencyCode),
-      currency_symbol: normalizeOptionalText(body?.currencySymbol, 8),
+      currency_symbol: normalizeOptionalText(body?.currencySymbol, 12),
+      currency_display_mode: normalizeCurrencyDisplayMode(body?.currencyDisplayMode),
+      currency_symbol_position: normalizeCurrencySymbolPosition(body?.currencySymbolPosition),
+      currency_decimal_places: normalizeCurrencyDecimalPlaces(body?.currencyDecimalPlaces),
+      currency_use_thousands_separator: normalizeBoolean(body?.currencyUseThousandsSeparator),
+      currency_decimal_separator: normalizeSeparator(body?.currencyDecimalSeparator),
+      currency_thousands_separator: normalizeSeparator(body?.currencyThousandsSeparator),
+      currency_suffix: normalizeOptionalText(body?.currencySuffix, 12),
     };
 
     const { data, error } = await db

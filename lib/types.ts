@@ -58,4 +58,11 @@ export type TenantSettings = {
   currency_name: string | null;
   currency_code: string | null;
   currency_symbol: string | null;
+  currency_display_mode: string | null;
+  currency_symbol_position: string | null;
+  currency_decimal_places: number | null;
+  currency_use_thousands_separator: boolean | null;
+  currency_decimal_separator: string | null;
+  currency_thousands_separator: string | null;
+  currency_suffix: string | null;
 };

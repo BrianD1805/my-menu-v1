@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
 type CartItem = {
   productId: string;
@@ -16,9 +16,10 @@ type Product = {
   price: number;
 };
 
-type TenantViewSettings = {
+type TenantViewSettings = MoneyFormatSettings & {
   currencyCode?: string;
   currencySymbol?: string;
+  currencyName?: string;
   displayName?: string;
   contactPhone?: string;
   contactEmail?: string;
@@ -53,7 +54,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
-  const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ currencyCode: "GBP", currencySymbol: "£" });
+  const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ currencyCode: "GBP", currencySymbol: "£", currencyDisplayMode: "symbol", currencySymbolPosition: "before", currencyDecimalPlaces: 2, currencyUseThousandsSeparator: true, currencyDecimalSeparator: ".", currencyThousandsSeparator: ",", currencySuffix: "" });
 
   useEffect(() => {
     const slug = resolveTenantSlugFromHost(window.location.host);
@@ -72,7 +73,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (res.ok) {
         setProducts(data.products || []);
-        setTenantSettings(data.settings || { currencyCode: "GBP", currencySymbol: "£" });
+        setTenantSettings(data.settings || { currencyCode: "GBP", currencySymbol: "£", currencyDisplayMode: "symbol", currencySymbolPosition: "before", currencyDecimalPlaces: 2, currencyUseThousandsSeparator: true, currencyDecimalSeparator: ".", currencyThousandsSeparator: ",", currencySuffix: "" });
       }
     }
 
@@ -228,7 +229,7 @@ export default function CheckoutPage() {
                   Ref: <span className="font-semibold">{successState.orderId}</span>
                 </div>
                 <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
-                  Total: <span className="font-semibold">{formatMoney(successState.total, tenantSettings.currencySymbol)}</span>
+                  Total: <span className="font-semibold">{formatMoney(successState.total, tenantSettings)}</span>
                 </div>
                 <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
                   {successState.itemCount} item{successState.itemCount === 1 ? "" : "s"}
@@ -320,7 +321,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-emerald-800/80">Total</span>
-                    <span className="text-lg font-bold">{formatMoney(successState.total, tenantSettings.currencySymbol)}</span>
+                    <span className="text-lg font-bold">{formatMoney(successState.total, tenantSettings)}</span>
                   </div>
                 </div>
               </div>
@@ -438,9 +439,9 @@ export default function CheckoutPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium">{row.name}</p>
-                      <p className="text-sm text-gray-600">{formatMoney(row.unitPrice, tenantSettings.currencySymbol)} each</p>
+                      <p className="text-sm text-gray-600">{formatMoney(row.unitPrice, tenantSettings)} each</p>
                     </div>
-                    <p className="font-medium">{formatMoney(row.lineTotal, tenantSettings.currencySymbol)}</p>
+                    <p className="font-medium">{formatMoney(row.lineTotal, tenantSettings)}</p>
                   </div>
 
                   <div className="mt-3 flex items-center gap-2">
@@ -463,7 +464,7 @@ export default function CheckoutPage() {
 
               <div className="flex items-center justify-between border-t pt-4 font-semibold">
                 <span>Total</span>
-                <span>{formatMoney(total, tenantSettings.currencySymbol)}</span>
+                <span>{formatMoney(total, tenantSettings)}</span>
               </div>
             </div>
           )}

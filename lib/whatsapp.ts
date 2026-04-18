@@ -1,4 +1,4 @@
-import { formatMoney } from "@/lib/money";
+import { formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
 type OrderForWhatsapp = {
   id: string;
@@ -20,40 +20,27 @@ export function buildWhatsAppOrderMessage(args: {
   tenantName: string;
   order: OrderForWhatsapp;
   items: OrderItemForWhatsapp[];
-  currencySymbol?: string | null;
-}) {
-  const { tenantName, order, items, currencySymbol } = args;
-
+} & MoneyFormatSettings) {
+  const { tenantName, order, items, ...moneySettings } = args;
   const lines: string[] = [];
-
   lines.push(`New order for ${tenantName}`);
   lines.push("");
   lines.push(`Order ID: ${order.id}`);
   lines.push(`Customer: ${order.customer_name}`);
   lines.push(`Phone: ${order.customer_phone}`);
   lines.push(`Type: ${order.order_type}`);
-
-  if (order.customer_address) {
-    lines.push(`Address: ${order.customer_address}`);
-  }
-
-  if (order.notes) {
-    lines.push(`Notes: ${order.notes}`);
-  }
-
+  if (order.customer_address) lines.push(`Address: ${order.customer_address}`);
+  if (order.notes) lines.push(`Notes: ${order.notes}`);
   lines.push("");
   lines.push("Items:");
-
   for (const item of items) {
-    lines.push(`- ${item.quantity} x ${item.product_name} = ${formatMoney(Number(item.line_total), currencySymbol)}`);
+    lines.push(`- ${item.quantity} x ${item.product_name} = ${formatMoney(Number(item.line_total), moneySettings)}`);
   }
-
   lines.push("");
-  lines.push(`Total: ${formatMoney(Number(order.total), currencySymbol)}`);
+  lines.push(`Total: ${formatMoney(Number(order.total), moneySettings)}`);
   lines.push("Payment: Offline");
   lines.push("");
   lines.push("Please confirm this order.");
-
   return lines.join("\n");
 }
 

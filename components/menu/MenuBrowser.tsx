@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
 type Category = {
   id: string;
@@ -45,8 +45,16 @@ export default function MenuBrowser({
   contactAddress,
   footerBlurb,
   footerNotice,
+  currencyName,
   currencyCode,
   currencySymbol,
+  currencyDisplayMode,
+  currencySymbolPosition,
+  currencyDecimalPlaces,
+  currencyUseThousandsSeparator,
+  currencyDecimalSeparator,
+  currencyThousandsSeparator,
+  currencySuffix,
 }: {
   tenantSlug: string;
   tenantName: string;
@@ -64,9 +72,29 @@ export default function MenuBrowser({
   contactAddress?: string | null;
   footerBlurb?: string | null;
   footerNotice?: string | null;
+  currencyName?: string | null;
   currencyCode?: string | null;
   currencySymbol?: string | null;
+  currencyDisplayMode?: MoneyFormatSettings["currencyDisplayMode"];
+  currencySymbolPosition?: MoneyFormatSettings["currencySymbolPosition"];
+  currencyDecimalPlaces?: number | null;
+  currencyUseThousandsSeparator?: boolean | null;
+  currencyDecimalSeparator?: string | null;
+  currencyThousandsSeparator?: string | null;
+  currencySuffix?: string | null;
 }) {
+  const moneySettings: MoneyFormatSettings = {
+    currencyName,
+    currencyCode,
+    currencySymbol,
+    currencyDisplayMode,
+    currencySymbolPosition,
+    currencyDecimalPlaces,
+    currencyUseThousandsSeparator,
+    currencyDecimalSeparator,
+    currencyThousandsSeparator,
+    currencySuffix,
+  };
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
@@ -196,8 +224,7 @@ export default function MenuBrowser({
                   imageUrl={product.image_url}
                   price={Number(product.price)}
                   tenantSlug={tenantSlug}
-                  currencySymbol={currencySymbol}
-                  currencyCode={currencyCode}
+                  moneySettings={moneySettings}
                 />
               ))}
             </div>
@@ -224,7 +251,7 @@ export default function MenuBrowser({
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{currencyCode || "GBP"}</span>
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{formatMoney(12.5, currencySymbol)} sample</span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{formatMoney(1000, moneySettings)} sample</span>
             </div>
           </div>
         </div>
@@ -345,7 +372,7 @@ export default function MenuBrowser({
                               </p>
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                  <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(product.price), currencySymbol)}</p>
+                                  <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(product.price), moneySettings)}</p>
                                   {state === "added" ? (
                                     <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
                                       In cart: {cartCount}

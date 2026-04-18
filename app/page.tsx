@@ -41,8 +41,16 @@ export default async function HomePage() {
         contactAddress={branding.contactAddress}
         footerBlurb={branding.footerBlurb}
         footerNotice={branding.footerNotice}
+        currencyName={branding.currencyName}
         currencyCode={branding.currencyCode}
         currencySymbol={branding.currencySymbol}
+        currencyDisplayMode={branding.currencyDisplayMode}
+        currencySymbolPosition={branding.currencySymbolPosition}
+        currencyDecimalPlaces={branding.currencyDecimalPlaces}
+        currencyUseThousandsSeparator={branding.currencyUseThousandsSeparator}
+        currencyDecimalSeparator={branding.currencyDecimalSeparator}
+        currencyThousandsSeparator={branding.currencyThousandsSeparator}
+        currencySuffix={branding.currencySuffix}
       />
     </main>
   );

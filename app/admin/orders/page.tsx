@@ -53,7 +53,7 @@ export default async function AdminOrdersPage() {
                     {order.customer_name} · {order.customer_phone}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {order.order_type} · {formatMoney(Number(order.total), branding.currencySymbol)}
+                    {order.order_type} · {formatMoney(Number(order.total), branding)}
                   </p>
                   <p className="mt-2">
                     <StatusBadge status={order.status} />
@@ -80,7 +80,7 @@ export default async function AdminOrdersPage() {
                       <span>
                         {item.quantity} × {item.product_name}
                       </span>
-                      <span>{formatMoney(Number(item.line_total), branding.currencySymbol)}</span>
+                      <span>{formatMoney(Number(item.line_total), branding)}</span>
                     </div>
                   ))}
                 </div>
