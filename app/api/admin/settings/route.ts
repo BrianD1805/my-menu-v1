@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveAdminTenant } from "@/lib/admin-tenant";
-import { normalizeColor, normalizeOptionalText } from "@/lib/tenant-settings";
+import { normalizeColor, normalizeCurrencyCode, normalizeOptionalText } from "@/lib/tenant-settings";
+
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol";
 
 export async function GET(req: Request) {
   const tenantLookup = await resolveAdminTenant(req);
@@ -9,7 +11,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await db
     .from("tenant_settings")
-    .select("tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color")
+    .select(SETTINGS_SELECT)
     .eq("tenant_id", tenantLookup.tenant.id)
     .maybeSingle();
 
@@ -35,12 +37,21 @@ export async function PATCH(req: Request) {
       logo_url: normalizeOptionalText(body?.logoUrl, 500),
       primary_color: normalizeColor(body?.primaryColor),
       accent_color: normalizeColor(body?.accentColor),
+      contact_phone: normalizeOptionalText(body?.contactPhone, 80),
+      contact_email: normalizeOptionalText(body?.contactEmail, 160),
+      contact_whatsapp: normalizeOptionalText(body?.contactWhatsApp, 80),
+      contact_address: normalizeOptionalText(body?.contactAddress, 240),
+      footer_blurb: normalizeOptionalText(body?.footerBlurb, 240),
+      footer_notice: normalizeOptionalText(body?.footerNotice, 240),
+      currency_name: normalizeOptionalText(body?.currencyName, 80),
+      currency_code: normalizeCurrencyCode(body?.currencyCode),
+      currency_symbol: normalizeOptionalText(body?.currencySymbol, 8),
     };
 
     const { data, error } = await db
       .from("tenant_settings")
       .upsert(payload, { onConflict: "tenant_id" })
-      .select("tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color")
+      .select(SETTINGS_SELECT)
       .single();
 
     if (error || !data) {

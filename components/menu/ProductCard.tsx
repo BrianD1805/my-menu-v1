@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
+import { formatMoney } from "@/lib/tenant-settings";
 
 type Props = {
   id: string;
@@ -10,9 +11,11 @@ type Props = {
   imageUrl: string | null;
   price: number;
   tenantSlug: string;
+  currencySymbol?: string | null;
+  currencyCode?: string | null;
 };
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, currencySymbol }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -74,7 +77,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
           <div className="grid grid-cols-[96px_minmax(0,1fr)_minmax(0,1.15fr)] items-stretch gap-2.5 sm:grid-cols-[110px_minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-3 lg:grid-cols-[124px_minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-4">
             <div className="inline-flex min-h-[56px] items-center justify-center rounded-[20px] bg-white px-3 py-3 text-[1rem] font-semibold tracking-tight text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:min-h-[58px] sm:px-4 sm:text-[1.2rem] lg:min-h-[60px] lg:text-[1.34rem]">
-              £{price.toFixed(2)}
+              {formatMoney(price, currencySymbol)}
             </div>
 
             <button
@@ -108,7 +111,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{name}</h3>
                     <div className="mt-4">
                       <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                        £{price.toFixed(2)}
+                        {formatMoney(price, currencySymbol)}
                       </span>
                     </div>
                   </div>

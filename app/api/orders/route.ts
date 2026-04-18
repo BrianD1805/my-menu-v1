@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import type { CreateOrderInput } from "@/lib/types";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
+import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 export async function POST(req: Request) {
   try {
@@ -132,9 +133,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to create order items" }, { status: 500 });
     }
 
+    const settings = await getTenantSettings(tenant.id);
+    const branding = buildTenantBranding(tenant.name, settings);
+
     const message = buildWhatsAppOrderMessage({
-      tenantName: tenant.name,
+      tenantName: branding.displayName,
       order,
+      currencySymbol: branding.currencySymbol,
       items: orderItems.map((item) => ({
         product_name: item.product_name,
         quantity: item.quantity,

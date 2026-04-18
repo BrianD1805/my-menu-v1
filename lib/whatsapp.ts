@@ -1,3 +1,5 @@
+import { formatMoney } from "@/lib/tenant-settings";
+
 type OrderForWhatsapp = {
   id: string;
   customer_name: string;
@@ -18,8 +20,9 @@ export function buildWhatsAppOrderMessage(args: {
   tenantName: string;
   order: OrderForWhatsapp;
   items: OrderItemForWhatsapp[];
+  currencySymbol?: string | null;
 }) {
-  const { tenantName, order, items } = args;
+  const { tenantName, order, items, currencySymbol } = args;
 
   const lines: string[] = [];
 
@@ -42,16 +45,17 @@ export function buildWhatsAppOrderMessage(args: {
   lines.push("Items:");
 
   for (const item of items) {
-    lines.push(`- ${item.quantity} x ${item.product_name} = £${Number(item.line_total).toFixed(2)}`);
+    lines.push(`- ${item.quantity} x ${item.product_name} = ${formatMoney(Number(item.line_total), currencySymbol)}`);
   }
 
   lines.push("");
-  lines.push(`Total: £${Number(order.total).toFixed(2)}`);
+  lines.push(`Total: ${formatMoney(Number(order.total), currencySymbol)}`);
   lines.push("Payment: Offline");
   lines.push("");
   lines.push("Please confirm this order.");
 
-  return lines.join("\n");
+  return lines.join("
+");
 }
 
 export function buildWhatsAppUrl(phone: string, message: string) {

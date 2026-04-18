@@ -9,10 +9,22 @@ export type TenantSettings = {
   logo_url: string | null;
   primary_color: string | null;
   accent_color: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  contact_whatsapp: string | null;
+  contact_address: string | null;
+  footer_blurb: string | null;
+  footer_notice: string | null;
+  currency_name: string | null;
+  currency_code: string | null;
+  currency_symbol: string | null;
 };
 
 export const DEFAULT_PRIMARY_COLOR = "#0f172a";
 export const DEFAULT_ACCENT_COLOR = "#10b981";
+export const DEFAULT_CURRENCY_NAME = "Pounds Sterling";
+export const DEFAULT_CURRENCY_CODE = "GBP";
+export const DEFAULT_CURRENCY_SYMBOL = "£";
 
 export function normalizeColor(value: unknown) {
   const color = String(value || "").trim();
@@ -25,10 +37,15 @@ export function normalizeOptionalText(value: unknown, maxLength: number) {
   return text.slice(0, maxLength);
 }
 
+export function normalizeCurrencyCode(value: unknown) {
+  const code = String(value || "").trim().toUpperCase();
+  return /^[A-Z]{3}$/.test(code) ? code : null;
+}
+
 export async function getTenantSettings(tenantId: string): Promise<TenantSettings | null> {
   const { data, error } = await db
     .from("tenant_settings")
-    .select("tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color")
+    .select("tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol")
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
@@ -51,5 +68,18 @@ export function buildTenantBranding(tenantName: string, settings: TenantSettings
     logoUrl: settings?.logo_url || null,
     primaryColor: settings?.primary_color || DEFAULT_PRIMARY_COLOR,
     accentColor: settings?.accent_color || DEFAULT_ACCENT_COLOR,
+    contactPhone: settings?.contact_phone || null,
+    contactEmail: settings?.contact_email || null,
+    contactWhatsApp: settings?.contact_whatsapp || null,
+    contactAddress: settings?.contact_address || null,
+    footerBlurb: settings?.footer_blurb || "Thank you for ordering with us.",
+    footerNotice: settings?.footer_notice || "Prices and availability may change without notice.",
+    currencyName: settings?.currency_name || DEFAULT_CURRENCY_NAME,
+    currencyCode: settings?.currency_code || DEFAULT_CURRENCY_CODE,
+    currencySymbol: settings?.currency_symbol || DEFAULT_CURRENCY_SYMBOL,
   };
+}
+
+export function formatMoney(amount: number | string, currencySymbol?: string | null) {
+  return `${currencySymbol || DEFAULT_CURRENCY_SYMBOL}${Number(amount || 0).toFixed(2)}`;
 }

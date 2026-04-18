@@ -14,12 +14,12 @@ export default async function AdminSettingsPage() {
       signedInAs={user.full_name || user.email || "Owner"}
       current="settings"
       title="Tenant settings"
-      description="Start shaping how this business looks and reads across storefront and admin, without disturbing the accepted product card layout."
+      description="Set the business identity, contact details, footer wording, and core currency display for this tenant without disturbing the accepted product card layout."
       logoUrl={branding.logoUrl}
       accentColor={branding.accentColor}
     >
       <div className="mb-6 rounded-[24px] border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900">
-        This is the first business branding/settings layer. It is tenant-scoped and safe to extend later with contact details, footer info, and brand assets.
+        This tenant-scoped settings layer now covers branding, contact details, storefront footer info, and currency display foundations.
       </div>
 
       <TenantSettingsForm
@@ -32,6 +32,15 @@ export default async function AdminSettingsPage() {
           logoUrl: settings?.logo_url || "",
           primaryColor: settings?.primary_color || "#0F172A",
           accentColor: settings?.accent_color || "#10B981",
+          contactPhone: settings?.contact_phone || "",
+          contactEmail: settings?.contact_email || "",
+          contactWhatsApp: settings?.contact_whatsapp || "",
+          contactAddress: settings?.contact_address || "",
+          footerBlurb: settings?.footer_blurb || "",
+          footerNotice: settings?.footer_notice || "",
+          currencyName: settings?.currency_name || "Pounds Sterling",
+          currencyCode: settings?.currency_code || "GBP",
+          currencySymbol: settings?.currency_symbol || "£",
         }}
       />
     </AdminShell>

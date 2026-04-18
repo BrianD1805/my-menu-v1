@@ -4,7 +4,7 @@ import WhatsAppButton from "@/components/admin/WhatsAppButton";
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
-import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { buildTenantBranding, formatMoney, getTenantSettings } from "@/lib/tenant-settings";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default async function AdminOrdersPage() {
@@ -52,7 +52,7 @@ export default async function AdminOrdersPage() {
                     {order.customer_name} · {order.customer_phone}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {order.order_type} · £{Number(order.total).toFixed(2)}
+                    {order.order_type} · {formatMoney(Number(order.total), branding.currencySymbol)}
                   </p>
                   <p className="mt-2">
                     <StatusBadge status={order.status} />
@@ -79,7 +79,7 @@ export default async function AdminOrdersPage() {
                       <span>
                         {item.quantity} × {item.product_name}
                       </span>
-                      <span>£{Number(item.line_total).toFixed(2)}</span>
+                      <span>{formatMoney(Number(item.line_total), branding.currencySymbol)}</span>
                     </div>
                   ))}
                 </div>

@@ -49,4 +49,13 @@ export type TenantSettings = {
   logo_url: string | null;
   primary_color: string | null;
   accent_color: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  contact_whatsapp: string | null;
+  contact_address: string | null;
+  footer_blurb: string | null;
+  footer_notice: string | null;
+  currency_name: string | null;
+  currency_code: string | null;
+  currency_symbol: string | null;
 };

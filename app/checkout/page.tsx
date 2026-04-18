@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
+import { formatMoney } from "@/lib/tenant-settings";
 
 type CartItem = {
   productId: string;
@@ -13,6 +14,18 @@ type Product = {
   id: string;
   name: string;
   price: number;
+};
+
+type TenantViewSettings = {
+  currencyCode?: string;
+  currencySymbol?: string;
+  displayName?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  contactWhatsApp?: string;
+  contactAddress?: string;
+  footerBlurb?: string;
+  footerNotice?: string;
 };
 
 type SuccessState = {
@@ -40,6 +53,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
+  const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ currencyCode: "GBP", currencySymbol: "£" });
 
   useEffect(() => {
     const slug = resolveTenantSlugFromHost(window.location.host);
@@ -58,6 +72,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (res.ok) {
         setProducts(data.products || []);
+        setTenantSettings(data.settings || { currencyCode: "GBP", currencySymbol: "£" });
       }
     }
 
@@ -213,7 +228,7 @@ export default function CheckoutPage() {
                   Ref: <span className="font-semibold">{successState.orderId}</span>
                 </div>
                 <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
-                  Total: <span className="font-semibold">£{successState.total.toFixed(2)}</span>
+                  Total: <span className="font-semibold">{formatMoney(successState.total, tenantSettings.currencySymbol)}</span>
                 </div>
                 <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
                   {successState.itemCount} item{successState.itemCount === 1 ? "" : "s"}
@@ -305,7 +320,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-emerald-800/80">Total</span>
-                    <span className="text-lg font-bold">£{successState.total.toFixed(2)}</span>
+                    <span className="text-lg font-bold">{formatMoney(successState.total, tenantSettings.currencySymbol)}</span>
                   </div>
                 </div>
               </div>
@@ -330,6 +345,15 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </aside>
+          </div>
+          <div className="border-t border-slate-100 bg-slate-50 px-6 py-5 text-sm text-slate-600 sm:px-8">
+            <p className="font-semibold text-slate-900">{tenantSettings.displayName || "Business details"}</p>
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+              {tenantSettings.contactPhone ? <span>Phone: {tenantSettings.contactPhone}</span> : null}
+              {tenantSettings.contactEmail ? <span>Email: {tenantSettings.contactEmail}</span> : null}
+              {tenantSettings.contactAddress ? <span>Address: {tenantSettings.contactAddress}</span> : null}
+            </div>
+            <p className="mt-3 text-xs leading-5 text-slate-500">{tenantSettings.footerNotice || "Prices and availability may change without notice."}</p>
           </div>
         </div>
       </main>
@@ -414,9 +438,9 @@ export default function CheckoutPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium">{row.name}</p>
-                      <p className="text-sm text-gray-600">£{row.unitPrice.toFixed(2)} each</p>
+                      <p className="text-sm text-gray-600">{formatMoney(row.unitPrice, tenantSettings.currencySymbol)} each</p>
                     </div>
-                    <p className="font-medium">£{row.lineTotal.toFixed(2)}</p>
+                    <p className="font-medium">{formatMoney(row.lineTotal, tenantSettings.currencySymbol)}</p>
                   </div>
 
                   <div className="mt-3 flex items-center gap-2">
@@ -439,12 +463,25 @@ export default function CheckoutPage() {
 
               <div className="flex items-center justify-between border-t pt-4 font-semibold">
                 <span>Total</span>
-                <span>£{total.toFixed(2)}</span>
+                <span>{formatMoney(total, tenantSettings.currencySymbol)}</span>
               </div>
             </div>
           )}
         </aside>
       </div>
+
+      <section className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 text-sm text-slate-600 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Business details</p>
+        <p className="mt-2 text-base font-semibold text-slate-900">{tenantSettings.displayName || "Your order"}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {tenantSettings.contactPhone ? <p>Phone: {tenantSettings.contactPhone}</p> : null}
+          {tenantSettings.contactEmail ? <p>Email: {tenantSettings.contactEmail}</p> : null}
+          {tenantSettings.contactWhatsApp ? <p>WhatsApp: {tenantSettings.contactWhatsApp}</p> : null}
+          {tenantSettings.contactAddress ? <p>Address: {tenantSettings.contactAddress}</p> : null}
+        </div>
+        <p className="mt-4 leading-6 text-slate-600">{tenantSettings.footerBlurb || "Thank you for ordering with us."}</p>
+        <p className="mt-3 text-xs leading-5 text-slate-500">{tenantSettings.footerNotice || "Prices and availability may change without notice."}</p>
+      </section>
     </main>
   );
 }

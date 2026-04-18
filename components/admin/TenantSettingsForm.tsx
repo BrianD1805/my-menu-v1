@@ -11,6 +11,15 @@ type FormState = {
   logoUrl: string;
   primaryColor: string;
   accentColor: string;
+  contactPhone: string;
+  contactEmail: string;
+  contactWhatsApp: string;
+  contactAddress: string;
+  footerBlurb: string;
+  footerNotice: string;
+  currencyName: string;
+  currencyCode: string;
+  currencySymbol: string;
 };
 
 export default function TenantSettingsForm({
@@ -27,8 +36,10 @@ export default function TenantSettingsForm({
 
   const previewName = form.businessDisplayName.trim() || tenantName;
   const previewHeading = form.storefrontHeading.trim() || "Browse the menu";
-  const previewSubheading =
-    form.storefrontSubheading.trim() || "Tap into the details for more information, or add favourites straight to your order.";
+  const previewSubheading = form.storefrontSubheading.trim() || "Tap into the details for more information, or add favourites straight to your order.";
+  const footerBlurb = form.footerBlurb.trim() || "Thank you for ordering with us.";
+  const footerNotice = form.footerNotice.trim() || "Prices and availability may change without notice.";
+  const currencySymbol = form.currencySymbol.trim() || "£";
 
   const messageClass = useMemo(() => {
     if (tone === "success") return "border-emerald-200 bg-emerald-50 text-emerald-800";
@@ -45,7 +56,7 @@ export default function TenantSettingsForm({
     event.preventDefault();
     setSaving(true);
     setTone("info");
-    setMessage("Saving tenant branding settings...");
+    setMessage("Saving tenant settings...");
 
     try {
       const response = await fetch("/api/admin/settings", {
@@ -56,7 +67,7 @@ export default function TenantSettingsForm({
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to save settings");
       setTone("success");
-      setMessage("Tenant branding settings saved.");
+      setMessage("Tenant settings saved.");
     } catch (error) {
       setTone("error");
       setMessage(error instanceof Error ? error.message : "Failed to save settings");
@@ -69,42 +80,48 @@ export default function TenantSettingsForm({
     <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
       <form onSubmit={onSubmit} className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
         <div className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant branding</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-900">Business identity and storefront wording</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
+          <h2 className="mt-2 text-2xl font-bold text-slate-900">Branding, contact, footer, and currency</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            This is the first branding/settings layer. It lets each tenant start reflecting its own name, header copy, and colour direction.
+            Each tenant can now shape its own business identity, contact details, storefront footer details, and core currency display.
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Business display name">
-            <input value={form.businessDisplayName} onChange={(e) => update("businessDisplayName", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder={tenantName} />
-          </Field>
-          <Field label="Admin heading label">
-            <input value={form.adminHeadingLabel} onChange={(e) => update("adminHeadingLabel", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Used in the admin shell" />
-          </Field>
-          <div className="md:col-span-2">
-            <Field label="Storefront heading">
-              <input value={form.storefrontHeading} onChange={(e) => update("storefrontHeading", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Browse the menu" />
-            </Field>
+        <Section title="Branding and wording">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Business display name"><input value={form.businessDisplayName} onChange={(e) => update("businessDisplayName", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder={tenantName} /></Field>
+            <Field label="Admin heading label"><input value={form.adminHeadingLabel} onChange={(e) => update("adminHeadingLabel", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Used in the admin shell" /></Field>
+            <div className="md:col-span-2"><Field label="Storefront heading"><input value={form.storefrontHeading} onChange={(e) => update("storefrontHeading", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Browse the menu" /></Field></div>
+            <div className="md:col-span-2"><Field label="Storefront subheading"><textarea value={form.storefrontSubheading} onChange={(e) => update("storefrontSubheading", e.target.value)} rows={3} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="A short welcome line for this business" /></Field></div>
+            <div className="md:col-span-2"><Field label="Logo URL"><input value={form.logoUrl} onChange={(e) => update("logoUrl", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="https://..." /></Field></div>
+            <Field label="Primary brand colour"><input value={form.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#0F172A" /></Field>
+            <Field label="Accent brand colour"><input value={form.accentColor} onChange={(e) => update("accentColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#10B981" /></Field>
           </div>
-          <div className="md:col-span-2">
-            <Field label="Storefront subheading">
-              <textarea value={form.storefrontSubheading} onChange={(e) => update("storefrontSubheading", e.target.value)} rows={4} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="A short welcome line for this business" />
-            </Field>
+        </Section>
+
+        <Section title="Business contact details">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Contact phone"><input value={form.contactPhone} onChange={(e) => update("contactPhone", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Main business phone" /></Field>
+            <Field label="Contact email"><input value={form.contactEmail} onChange={(e) => update("contactEmail", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="orders@example.com" /></Field>
+            <Field label="Contact WhatsApp"><input value={form.contactWhatsApp} onChange={(e) => update("contactWhatsApp", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="WhatsApp number for customers" /></Field>
+            <Field label="Business address"><input value={form.contactAddress} onChange={(e) => update("contactAddress", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Street, area, city" /></Field>
           </div>
-          <div className="md:col-span-2">
-            <Field label="Logo URL">
-              <input value={form.logoUrl} onChange={(e) => update("logoUrl", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="https://..." />
-            </Field>
+        </Section>
+
+        <Section title="Storefront footer info">
+          <div className="grid gap-4">
+            <Field label="Footer blurb"><textarea value={form.footerBlurb} onChange={(e) => update("footerBlurb", e.target.value)} rows={3} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="A friendly closing line for the storefront footer" /></Field>
+            <Field label="Footer notice"><textarea value={form.footerNotice} onChange={(e) => update("footerNotice", e.target.value)} rows={3} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Useful notice such as delivery area, pricing, or availability note" /></Field>
           </div>
-          <Field label="Primary brand colour">
-            <input value={form.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm uppercase outline-none transition focus:border-slate-400" placeholder="#0F172A" />
-          </Field>
-          <Field label="Accent brand colour">
-            <input value={form.accentColor} onChange={(e) => update("accentColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm uppercase outline-none transition focus:border-slate-400" placeholder="#10B981" />
-          </Field>
-        </div>
+        </Section>
+
+        <Section title="Currency display">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Pounds Sterling" /></Field>
+            <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="GBP" maxLength={3} /></Field>
+            <Field label="Currency symbol"><input value={form.currencySymbol} onChange={(e) => update("currencySymbol", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="£" maxLength={8} /></Field>
+          </div>
+        </Section>
 
         {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}
 
@@ -121,7 +138,7 @@ export default function TenantSettingsForm({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Storefront preview</p>
           <div className="mt-4 rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)]">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[18px] border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-sm overflow-hidden">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px] border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-sm">
                 {form.logoUrl.trim() ? <img src={form.logoUrl.trim()} alt={previewName} className="h-full w-full rounded-[18px] object-cover" /> : "Logo"}
               </div>
               <div>
@@ -134,14 +151,37 @@ export default function TenantSettingsForm({
               <h4 className="mt-2 text-3xl font-semibold" style={{ color: form.primaryColor || "#0F172A" }}>{previewHeading}</h4>
               <p className="mt-3 text-sm leading-6 text-slate-600">{previewSubheading}</p>
             </div>
+            <div className="mt-5 rounded-[24px] border border-slate-200 bg-white p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Footer</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{footerBlurb}</p>
+              <div className="mt-3 grid gap-2 text-sm text-slate-600">
+                {form.contactPhone.trim() ? <p>Phone: {form.contactPhone}</p> : null}
+                {form.contactEmail.trim() ? <p>Email: {form.contactEmail}</p> : null}
+                {form.contactAddress.trim() ? <p>Address: {form.contactAddress}</p> : null}
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="rounded-full bg-slate-100 px-3 py-1.5">{form.currencyCode.trim() || "GBP"}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1.5">{currencySymbol}12.50 sample</span>
+              </div>
+              <p className="mt-4 text-xs leading-5 text-slate-500">{footerNotice}</p>
+            </div>
           </div>
         </div>
 
         <div className="rounded-[30px] border border-sky-100 bg-sky-50 p-5 text-sm leading-6 text-sky-900 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-6">
-          This is the first real tenant settings layer. After this, the next good expansion is contact details, footer info, social links, and customer-facing business details.
+          This tenant settings layer now covers branding, contact details, storefront footer content, and core currency display.
         </div>
       </div>
     </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mb-6 rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+      <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">{title}</h3>
+      {children}
+    </section>
   );
 }
 

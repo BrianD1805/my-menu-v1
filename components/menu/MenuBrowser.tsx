@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
+import { formatMoney } from "@/lib/tenant-settings";
 
 type Category = {
   id: string;
@@ -38,6 +39,14 @@ export default function MenuBrowser({
   welcomeSubheading,
   primaryColor,
   accentColor,
+  contactPhone,
+  contactEmail,
+  contactWhatsApp,
+  contactAddress,
+  footerBlurb,
+  footerNotice,
+  currencyCode,
+  currencySymbol,
 }: {
   tenantSlug: string;
   tenantName: string;
@@ -49,6 +58,14 @@ export default function MenuBrowser({
   welcomeSubheading?: string;
   primaryColor?: string;
   accentColor?: string;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+  contactWhatsApp?: string | null;
+  contactAddress?: string | null;
+  footerBlurb?: string | null;
+  footerNotice?: string | null;
+  currencyCode?: string | null;
+  currencySymbol?: string | null;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -179,12 +196,39 @@ export default function MenuBrowser({
                   imageUrl={product.image_url}
                   price={Number(product.price)}
                   tenantSlug={tenantSlug}
+                  currencySymbol={currencySymbol}
+                  currencyCode={currencyCode}
                 />
               ))}
             </div>
           </section>
         );
       })}
+
+      <section className="rounded-[28px] border border-white/80 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+        <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Storefront footer</p>
+            <h3 className="mt-2 text-[1.2rem] font-semibold tracking-tight text-slate-900 sm:text-[1.45rem]">{tenantName}</h3>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">{footerBlurb || "Thank you for ordering with us."}</p>
+            <p className="mt-4 text-xs leading-5 text-slate-500">{footerNotice || "Prices and availability may change without notice."}</p>
+          </div>
+
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Business details</p>
+            <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+              {contactPhone ? <p><span className="font-semibold text-slate-900">Phone:</span> {contactPhone}</p> : null}
+              {contactWhatsApp ? <p><span className="font-semibold text-slate-900">WhatsApp:</span> {contactWhatsApp}</p> : null}
+              {contactEmail ? <p><span className="font-semibold text-slate-900">Email:</span> {contactEmail}</p> : null}
+              {contactAddress ? <p><span className="font-semibold text-slate-900">Address:</span> {contactAddress}</p> : null}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{currencyCode || "GBP"}</span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{formatMoney(12.5, currencySymbol)} sample</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {searchOpen ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px] overscroll-none" onClick={() => setSearchOpen(false)}>
@@ -301,7 +345,7 @@ export default function MenuBrowser({
                               </p>
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                  <p className="text-sm font-semibold text-slate-900">£{Number(product.price).toFixed(2)}</p>
+                                  <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(product.price), currencySymbol)}</p>
                                   {state === "added" ? (
                                     <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
                                       In cart: {cartCount}

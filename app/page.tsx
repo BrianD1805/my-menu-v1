@@ -35,6 +35,14 @@ export default async function HomePage() {
         welcomeSubheading={branding.storefrontSubheading}
         primaryColor={branding.primaryColor}
         accentColor={branding.accentColor}
+        contactPhone={branding.contactPhone}
+        contactEmail={branding.contactEmail}
+        contactWhatsApp={branding.contactWhatsApp}
+        contactAddress={branding.contactAddress}
+        footerBlurb={branding.footerBlurb}
+        footerNotice={branding.footerNotice}
+        currencyCode={branding.currencyCode}
+        currencySymbol={branding.currencySymbol}
       />
     </main>
   );
