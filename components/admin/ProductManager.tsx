@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
 type CategoryOption = {
   id: string;
@@ -111,9 +112,11 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (value: 
 export default function ProductManager({
   products: initialProducts,
   categories,
+  moneySettings,
 }: {
   products: ProductRow[];
   categories: CategoryOption[];
+  moneySettings?: MoneyFormatSettings | null;
 }) {
   const [products, setProducts] = useState<ProductRow[]>(initialProducts);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -347,6 +350,10 @@ export default function ProductManager({
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Manage products</h2>
               <p className="mt-1 text-sm text-gray-600">Keep the page clean, then use the popup tools to search, filter, add, or edit products.</p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                <span className="rounded-full bg-slate-100 px-3 py-1.5 normal-case tracking-normal">100 → {formatMoney(100, moneySettings)}</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1.5 normal-case tracking-normal">1000 → {formatMoney(1000, moneySettings)}</span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
@@ -401,7 +408,7 @@ export default function ProductManager({
                         ) : null}
                       </div>
                       {product.description ? <p className="mt-1 text-sm text-gray-600">{stripHtml(product.description).slice(0, 180)}{stripHtml(product.description).length > 180 ? "..." : ""}</p> : null}
-                      <p className="mt-2 text-sm font-medium text-gray-900">£{Number(product.price).toFixed(2)}</p>
+                      <p className="mt-2 text-sm font-medium text-gray-900">{formatMoney(Number(product.price), moneySettings)}</p>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
@@ -541,7 +548,7 @@ export default function ProductManager({
                                 </p>
                               ) : null}
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                                <p className="text-sm font-semibold text-slate-900">£{Number(product.price).toFixed(2)}</p>
+                                <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(product.price), moneySettings)}</p>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -629,9 +636,10 @@ export default function ProductManager({
                               ? setNewDraft((current) => ({ ...current, price: event.target.value }))
                               : setEditingDraft((current) => (current ? { ...current, price: event.target.value } : current))
                           }
-                          placeholder="0.00"
+                          placeholder={formatMoney(100, moneySettings).replace(/100(?:[.,]00)?/, "0")}
                           className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
                         />
+                        <p className="mt-2 text-xs text-slate-500">Current tenant format example: {formatMoney(Number(activeDraft.price || 0), moneySettings)}</p>
                       </div>
 
                       <div>

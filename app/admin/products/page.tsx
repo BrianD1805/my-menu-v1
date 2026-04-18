@@ -42,7 +42,7 @@ export default async function AdminProductsPage() {
         This product list is tenant-specific. Use the popup tools to search, add, edit, and manage images for this tenant only.
       </div>
 
-      <ProductManager products={productRows} categories={categories || []} />
+      <ProductManager products={productRows} categories={categories || []} moneySettings={branding} />
     </AdminShell>
   );
 }

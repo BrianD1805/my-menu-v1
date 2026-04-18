@@ -161,6 +161,33 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <input type="checkbox" checked={form.currencyUseThousandsSeparator} onChange={(e) => update("currencyUseThousandsSeparator", e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
             Use thousands separator
           </label>
+
+          <div className="mt-4 rounded-[24px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Live currency preview</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">As you change the settings above, these sample prices update immediately.</p>
+              </div>
+              <div className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
+                Sample code: {form.currencyCode.trim() || "GBP"}
+              </div>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Small item</p>
+                <p className="mt-2 text-xl font-semibold text-slate-950">{formatMoney(100, moneySettings)}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Popular item</p>
+                <p className="mt-2 text-xl font-semibold text-slate-950">{formatMoney(295, moneySettings)}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Larger total</p>
+                <p className="mt-2 text-xl font-semibold text-slate-950">{formatMoney(1000, moneySettings)}</p>
+              </div>
+            </div>
+          </div>
+
         </Section>
 
         {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}

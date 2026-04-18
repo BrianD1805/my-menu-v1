@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
 type ProductRow = {
   id: string;
@@ -15,9 +16,11 @@ type ProductRow = {
 export default function ProductImageManager({
   tenantSlug,
   products,
+  moneySettings,
 }: {
   tenantSlug: string;
   products: ProductRow[];
+  moneySettings?: MoneyFormatSettings | null;
 }) {
   const [drafts, setDrafts] = useState<Record<string, string>>(
     Object.fromEntries(products.map((product) => [product.id, product.image_url || ""]))
@@ -145,7 +148,7 @@ export default function ProductImageManager({
                     ) : null}
                   </div>
                   {product.description ? <p className="mt-1 text-sm text-gray-600">{product.description}</p> : null}
-                  <p className="mt-2 text-sm font-medium text-gray-900">£{Number(product.price).toFixed(2)}</p>
+                  <p className="mt-2 text-sm font-medium text-gray-900">{formatMoney(Number(product.price), moneySettings)}</p>
                 </div>
 
                 <div className="space-y-2">
