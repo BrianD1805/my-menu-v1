@@ -1,4 +1,4 @@
-import { formatMoney } from "@/lib/tenant-settings";
+import { formatMoney } from "@/lib/money";
 
 type OrderForWhatsapp = {
   id: string;

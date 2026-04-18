@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
-import { formatMoney } from "@/lib/tenant-settings";
+import { formatMoney } from "@/lib/money";
 
 type Category = {
   id: string;

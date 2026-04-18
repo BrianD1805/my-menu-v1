@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
-import { formatMoney } from "@/lib/tenant-settings";
+import { formatMoney } from "@/lib/money";
 
 type CartItem = {
   productId: string;

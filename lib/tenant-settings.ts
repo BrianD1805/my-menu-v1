@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { DEFAULT_CURRENCY_CODE, DEFAULT_CURRENCY_NAME, DEFAULT_CURRENCY_SYMBOL, formatMoney } from "@/lib/money";
 
 export type TenantSettings = {
   tenant_id: string;
@@ -22,9 +23,6 @@ export type TenantSettings = {
 
 export const DEFAULT_PRIMARY_COLOR = "#0f172a";
 export const DEFAULT_ACCENT_COLOR = "#10b981";
-export const DEFAULT_CURRENCY_NAME = "Pounds Sterling";
-export const DEFAULT_CURRENCY_CODE = "GBP";
-export const DEFAULT_CURRENCY_SYMBOL = "£";
 
 export function normalizeColor(value: unknown) {
   const color = String(value || "").trim();
@@ -80,6 +78,3 @@ export function buildTenantBranding(tenantName: string, settings: TenantSettings
   };
 }
 
-export function formatMoney(amount: number | string, currencySymbol?: string | null) {
-  return `${currencySymbol || DEFAULT_CURRENCY_SYMBOL}${Number(amount || 0).toFixed(2)}`;
-}

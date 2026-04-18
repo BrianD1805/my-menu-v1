@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
-import { formatMoney } from "@/lib/tenant-settings";
+import { formatMoney } from "@/lib/money";
 
 type Props = {
   id: string;

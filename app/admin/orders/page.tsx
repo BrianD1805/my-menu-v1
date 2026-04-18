@@ -4,7 +4,8 @@ import WhatsAppButton from "@/components/admin/WhatsAppButton";
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
-import { buildTenantBranding, formatMoney, getTenantSettings } from "@/lib/tenant-settings";
+import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { formatMoney } from "@/lib/money";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default async function AdminOrdersPage() {
