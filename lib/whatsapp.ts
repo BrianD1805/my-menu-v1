@@ -54,8 +54,7 @@ export function buildWhatsAppOrderMessage(args: {
   lines.push("");
   lines.push("Please confirm this order.");
 
-  return lines.join("
-");
+  return lines.join("\n");
 }
 
 export function buildWhatsAppUrl(phone: string, message: string) {
