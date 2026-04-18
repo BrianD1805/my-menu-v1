@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
+import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
@@ -45,6 +46,9 @@ function ActionCard({
 export default async function AdminHomePage() {
   const { tenant, user } = await requireAdminPageUser();
 
+  const settings = await getTenantSettings(tenant.id);
+  const branding = buildTenantBranding(tenant.name, settings);
+
   const [{ count: orderCount }, { count: productCount }, { count: categoryCount }] = await Promise.all([
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("products").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
@@ -53,11 +57,13 @@ export default async function AdminHomePage() {
 
   return (
     <AdminShell
-      tenantName={tenant.name}
+      tenantName={branding.adminHeadingLabel}
       signedInAs={user.full_name || user.email || "Owner"}
       current="home"
       title={`Welcome back, ${user.full_name || user.email}`}
-      description="Choose where you want to work today — orders, products, categories, or a quick storefront check. Everything below belongs to this tenant only."
+      description="Choose where you want to work today — orders, products, categories, settings, or a quick storefront check. Everything below belongs to this tenant only."
+      logoUrl={branding.logoUrl}
+      accentColor={branding.accentColor}
     >
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Orders" value={String(orderCount || 0)} hint="All orders shown here belong to this tenant only." />
@@ -83,6 +89,12 @@ export default async function AdminHomePage() {
           eyebrow="Menu structure"
           title="Categories"
           body="Create, reorder, and tidy category groups so the storefront stays clean and easy for customers to browse."
+        />
+        <ActionCard
+          href="/admin/settings"
+          eyebrow="Branding"
+          title="Settings"
+          body="Start shaping the business identity, wording, colours, and logo that will flow through this tenant’s storefront and admin."
         />
       </div>
     </AdminShell>

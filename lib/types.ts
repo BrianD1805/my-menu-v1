@@ -38,3 +38,15 @@ export type CreateOrderInput = {
   notes?: string;
   items: CartItemInput[];
 };
+
+
+export type TenantSettings = {
+  tenant_id: string;
+  business_display_name: string | null;
+  storefront_heading: string | null;
+  storefront_subheading: string | null;
+  admin_heading_label: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  accent_color: string | null;
+};

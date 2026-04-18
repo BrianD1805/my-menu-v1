@@ -4,10 +4,13 @@ import WhatsAppButton from "@/components/admin/WhatsAppButton";
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
+import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default async function AdminOrdersPage() {
   const { tenant, user } = await requireAdminPageUser();
+  const settings = await getTenantSettings(tenant.id);
+  const branding = buildTenantBranding(tenant.name, settings);
 
   const { data: orders } = await db
     .from("orders")
@@ -24,10 +27,12 @@ export default async function AdminOrdersPage() {
 
   return (
     <AdminShell
-      tenantName={tenant.name}
+      tenantName={branding.adminHeadingLabel}
       signedInAs={user.full_name || user.email || "Owner"}
       current="orders"
       title="Admin Orders"
+      logoUrl={branding.logoUrl}
+      accentColor={branding.accentColor}
       description="Manage incoming orders for this tenant only. Update status, open WhatsApp when needed, and keep service moving cleanly."
     >
       <div className="space-y-4">

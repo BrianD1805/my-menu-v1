@@ -33,12 +33,22 @@ export default function MenuBrowser({
   version,
   categories,
   products,
+  logoUrl,
+  welcomeHeading,
+  welcomeSubheading,
+  primaryColor,
+  accentColor,
 }: {
   tenantSlug: string;
   tenantName: string;
   version: string;
   categories: Category[];
   products: Product[];
+  logoUrl?: string | null;
+  welcomeHeading?: string;
+  welcomeSubheading?: string;
+  primaryColor?: string;
+  accentColor?: string;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -110,12 +120,12 @@ export default function MenuBrowser({
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-emerald-100 bg-white/95 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:h-12 sm:w-12 sm:rounded-[20px]">
-                  <span className="text-[10px] font-bold leading-tight tracking-[0.16em] text-slate-600">{version.replace("Ver: ", "V ")}</span>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border bg-white/95 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:h-12 sm:w-12 sm:rounded-[20px]" style={accentColor ? { borderColor: `${accentColor}33` } : undefined}>
+                  {logoUrl ? <img src={logoUrl} alt={tenantName} className="h-full w-full object-cover" loading="lazy" /> : <span className="text-[10px] font-bold leading-tight tracking-[0.16em] text-slate-600">{version.replace("Ver: ", "V ")}</span>}
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400 sm:text-[11px] sm:tracking-[0.28em]">Order online</p>
-                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight text-slate-950 sm:text-[1.95rem] lg:text-[2.35rem]">{tenantName}</h1>
+                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight text-slate-950 sm:text-[1.95rem] lg:text-[2.35rem]" style={primaryColor ? { color: primaryColor } : undefined}>{tenantName}</h1>
                 </div>
               </div>
 
@@ -141,9 +151,9 @@ export default function MenuBrowser({
 
       <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Welcome</p>
-        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]">Browse the menu</h2>
+        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]" style={primaryColor ? { color: primaryColor } : undefined}>{welcomeHeading || "Browse the menu"}</h2>
         <p className="mt-3 max-w-3xl text-[14px] leading-6 text-slate-600 sm:text-base sm:leading-7">
-          Tap into the details for more information, or add favourites straight to your order.
+          {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
       </section>
 

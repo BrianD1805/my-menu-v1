@@ -2,9 +2,12 @@ import ProductManager from "@/components/admin/ProductManager";
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
+import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 export default async function AdminProductsPage() {
   const { tenant, user } = await requireAdminPageUser();
+  const settings = await getTenantSettings(tenant.id);
+  const branding = buildTenantBranding(tenant.name, settings);
 
   const { data: categories } = await db
     .from("categories")
@@ -27,10 +30,12 @@ export default async function AdminProductsPage() {
 
   return (
     <AdminShell
-      tenantName={tenant.name}
+      tenantName={branding.adminHeadingLabel}
       signedInAs={user.full_name || user.email || "Owner"}
       current="products"
       title="Products"
+      logoUrl={branding.logoUrl}
+      accentColor={branding.accentColor}
       description="Manage products, images, and rich descriptions for this tenant only."
     >
       <div className="mb-6 rounded-[24px] border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900">

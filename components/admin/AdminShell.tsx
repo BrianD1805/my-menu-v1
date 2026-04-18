@@ -23,33 +23,47 @@ export default function AdminShell({
   description,
   current,
   children,
+  logoUrl,
+  accentColor,
 }: {
   tenantName: string;
   signedInAs: string;
   title: string;
   description: string;
-  current: "home" | "orders" | "products" | "categories";
+  current: "home" | "orders" | "products" | "categories" | "settings";
   children: ReactNode;
+  logoUrl?: string | null;
+  accentColor?: string | null;
 }) {
   const nav: NavItem[] = [
     { href: "/admin", label: "Home", current: current === "home" },
     { href: "/admin/orders", label: "Orders", current: current === "orders" },
     { href: "/admin/products", label: "Products", current: current === "products" },
     { href: "/admin/categories", label: "Categories", current: current === "categories" },
+    { href: "/admin/settings", label: "Settings", current: current === "settings" },
   ];
 
   return (
     <main className="min-h-screen bg-slate-100 px-3 py-4 sm:px-6 sm:py-7">
       <div className="mx-auto max-w-6xl">
-        <header className="rounded-[28px] border border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,#f7faf8_52%,#edf7f1_100%)] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.10)] sm:rounded-[32px] sm:p-7">
+        <header
+          className="rounded-[28px] border border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,#f7faf8_52%,#edf7f1_100%)] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.10)] sm:rounded-[32px] sm:p-7"
+          style={accentColor ? { borderColor: `${accentColor}22` } : undefined}
+        >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 sm:text-xs">Tenant admin</p>
-                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 sm:hidden">
-                  {current}
-                </span>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
+                  {logoUrl ? <img src={logoUrl} alt={tenantName} className="h-full w-full object-cover" /> : <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Brand</span>}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 sm:text-xs">Tenant admin</p>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 sm:hidden">
+                    {current}
+                  </span>
+                </div>
               </div>
+
               <h1 className="mt-3 text-2xl font-bold leading-tight text-slate-900 sm:text-4xl">{title}</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">{description}</p>
               <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
