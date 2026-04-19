@@ -2,6 +2,7 @@ import MenuBrowser from "@/components/menu/MenuBrowser";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { getDefaultTenantLogoUrl } from "@/lib/tenant-assets";
 import { LIVE_VERSION } from "@/lib/version";
 
 export default async function HomePage() {
@@ -30,8 +31,8 @@ export default async function HomePage() {
         version={LIVE_VERSION}
         categories={categories || []}
         products={products || []}
-        logoUrl={branding.logoUrl}
-        headerLogoUrl={slug === "orduva" ? "/tenant-assets/zimza-express/logo.png" : branding.logoUrl}
+        logoUrl={branding.logoUrl || getDefaultTenantLogoUrl(slug)}
+        headerLogoUrl={branding.logoUrl || getDefaultTenantLogoUrl(slug)}
         welcomeHeading={branding.storefrontHeading}
         welcomeSubheading={branding.storefrontSubheading}
         primaryColor={branding.primaryColor}

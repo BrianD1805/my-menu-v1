@@ -1,11 +1,39 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
+import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { getDefaultTenantFaviconUrl } from "@/lib/tenant-assets";
 
-export const metadata: Metadata = {
-  title: "My Menu V1",
-  description: "Online ordering"
-};
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const slug = await resolveTenantSlug();
+    const tenant = await getTenantBySlug(slug);
+    const settings = await getTenantSettings(tenant.id);
+    const branding = buildTenantBranding(tenant.name, settings);
+    const faviconUrl = branding.faviconUrl || getDefaultTenantFaviconUrl(slug) || "/favicon.ico";
+    const title = `${branding.displayName} | Orduva Online`;
+
+    return {
+      title,
+      description: branding.storefrontSubheading || "Online ordering",
+      icons: {
+        icon: faviconUrl,
+        shortcut: faviconUrl,
+        apple: faviconUrl,
+      },
+      manifest: "/manifest.webmanifest",
+      themeColor: branding.primaryColor || "#0f172a",
+      applicationName: branding.displayName,
+    };
+  } catch {
+    return {
+      title: "Orduva Online",
+      description: "Online ordering",
+      manifest: "/manifest.webmanifest",
+    };
+  }
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
