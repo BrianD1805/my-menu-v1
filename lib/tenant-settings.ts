@@ -57,6 +57,29 @@ export function normalizeOptionalText(value: unknown, maxLength: number) {
   return text.slice(0, maxLength);
 }
 
+function asStringOrNull(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function asNumberOrNull(value: unknown): number | null {
+  return typeof value === "number" ? value : null;
+}
+
+function asBooleanOrNull(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
+}
+
+function asCurrencyDisplayModeOrNull(value: unknown): CurrencyDisplayMode | null {
+  return value === "symbol" || value === "code" || value === "code_symbol" || value === "symbol_code" || value === "none"
+    ? value
+    : null;
+}
+
+function asCurrencySymbolPositionOrNull(value: unknown): CurrencySymbolPosition | null {
+  return value === "before" || value === "after" ? value : null;
+}
+
+
 export function normalizeCurrencyCode(value: unknown) {
   const code = String(value || "").trim().toUpperCase();
   return /^[A-Z]{3}$/.test(code) ? code : null;
@@ -110,31 +133,31 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
   if (!data) return null;
 
   return {
-    tenant_id: data.tenant_id,
-    business_display_name: data.business_display_name ?? null,
-    storefront_heading: data.storefront_heading ?? null,
-    storefront_subheading: data.storefront_subheading ?? null,
-    admin_heading_label: data.admin_heading_label ?? null,
-    logo_url: data.logo_url ?? null,
-    favicon_url: ("favicon_url" in data ? data.favicon_url : null) ?? null,
-    primary_color: data.primary_color ?? null,
-    accent_color: data.accent_color ?? null,
-    contact_phone: ("contact_phone" in data ? data.contact_phone : null) ?? null,
-    contact_email: ("contact_email" in data ? data.contact_email : null) ?? null,
-    contact_whatsapp: ("contact_whatsapp" in data ? data.contact_whatsapp : null) ?? null,
-    contact_address: ("contact_address" in data ? data.contact_address : null) ?? null,
-    footer_blurb: ("footer_blurb" in data ? data.footer_blurb : null) ?? null,
-    footer_notice: ("footer_notice" in data ? data.footer_notice : null) ?? null,
-    currency_name: ("currency_name" in data ? data.currency_name : null) ?? null,
-    currency_code: ("currency_code" in data ? data.currency_code : null) ?? null,
-    currency_symbol: ("currency_symbol" in data ? data.currency_symbol : null) ?? null,
-    currency_display_mode: ("currency_display_mode" in data ? data.currency_display_mode : null) ?? null,
-    currency_symbol_position: ("currency_symbol_position" in data ? data.currency_symbol_position : null) ?? null,
-    currency_decimal_places: ("currency_decimal_places" in data ? data.currency_decimal_places : null) ?? null,
-    currency_use_thousands_separator: ("currency_use_thousands_separator" in data ? data.currency_use_thousands_separator : null) ?? null,
-    currency_decimal_separator: ("currency_decimal_separator" in data ? data.currency_decimal_separator : null) ?? null,
-    currency_thousands_separator: ("currency_thousands_separator" in data ? data.currency_thousands_separator : null) ?? null,
-    currency_suffix: ("currency_suffix" in data ? data.currency_suffix : null) ?? null,
+    tenant_id: String(data.tenant_id),
+    business_display_name: asStringOrNull(data.business_display_name),
+    storefront_heading: asStringOrNull(data.storefront_heading),
+    storefront_subheading: asStringOrNull(data.storefront_subheading),
+    admin_heading_label: asStringOrNull(data.admin_heading_label),
+    logo_url: asStringOrNull(data.logo_url),
+    favicon_url: asStringOrNull((data as Record<string, unknown>).favicon_url),
+    primary_color: asStringOrNull(data.primary_color),
+    accent_color: asStringOrNull(data.accent_color),
+    contact_phone: asStringOrNull((data as Record<string, unknown>).contact_phone),
+    contact_email: asStringOrNull((data as Record<string, unknown>).contact_email),
+    contact_whatsapp: asStringOrNull((data as Record<string, unknown>).contact_whatsapp),
+    contact_address: asStringOrNull((data as Record<string, unknown>).contact_address),
+    footer_blurb: asStringOrNull((data as Record<string, unknown>).footer_blurb),
+    footer_notice: asStringOrNull((data as Record<string, unknown>).footer_notice),
+    currency_name: asStringOrNull((data as Record<string, unknown>).currency_name),
+    currency_code: asStringOrNull((data as Record<string, unknown>).currency_code),
+    currency_symbol: asStringOrNull((data as Record<string, unknown>).currency_symbol),
+    currency_display_mode: asCurrencyDisplayModeOrNull((data as Record<string, unknown>).currency_display_mode),
+    currency_symbol_position: asCurrencySymbolPositionOrNull((data as Record<string, unknown>).currency_symbol_position),
+    currency_decimal_places: asNumberOrNull((data as Record<string, unknown>).currency_decimal_places),
+    currency_use_thousands_separator: asBooleanOrNull((data as Record<string, unknown>).currency_use_thousands_separator),
+    currency_decimal_separator: asStringOrNull((data as Record<string, unknown>).currency_decimal_separator),
+    currency_thousands_separator: asStringOrNull((data as Record<string, unknown>).currency_thousands_separator),
+    currency_suffix: asStringOrNull((data as Record<string, unknown>).currency_suffix),
   };
 }
 
