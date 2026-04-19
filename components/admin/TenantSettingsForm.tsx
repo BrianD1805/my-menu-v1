@@ -150,6 +150,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <div className="md:col-span-2"><Field label="Logo URL"><input value={form.logoUrl} onChange={(e) => update("logoUrl", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="https://..." /></Field></div>
             <Field label="Primary brand colour"><input value={form.primaryColor} onChange={(e) => update("primaryColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#0F172A" /></Field>
             <Field label="Accent brand colour"><input value={form.accentColor} onChange={(e) => update("accentColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#10B981" /></Field>
+            <Field label="Background tint"><input value={form.backgroundTint} onChange={(e) => update("backgroundTint", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#F8F4F0" /></Field>
+            <Field label="Border colour"><input value={form.borderColor} onChange={(e) => update("borderColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#D9C7A3" /></Field>
+            <Field label="Text colour"><input value={form.textColor} onChange={(e) => update("textColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#2B2B2B" /></Field>
           </div>
         </Section>
 
