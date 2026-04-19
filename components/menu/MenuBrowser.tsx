@@ -165,15 +165,28 @@ export default function MenuBrowser({
       <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-[#f4f8f4] before:content-['']">
         <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,#f7fbf7_0%,#eef5ef_50%,#e6eee7_100%)] shadow-[0_22px_60px_rgba(15,23,42,0.10)]">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400 sm:text-[11px] sm:tracking-[0.28em]">Order online</p>
-                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight text-slate-950 sm:text-[1.95rem] lg:text-[2.35rem]" style={primaryColor ? { color: primaryColor } : undefined}>{tenantName}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="inline-flex rounded-[4px] bg-[#3366cc] px-1.5 py-0.5 text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-white shadow-[0_8px_18px_rgba(51,102,204,0.26)] sm:text-[0.74rem]">Orduva Online</p>
+                  <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+                </div>
+
+                <div className="mt-4 flex min-h-[94px] items-center justify-start sm:min-h-[110px] lg:min-h-[126px]">
+                  {headerLogoUrl ? (
+                    <img
+                      src={headerLogoUrl}
+                      alt={tenantName}
+                      className="h-auto max-h-[96px] w-auto max-w-[320px] object-contain sm:max-h-[112px] sm:max-w-[420px] lg:max-h-[130px] lg:max-w-[520px]"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <h1 className="truncate text-[1.56rem] font-semibold tracking-tight text-slate-950 sm:text-[1.95rem] lg:text-[2.35rem]" style={primaryColor ? { color: primaryColor } : undefined}>{tenantName}</h1>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="flex items-center gap-2 sm:gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
