@@ -14,6 +14,7 @@ import {
   type CurrencyDisplayMode,
   type CurrencySymbolPosition,
 } from "@/lib/money";
+import { getTenantBrandDefaults } from "@/lib/tenant-assets";
 
 export type TenantSettings = {
   tenant_id: string;
@@ -161,7 +162,8 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
   };
 }
 
-export function buildTenantBranding(tenantName: string, settings: TenantSettings | null) {
+export function buildTenantBranding(slug: string, tenantName: string, settings: TenantSettings | null) {
+  const defaults = getTenantBrandDefaults(slug);
   const displayName = settings?.business_display_name || tenantName;
   const money = buildMoneySettings({
     currencyName: settings?.currency_name || DEFAULT_CURRENCY_NAME,
@@ -182,10 +184,10 @@ export function buildTenantBranding(tenantName: string, settings: TenantSettings
     storefrontSubheading:
       settings?.storefront_subheading || "Tap into the details for more information, or add favourites straight to your order.",
     adminHeadingLabel: settings?.admin_heading_label || displayName,
-    logoUrl: settings?.logo_url || null,
-    faviconUrl: settings?.favicon_url || null,
-    primaryColor: settings?.primary_color || DEFAULT_PRIMARY_COLOR,
-    accentColor: settings?.accent_color || DEFAULT_ACCENT_COLOR,
+    logoUrl: settings?.logo_url || defaults.starterLogoUrl,
+    faviconUrl: settings?.favicon_url || defaults.starterFaviconUrl,
+    primaryColor: settings?.primary_color || defaults.primaryColor || DEFAULT_PRIMARY_COLOR,
+    accentColor: settings?.accent_color || defaults.accentColor || DEFAULT_ACCENT_COLOR,
     contactPhone: settings?.contact_phone || null,
     contactEmail: settings?.contact_email || null,
     contactWhatsApp: settings?.contact_whatsapp || null,

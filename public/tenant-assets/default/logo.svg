@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" role="img" aria-labelledby="title desc">
+  <title id="title">Orduva Starter Logo</title>
+  <desc id="desc">Starter tenant logo shown before a business uploads its own branding.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0%" stop-color="#336699"/>
+      <stop offset="100%" stop-color="#2C7A7B"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="220" rx="36" fill="#F7FAFC"/>
+  <circle cx="90" cy="110" r="54" fill="url(#g)"/>
+  <path d="M67 110c0-13 10-23 23-23h61v12H90c-6 0-11 5-11 11s5 11 11 11h49c13 0 23 10 23 23s-10 23-23 23H78v-12h61c6 0 11-5 11-11s-5-11-11-11H90c-13 0-23-10-23-23Z" fill="#fff"/>
+  <text x="176" y="98" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700" fill="#1F2937">Your Brand Here</text>
+  <text x="176" y="136" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#4B5563">Starter tenant logo until your business uploads its own.</text>
+</svg>

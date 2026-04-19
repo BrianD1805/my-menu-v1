@@ -47,7 +47,7 @@ export default async function AdminHomePage() {
   const { tenant, user } = await requireAdminPageUser();
 
   const settings = await getTenantSettings(tenant.id);
-  const branding = buildTenantBranding(tenant.name, settings);
+  const branding = buildTenantBranding(slug, tenant.name, settings);
 
   const [{ count: orderCount }, { count: productCount }, { count: categoryCount }] = await Promise.all([
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),

@@ -3,15 +3,14 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
-import { getDefaultTenantFaviconUrl } from "@/lib/tenant-assets";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const slug = await resolveTenantSlug();
     const tenant = await getTenantBySlug(slug);
     const settings = await getTenantSettings(tenant.id);
-    const branding = buildTenantBranding(tenant.name, settings);
-    const faviconUrl = branding.faviconUrl || getDefaultTenantFaviconUrl(slug) || "/favicon.ico";
+    const branding = buildTenantBranding(slug, tenant.name, settings);
+    const faviconUrl = branding.faviconUrl || "/favicon.ico";
     const title = `${branding.displayName} | Orduva Online`;
 
     return {

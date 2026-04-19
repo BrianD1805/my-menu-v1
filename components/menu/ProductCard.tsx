@@ -12,9 +12,10 @@ type Props = {
   price: number;
   tenantSlug: string;
   moneySettings?: MoneyFormatSettings;
+  accentColor?: string | null;
 };
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
 
@@ -93,7 +94,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <span className="whitespace-nowrap text-[1rem] font-semibold tracking-tight text-slate-950 sm:text-[1.18rem] lg:text-[1.3rem]">{fullPrice}</span>
               )}
             </div>
-            <button className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-[20px] border border-emerald-200/90 bg-[linear-gradient(180deg,#f3fbf4_0%,#eaf7ec_100%)] px-3 py-3 text-[0.84rem] font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[58px] sm:px-3.5 sm:text-[0.9rem] lg:min-h-[60px] lg:min-w-[122px] lg:px-4.5 lg:text-[0.93rem]" onClick={addToCart} disabled={buttonState === "adding"}>{buttonLabel()}</button>
+            <button className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-[20px] border px-3 py-3 text-[0.84rem] font-medium shadow-sm transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[58px] sm:px-3.5 sm:text-[0.9rem] lg:min-h-[60px] lg:min-w-[122px] lg:px-4.5 lg:text-[0.93rem]" style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 10%, white), color-mix(in srgb, ${accentColor} 16%, white))` } : undefined} onClick={addToCart} disabled={buttonState === "adding"}>{buttonLabel()}</button>
           </div>
         </div>
       </div>

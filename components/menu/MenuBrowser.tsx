@@ -183,7 +183,7 @@ export default function MenuBrowser({
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-100 bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.07)] transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-white sm:h-11 sm:w-11"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.07)] transition hover:-translate-y-[1px] hover:bg-white sm:h-11 sm:w-11" style={accentColor ? { borderColor: `${accentColor}44` } : undefined}
                   aria-label="Search menu"
                   title="Search menu"
                 >
@@ -199,7 +199,7 @@ export default function MenuBrowser({
         </div>
       </div>
 
-      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={accentColor ? { boxShadow: `0 18px 50px color-mix(in srgb, ${accentColor} 12%, rgba(15,23,42,0.07))`, borderColor: `${accentColor}1f` } : undefined}>
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Welcome</p>
         <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]" style={primaryColor ? { color: primaryColor } : undefined}>{welcomeHeading || "Browse the menu"}</h2>
         <p className="mt-3 max-w-3xl text-[14px] leading-6 text-slate-600 sm:text-base sm:leading-7">
@@ -215,7 +215,7 @@ export default function MenuBrowser({
           <section key={category.id} className="mb-8 sm:mb-10">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
               <h2 className="text-[1.38rem] font-semibold tracking-tight text-slate-900 sm:text-[1.95rem]">{category.name}</h2>
-              <span className="rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]">
+              <span className="rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]" style={accentColor ? { borderColor: `${accentColor}33`, color: accentColor } : undefined}>
                 {categoryProducts.length} {categoryProducts.length === 1 ? "item" : "items"}
               </span>
             </div>
@@ -230,6 +230,7 @@ export default function MenuBrowser({
                   price={Number(product.price)}
                   tenantSlug={tenantSlug}
                   moneySettings={moneySettings}
+                  accentColor={accentColor}
                 />
               ))}
             </div>
@@ -262,9 +263,9 @@ export default function MenuBrowser({
         </div>
       </section>
 
-      <footer className="rounded-[24px] border border-slate-200 bg-white/90 px-5 py-5 text-sm text-slate-600 shadow-sm sm:px-6">
+      <footer className="rounded-[24px] border border-slate-200 bg-white/90 px-5 py-5 text-sm text-slate-600 shadow-sm sm:px-6" style={accentColor ? { borderColor: `${accentColor}22` } : undefined}>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="inline-flex rounded-[4px] bg-[#3366cc] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white">Orduva Online</span>
+          <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={accentColor ? { backgroundColor: accentColor } : undefined}>Orduva Online</span>
           <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
         </div>
       </footer>

@@ -1,15 +1,14 @@
 import type { MetadataRoute } from "next";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
-import { getDefaultTenantFaviconUrl } from "@/lib/tenant-assets";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   try {
     const slug = await resolveTenantSlug();
     const tenant = await getTenantBySlug(slug);
     const settings = await getTenantSettings(tenant.id);
-    const branding = buildTenantBranding(tenant.name, settings);
-    const icon = branding.faviconUrl || getDefaultTenantFaviconUrl(slug) || "/favicon.ico";
+    const branding = buildTenantBranding(slug, tenant.name, settings);
+    const icon = branding.faviconUrl || "/favicon.ico";
 
     return {
       name: `${branding.displayName} | Orduva Online`,

@@ -247,7 +247,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 {form.logoUrl.trim() ? <img src={form.logoUrl.trim()} alt={previewName} className="h-full w-full rounded-[18px] object-cover" /> : "Logo"}
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">Order online</p>
+                <p className="inline-flex rounded-[4px] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white" style={{ backgroundColor: form.accentColor || "#2C7A7B" }}>Order online</p>
                 <h3 className="text-2xl font-semibold tracking-tight text-slate-950">{previewName}</h3>
               </div>
             </div>

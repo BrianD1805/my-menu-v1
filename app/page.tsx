@@ -2,14 +2,13 @@ import MenuBrowser from "@/components/menu/MenuBrowser";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
-import { getDefaultTenantLogoUrl } from "@/lib/tenant-assets";
 import { LIVE_VERSION } from "@/lib/version";
 
 export default async function HomePage() {
   const slug = await resolveTenantSlug();
   const tenant = await getTenantBySlug(slug);
   const settings = await getTenantSettings(tenant.id);
-  const branding = buildTenantBranding(tenant.name, settings);
+  const branding = buildTenantBranding(slug, tenant.name, settings);
 
   const { data: categories } = await db
     .from("categories")
@@ -31,8 +30,8 @@ export default async function HomePage() {
         version={LIVE_VERSION}
         categories={categories || []}
         products={products || []}
-        logoUrl={branding.logoUrl || getDefaultTenantLogoUrl(slug)}
-        headerLogoUrl={branding.logoUrl || getDefaultTenantLogoUrl(slug)}
+        logoUrl={branding.logoUrl}
+        headerLogoUrl={branding.logoUrl}
         welcomeHeading={branding.storefrontHeading}
         welcomeSubheading={branding.storefrontSubheading}
         primaryColor={branding.primaryColor}
