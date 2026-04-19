@@ -35,6 +35,7 @@ export default function MenuBrowser({
   categories,
   products,
   logoUrl,
+  headerLogoUrl,
   welcomeHeading,
   welcomeSubheading,
   primaryColor,
@@ -62,6 +63,7 @@ export default function MenuBrowser({
   categories: Category[];
   products: Product[];
   logoUrl?: string | null;
+  headerLogoUrl?: string | null;
   welcomeHeading?: string;
   welcomeSubheading?: string;
   primaryColor?: string;
