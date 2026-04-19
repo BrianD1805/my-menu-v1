@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowUpRight } from "lucide-react";
 import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
@@ -69,12 +70,23 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               </div>
             </button>
             <div className="min-w-0">
-              <button type="button" onClick={() => setDetailsOpen(true)} className="block min-w-0 text-left">
-                <h3 className="text-[1.1rem] font-semibold leading-[1.18] tracking-tight text-slate-950 sm:text-[1.32rem] lg:text-[1.4rem] xl:text-[1.48rem]">{name}</h3>
-              </button>
+              <div className="flex items-start gap-2">
+                <button type="button" onClick={() => setDetailsOpen(true)} className="block min-w-0 flex-1 text-left">
+                  <h3 className="text-[1.1rem] font-semibold leading-[1.18] tracking-tight text-slate-950 sm:text-[1.32rem] lg:text-[1.275rem] xl:text-[1.36rem]">{name}</h3>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailsOpen(true)}
+                  className="hidden lg:inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                  aria-label={`Open details for ${name}`}
+                  title="Open details"
+                >
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-[8.25rem_4.65rem_minmax(0,1fr)] items-stretch gap-2.5 sm:grid-cols-[9.5rem_5rem_minmax(0,1fr)] sm:gap-3 lg:grid-cols-[10.5rem_5.35rem_minmax(0,1fr)] lg:gap-4">
+          <div className="grid grid-cols-[8.25rem_4.65rem_minmax(0,1fr)] items-stretch gap-2.5 sm:grid-cols-[9.5rem_5rem_minmax(0,1fr)] sm:gap-3 lg:grid-cols-[10.5rem_4.75rem_minmax(6.9rem,1fr)] lg:gap-4">
             <div className="flex min-h-[56px] flex-col items-center justify-center rounded-[20px] bg-white px-3 py-2.5 text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:min-h-[58px] sm:px-4 sm:py-3 lg:min-h-[60px]">
               {usesCodeAndSymbol ? (
                 <>
@@ -85,8 +97,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <span className="whitespace-nowrap text-[1rem] font-semibold tracking-tight text-slate-950 sm:text-[1.18rem] lg:text-[1.3rem]">{fullPrice}</span>
               )}
             </div>
-            <button type="button" onClick={() => setDetailsOpen(true)} className="inline-flex min-h-[56px] items-center justify-center rounded-[20px] border border-slate-200 bg-white px-2.5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 transition hover:border-slate-300 hover:text-slate-800 sm:min-h-[58px] sm:px-3 sm:text-[11.5px] lg:min-h-[60px]">More</button>
-            <button className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-[20px] border border-emerald-200/90 bg-[linear-gradient(180deg,#f3fbf4_0%,#eaf7ec_100%)] px-2.5 py-3 text-[0.84rem] font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[58px] sm:px-3 sm:text-[0.9rem] lg:min-h-[60px] lg:px-3.5 lg:text-[0.95rem]" onClick={addToCart} disabled={buttonState === "adding"}>{buttonLabel()}</button>
+            <button type="button" onClick={() => setDetailsOpen(true)} className="inline-flex min-h-[56px] items-center justify-center rounded-[20px] border border-slate-200 bg-white px-2.5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 transition hover:border-slate-300 hover:text-slate-800 sm:min-h-[58px] sm:px-3 sm:text-[11.5px] lg:min-h-[60px] lg:px-2.5 lg:text-[11px]">More</button>
+            <button className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-[20px] border border-emerald-200/90 bg-[linear-gradient(180deg,#f3fbf4_0%,#eaf7ec_100%)] px-2.5 py-3 text-[0.84rem] font-medium text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[58px] sm:px-3 sm:text-[0.9rem] lg:min-h-[60px] lg:min-w-[112px] lg:px-4.5 lg:text-[0.93rem]" onClick={addToCart} disabled={buttonState === "adding"}>{buttonLabel()}</button>
           </div>
         </div>
       </div>
