@@ -103,6 +103,10 @@ export default function MenuBrowser({
   const [buttonStateById, setButtonStateById] = useState<Record<string, "idle" | "adding" | "added">>({});
   const [cartCount, setCartCount] = useState(0);
 
+  const brandPrimary = primaryColor || "#7B1E22";
+  const brandAccent = accentColor || "#C7922F";
+  const brandAccentBorder = `color-mix(in srgb, ${brandAccent} 30%, white)`;
+
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return products.filter((product) => {
@@ -192,15 +196,15 @@ export default function MenuBrowser({
                     <path d="m20 20-3.5-3.5" />
                   </svg>
                 </button>
-                <CartButton tenantSlug={tenantSlug} />
+                <CartButton tenantSlug={tenantSlug} accentColor={brandAccent} primaryColor={brandPrimary} />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={accentColor ? { boxShadow: `0 18px 50px color-mix(in srgb, ${accentColor} 12%, rgba(15,23,42,0.07))`, borderColor: `${accentColor}1f` } : undefined}>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Welcome</p>
+      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(248,244,240,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ borderColor: brandAccentBorder, boxShadow: `0 18px 50px color-mix(in srgb, ${brandPrimary} 10%, rgba(15,23,42,0.07))` }} style={accentColor ? { boxShadow: `0 18px 50px color-mix(in srgb, ${accentColor} 12%, rgba(15,23,42,0.07))`, borderColor: `${accentColor}1f` } : undefined}>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: brandAccent }}>Welcome</p>
         <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]" style={primaryColor ? { color: primaryColor } : undefined}>{welcomeHeading || "Browse the menu"}</h2>
         <p className="mt-3 max-w-3xl text-[14px] leading-6 text-slate-600 sm:text-base sm:leading-7">
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}

@@ -50,6 +50,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     !!symbolPart;
 
   const fullPrice = formatMoney(price, money);
+  const brandAccent = accentColor || "#C7922F";
+  const brandPrimary = "#7B1E22";
   const stackedAmount = formatMoney(price, {
     ...money,
     currencyDisplayMode: "symbol",
@@ -61,7 +63,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   return (
     <>
-      <div className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(246,249,247,0.98))] shadow-[0_20px_52px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)]">
+      <div className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(250,247,244,0.98))] shadow-[0_20px_52px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)]" style={{ boxShadow: `0 20px 52px color-mix(in srgb, ${brandPrimary} 8%, rgba(15,23,42,0.08))` }}>
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">
             <button type="button" onClick={() => setDetailsOpen(true)} className="block text-left" aria-label={`View details for ${name}`}>
@@ -84,7 +86,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             </div>
           </div>
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-stretch gap-2.5 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-3 lg:grid-cols-[10.5rem_minmax(8rem,1fr)] lg:gap-4">
-            <div className="flex min-h-[56px] flex-col items-center justify-center rounded-[20px] bg-white px-3 py-2.5 text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:min-h-[58px] sm:px-4 sm:py-3 lg:min-h-[60px]">
+            <div className="flex min-h-[56px] flex-col items-center justify-center rounded-[20px] bg-white px-3 py-2.5 text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 sm:min-h-[58px] sm:px-4 sm:py-3 lg:min-h-[60px]" style={{ borderColor: `color-mix(in srgb, ${brandAccent} 30%, white)` }}>
               {usesCodeAndSymbol ? (
                 <>
                   <span className="-mb-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[10.5px] lg:text-[11px]">{codePart}</span>
