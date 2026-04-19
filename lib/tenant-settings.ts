@@ -107,7 +107,35 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     return null;
   }
 
-  return data || null;
+  if (!data) return null;
+
+  return {
+    tenant_id: data.tenant_id,
+    business_display_name: data.business_display_name ?? null,
+    storefront_heading: data.storefront_heading ?? null,
+    storefront_subheading: data.storefront_subheading ?? null,
+    admin_heading_label: data.admin_heading_label ?? null,
+    logo_url: data.logo_url ?? null,
+    favicon_url: ("favicon_url" in data ? data.favicon_url : null) ?? null,
+    primary_color: data.primary_color ?? null,
+    accent_color: data.accent_color ?? null,
+    contact_phone: ("contact_phone" in data ? data.contact_phone : null) ?? null,
+    contact_email: ("contact_email" in data ? data.contact_email : null) ?? null,
+    contact_whatsapp: ("contact_whatsapp" in data ? data.contact_whatsapp : null) ?? null,
+    contact_address: ("contact_address" in data ? data.contact_address : null) ?? null,
+    footer_blurb: ("footer_blurb" in data ? data.footer_blurb : null) ?? null,
+    footer_notice: ("footer_notice" in data ? data.footer_notice : null) ?? null,
+    currency_name: ("currency_name" in data ? data.currency_name : null) ?? null,
+    currency_code: ("currency_code" in data ? data.currency_code : null) ?? null,
+    currency_symbol: ("currency_symbol" in data ? data.currency_symbol : null) ?? null,
+    currency_display_mode: ("currency_display_mode" in data ? data.currency_display_mode : null) ?? null,
+    currency_symbol_position: ("currency_symbol_position" in data ? data.currency_symbol_position : null) ?? null,
+    currency_decimal_places: ("currency_decimal_places" in data ? data.currency_decimal_places : null) ?? null,
+    currency_use_thousands_separator: ("currency_use_thousands_separator" in data ? data.currency_use_thousands_separator : null) ?? null,
+    currency_decimal_separator: ("currency_decimal_separator" in data ? data.currency_decimal_separator : null) ?? null,
+    currency_thousands_separator: ("currency_thousands_separator" in data ? data.currency_thousands_separator : null) ?? null,
+    currency_suffix: ("currency_suffix" in data ? data.currency_suffix : null) ?? null,
+  };
 }
 
 export function buildTenantBranding(tenantName: string, settings: TenantSettings | null) {
