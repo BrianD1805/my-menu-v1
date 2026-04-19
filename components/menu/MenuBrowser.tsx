@@ -167,9 +167,6 @@ export default function MenuBrowser({
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border bg-white/95 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:h-12 sm:w-12 sm:rounded-[20px]" style={accentColor ? { borderColor: `${accentColor}33` } : undefined}>
-                  {logoUrl ? <img src={logoUrl} alt={tenantName} className="h-full w-full object-cover" loading="lazy" /> : <span className="text-[10px] font-bold leading-tight tracking-[0.10em] text-slate-600">{version.replace("Ver: ", "V ")}</span>}
-                </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400 sm:text-[11px] sm:tracking-[0.28em]">Order online</p>
                   <h1 className="truncate text-[1.56rem] font-semibold tracking-tight text-slate-950 sm:text-[1.95rem] lg:text-[2.35rem]" style={primaryColor ? { color: primaryColor } : undefined}>{tenantName}</h1>
@@ -364,8 +361,8 @@ export default function MenuBrowser({
                               )}
                             </div>
 
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
+                            <div className="min-w-0 flex-1 flex-col items-center text-center">
+                              <div className="flex flex-wrap items-center justify-center gap-2">
                                 <h4 className="text-lg font-semibold text-slate-900">{product.name}</h4>
                                 <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold tracking-wide text-slate-500 ring-1 ring-slate-200">{categoryName}</span>
                               </div>
