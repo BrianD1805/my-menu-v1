@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
-import { formatMoney, type MoneyFormatSettings } from "@/lib/money";
+import { DEFAULT_MONEY_SETTINGS, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
 type CartItem = {
   productId: string;
@@ -54,7 +54,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
-  const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>(DEFAULT_MONEY_SETTINGS);
+  const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ ...DEFAULT_MONEY_SETTINGS });
 
   useEffect(() => {
     const slug = resolveTenantSlugFromHost(window.location.host);
