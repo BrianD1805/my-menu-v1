@@ -39,7 +39,7 @@ export async function GET(req: Request) {
   }
 
   const settings = await getTenantSettings(tenantLookup.tenant.id);
-  const branding = buildTenantBranding(tenantLookup.tenant.slug, tenantLookup.tenant.name, settings);
+  const branding = buildTenantBranding(tenantLookup.tenant.name, settings);
 
   return NextResponse.json({
     products,

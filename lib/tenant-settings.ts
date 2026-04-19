@@ -162,7 +162,16 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
   };
 }
 
-export function buildTenantBranding(slug: string, tenantName: string, settings: TenantSettings | null) {
+export function buildTenantBranding(slug: string, tenantName: string, settings: TenantSettings | null): ReturnType<typeof _buildTenantBranding>;
+export function buildTenantBranding(tenantName: string, settings: TenantSettings | null): ReturnType<typeof _buildTenantBranding>;
+export function buildTenantBranding(arg1: string, arg2: string | TenantSettings | null, arg3?: TenantSettings | null) {
+  if (typeof arg2 === "string") {
+    return _buildTenantBranding(arg1, arg2, arg3 ?? null);
+  }
+  return _buildTenantBranding("", arg1, arg2 ?? null);
+}
+
+function _buildTenantBranding(slug: string, tenantName: string, settings: TenantSettings | null) {
   const defaults = getTenantBrandDefaults(slug);
   const displayName = settings?.business_display_name || tenantName;
   const money = buildMoneySettings({
