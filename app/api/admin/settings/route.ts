@@ -44,6 +44,7 @@ export async function PATCH(req: Request) {
       storefront_subheading: normalizeOptionalText(body?.storefrontSubheading, 400),
       admin_heading_label: normalizeOptionalText(body?.adminHeadingLabel, 120),
       logo_url: normalizeOptionalText(body?.logoUrl, 500),
+      favicon_url: normalizeOptionalText(body?.faviconUrl, 500),
       primary_color: normalizeColor(body?.primaryColor),
       accent_color: normalizeColor(body?.accentColor),
       contact_phone: normalizeOptionalText(body?.contactPhone, 80),

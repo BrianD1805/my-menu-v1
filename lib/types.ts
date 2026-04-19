@@ -47,6 +47,7 @@ export type TenantSettings = {
   storefront_subheading: string | null;
   admin_heading_label: string | null;
   logo_url: string | null;
+  favicon_url: string | null;
   primary_color: string | null;
   accent_color: string | null;
   contact_phone: string | null;

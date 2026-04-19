@@ -10,6 +10,7 @@ type FormState = {
   storefrontSubheading: string;
   adminHeadingLabel: string;
   logoUrl: string;
+  faviconUrl: string;
   primaryColor: string;
   accentColor: string;
   contactPhone: string;
@@ -35,6 +36,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"idle" | "success" | "error" | "info">("idle");
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
 
   const previewName = form.businessDisplayName.trim() || tenantName;
   const previewHeading = form.storefrontHeading.trim() || "Browse the menu";
@@ -63,6 +66,41 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+
+  async function uploadAsset(file: File, kind: "logo" | "favicon") {
+    const setUploading = kind === "logo" ? setUploadingLogo : setUploadingFavicon;
+    setUploading(true);
+    setTone("info");
+    setMessage(`Uploading ${kind}...`);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      body.append("kind", kind);
+
+      const response = await fetch("/api/admin/upload-tenant-asset", {
+        method: "POST",
+        body,
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || `Failed to upload ${kind}`);
+
+      if (kind === "logo") {
+        update("logoUrl", payload.url || "");
+      } else {
+        update("faviconUrl", payload.url || "");
+      }
+
+      setTone("success");
+      setMessage(`${kind === "logo" ? "Logo" : "Favicon"} uploaded.`);
+    } catch (error) {
+      setTone("error");
+      setMessage(error instanceof Error ? error.message : `Failed to upload ${kind}`);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function onSubmit(event: FormEvent) {

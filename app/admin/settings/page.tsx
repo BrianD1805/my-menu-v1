@@ -31,6 +31,7 @@ export default async function AdminSettingsPage() {
           storefrontSubheading: settings?.storefront_subheading || "",
           adminHeadingLabel: settings?.admin_heading_label || "",
           logoUrl: settings?.logo_url || "",
+          faviconUrl: settings?.favicon_url || "",
           primaryColor: settings?.primary_color || "#0F172A",
           accentColor: settings?.accent_color || "#10B981",
           contactPhone: settings?.contact_phone || "",

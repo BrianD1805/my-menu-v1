@@ -22,6 +22,7 @@ export type TenantSettings = {
   storefront_subheading: string | null;
   admin_heading_label: string | null;
   logo_url: string | null;
+  favicon_url: string | null;
   primary_color: string | null;
   accent_color: string | null;
   contact_phone: string | null;
@@ -131,6 +132,7 @@ export function buildTenantBranding(tenantName: string, settings: TenantSettings
       settings?.storefront_subheading || "Tap into the details for more information, or add favourites straight to your order.",
     adminHeadingLabel: settings?.admin_heading_label || displayName,
     logoUrl: settings?.logo_url || null,
+    faviconUrl: settings?.favicon_url || null,
     primaryColor: settings?.primary_color || DEFAULT_PRIMARY_COLOR,
     accentColor: settings?.accent_color || DEFAULT_ACCENT_COLOR,
     contactPhone: settings?.contact_phone || null,
