@@ -134,7 +134,7 @@ export async function POST(req: Request) {
     }
 
     const settings = await getTenantSettings(tenant.id);
-    const branding = buildTenantBranding(tenant.name, settings);
+    const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
     const message = buildWhatsAppOrderMessage({
       tenantName: branding.displayName,
