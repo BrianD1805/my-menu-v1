@@ -165,19 +165,19 @@ export default function MenuBrowser({
       <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-[#f4f8f4] before:content-['']">
         <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,#f7fbf7_0%,#eef5ef_50%,#e6eee7_100%)] shadow-[0_22px_60px_rgba(15,23,42,0.10)]">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="inline-flex rounded-[4px] bg-[#3366cc] px-1.5 py-0.5 text-[0.72rem] font-semibold uppercase tracking-[0.28em] text-white shadow-[0_8px_18px_rgba(51,102,204,0.26)] sm:text-[0.74rem]">Orduva Online</p>
-                  <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+            <div className="grid grid-cols-[1fr_auto] items-start gap-3">
+              <div className="min-w-0 flex-1 text-center">
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  <p className="inline-flex rounded-[4px] bg-[#3366cc] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white shadow-[0_8px_18px_rgba(51,102,204,0.26)] sm:text-[0.60rem]">Orduva Online</p>
+                  <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[0.58rem]">{version.replace("Ver: ", "V ")}</span>
                 </div>
 
-                <div className="mt-4 flex min-h-[94px] items-center justify-start sm:min-h-[110px] lg:min-h-[126px]">
+                <div className="mt-3 flex min-h-[54px] items-center justify-center sm:min-h-[64px] lg:min-h-[72px]">
                   {headerLogoUrl ? (
                     <img
                       src={headerLogoUrl}
                       alt={tenantName}
-                      className="h-auto max-h-[96px] w-auto max-w-[320px] object-contain sm:max-h-[112px] sm:max-w-[420px] lg:max-h-[130px] lg:max-w-[520px]"
+                      className="h-auto max-h-[48px] w-auto max-w-[180px] object-contain sm:max-h-[56px] sm:max-w-[220px] lg:max-h-[64px] lg:max-w-[260px]"
                       loading="lazy"
                     />
                   ) : (
@@ -186,7 +186,7 @@ export default function MenuBrowser({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-2.5 pt-2">
+              <div className="flex items-center gap-2 sm:gap-2.5 pt-1 justify-self-end">
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
