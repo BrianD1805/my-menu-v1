@@ -26,6 +26,9 @@ export type TenantSettings = {
   favicon_url: string | null;
   primary_color: string | null;
   accent_color: string | null;
+  background_tint: string | null;
+  border_color: string | null;
+  text_color: string | null;
   contact_phone: string | null;
   contact_email: string | null;
   contact_whatsapp: string | null;
@@ -117,7 +120,7 @@ export function normalizeSeparator(value: unknown) {
   return text.slice(0, 1);
 }
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
 
 export async function getTenantSettings(tenantId: string): Promise<TenantSettings | null> {
   const { data, error } = await db
@@ -143,6 +146,9 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     favicon_url: asStringOrNull((data as Record<string, unknown>).favicon_url),
     primary_color: asStringOrNull(data.primary_color),
     accent_color: asStringOrNull(data.accent_color),
+    background_tint: asStringOrNull((data as Record<string, unknown>).background_tint),
+    border_color: asStringOrNull((data as Record<string, unknown>).border_color),
+    text_color: asStringOrNull((data as Record<string, unknown>).text_color),
     contact_phone: asStringOrNull((data as Record<string, unknown>).contact_phone),
     contact_email: asStringOrNull((data as Record<string, unknown>).contact_email),
     contact_whatsapp: asStringOrNull((data as Record<string, unknown>).contact_whatsapp),
@@ -197,6 +203,9 @@ function _buildTenantBranding(slug: string, tenantName: string, settings: Tenant
     faviconUrl: settings?.favicon_url || defaults.starterFaviconUrl,
     primaryColor: settings?.primary_color || defaults.primaryColor || DEFAULT_PRIMARY_COLOR,
     accentColor: settings?.accent_color || defaults.accentColor || DEFAULT_ACCENT_COLOR,
+    backgroundTint: settings?.background_tint || '#F8F4F0',
+    borderColor: settings?.border_color || '#D9C7A3',
+    textColor: settings?.text_color || '#2B2B2B',
     contactPhone: settings?.contact_phone || null,
     contactEmail: settings?.contact_email || null,
     contactWhatsApp: settings?.contact_whatsapp || null,

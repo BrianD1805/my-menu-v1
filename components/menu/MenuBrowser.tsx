@@ -40,6 +40,9 @@ export default function MenuBrowser({
   welcomeSubheading,
   primaryColor,
   accentColor,
+  backgroundTint,
+  borderColor,
+  textColor,
   contactPhone,
   contactEmail,
   contactWhatsApp,
@@ -68,6 +71,9 @@ export default function MenuBrowser({
   welcomeSubheading?: string;
   primaryColor?: string;
   accentColor?: string;
+  backgroundTint?: string | null;
+  borderColor?: string | null;
+  textColor?: string | null;
   contactPhone?: string | null;
   contactEmail?: string | null;
   contactWhatsApp?: string | null;
@@ -105,7 +111,10 @@ export default function MenuBrowser({
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
-  const brandAccentBorder = `color-mix(in srgb, ${brandAccent} 30%, white)`;
+  const brandSurface = backgroundTint || "#F8F4F0";
+  const brandBorder = borderColor || "#D9C7A3";
+  const brandText = textColor || "#2B2B2B";
+  const brandAccentBorder = brandBorder;
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -166,8 +175,8 @@ export default function MenuBrowser({
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:bg-[#f4f8f4] before:content-['']">
-        <div className="border-b border-slate-200/85 bg-[linear-gradient(180deg,#f7fbf7_0%,#eef5ef_50%,#e6eee7_100%)] shadow-[0_22px_60px_rgba(15,23,42,0.10)]">
+      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:content-['']" style={{ backgroundColor: brandSurface }}>
+        <div className="border-b shadow-[0_22px_60px_rgba(15,23,42,0.10)]" style={{ borderColor: brandBorder, background: `linear-gradient(180deg, ${brandSurface} 0%, color-mix(in srgb, ${brandSurface} 80%, white) 50%, white 100%)` }}>
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="relative flex items-center justify-center min-h-[78px] sm:min-h-[86px] lg:min-h-[94px]">
               <div className="flex items-center justify-center">
@@ -179,7 +188,7 @@ export default function MenuBrowser({
                     loading="lazy"
                   />
                 ) : (
-                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight text-slate-950 sm:text-[1.95rem] lg:text-[2.35rem]" style={primaryColor ? { color: primaryColor } : undefined}>{tenantName}</h1>
+                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight sm:text-[1.95rem] lg:text-[2.35rem]" style={{ color: brandText }}>{tenantName}</h1>
                 )}
               </div>
 
@@ -205,8 +214,8 @@ export default function MenuBrowser({
 
       <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(248,244,240,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ borderColor: brandAccentBorder, boxShadow: `0 18px 50px color-mix(in srgb, ${brandPrimary} 10%, rgba(15,23,42,0.07))` }}>
         <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: brandAccent }}>Welcome</p>
-        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2.35rem] lg:text-[2.65rem]" style={primaryColor ? { color: primaryColor } : undefined}>{welcomeHeading || "Browse the menu"}</h2>
-        <p className="mt-3 max-w-3xl text-[14px] leading-6 text-slate-600 sm:text-base sm:leading-7">
+        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight sm:text-[2.35rem] lg:text-[2.65rem]" style={{ color: brandPrimary }}>{welcomeHeading || "Browse the menu"}</h2>
+        <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7" style={{ color: brandText }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
       </section>

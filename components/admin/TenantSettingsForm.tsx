@@ -13,6 +13,9 @@ type FormState = {
   faviconUrl: string;
   primaryColor: string;
   accentColor: string;
+  backgroundTint: string;
+  borderColor: string;
+  textColor: string;
   contactPhone: string;
   contactEmail: string;
   contactWhatsApp: string;
@@ -241,20 +244,20 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       <div className="space-y-5">
         <div className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Storefront preview</p>
-          <div className="mt-4 rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(244,248,244,0.97))] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)]">
+          <div className="mt-4 rounded-[28px] border p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)]" style={{ background: form.backgroundTint || "#F8F4F0", borderColor: form.borderColor || "#D9C7A3" }}>
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px] border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-sm">
                 {form.logoUrl.trim() ? <img src={form.logoUrl.trim()} alt={previewName} className="h-full w-full rounded-[18px] object-cover" /> : "Logo"}
               </div>
               <div>
                 <p className="inline-flex rounded-[4px] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white" style={{ backgroundColor: form.accentColor || "#2C7A7B" }}>Order online</p>
-                <h3 className="text-2xl font-semibold tracking-tight text-slate-950">{previewName}</h3>
+                <h3 className="text-2xl font-semibold tracking-tight" style={{ color: form.textColor || "#2B2B2B" }}>{previewName}</h3>
               </div>
             </div>
             <div className="mt-5 rounded-[24px] border p-5" style={{ borderColor: form.accentColor || "#10B981" }}>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Welcome</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: form.accentColor || "#10B981" }}>Welcome</p>
               <h4 className="mt-2 text-3xl font-semibold" style={{ color: form.primaryColor || "#0F172A" }}>{previewHeading}</h4>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{previewSubheading}</p>
+              <p className="mt-3 text-sm leading-6" style={{ color: form.textColor || "#2B2B2B" }}>{previewSubheading}</p>
             </div>
             <div className="mt-5 rounded-[24px] border border-slate-200 bg-white p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Footer</p>
