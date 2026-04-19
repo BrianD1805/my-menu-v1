@@ -166,7 +166,7 @@ export default function MenuBrowser({
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border bg-white/95 text-center shadow-[0_12px_30px_rgba(15,23,42,0.08)] sm:h-12 sm:w-12 sm:rounded-[20px]" style={accentColor ? { borderColor: `${accentColor}33` } : undefined}>
-                  {logoUrl ? <img src={logoUrl} alt={tenantName} className="h-full w-full object-cover" loading="lazy" /> : <span className="text-[10px] font-bold leading-tight tracking-[0.16em] text-slate-600">{version.replace("Ver: ", "V ")}</span>}
+                  {logoUrl ? <img src={logoUrl} alt={tenantName} className="h-full w-full object-cover" loading="lazy" /> : <span className="text-[10px] font-bold leading-tight tracking-[0.10em] text-slate-600">{version.replace("Ver: ", "V ")}</span>}
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-slate-400 sm:text-[11px] sm:tracking-[0.28em]">Order online</p>

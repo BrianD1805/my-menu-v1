@@ -31,6 +31,7 @@ export default async function HomePage() {
         categories={categories || []}
         products={products || []}
         logoUrl={branding.logoUrl}
+        headerLogoUrl={slug === "orduva" ? "/tenant-assets/zimza-express/logo.png" : branding.logoUrl}
         welcomeHeading={branding.storefrontHeading}
         welcomeSubheading={branding.storefrontSubheading}
         primaryColor={branding.primaryColor}
