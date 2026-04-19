@@ -11,7 +11,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 export default async function AdminOrdersPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
-  const branding = buildTenantBranding(slug, tenant.name, settings);
+  const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
   const { data: orders } = await db
     .from("orders")

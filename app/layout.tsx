@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const slug = await resolveTenantSlug();
     const tenant = await getTenantBySlug(slug);
     const settings = await getTenantSettings(tenant.id);
-    const branding = buildTenantBranding(slug, tenant.name, settings);
+    const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
     const faviconUrl = branding.faviconUrl || "/favicon.ico";
     const title = `${branding.displayName} | Orduva Online`;
 

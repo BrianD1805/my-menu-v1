@@ -7,7 +7,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     const slug = await resolveTenantSlug();
     const tenant = await getTenantBySlug(slug);
     const settings = await getTenantSettings(tenant.id);
-    const branding = buildTenantBranding(slug, tenant.name, settings);
+    const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
     const icon = branding.faviconUrl || "/favicon.ico";
 
     return {

@@ -8,7 +8,7 @@ export default async function HomePage() {
   const slug = await resolveTenantSlug();
   const tenant = await getTenantBySlug(slug);
   const settings = await getTenantSettings(tenant.id);
-  const branding = buildTenantBranding(slug, tenant.name, settings);
+  const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
   const { data: categories } = await db
     .from("categories")

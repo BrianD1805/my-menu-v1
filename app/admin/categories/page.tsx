@@ -7,7 +7,7 @@ import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 export default async function AdminCategoriesPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
-  const branding = buildTenantBranding(slug, tenant.name, settings);
+  const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
   const { data: categories } = await db
     .from("categories")

@@ -7,7 +7,7 @@ import { DEFAULT_MONEY_SETTINGS } from "@/lib/money";
 export default async function AdminSettingsPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
-  const branding = buildTenantBranding(slug, tenant.name, settings);
+  const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
   return (
     <AdminShell
