@@ -54,7 +54,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
-  const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ currencyCode: "GBP", currencySymbol: "£", currencyDisplayMode: "symbol", currencySymbolPosition: "before", currencyDecimalPlaces: 2, currencyUseThousandsSeparator: true, currencyDecimalSeparator: ".", currencyThousandsSeparator: ",", currencySuffix: "" });
+  const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>(DEFAULT_MONEY_SETTINGS);
 
   useEffect(() => {
     const slug = resolveTenantSlugFromHost(window.location.host);
@@ -73,7 +73,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (res.ok) {
         setProducts(data.products || []);
-        setTenantSettings(data.settings || { currencyCode: "GBP", currencySymbol: "£", currencyDisplayMode: "symbol", currencySymbolPosition: "before", currencyDecimalPlaces: 2, currencyUseThousandsSeparator: true, currencyDecimalSeparator: ".", currencyThousandsSeparator: ",", currencySuffix: "" });
+        setTenantSettings(data.settings || DEFAULT_MONEY_SETTINGS);
       }
     }
 

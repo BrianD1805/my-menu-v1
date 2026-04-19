@@ -1,13 +1,13 @@
-export const DEFAULT_CURRENCY_NAME = "Pounds Sterling";
-export const DEFAULT_CURRENCY_CODE = "GBP";
-export const DEFAULT_CURRENCY_SYMBOL = "£";
-export const DEFAULT_CURRENCY_DISPLAY_MODE = "symbol";
+export const DEFAULT_CURRENCY_NAME = "Kenyan Shilling";
+export const DEFAULT_CURRENCY_CODE = "KES";
+export const DEFAULT_CURRENCY_SYMBOL = "";
+export const DEFAULT_CURRENCY_DISPLAY_MODE = "code";
 export const DEFAULT_CURRENCY_SYMBOL_POSITION = "before";
-export const DEFAULT_CURRENCY_DECIMAL_PLACES = 2;
+export const DEFAULT_CURRENCY_DECIMAL_PLACES = 0;
 export const DEFAULT_CURRENCY_USE_THOUSANDS_SEPARATOR = true;
 export const DEFAULT_CURRENCY_DECIMAL_SEPARATOR = ".";
 export const DEFAULT_CURRENCY_THOUSANDS_SEPARATOR = ",";
-export const DEFAULT_CURRENCY_SUFFIX = "";
+export const DEFAULT_CURRENCY_SUFFIX = "/-";
 
 export type CurrencyDisplayMode = "symbol" | "code" | "code_symbol" | "symbol_code" | "none";
 export type CurrencySymbolPosition = "before" | "after";
@@ -25,23 +25,36 @@ export type MoneyFormatSettings = {
   currencySuffix?: string | null;
 };
 
+export const DEFAULT_MONEY_SETTINGS: Required<MoneyFormatSettings> = {
+  currencyName: DEFAULT_CURRENCY_NAME,
+  currencyCode: DEFAULT_CURRENCY_CODE,
+  currencySymbol: DEFAULT_CURRENCY_SYMBOL,
+  currencyDisplayMode: DEFAULT_CURRENCY_DISPLAY_MODE,
+  currencySymbolPosition: DEFAULT_CURRENCY_SYMBOL_POSITION,
+  currencyDecimalPlaces: DEFAULT_CURRENCY_DECIMAL_PLACES,
+  currencyUseThousandsSeparator: DEFAULT_CURRENCY_USE_THOUSANDS_SEPARATOR,
+  currencyDecimalSeparator: DEFAULT_CURRENCY_DECIMAL_SEPARATOR,
+  currencyThousandsSeparator: DEFAULT_CURRENCY_THOUSANDS_SEPARATOR,
+  currencySuffix: DEFAULT_CURRENCY_SUFFIX,
+};
+
 export function buildMoneySettings(settings?: MoneyFormatSettings | null) {
   return {
-    currencyName: settings?.currencyName || DEFAULT_CURRENCY_NAME,
-    currencyCode: settings?.currencyCode || DEFAULT_CURRENCY_CODE,
-    currencySymbol: settings?.currencySymbol || DEFAULT_CURRENCY_SYMBOL,
-    currencyDisplayMode: (settings?.currencyDisplayMode || DEFAULT_CURRENCY_DISPLAY_MODE) as CurrencyDisplayMode,
-    currencySymbolPosition: (settings?.currencySymbolPosition || DEFAULT_CURRENCY_SYMBOL_POSITION) as CurrencySymbolPosition,
+    currencyName: settings?.currencyName || DEFAULT_MONEY_SETTINGS.currencyName,
+    currencyCode: settings?.currencyCode || DEFAULT_MONEY_SETTINGS.currencyCode,
+    currencySymbol: settings?.currencySymbol || DEFAULT_MONEY_SETTINGS.currencySymbol,
+    currencyDisplayMode: (settings?.currencyDisplayMode || DEFAULT_MONEY_SETTINGS.currencyDisplayMode) as CurrencyDisplayMode,
+    currencySymbolPosition: (settings?.currencySymbolPosition || DEFAULT_MONEY_SETTINGS.currencySymbolPosition) as CurrencySymbolPosition,
     currencyDecimalPlaces: Number.isInteger(settings?.currencyDecimalPlaces)
       ? Math.min(4, Math.max(0, Number(settings?.currencyDecimalPlaces)))
-      : DEFAULT_CURRENCY_DECIMAL_PLACES,
+      : DEFAULT_MONEY_SETTINGS.currencyDecimalPlaces,
     currencyUseThousandsSeparator:
       typeof settings?.currencyUseThousandsSeparator === "boolean"
         ? settings.currencyUseThousandsSeparator
-        : DEFAULT_CURRENCY_USE_THOUSANDS_SEPARATOR,
-    currencyDecimalSeparator: settings?.currencyDecimalSeparator || DEFAULT_CURRENCY_DECIMAL_SEPARATOR,
-    currencyThousandsSeparator: settings?.currencyThousandsSeparator || DEFAULT_CURRENCY_THOUSANDS_SEPARATOR,
-    currencySuffix: settings?.currencySuffix || DEFAULT_CURRENCY_SUFFIX,
+        : DEFAULT_MONEY_SETTINGS.currencyUseThousandsSeparator,
+    currencyDecimalSeparator: settings?.currencyDecimalSeparator || DEFAULT_MONEY_SETTINGS.currencyDecimalSeparator,
+    currencyThousandsSeparator: settings?.currencyThousandsSeparator || DEFAULT_MONEY_SETTINGS.currencyThousandsSeparator,
+    currencySuffix: settings?.currencySuffix || DEFAULT_MONEY_SETTINGS.currencySuffix,
   };
 }
 

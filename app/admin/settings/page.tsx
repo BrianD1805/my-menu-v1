@@ -2,6 +2,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import TenantSettingsForm from "@/components/admin/TenantSettingsForm";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { DEFAULT_MONEY_SETTINGS } from "@/lib/money";
 
 export default async function AdminSettingsPage() {
   const { tenant, user } = await requireAdminPageUser();
@@ -38,16 +39,16 @@ export default async function AdminSettingsPage() {
           contactAddress: settings?.contact_address || "",
           footerBlurb: settings?.footer_blurb || "",
           footerNotice: settings?.footer_notice || "",
-          currencyName: settings?.currency_name || "Pounds Sterling",
-          currencyCode: settings?.currency_code || "GBP",
-          currencySymbol: settings?.currency_symbol || "£",
-          currencyDisplayMode: settings?.currency_display_mode || "symbol",
-          currencySymbolPosition: settings?.currency_symbol_position || "before",
-          currencyDecimalPlaces: String(settings?.currency_decimal_places ?? 2),
-          currencyUseThousandsSeparator: settings?.currency_use_thousands_separator ?? true,
-          currencyDecimalSeparator: settings?.currency_decimal_separator || ".",
-          currencyThousandsSeparator: settings?.currency_thousands_separator || ",",
-          currencySuffix: settings?.currency_suffix || "",
+          currencyName: settings?.currency_name || DEFAULT_MONEY_SETTINGS.currencyName,
+          currencyCode: settings?.currency_code || DEFAULT_MONEY_SETTINGS.currencyCode,
+          currencySymbol: settings?.currency_symbol || DEFAULT_MONEY_SETTINGS.currencySymbol,
+          currencyDisplayMode: settings?.currency_display_mode || DEFAULT_MONEY_SETTINGS.currencyDisplayMode,
+          currencySymbolPosition: settings?.currency_symbol_position || DEFAULT_MONEY_SETTINGS.currencySymbolPosition,
+          currencyDecimalPlaces: String(settings?.currency_decimal_places ?? DEFAULT_MONEY_SETTINGS.currencyDecimalPlaces),
+          currencyUseThousandsSeparator: settings?.currency_use_thousands_separator ?? DEFAULT_MONEY_SETTINGS.currencyUseThousandsSeparator,
+          currencyDecimalSeparator: settings?.currency_decimal_separator || DEFAULT_MONEY_SETTINGS.currencyDecimalSeparator,
+          currencyThousandsSeparator: settings?.currency_thousands_separator || DEFAULT_MONEY_SETTINGS.currencyThousandsSeparator,
+          currencySuffix: settings?.currency_suffix || DEFAULT_MONEY_SETTINGS.currencySuffix,
         }}
       />
     </AdminShell>

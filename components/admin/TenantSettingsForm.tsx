@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { FormEvent, useMemo, useState } from "react";
-import { formatMoney } from "@/lib/money";
+import { DEFAULT_MONEY_SETTINGS, formatMoney } from "@/lib/money";
 
 type FormState = {
   businessDisplayName: string;
@@ -42,9 +42,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const footerBlurb = form.footerBlurb.trim() || "Thank you for ordering with us.";
   const footerNotice = form.footerNotice.trim() || "Prices and availability may change without notice.";
   const moneySettings = {
-    currencyName: form.currencyName.trim() || "Pounds Sterling",
-    currencyCode: form.currencyCode.trim() || "GBP",
-    currencySymbol: form.currencySymbol.trim() || "£",
+    currencyName: form.currencyName.trim() || DEFAULT_MONEY_SETTINGS.currencyName,
+    currencyCode: form.currencyCode.trim() || DEFAULT_MONEY_SETTINGS.currencyCode,
+    currencySymbol: form.currencySymbol.trim() || DEFAULT_MONEY_SETTINGS.currencySymbol,
     currencyDisplayMode: form.currencyDisplayMode,
     currencySymbolPosition: form.currencySymbolPosition,
     currencyDecimalPlaces: Number(form.currencyDecimalPlaces || "0"),
@@ -130,9 +130,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
         <Section title="Currency display">
           <div className="grid gap-4 md:grid-cols-3">
-            <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Pounds Sterling" /></Field>
-            <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="GBP" maxLength={3} /></Field>
-            <Field label="Currency symbol"><input value={form.currencySymbol} onChange={(e) => update("currencySymbol", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="£" maxLength={12} /></Field>
+            <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder={DEFAULT_MONEY_SETTINGS.currencyName} /></Field>
+            <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder={DEFAULT_MONEY_SETTINGS.currencyCode} maxLength={3} /></Field>
+            <Field label="Currency symbol"><input value={form.currencySymbol} onChange={(e) => update("currencySymbol", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400" placeholder="Leave blank if not used" maxLength={12} /></Field>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Field label="Display mode">
@@ -169,7 +169,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 <p className="mt-1 text-sm leading-6 text-slate-600">As you change the settings above, these sample prices update immediately.</p>
               </div>
               <div className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
-                Sample code: {form.currencyCode.trim() || "GBP"}
+                Sample code: {form.currencyCode.trim() || DEFAULT_MONEY_SETTINGS.currencyCode}
               </div>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">

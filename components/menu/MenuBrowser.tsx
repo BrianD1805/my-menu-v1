@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
-import { formatMoney, type MoneyFormatSettings } from "@/lib/money";
+import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
 type Category = {
   id: string;
@@ -83,7 +83,7 @@ export default function MenuBrowser({
   currencyThousandsSeparator?: string | null;
   currencySuffix?: string | null;
 }) {
-  const moneySettings: MoneyFormatSettings = {
+  const moneySettings = buildMoneySettings({
     currencyName,
     currencyCode,
     currencySymbol,
@@ -94,7 +94,7 @@ export default function MenuBrowser({
     currencyDecimalSeparator,
     currencyThousandsSeparator,
     currencySuffix,
-  };
+  });
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
@@ -250,7 +250,7 @@ export default function MenuBrowser({
               {contactAddress ? <p><span className="font-semibold text-slate-900">Address:</span> {contactAddress}</p> : null}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{currencyCode || "GBP"}</span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{moneySettings.currencyCode}</span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{formatMoney(1000, moneySettings)} sample</span>
             </div>
           </div>
