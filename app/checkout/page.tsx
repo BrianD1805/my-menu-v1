@@ -73,7 +73,7 @@ export default function CheckoutPage() {
       const data = await res.json();
       if (res.ok) {
         setProducts(data.products || []);
-        setTenantSettings(data.settings || DEFAULT_MONEY_SETTINGS);
+        setTenantSettings({ ...DEFAULT_MONEY_SETTINGS, ...(data.settings || {}) });
       }
     }
 

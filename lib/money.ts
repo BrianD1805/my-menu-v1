@@ -25,7 +25,20 @@ export type MoneyFormatSettings = {
   currencySuffix?: string | null;
 };
 
-export const DEFAULT_MONEY_SETTINGS: Required<MoneyFormatSettings> = {
+export type NormalizedMoneySettings = {
+  currencyName: string;
+  currencyCode: string;
+  currencySymbol: string;
+  currencyDisplayMode: CurrencyDisplayMode;
+  currencySymbolPosition: CurrencySymbolPosition;
+  currencyDecimalPlaces: number;
+  currencyUseThousandsSeparator: boolean;
+  currencyDecimalSeparator: string;
+  currencyThousandsSeparator: string;
+  currencySuffix: string;
+};
+
+export const DEFAULT_MONEY_SETTINGS: NormalizedMoneySettings = {
   currencyName: DEFAULT_CURRENCY_NAME,
   currencyCode: DEFAULT_CURRENCY_CODE,
   currencySymbol: DEFAULT_CURRENCY_SYMBOL,
@@ -38,23 +51,24 @@ export const DEFAULT_MONEY_SETTINGS: Required<MoneyFormatSettings> = {
   currencySuffix: DEFAULT_CURRENCY_SUFFIX,
 };
 
-export function buildMoneySettings(settings?: MoneyFormatSettings | null) {
+export function buildMoneySettings(settings?: MoneyFormatSettings | null): NormalizedMoneySettings {
   return {
-    currencyName: settings?.currencyName || DEFAULT_MONEY_SETTINGS.currencyName,
-    currencyCode: settings?.currencyCode || DEFAULT_MONEY_SETTINGS.currencyCode,
-    currencySymbol: settings?.currencySymbol || DEFAULT_MONEY_SETTINGS.currencySymbol,
+    currencyName: settings?.currencyName?.trim() || DEFAULT_MONEY_SETTINGS.currencyName,
+    currencyCode: settings?.currencyCode?.trim() || DEFAULT_MONEY_SETTINGS.currencyCode,
+    currencySymbol: settings?.currencySymbol?.trim() || DEFAULT_MONEY_SETTINGS.currencySymbol,
     currencyDisplayMode: (settings?.currencyDisplayMode || DEFAULT_MONEY_SETTINGS.currencyDisplayMode) as CurrencyDisplayMode,
     currencySymbolPosition: (settings?.currencySymbolPosition || DEFAULT_MONEY_SETTINGS.currencySymbolPosition) as CurrencySymbolPosition,
-    currencyDecimalPlaces: Number.isInteger(settings?.currencyDecimalPlaces)
-      ? Math.min(4, Math.max(0, Number(settings?.currencyDecimalPlaces)))
-      : DEFAULT_MONEY_SETTINGS.currencyDecimalPlaces,
+    currencyDecimalPlaces:
+      typeof settings?.currencyDecimalPlaces === "number" && Number.isInteger(settings.currencyDecimalPlaces)
+        ? Math.min(4, Math.max(0, settings.currencyDecimalPlaces))
+        : DEFAULT_MONEY_SETTINGS.currencyDecimalPlaces,
     currencyUseThousandsSeparator:
       typeof settings?.currencyUseThousandsSeparator === "boolean"
         ? settings.currencyUseThousandsSeparator
         : DEFAULT_MONEY_SETTINGS.currencyUseThousandsSeparator,
-    currencyDecimalSeparator: settings?.currencyDecimalSeparator || DEFAULT_MONEY_SETTINGS.currencyDecimalSeparator,
-    currencyThousandsSeparator: settings?.currencyThousandsSeparator || DEFAULT_MONEY_SETTINGS.currencyThousandsSeparator,
-    currencySuffix: settings?.currencySuffix || DEFAULT_MONEY_SETTINGS.currencySuffix,
+    currencyDecimalSeparator: settings?.currencyDecimalSeparator?.slice(0, 1) || DEFAULT_MONEY_SETTINGS.currencyDecimalSeparator,
+    currencyThousandsSeparator: settings?.currencyThousandsSeparator?.slice(0, 1) || DEFAULT_MONEY_SETTINGS.currencyThousandsSeparator,
+    currencySuffix: settings?.currencySuffix ?? DEFAULT_MONEY_SETTINGS.currencySuffix,
   };
 }
 
@@ -73,14 +87,15 @@ export function formatMoney(amount: number | string, settings?: MoneyFormatSetti
   const withThousands = money.currencyUseThousandsSeparator
     ? addThousandsSeparators(fixed, money.currencyThousandsSeparator)
     : fixed;
-  const normalizedAmount = money.currencyDecimalSeparator === "."
-    ? withThousands
-    : withThousands.replace(".", money.currencyDecimalSeparator);
+  const normalizedAmount =
+    money.currencyDecimalSeparator === "."
+      ? withThousands
+      : withThousands.replace(".", money.currencyDecimalSeparator);
 
-  const symbolPart = money.currencySymbol?.trim() || "";
-  const codePart = money.currencyCode?.trim() || "";
+  const symbolPart = money.currencySymbol;
+  const codePart = money.currencyCode;
   let prefix = "";
-  let suffix = money.currencySuffix || "";
+  let suffix = money.currencySuffix;
 
   if (money.currencyDisplayMode === "symbol") {
     if (money.currencySymbolPosition === "before") prefix = symbolPart;
