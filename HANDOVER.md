@@ -60,3 +60,10 @@ Included in this patch:
 - Added dedicated storefront service worker registration on the storefront.
 - Added dedicated storefront install icons in 192 and 512 sizes.
 - Strengthened storefront manifest with explicit id, start_url, scope, and valid icon entries.
+
+
+## Ver-0.100C
+- Clean storefront/admin baseline rebuild prepared from the current live project folder.
+- Visible storefront version bumped to Ver: 0.100C so deployment integrity can be verified immediately on desktop and mobile.
+- Shared admin subdomain architecture files preserved in the baseline.
+- Use this build to confirm the storefront is actually updating before further PWA work.
