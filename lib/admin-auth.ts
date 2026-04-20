@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { resolveTenantSlug, resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { clearAdminTenantCookie, resolveAdminTenantSlugForPage, resolveAdminTenantSlugFromRequest, applyAdminTenantCookie } from "@/lib/admin-tenant-context";
 
 export const ADMIN_SESSION_COOKIE = "orduva_admin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -150,7 +150,7 @@ export async function validateAdminRequestSession(req: Request) {
   const session = readAdminSessionToken(token);
   if (!session) return null;
 
-  const tenantSlug = resolveTenantSlugFromRequest(req);
+  const tenantSlug = resolveAdminTenantSlugFromRequest(req);
   if (!tenantSlug) return null;
 
   const { data: tenant, error: tenantError } = await db
@@ -187,7 +187,7 @@ export async function requireAdminPageUser() {
     redirect("/admin/login");
   }
 
-  const tenantSlug = await resolveTenantSlug();
+  const tenantSlug = await resolveAdminTenantSlugForPage();
   const { data: tenant, error: tenantError } = await db
     .from("tenants")
     .select("id, slug, name, whatsapp_number")
@@ -206,12 +206,16 @@ export async function requireAdminPageUser() {
   return { tenant, user };
 }
 
-export async function applyAdminSessionCookie(response: NextResponse, user: TenantUserRow) {
+export async function applyAdminSessionCookie(response: NextResponse, user: TenantUserRow, tenantSlug?: string) {
   response.cookies.set(ADMIN_SESSION_COOKIE, buildAdminSessionForUser(user), sessionCookieOptions());
+  if (tenantSlug) {
+    applyAdminTenantCookie(response, tenantSlug);
+  }
   return response;
 }
 
 export async function clearAdminSessionCookie(response: NextResponse) {
   response.cookies.set(ADMIN_SESSION_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
+  clearAdminTenantCookie(response);
   return response;
 }

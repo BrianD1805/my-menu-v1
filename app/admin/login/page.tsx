@@ -24,6 +24,7 @@ type SessionState =
     };
 
 export default function AdminLoginPage() {
+  const [tenantSlug, setTenantSlug] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -34,6 +35,10 @@ export default function AdminLoginPage() {
   const [activePanel, setActivePanel] = useState<ActivePanel>("login");
   const [session, setSession] = useState<SessionState>({ loading: true, authenticated: false });
   const tenantHint = useMemo(() => normalizeSlugFromHost(), []);
+
+  useEffect(() => {
+    if (!tenantSlug) setTenantSlug(tenantHint || "orduva");
+  }, [tenantHint, tenantSlug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +82,7 @@ export default function AdminLoginPage() {
       const response = await fetch("/api/admin/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ tenantSlug, email, password }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Login failed");
@@ -101,7 +106,7 @@ export default function AdminLoginPage() {
       const response = await fetch("/api/admin/auth/bootstrap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, fullName, accessKey: setupKey }),
+        body: JSON.stringify({ tenantSlug, email, password, fullName, accessKey: setupKey }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Bootstrap failed");
@@ -221,6 +226,17 @@ export default function AdminLoginPage() {
           ) : activePanel === "login" ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Tenant slug</label>
+                <input
+                  type="text"
+                  value={tenantSlug}
+                  onChange={(event) => setTenantSlug(event.target.value.toLowerCase())}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  placeholder="orduva"
+                  required
+                />
+              </div>
+              <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">Owner email</label>
                 <input
                   type="email"
@@ -260,12 +276,34 @@ export default function AdminLoginPage() {
                 </p>
               </div>
               <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Tenant slug</label>
+                <input
+                  type="text"
+                  value={tenantSlug}
+                  onChange={(event) => setTenantSlug(event.target.value.toLowerCase())}
+                  className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400"
+                  placeholder="orduva"
+                  required
+                />
+              </div>
+              <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">Full name</label>
                 <input
                   value={fullName}
                   onChange={(event) => setFullName(event.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400"
                   placeholder="Tenant owner"
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">Tenant slug</label>
+                <input
+                  type="text"
+                  value={tenantSlug}
+                  onChange={(event) => setTenantSlug(event.target.value.toLowerCase())}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  placeholder="orduva"
                   required
                 />
               </div>

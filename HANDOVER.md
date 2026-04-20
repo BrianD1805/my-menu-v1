@@ -18,3 +18,10 @@ Included in this patch:
 - Added explicit manifest ids, scopes, and start URLs for storefront and admin.
 - Replaced the admin install icon with the supplied full-circle Orduva icon.
 - Corrected admin metadata so install branding stays on Orduva Admin instead of inheriting storefront branding.
+
+
+## Ver-0.098B
+- Prepared Orduva for a shared admin subdomain architecture instead of tenant-admin subdomains.
+- Admin login and first-owner setup now accept an explicit tenant slug.
+- Added an admin tenant cookie so the shared admin domain can stay tied to the chosen tenant after login.
+- Admin API tenant resolution now follows the authenticated tenant session instead of relying only on the current host.

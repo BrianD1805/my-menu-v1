@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { requireAdminApiUser } from "@/lib/admin-auth";
 
 type TenantShape = { id: string; slug: string; name: string };
@@ -23,22 +22,7 @@ export async function resolveAdminTenant(req: Request): Promise<AdminTenantResul
     return { ok: false, error: auth.error };
   }
 
-  const tenantSlug = resolveTenantSlugFromRequest(req);
-  if (!tenantSlug) {
-    return { ok: false, error: NextResponse.json({ error: "Tenant could not be resolved" }, { status: 400 }) };
-  }
-
-  const { data: tenant, error } = await db
-    .from("tenants")
-    .select("id, slug, name")
-    .eq("slug", tenantSlug)
-    .single();
-
-  if (error || !tenant) {
-    return { ok: false, error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }) };
-  }
-
-  return { ok: true, tenant, user: auth.user };
+  return { ok: true, tenant: auth.tenant, user: auth.user };
 }
 
 export async function getTenantCategoryForAdmin(categoryId: string, tenantId: string): Promise<AdminCategoryResult> {

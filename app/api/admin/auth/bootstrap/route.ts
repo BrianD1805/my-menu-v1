@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { applyAdminSessionCookie, countTenantUsers, getTenantUserByEmail, hashOwnerPassword, normalizeOwnerEmail } from "@/lib/admin-auth";
+import { resolveAdminTenantSlugFromRequest } from "@/lib/admin-tenant-context";
 import { db } from "@/lib/db";
-import { getTenantBySlug, resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { getTenantBySlug } from "@/lib/tenant-server";
 
 export async function POST(req: Request) {
   try {
@@ -10,6 +11,7 @@ export async function POST(req: Request) {
     const email = normalizeOwnerEmail(body?.email);
     const password = String(body?.password || "");
     const accessKey = String(body?.accessKey || "").trim();
+    const tenantSlug = resolveAdminTenantSlugFromRequest(req, body?.tenantSlug);
 
     if (!email || !password || !accessKey) {
       return NextResponse.json({ error: "Full owner setup details are required" }, { status: 400 });
@@ -23,7 +25,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid bootstrap access key" }, { status: 401 });
     }
 
-    const tenantSlug = resolveTenantSlugFromRequest(req);
     const tenant = await getTenantBySlug(tenantSlug);
     const existingCount = await countTenantUsers(tenant.id);
     if (existingCount > 0) {
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     const response = NextResponse.json({ success: true, tenant: { id: tenant.id, name: tenant.name, slug: tenant.slug } });
-    await applyAdminSessionCookie(response, user);
+    await applyAdminSessionCookie(response, user, tenant.slug);
     return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Bootstrap failed";
