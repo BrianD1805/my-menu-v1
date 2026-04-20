@@ -11,10 +11,12 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     const icon = branding.faviconUrl || "/favicon.ico";
 
     return {
+      id: "/",
       name: `${branding.displayName} | Orduva Online`,
       short_name: branding.displayName,
       description: branding.storefrontSubheading || "Online ordering",
       start_url: "/",
+      scope: "/",
       display: "standalone",
       background_color: "#ffffff",
       theme_color: branding.primaryColor || "#0f172a",
@@ -32,10 +34,12 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     };
   } catch {
     return {
+      id: "/",
       name: "Orduva Online",
       short_name: "Orduva",
       description: "Online ordering",
       start_url: "/",
+      scope: "/",
       display: "standalone",
       background_color: "#ffffff",
       theme_color: "#0f172a",
