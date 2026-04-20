@@ -136,7 +136,7 @@ export default async function AdminOrdersPage() {
           <SummaryCard label="Ready / Completed" value={counts.done} tone="done" />
         </div>
 
-        <LiveOrdersRefresh />
+        <LiveOrdersRefresh currentNewCount={counts.new} />
 
         <p className="text-sm text-slate-600">New orders are highlighted below and counted in the amber card above. There is not a separate New Orders page.</p>
 
