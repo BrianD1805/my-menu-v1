@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { CreateOrderInput } from "@/lib/types";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
-import { buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
+import { buildWhatsAppAppUrl, buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 export async function POST(req: Request) {
@@ -148,6 +148,7 @@ export async function POST(req: Request) {
     });
 
     const whatsappUrl = buildWhatsAppUrl(tenant.whatsapp_number, message);
+    const whatsappAppUrl = buildWhatsAppAppUrl(tenant.whatsapp_number, message);
 
     await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
 
@@ -155,6 +156,7 @@ export async function POST(req: Request) {
       ok: true,
       orderId: order.id,
       whatsappUrl,
+      whatsappAppUrl,
       whatsappMessage: message,
     });
   } catch (error) {

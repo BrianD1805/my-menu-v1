@@ -3,9 +3,9 @@ import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
-function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+function StatCard({ label, value, hint, urgent }: { label: string; value: string; hint: string; urgent?: boolean }) {
   return (
-    <div className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+    <div className={`rounded-[28px] border p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] ${urgent ? "border-amber-200 bg-amber-50/60" : "border-black/5 bg-white"}`}>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
       <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
       <p className="mt-2 text-sm text-slate-600">{hint}</p>
@@ -49,10 +49,11 @@ export default async function AdminHomePage() {
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
-  const [{ count: orderCount }, { count: productCount }, { count: categoryCount }] = await Promise.all([
+  const [{ count: orderCount }, { count: productCount }, { count: categoryCount }, { count: newOrderCount }] = await Promise.all([
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("products").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("categories").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
+    db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("status", "new"),
   ]);
 
   return (
@@ -65,8 +66,14 @@ export default async function AdminHomePage() {
       logoUrl={branding.logoUrl}
       accentColor={branding.accentColor}
     >
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Orders" value={String(orderCount || 0)} hint="All orders shown here belong to this tenant only." />
+        <StatCard
+          label="New orders"
+          value={String(newOrderCount || 0)}
+          hint={newOrderCount ? "These need attention now. New orders are counted here and highlighted inside Orders." : "Nothing waiting right now."}
+          urgent={Boolean(newOrderCount)}
+        />
         <StatCard label="Products" value={String(productCount || 0)} hint="Manage the live product catalogue for this business." />
         <StatCard label="Categories" value={String(categoryCount || 0)} hint="Organise the menu structure and display order." />
       </div>
@@ -76,7 +83,7 @@ export default async function AdminHomePage() {
           href="/admin/orders"
           eyebrow="Operations"
           title="Orders"
-          body="Open today’s order management view, update statuses, and keep customer messaging focused in one place."
+          body="Open the live orders view, spot new orders quickly, update statuses, and keep customer messaging focused in one place."
         />
         <ActionCard
           href="/admin/products"

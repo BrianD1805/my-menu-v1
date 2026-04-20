@@ -44,8 +44,18 @@ export function buildWhatsAppOrderMessage(args: {
   return lines.join("\n");
 }
 
+export function cleanPhone(phone: string) {
+  return phone.replace(/[^\d]/g, "");
+}
+
 export function buildWhatsAppUrl(phone: string, message: string) {
-  const cleanedPhone = phone.replace(/[^\d]/g, "");
+  const cleanedPhone = cleanPhone(phone);
   const encodedMessage = encodeURIComponent(message);
   return `https://wa.me/${cleanedPhone}?text=${encodedMessage}`;
+}
+
+export function buildWhatsAppAppUrl(phone: string, message: string) {
+  const cleanedPhone = cleanPhone(phone);
+  const encodedMessage = encodeURIComponent(message);
+  return `whatsapp://send?phone=${cleanedPhone}&text=${encodedMessage}`;
 }

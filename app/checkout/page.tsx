@@ -44,6 +44,8 @@ type SuccessState = {
   total: number;
   itemCount: number;
   whatsappPaused: boolean;
+  whatsappUrl: string | null;
+  whatsappAppUrl: string | null;
 };
 
 export default function CheckoutPage() {
@@ -122,6 +124,37 @@ export default function CheckoutPage() {
   const checkoutBorder = tenantSettings.borderColor || "#D9C7A3";
   const checkoutText = tenantSettings.textColor || "#2B2B2B";
 
+  function attemptWhatsAppHandoff(webUrl: string | null, appUrl: string | null) {
+    const fallbackUrl = webUrl?.trim() || null;
+    const appFirstUrl = appUrl?.trim() || fallbackUrl;
+    if (!appFirstUrl) return;
+
+    let fallbackTimer: number | null = null;
+    const clearFallback = () => {
+      if (fallbackTimer) {
+        window.clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        clearFallback();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange, { once: true });
+
+    if (fallbackUrl && appFirstUrl !== fallbackUrl) {
+      fallbackTimer = window.setTimeout(() => {
+        window.location.href = fallbackUrl;
+      }, 1200);
+    }
+
+    window.location.href = appFirstUrl;
+  }
+
+
   function updateQuantity(productId: string, nextQuantity: number) {
     const nextItems =
       nextQuantity <= 0
@@ -144,7 +177,7 @@ export default function CheckoutPage() {
     setErrorMessage("");
   }
 
-  const PAUSE_WHATSAPP_FOR_TESTING = true;
+  const PAUSE_WHATSAPP_FOR_TESTING = false;
 
   async function placeOrder() {
     setErrorMessage("");
@@ -202,12 +235,16 @@ export default function CheckoutPage() {
         notes: notes.trim(),
         total,
         itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
-        whatsappPaused: PAUSE_WHATSAPP_FOR_TESTING
+        whatsappPaused: PAUSE_WHATSAPP_FOR_TESTING,
+        whatsappUrl: data.whatsappUrl || null,
+        whatsappAppUrl: data.whatsappAppUrl || null
       });
       setLoading(false);
 
-      if (!PAUSE_WHATSAPP_FOR_TESTING && data.whatsappUrl) {
-        window.location.href = data.whatsappUrl;
+      if (!PAUSE_WHATSAPP_FOR_TESTING && (data.whatsappAppUrl || data.whatsappUrl)) {
+        window.setTimeout(() => {
+          attemptWhatsAppHandoff(data.whatsappUrl || null, data.whatsappAppUrl || null);
+        }, 150);
       }
     } catch {
       setErrorMessage("Something went wrong while placing the order.");
@@ -303,7 +340,7 @@ export default function CheckoutPage() {
                       <p className="text-sm leading-6 text-gray-600">
                         {successState.whatsappPaused
                           ? "WhatsApp handoff is still paused for now, so this confirmation page is the final step in the customer flow."
-                          : "The next handoff step will continue automatically."}
+                          : "We’re opening WhatsApp now. If it does not open automatically, use the button below."}
                       </p>
                     </div>
                   </div>
@@ -339,6 +376,15 @@ export default function CheckoutPage() {
 
               <div className="rounded-[28px] border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="space-y-3">
+                  {!successState.whatsappPaused && (successState.whatsappAppUrl || successState.whatsappUrl) ? (
+                    <button
+                      onClick={() => attemptWhatsAppHandoff(successState.whatsappUrl, successState.whatsappAppUrl)}
+                      className="w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition"
+                      style={{ backgroundColor: checkoutPrimary }}
+                    >
+                      Open WhatsApp
+                    </button>
+                  ) : null}
                   <button
                     onClick={() => {
                       resetCheckoutForNewOrder();

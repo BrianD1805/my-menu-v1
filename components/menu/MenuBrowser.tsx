@@ -277,9 +277,19 @@ export default function MenuBrowser({
       </section>
 
       <footer className="rounded-[24px] border border-slate-200 bg-white/90 px-5 py-5 text-sm text-slate-600 shadow-sm sm:px-6" style={accentColor ? { borderColor: `${accentColor}22` } : undefined}>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={accentColor ? { backgroundColor: accentColor } : undefined}>Orduva Online</span>
-          <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+        <div className="flex flex-col items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={accentColor ? { backgroundColor: accentColor } : undefined}>Orduva Online</span>
+            <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+          </div>
+
+          <a
+            href="/admin/login"
+            className="inline-flex min-h-[38px] items-center justify-center rounded-[14px] border border-slate-200 bg-white px-4 py-2 text-[0.76rem] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+            title="Temporary admin login link"
+          >
+            Admin Login
+          </a>
         </div>
       </footer>
 
