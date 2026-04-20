@@ -86,7 +86,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             </div>
           </div>
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-stretch gap-2.5 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-3 lg:grid-cols-[10.5rem_minmax(8rem,1fr)] lg:gap-4">
-            <div className="flex min-h-[56px] flex-col items-center justify-center rounded-[20px] bg-white px-3 py-2.5 text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 sm:min-h-[58px] sm:px-4 sm:py-3 lg:min-h-[60px]" style={{ borderColor: `color-mix(in srgb, ${brandAccent} 30%, white)` }}>
+            <div className="flex min-h-[44px] flex-col items-center justify-center rounded-[16px] bg-white px-3 py-2.5 text-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 sm:min-h-[58px] sm:px-4 sm:py-3 lg:min-h-[60px]" style={{ borderColor: `color-mix(in srgb, ${brandAccent} 30%, white)` }}>
               {usesCodeAndSymbol ? (
                 <>
                   <span className="-mb-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[10.5px] lg:text-[11px]">{codePart}</span>
@@ -96,7 +96,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <span className="whitespace-nowrap text-[1rem] font-semibold tracking-tight text-slate-950 sm:text-[1.18rem] lg:text-[1.3rem]">{fullPrice}</span>
               )}
             </div>
-            <button className="inline-flex min-h-[56px] items-center justify-center whitespace-nowrap rounded-[20px] border px-3 py-3 text-[0.84rem] font-medium shadow-sm transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[58px] sm:px-3.5 sm:text-[0.9rem] lg:min-h-[60px] lg:min-w-[122px] lg:px-4.5 lg:text-[0.93rem]" style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 10%, white), color-mix(in srgb, ${accentColor} 16%, white))` } : undefined} onClick={addToCart} disabled={buttonState === "adding"}>{buttonLabel()}</button>
+            <button className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap rounded-[16px] border px-3 py-3 text-[0.84rem] font-medium shadow-sm transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[58px] sm:px-3.5 sm:text-[0.9rem] lg:min-h-[60px] lg:min-w-[122px] lg:px-4.5 lg:text-[0.93rem]" style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 10%, white), color-mix(in srgb, ${accentColor} 16%, white))` } : undefined} onClick={addToCart} disabled={buttonState === "adding"}>{buttonLabel()}</button>
           </div>
         </div>
       </div>
