@@ -6,6 +6,11 @@ function normalizeSlugFromHost() {
   if (typeof window === "undefined") return "";
   const host = window.location.host;
   const hostname = host.split(":")[0].toLowerCase();
+
+  if (hostname === "admin.localhost" || hostname.startsWith("admin.")) {
+    return "";
+  }
+
   const parts = hostname.split(".").filter(Boolean);
   if (parts.length >= 3) return parts[0];
   return parts[0] === "www" && parts[1] ? parts[1] : parts[0] || "orduva";
@@ -148,7 +153,7 @@ export default function AdminLoginPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Orduva owner login</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">Sign in to admin</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              This login is tenant-specific. You will only see the admin for the current tenant, and your session stays tied to that tenant only.
+              This login is tenant-specific. On a shared admin subdomain, enter the tenant slug you want to manage. Your session stays tied to that tenant only.
             </p>
           </div>
 
@@ -156,9 +161,9 @@ export default function AdminLoginPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current tenant</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{tenantHint || "Current tenant"}</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">{tenantHint || "Shared admin domain"}</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">
-                  Make sure the tenant hint matches the business you expect before signing in or creating the first owner.
+                  If you are using a shared admin subdomain, type the tenant slug directly below. On tenant storefront domains, the tenant hint should match the current business.
                 </p>
               </div>
               <div className="rounded-2xl bg-white/80 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">
@@ -191,6 +196,15 @@ export default function AdminLoginPage() {
             >
               First owner setup
             </button>
+          </div>
+
+          <div className="mb-6 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Shared admin subdomain prep</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                When admin moves to a shared host such as <span className="font-semibold">admin.orduva.com</span>, this page will no longer guess the tenant from the host. Use the tenant slug field below to open the right admin safely.
+              </p>
+            </div>
           </div>
 
           {session.loading ? (

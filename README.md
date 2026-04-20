@@ -110,3 +110,18 @@ Protected paths:
 - `/api/products`
 
 Set the same values locally in `.env.local` and in Netlify environment variables before testing admin screens.
+
+
+## Shared admin subdomain prep
+
+For a clean separate admin install, prepare a shared admin host such as `admin.orduva.com`.
+
+Recommended split:
+- Storefronts: `tenant.orduva.com`
+- Admin: `admin.orduva.com`
+
+Environment variables:
+- `ADMIN_HOSTNAME=admin.orduva.com`
+- `NEXT_PUBLIC_ADMIN_HOSTNAME=admin.orduva.com`
+
+This patch ensures the shared admin host is not treated as a tenant slug. Admin tenant choice should come from the login tenant slug field and the admin tenant cookie.

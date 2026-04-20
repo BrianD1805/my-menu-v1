@@ -12,15 +12,28 @@ function isPublicAdminPath(pathname: string) {
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const requestHeaders = new Headers(request.headers);
+
+  if (pathname.startsWith("/admin")) {
+    requestHeaders.set("x-orduva-route-kind", "admin");
+  }
 
   if (!isProtectedAdminPath(pathname) || isPublicAdminPath(pathname)) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   const sessionToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
 
   if (sessionToken) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   if (pathname.startsWith("/api/admin")) {

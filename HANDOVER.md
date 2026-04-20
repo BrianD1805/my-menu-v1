@@ -32,3 +32,18 @@ Included in this patch:
 - Added explicit admin head tags so admin pages keep the Orduva Admin favicon and manifest.
 - Added a dedicated admin service worker registration to improve installability on /admin.
 - Tightened admin install guidance to warn about removing old installs before reinstalling.
+
+
+## Ver-0.098D
+- Reduced storefront PWA metadata bleed into admin pages by marking admin requests in middleware and returning admin-specific root metadata on admin routes.
+- Hard-set admin install name to Orduva Admin, with admin-only icon/head metadata.
+- Changed admin start URL to the admin login route to avoid storefront launch fallback after install.
+- Kept the shared admin subdomain direction intact without touching locked storefront product card UI.
+
+
+## Ver-0.099
+- Prepared the app for a shared admin subdomain such as `admin.orduva.com`.
+- Added `ADMIN_HOSTNAME` / `NEXT_PUBLIC_ADMIN_HOSTNAME` support.
+- Updated tenant host resolution so the shared admin host does not get mistaken for a tenant slug.
+- Updated admin login guidance so the tenant slug is entered explicitly on the shared admin host.
+- This is deployment prep only. Storefront tenant subdomains remain separate and are not reassigned by this patch.
