@@ -125,3 +125,16 @@ Environment variables:
 - `NEXT_PUBLIC_ADMIN_HOSTNAME=admin.orduva.com`
 
 This patch ensures the shared admin host is not treated as a tenant slug. Admin tenant choice should come from the login tenant slug field and the admin tenant cookie.
+
+
+## Shared admin host wiring
+This build supports a shared admin host such as `admin.orduva.com`.
+
+Set:
+- `ADMIN_HOSTNAME=admin.orduva.com`
+- `NEXT_PUBLIC_ADMIN_HOSTNAME=admin.orduva.com`
+
+Behaviour:
+- `https://admin.orduva.com/` redirects to `https://admin.orduva.com/admin/login`
+- `https://tenant.orduva.com/admin/...` redirects to the shared admin host
+- tenant selection happens on the admin login form using the tenant slug field

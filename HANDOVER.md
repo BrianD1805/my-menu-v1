@@ -47,3 +47,9 @@ Included in this patch:
 - Updated tenant host resolution so the shared admin host does not get mistaken for a tenant slug.
 - Updated admin login guidance so the tenant slug is entered explicitly on the shared admin host.
 - This is deployment prep only. Storefront tenant subdomains remain separate and are not reassigned by this patch.
+
+
+## Ver-0.100
+- Added shared admin host redirects using `ADMIN_HOSTNAME`.
+- Added root redirect from the admin subdomain to `/admin/login`.
+- Added admin subdomain setup instructions for Netlify and DNS.

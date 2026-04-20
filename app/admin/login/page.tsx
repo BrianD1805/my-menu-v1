@@ -153,7 +153,7 @@ export default function AdminLoginPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">Orduva owner login</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">Sign in to admin</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              This login is tenant-specific. On a shared admin subdomain, enter the tenant slug you want to manage. Your session stays tied to that tenant only.
+              This login is tenant-specific. On a shared admin subdomain such as admin.orduva.com, enter the tenant slug you want to manage. Your session stays tied to that tenant only.
             </p>
           </div>
 
@@ -202,7 +202,7 @@ export default function AdminLoginPage() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Shared admin subdomain prep</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
-                When admin moves to a shared host such as <span className="font-semibold">admin.orduva.com</span>, this page will no longer guess the tenant from the host. Use the tenant slug field below to open the right admin safely.
+                On a shared host such as <span className="font-semibold">admin.orduva.com</span>, this page no longer depends on storefront host detection. Use the tenant slug field below to open the right admin safely.
               </p>
             </div>
           </div>
