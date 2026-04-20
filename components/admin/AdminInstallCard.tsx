@@ -11,7 +11,7 @@ export default function AdminInstallCard() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIos, setIsIos] = useState(false);
-  const [message, setMessage] = useState("Install admin on your phone for faster access to new orders and day-to-day management.");
+  const [message, setMessage] = useState("Install Orduva Admin on your phone for faster access to new orders and day-to-day management.");
 
   useEffect(() => {
     const ua = window.navigator.userAgent.toLowerCase();
@@ -29,7 +29,7 @@ export default function AdminInstallCard() {
     const handleInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
-      setMessage("Admin app installed. Open it from your home screen for a cleaner phone-first workflow.");
+      setMessage("Orduva Admin is installed. Open it from your home screen for a cleaner phone-first workflow.");
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -58,7 +58,7 @@ export default function AdminInstallCard() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Phone-first admin</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-900">Install admin on your phone</h2>
+          <h2 className="mt-2 text-2xl font-bold text-slate-900">Install Orduva Admin on your phone</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">{message}</p>
           <div className="mt-4 grid gap-3 text-sm text-slate-700 sm:grid-cols-3">
             <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3 shadow-sm">
@@ -89,9 +89,9 @@ export default function AdminInstallCard() {
                 onClick={handleInstall}
                 className="admin-pressable inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
-                Install admin app
+                Install Orduva Admin
               </button>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Best on Android Chrome or desktop Chrome/Edge where install is supported directly.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Best on Android Chrome or desktop Chrome/Edge. If you changed icons recently, remove the old install first and then install again.</p>
             </>
           ) : isIos ? (
             <>
@@ -105,7 +105,7 @@ export default function AdminInstallCard() {
           ) : (
             <>
               <p className="text-sm font-semibold text-slate-900">Install option not showing yet</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Open admin in Chrome or Edge and use the browser install option if available. On some devices it appears after a short visit.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Open admin in Chrome or Edge and use the browser install option if available. If the old app identity was previously installed, remove it first, refresh, then try again.</p>
             </>
           )}
         </div>

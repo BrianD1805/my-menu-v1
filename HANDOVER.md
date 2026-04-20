@@ -25,3 +25,10 @@ Included in this patch:
 - Admin login and first-owner setup now accept an explicit tenant slug.
 - Added an admin tenant cookie so the shared admin domain can stay tied to the chosen tenant after login.
 - Admin API tenant resolution now follows the authenticated tenant session instead of relying only on the current host.
+
+
+## Ver-0.098C
+- Hard-fixed admin PWA identity metadata with a stronger dedicated admin manifest id.
+- Added explicit admin head tags so admin pages keep the Orduva Admin favicon and manifest.
+- Added a dedicated admin service worker registration to improve installability on /admin.
+- Tightened admin install guidance to warn about removing old installs before reinstalling.
