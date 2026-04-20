@@ -37,3 +37,14 @@ body {
   outline: 2px solid rgba(15, 23, 42, 0.22);
   outline-offset: 2px;
 }
+
+
+.admin-bottom-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+@supports (padding: max(0px)) {
+  .admin-bottom-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}

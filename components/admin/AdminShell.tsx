@@ -44,7 +44,7 @@ export default function AdminShell({
   ];
 
   return (
-    <main className="min-h-screen bg-slate-100 px-3 py-4 sm:px-6 sm:py-7">
+    <main className="min-h-screen bg-slate-100 px-3 py-4 pb-24 sm:px-6 sm:py-7 sm:pb-7">
       <div className="mx-auto max-w-6xl">
         <header
           className="rounded-[28px] border border-black/5 bg-[linear-gradient(135deg,#ffffff_0%,#f7faf8_52%,#edf7f1_100%)] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.10)] sm:rounded-[32px] sm:p-7"
@@ -84,7 +84,7 @@ export default function AdminShell({
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-6 sm:flex sm:flex-wrap">
+          <div className="mt-5 hidden grid-cols-2 gap-3 sm:mt-6 sm:flex sm:flex-wrap">
             {nav.map((item) => (
               <a key={item.href} href={item.href} aria-current={item.current ? "page" : undefined} className={navClassName(item.current)}>
                 {item.label}
@@ -95,6 +95,26 @@ export default function AdminShell({
 
         <div className="mt-5 sm:mt-6">{children}</div>
       </div>
+
+      <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden">
+        <div className="mx-auto grid max-w-6xl grid-cols-5 gap-2">
+          {nav.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              aria-current={item.current ? "page" : undefined}
+              className={[
+                "admin-pressable inline-flex min-h-[52px] flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold transition",
+                item.current
+                  ? "bg-slate-900 text-white shadow-[0_14px_34px_rgba(15,23,42,0.18)]"
+                  : "border border-slate-200 bg-white text-slate-700",
+              ].join(" ")}
+            >
+              <span>{item.label}</span>
+            </a>
+          ))}
+        </div>
+      </nav>
     </main>
   );
 }
