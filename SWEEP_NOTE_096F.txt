@@ -1,0 +1,12 @@
+Orduva Ver-0.096F sweep summary
+
+Checked:
+- app/admin/orders/page.tsx: AdminShell now uses title + description, no version prop
+- app/admin/page.tsx: AdminShell props valid
+- app/admin/products/page.tsx: AdminShell props valid
+- app/admin/categories/page.tsx: AdminShell props valid
+- app/admin/settings/page.tsx: AdminShell props valid
+- components/admin/LiveOrdersRefresh.tsx: router.refresh is no longer called from inside the state updater
+- components/admin/OrderStatusForm.tsx: router.refresh remains in submit flow only
+
+This package is a fresh repack of the corrected admin-orders code with the visible version bumped to Ver: 0.096F.

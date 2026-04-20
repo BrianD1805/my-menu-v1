@@ -124,7 +124,8 @@ export default async function AdminOrdersPage() {
       tenantName={branding.adminHeadingLabel}
       signedInAs={user.full_name || user.email || "Owner"}
       current="orders"
-      version={branding.version}
+      title="Orders"
+      description="Monitor new orders, update statuses, and keep track of live order activity."
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
