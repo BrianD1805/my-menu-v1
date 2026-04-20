@@ -53,3 +53,10 @@ Included in this patch:
 - Added shared admin host redirects using `ADMIN_HOSTNAME`.
 - Added root redirect from the admin subdomain to `/admin/login`.
 - Added admin subdomain setup instructions for Netlify and DNS.
+
+
+## Ver-0.100A
+- Restored storefront PWA installability groundwork.
+- Added dedicated storefront service worker registration on the storefront.
+- Added dedicated storefront install icons in 192 and 512 sizes.
+- Strengthened storefront manifest with explicit id, start_url, scope, and valid icon entries.

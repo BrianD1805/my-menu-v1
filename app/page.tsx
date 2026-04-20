@@ -1,4 +1,5 @@
 import MenuBrowser from "@/components/menu/MenuBrowser";
+import StorefrontPwaRegistrar from "@/components/menu/StorefrontPwaRegistrar";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
@@ -23,7 +24,9 @@ export default async function HomePage() {
     .eq("is_active", true);
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6">
+    <>
+      <StorefrontPwaRegistrar />
+      <main className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6">
       <MenuBrowser
         tenantSlug={slug}
         tenantName={branding.displayName}
@@ -56,6 +59,7 @@ export default async function HomePage() {
         currencyThousandsSeparator={branding.currencyThousandsSeparator}
         currencySuffix={branding.currencySuffix}
       />
-    </main>
+      </main>
+    </>
   );
 }
