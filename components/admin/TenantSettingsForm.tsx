@@ -34,6 +34,43 @@ type FormState = {
   currencySuffix: string;
 };
 
+const THEME_PRESETS = [
+  {
+    name: "ZimZa Red & Gold",
+    primaryColor: "#7B1E22",
+    accentColor: "#C7922F",
+    backgroundTint: "#F8F4F0",
+    borderColor: "#D9C7A3",
+    textColor: "#2B2B2B",
+  },
+  {
+    name: "Midnight Blue & Gold",
+    primaryColor: "#17324D",
+    accentColor: "#D4A63C",
+    backgroundTint: "#F5F7FA",
+    borderColor: "#C9D4E2",
+    textColor: "#1F2937",
+  },
+  {
+    name: "Forest & Sand",
+    primaryColor: "#1F4D3A",
+    accentColor: "#C89B5C",
+    backgroundTint: "#F5F3ED",
+    borderColor: "#D6CBB8",
+    textColor: "#2B312D",
+  },
+  {
+    name: "Plum & Rose Gold",
+    primaryColor: "#5A294F",
+    accentColor: "#C98D7A",
+    backgroundTint: "#FAF4F6",
+    borderColor: "#E3CAD1",
+    textColor: "#2D2430",
+  },
+] as const;
+
+type ThemePreset = (typeof THEME_PRESETS)[number];
+
 export default function TenantSettingsForm({ initial, tenantName }: { initial: FormState; tenantName: string }) {
   const [form, setForm] = useState<FormState>(initial);
   const [message, setMessage] = useState("");
@@ -71,6 +108,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function applyThemePreset(preset: ThemePreset) {
+    setForm((current) => ({
+      ...current,
+      primaryColor: preset.primaryColor,
+      accentColor: preset.accentColor,
+      backgroundTint: preset.backgroundTint,
+      borderColor: preset.borderColor,
+      textColor: preset.textColor,
+    }));
+    setTone("info");
+    setMessage(`Applied ${preset.name}. Save settings to publish it.`);
+  }
 
   async function uploadAsset(file: File, kind: "logo" | "favicon") {
     const setUploading = kind === "logo" ? setUploadingLogo : setUploadingFavicon;
@@ -153,6 +202,36 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <Field label="Background tint"><input value={form.backgroundTint} onChange={(e) => update("backgroundTint", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#F8F4F0" /></Field>
             <Field label="Border colour"><input value={form.borderColor} onChange={(e) => update("borderColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#D9C7A3" /></Field>
             <Field label="Text colour"><input value={form.textColor} onChange={(e) => update("textColor", e.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 uppercase" placeholder="#2B2B2B" /></Field>
+          </div>
+
+          <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-slate-900">Theme presets</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                Pick a preset to fill the colour fields quickly. You can still edit the five colours manually afterwards.
+              </p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {THEME_PRESETS.map((preset) => (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => applyThemePreset(preset)}
+                  className="rounded-[18px] border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-[1px] hover:border-slate-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full border border-black/5" style={{ backgroundColor: preset.primaryColor }} />
+                    <span className="h-4 w-4 rounded-full border border-black/5" style={{ backgroundColor: preset.accentColor }} />
+                    <span className="h-4 w-4 rounded-full border border-black/5" style={{ backgroundColor: preset.backgroundTint }} />
+                    <span className="h-4 w-4 rounded-full border border-black/5" style={{ backgroundColor: preset.borderColor }} />
+                    <span className="h-4 w-4 rounded-full border border-black/5" style={{ backgroundColor: preset.textColor }} />
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-slate-900">{preset.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">Apply this palette to the current tenant colours.</p>
+                </button>
+              ))}
+            </div>
           </div>
         </Section>
 

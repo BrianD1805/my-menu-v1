@@ -61,6 +61,11 @@ export async function GET(req: Request) {
       contactAddress: branding.contactAddress,
       footerBlurb: branding.footerBlurb,
       footerNotice: branding.footerNotice,
+      primaryColor: branding.primaryColor,
+      accentColor: branding.accentColor,
+      backgroundTint: branding.backgroundTint,
+      borderColor: branding.borderColor,
+      textColor: branding.textColor,
     },
   });
 }
