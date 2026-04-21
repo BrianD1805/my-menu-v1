@@ -8,10 +8,23 @@ type Props = {
   currentStatus: string;
 };
 
+function labelForStatus(status: string) {
+  switch (status) {
+    case "ready":
+      return "Out for delivery";
+    case "completed":
+      return "Delivered / finalised";
+    default:
+      return status;
+  }
+}
+
 export default function OrderStatusForm({ orderId, currentStatus }: Props) {
   const [status, setStatus] = useState(currentStatus);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
+
+  const completed = currentStatus === "completed";
 
   async function updateStatus() {
     setSaving(true);
@@ -34,6 +47,15 @@ export default function OrderStatusForm({ orderId, currentStatus }: Props) {
     router.refresh();
   }
 
+  if (completed) {
+    return (
+      <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Finalised</p>
+        <p className="mt-1 font-semibold">Delivered order</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2">
       <select
@@ -41,18 +63,19 @@ export default function OrderStatusForm({ orderId, currentStatus }: Props) {
         value={status}
         onChange={(e) => setStatus(e.target.value)}
       >
-        <option value="new">new</option>
-        <option value="accepted">accepted</option>
-        <option value="preparing">preparing</option>
-        <option value="ready">ready</option>
-        <option value="completed">completed</option>
-        <option value="cancelled">cancelled</option>
+        <option value="new">New</option>
+        <option value="accepted">Accepted</option>
+        <option value="preparing">Preparing</option>
+        <option value="ready">Out for delivery</option>
+        <option value="completed">Delivered / finalised</option>
+        <option value="cancelled">Cancelled</option>
       </select>
 
       <button
         onClick={() => void updateStatus()}
         disabled={saving}
         className="admin-pressable rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
+        aria-label={`Save ${labelForStatus(status)} for order ${orderId}`}
       >
         {saving ? "Saving..." : "Save"}
       </button>

@@ -76,16 +76,6 @@ export default function AdminShell({
                 </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-3 lg:flex lg:flex-wrap lg:justify-end">
-              <a
-                href="/"
-                className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                View storefront
-              </a>
-              <LogoutButton className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" />
-            </div>
           </div>
 
           <div className="mt-5 hidden grid-cols-2 gap-3 sm:mt-6 sm:flex sm:flex-wrap">
@@ -98,6 +88,16 @@ export default function AdminShell({
         </header>
 
         <div className="mt-5 sm:mt-6">{children}</div>
+
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <a
+            href="/"
+            className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            View storefront
+          </a>
+          <LogoutButton className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60" />
+        </div>
       </div>
 
       <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden">

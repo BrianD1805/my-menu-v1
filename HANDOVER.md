@@ -139,3 +139,15 @@ Included in this patch:
 - Switched off automatic WhatsApp order handoff on checkout success.
 - Added a small manual WhatsApp send button on the success page.
 - This avoids the lingering WhatsApp web/app chooser screen staying open in the background.
+
+
+## Ver-0.103
+- Made order status info cards open filtered orders for New, Accepted, Preparing, Out for delivery, and Delivered.
+- Moved View storefront and Logout to the bottom of the admin shell.
+- Delivered orders are treated as finalised/archived in the default live view but still counted in Total orders.
+- Removed the Save button for completed/delivered orders.
+- Fixed visible order contents by reading order_items correctly and showing a clear order summary on each order card.
+
+
+## Ver-0.103 FIXED
+- Fixed Next.js app router `searchParams` typing on admin orders page so production build passes.
