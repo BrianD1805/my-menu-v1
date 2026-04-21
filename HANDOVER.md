@@ -133,3 +133,9 @@ Included in this patch:
 - Replaced the admin icon/favicon assets throughout the admin app with the newly supplied icon.
 - Updated admin install icon files and apple touch icon so the new artwork is used consistently.
 - Bumped live version to Ver: 0.102H.
+
+
+## Ver-0.102I
+- Switched off automatic WhatsApp order handoff on checkout success.
+- Added a small manual WhatsApp send button on the success page.
+- This avoids the lingering WhatsApp web/app chooser screen staying open in the background.

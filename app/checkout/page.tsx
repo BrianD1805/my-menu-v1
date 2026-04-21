@@ -177,7 +177,7 @@ export default function CheckoutPage() {
     setErrorMessage("");
   }
 
-  const PAUSE_WHATSAPP_FOR_TESTING = false;
+  const PAUSE_WHATSAPP_FOR_TESTING = true;
 
   async function placeOrder() {
     setErrorMessage("");
@@ -337,6 +337,11 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-3">
+                  {successState.whatsappAppUrl || successState.whatsappUrl ? (
+                    <p className="text-xs leading-5 text-gray-500">
+                      WhatsApp auto-open is paused for now. Use the button below only when the customer wants to send manually.
+                    </p>
+                  ) : null}
                   <div className="flex gap-3">
                     <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }}>1</div>
                     <div>
@@ -357,8 +362,8 @@ export default function CheckoutPage() {
                       <p className="font-medium text-gray-900">You can head back to the menu any time</p>
                       <p className="text-sm leading-6 text-gray-600">
                         {successState.whatsappPaused
-                          ? "WhatsApp handoff is still paused for now, so this confirmation page is the final step in the customer flow."
-                          : "We’re opening WhatsApp now. If it does not open automatically, use the button below."}
+                          ? "Automatic WhatsApp opening is switched off for now. Use the manual button below only if the customer wants to send the order in WhatsApp."
+                          : "Automatic WhatsApp opening is switched off for now. Use the manual button below only if the customer wants to send the order in WhatsApp."}
                       </p>
                     </div>
                   </div>
@@ -394,13 +399,13 @@ export default function CheckoutPage() {
 
               <div className="rounded-[28px] border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="space-y-3">
-                  {!successState.whatsappPaused && (successState.whatsappAppUrl || successState.whatsappUrl) ? (
+                  {successState.whatsappAppUrl || successState.whatsappUrl ? (
                     <button
                       onClick={() => attemptWhatsAppHandoff(successState.whatsappUrl, successState.whatsappAppUrl)}
                       className="w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition"
                       style={{ backgroundColor: checkoutPrimary }}
                     >
-                      Open WhatsApp
+                      Send on WhatsApp manually
                     </button>
                   ) : null}
                   <button
