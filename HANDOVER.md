@@ -151,3 +151,19 @@ Included in this patch:
 
 ## Ver-0.103 FIXED
 - Fixed Next.js app router `searchParams` typing on admin orders page so production build passes.
+
+
+## Ver-0.104
+- Changed orders into focused status views so each status card lands directly in that status list.
+- Added a proper order detail viewer popup instead of cramming full contents into the main card.
+- Kept order cards compact with View order plus status controls.
+
+
+## Ver-0.104A
+- Changed status cards so they open the order queue popup directly.
+- New, Accepted, Preparing, Out for delivery, and Delivered now open their orders immediately in a popup working queue.
+- The queue popup includes status controls and a separate View order detail viewer.
+
+
+## Ver-0.104B
+- Fixed the order queue popup runtime bug by changing `label.lower()` to `label.toLowerCase()`.
