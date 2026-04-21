@@ -113,3 +113,7 @@ Included in this patch:
 - Root metadata now returns Orduva Admin on the admin host, not storefront branding.
 - Root manifest route now returns the admin manifest on the admin host to stop storefront name/icon bleed during install.
 - Middleware now marks all admin-host requests as admin route kind for stronger metadata isolation.
+
+
+## Ver-0.102E
+- Added a little more bleed space around the admin favicon/icon artwork so the letters do not sit too tight to the edge on installed app and notification surfaces.
