@@ -121,3 +121,9 @@ Included in this patch:
 
 ## Ver-0.102F
 - Removed the remaining white fringe around the admin icon edges while keeping the improved bleed space around the letters.
+
+
+## Ver-0.102G
+- Restored the white "Ord" lettering in the admin icon.
+- Removed only the unwanted white fringe connected to the outer edge of the icon.
+- Kept the improved bleed space around the letters.
