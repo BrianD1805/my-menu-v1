@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { LIVE_VERSION } from "@/lib/version";
 
 type RemoteStatus = {
   activeSubscriptions: number;
   vapidConfigured: boolean;
   permissionHint?: string;
+  error?: string;
 };
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -28,8 +30,10 @@ export default function AdminPushNotificationsCard() {
     try {
       const response = await fetch("/api/admin/push-subscriptions", { cache: "no-store" });
       const payload = await response.json();
-      if (response.ok) {
-        setRemoteStatus(payload);
+      setRemoteStatus(payload);
+      if (!response.ok && payload?.error) {
+        setTone("error");
+        setMessage(payload.error);
       }
     } catch {
       // silent
@@ -65,7 +69,7 @@ export default function AdminPushNotificationsCard() {
 
     setBusy(true);
     setTone("info");
-    setMessage("Requesting notification permission...");
+    setMessage("Registering this device for real admin push...");
 
     try {
       const nextPermission = await Notification.requestPermission();
@@ -95,7 +99,7 @@ export default function AdminPushNotificationsCard() {
       if (!response.ok) throw new Error(payload.error || "Failed to save push subscription");
 
       setTone("success");
-      setMessage("Admin device saved for live push notifications.");
+      setMessage(payload.message || "This device is now saved for real admin push notifications.");
       await refreshStatus();
     } catch (error) {
       setTone("error");
@@ -113,19 +117,21 @@ export default function AdminPushNotificationsCard() {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       if (subscription) {
-        await fetch("/api/admin/push-subscriptions", {
+        const response = await fetch("/api/admin/push-subscriptions", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ endpoint: subscription.endpoint }),
         });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || "Could not disable push notifications on this device.");
         await subscription.unsubscribe();
       }
       setTone("success");
       setMessage("Push notifications disabled on this device.");
       await refreshStatus();
-    } catch {
+    } catch (error) {
       setTone("error");
-      setMessage("Could not disable push notifications on this device.");
+      setMessage(error instanceof Error ? error.message : "Could not disable push notifications on this device.");
     } finally {
       setBusy(false);
     }
@@ -174,7 +180,12 @@ export default function AdminPushNotificationsCard() {
     <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Push notifications</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Push notifications</p>
+            <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-slate-600">
+              Admin {LIVE_VERSION.replace("Ver: ", "")}
+            </span>
+          </div>
           <h2 className="mt-3 text-2xl font-bold text-slate-900">Live admin push for new orders</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             This build saves the installed admin device subscription and attempts a real web push when a new order is placed.

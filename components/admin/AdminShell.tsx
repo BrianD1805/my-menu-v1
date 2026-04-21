@@ -68,9 +68,12 @@ export default function AdminShell({
               <h1 className="mt-3 text-2xl font-bold leading-tight text-slate-900 sm:text-4xl">{title}</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">{description}</p>
               <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-                Signed in as <span className="font-semibold text-slate-900">{signedInAs}</span>
-                <span className="hidden sm:inline">. Working inside </span>
-                <span className="block font-semibold text-slate-900 sm:inline">{tenantName}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>Signed in as <span className="font-semibold text-slate-900">{signedInAs}</span></span>
+                  <span className="hidden sm:inline">·</span>
+                  <span>Working inside <span className="font-semibold text-slate-900">{tenantName}</span></span>
+                  <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-slate-600">Admin {LIVE_VERSION.replace("Ver: ", "")}</span>
+                </div>
               </div>
             </div>
 

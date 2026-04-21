@@ -12,9 +12,9 @@ type PushPayload = {
 
 type DbSubscriptionRow = {
   endpoint: string;
-  p256dh_key: string;
-  auth_key: string;
-  is_active: boolean;
+  p256dh: string;
+  auth: string;
+  enabled: boolean;
 };
 
 function hasPushConfig() {
@@ -41,8 +41,8 @@ function buildSubscription(row: DbSubscriptionRow) {
   return {
     endpoint: row.endpoint,
     keys: {
-      p256dh: row.p256dh_key,
-      auth: row.auth_key,
+      p256dh: row.p256dh,
+      auth: row.auth,
     },
   };
 }
@@ -54,9 +54,9 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
 
   const { data, error } = await db
     .from("admin_push_subscriptions")
-    .select("endpoint,p256dh_key,auth_key,is_active")
+    .select("endpoint,p256dh,auth,enabled")
     .eq("tenant_id", tenantId)
-    .eq("is_active", true);
+    .eq("enabled", true);
 
   if (error || !data?.length) {
     return { ok: false, reason: error ? "query_failed" as const : "no_subscriptions" as const, sent: 0, failed: 0 };
@@ -85,7 +85,11 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
       if (statusCode === 404 || statusCode === 410) {
         await db
           .from("admin_push_subscriptions")
-          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .update({
+            enabled: false,
+            updated_at: new Date().toISOString(),
+            last_seen_at: new Date().toISOString(),
+          })
           .eq("tenant_id", tenantId)
           .eq("endpoint", row.endpoint);
       }

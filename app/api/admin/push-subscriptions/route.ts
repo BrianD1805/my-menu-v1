@@ -15,15 +15,36 @@ export async function GET(req: Request) {
   const auth = await requireAdminApiUser(req);
   if ("error" in auth) return auth.error;
 
-  const { count } = await db
+  const { count, error } = await db
     .from("admin_push_subscriptions")
     .select("id", { count: "exact", head: true })
     .eq("tenant_id", auth.tenant.id)
-    .eq("is_active", true);
+    .eq("enabled", true);
+
+  if (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Could not load saved devices: ${error.message}`,
+        vapidConfigured: Boolean(
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
+            process.env.VAPID_PRIVATE_KEY?.trim() &&
+            process.env.VAPID_SUBJECT?.trim()
+        ),
+        activeSubscriptions: 0,
+        permissionHint: "Use an installed admin PWA on phone for the best result.",
+      },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     ok: true,
-    vapidConfigured: Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim() && process.env.VAPID_SUBJECT?.trim()),
+    vapidConfigured: Boolean(
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
+        process.env.VAPID_PRIVATE_KEY?.trim() &&
+        process.env.VAPID_SUBJECT?.trim()
+    ),
     activeSubscriptions: count || 0,
     permissionHint: "Use an installed admin PWA on phone for the best result.",
   });
@@ -42,22 +63,37 @@ export async function POST(req: Request) {
 
   const payload = {
     tenant_id: auth.tenant.id,
-    tenant_user_id: auth.user.id,
+    admin_user_id: auth.user.id,
+    admin_email: auth.user.email,
     endpoint: subscription.endpoint,
-    p256dh_key: subscription.keys.p256dh,
-    auth_key: subscription.keys.auth,
-    expiration_time: subscription.expirationTime || null,
+    p256dh: subscription.keys.p256dh,
+    auth: subscription.keys.auth,
     user_agent: req.headers.get("user-agent") || null,
-    is_active: true,
+    device_label: "Installed admin PWA",
+    enabled: true,
     updated_at: new Date().toISOString(),
+    last_seen_at: new Date().toISOString(),
   };
 
   const { error } = await db.from("admin_push_subscriptions").upsert(payload, { onConflict: "endpoint" });
   if (error) {
-    return NextResponse.json({ error: "Failed to save push subscription" }, { status: 500 });
+    return NextResponse.json(
+      { error: `Failed to save push subscription: ${error.message}` },
+      { status: 500 }
+    );
   }
 
-  return NextResponse.json({ ok: true, message: "Push-ready device saved for this tenant." });
+  const { count } = await db
+    .from("admin_push_subscriptions")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", auth.tenant.id)
+    .eq("enabled", true);
+
+  return NextResponse.json({
+    ok: true,
+    message: "This device is now saved for real admin push notifications.",
+    activeSubscriptions: count || 0,
+  });
 }
 
 export async function DELETE(req: Request) {
@@ -72,12 +108,16 @@ export async function DELETE(req: Request) {
 
   const { error } = await db
     .from("admin_push_subscriptions")
-    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .update({
+      enabled: false,
+      updated_at: new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+    })
     .eq("tenant_id", auth.tenant.id)
     .eq("endpoint", endpoint);
 
   if (error) {
-    return NextResponse.json({ error: "Failed to disable push subscription" }, { status: 500 });
+    return NextResponse.json({ error: `Failed to disable push subscription: ${error.message}` }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
