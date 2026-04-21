@@ -117,3 +117,7 @@ Included in this patch:
 
 ## Ver-0.102E
 - Added a little more bleed space around the admin favicon/icon artwork so the letters do not sit too tight to the edge on installed app and notification surfaces.
+
+
+## Ver-0.102F
+- Removed the remaining white fringe around the admin icon edges while keeping the improved bleed space around the letters.
