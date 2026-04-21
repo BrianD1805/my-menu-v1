@@ -18,6 +18,7 @@ function urlBase64ToUint8Array(base64String: string) {
 export default function AdminPushNotificationsCard() {
   const [permission, setPermission] = useState<string>(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
   const [busy, setBusy] = useState(false);
+  const [realBusy, setRealBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"info" | "success" | "error">("info");
   const [remoteStatus, setRemoteStatus] = useState<RemoteStatus | null>(null);
@@ -58,7 +59,7 @@ export default function AdminPushNotificationsCard() {
 
     if (!vapidPublicKey) {
       setTone("error");
-      setMessage("Push foundation is added, but the public web push key is not configured yet.");
+      setMessage("Add the public VAPID key before enabling real admin push notifications.");
       return;
     }
 
@@ -73,7 +74,6 @@ export default function AdminPushNotificationsCard() {
       if (nextPermission !== "granted") {
         setTone("error");
         setMessage("Notification permission was not granted.");
-        setBusy(false);
         return;
       }
 
@@ -95,7 +95,7 @@ export default function AdminPushNotificationsCard() {
       if (!response.ok) throw new Error(payload.error || "Failed to save push subscription");
 
       setTone("success");
-      setMessage("Admin device saved for push notifications. New-order push sending is now ready for the next delivery step.");
+      setMessage("Admin device saved for live push notifications.");
       await refreshStatus();
     } catch (error) {
       setTone("error");
@@ -150,21 +150,42 @@ export default function AdminPushNotificationsCard() {
     }
   }
 
+  async function sendRealPushTest() {
+    setRealBusy(true);
+    try {
+      const response = await fetch("/api/admin/push-subscriptions/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Real push test failed.");
+      setTone("success");
+      setMessage(payload.message || "Real push test sent.");
+      await refreshStatus();
+    } catch (error) {
+      setTone("error");
+      setMessage(error instanceof Error ? error.message : "Real push test failed.");
+    } finally {
+      setRealBusy(false);
+    }
+  }
+
   return (
     <section className="rounded-[28px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Push notifications</p>
-          <h2 className="mt-3 text-2xl font-bold text-slate-900">Installed admin PWA notification foundation</h2>
+          <h2 className="mt-3 text-2xl font-bold text-slate-900">Live admin push for new orders</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            This device can now request notification permission, register a push subscription, and store it against the current tenant.
-            Delivery of live server push is the next step after VAPID keys are configured.
+            This build saves the installed admin device subscription and attempts a real web push when a new order is placed.
+            Customer notification events are still being staged in the background for the next phase.
           </p>
         </div>
 
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
           <p><span className="font-semibold text-slate-900">Permission:</span> {permission}</p>
           <p className="mt-1"><span className="font-semibold text-slate-900">Saved devices:</span> {remoteStatus?.activeSubscriptions ?? 0}</p>
+          <p className="mt-1"><span className="font-semibold text-slate-900">VAPID:</span> {remoteStatus?.vapidConfigured ? "configured" : "missing"}</p>
         </div>
       </div>
 
@@ -172,23 +193,26 @@ export default function AdminPushNotificationsCard() {
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Step 1</p>
           <p className="mt-2 text-base font-semibold text-slate-900">Enable device push</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Best tested from the installed admin PWA on phone.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Grant permission from the installed admin PWA on your phone.</p>
         </div>
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Step 2</p>
-          <p className="mt-2 text-base font-semibold text-slate-900">Save browser subscription</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">This build stores the device endpoint for future new-order pushes.</p>
+          <p className="mt-2 text-base font-semibold text-slate-900">Save subscription</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">The device endpoint is saved against the current tenant for real push delivery.</p>
         </div>
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Step 3</p>
-          <p className="mt-2 text-base font-semibold text-slate-900">Prepare customer flow</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Order events are now being staged for customer notification delivery later.</p>
+          <p className="mt-2 text-base font-semibold text-slate-900">Receive new order pushes</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">New orders now attempt a real push to the installed admin devices for this tenant.</p>
         </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <button onClick={() => void enablePush()} disabled={busy} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60">
           {busy ? "Working..." : "Enable admin push"}
+        </button>
+        <button onClick={() => void sendRealPushTest()} disabled={realBusy} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-60">
+          {realBusy ? "Sending..." : "Send real push test"}
         </button>
         <button onClick={() => void showLocalTestNotification()} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
           Send local test notification
@@ -200,7 +224,7 @@ export default function AdminPushNotificationsCard() {
 
       {!vapidPublicKey ? (
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Add <span className="font-semibold">NEXT_PUBLIC_VAPID_PUBLIC_KEY</span> before expecting real server push delivery.
+          Add <span className="font-semibold">NEXT_PUBLIC_VAPID_PUBLIC_KEY</span>, <span className="font-semibold">VAPID_PRIVATE_KEY</span>, and <span className="font-semibold">VAPID_SUBJECT</span> before expecting real server push delivery.
         </div>
       ) : null}
 

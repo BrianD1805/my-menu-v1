@@ -5,6 +5,7 @@ import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { buildWhatsAppAppUrl, buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { enqueueNotificationEvent } from "@/lib/notifications";
+import { sendAdminPushForTenant } from "@/lib/web-push";
 
 export async function POST(req: Request) {
   try {
@@ -171,6 +172,12 @@ export async function POST(req: Request) {
         title: "Order received",
         body: "Your order has been received and is waiting for confirmation.",
         payload: { orderId: order.id, status: "new" },
+      }),
+      sendAdminPushForTenant(tenant.id, {
+        title: "New order received",
+        body: `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        url: "/admin/orders",
+        tag: `orduva-order-${order.id}`,
       }),
     ]);
 

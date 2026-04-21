@@ -76,3 +76,20 @@ Included in this patch:
 - Added notification event queue foundation for admin and customer order events.
 - Added customer notification journey block on the checkout success screen.
 - Added starter schema entries for admin push subscriptions and notification events.
+
+
+## Ver-0.101A
+- Added a visible admin version label in the admin shell header so live admin testing can be confirmed quickly.
+- Bumped live version display to Ver: 0.101A.
+
+
+## Ver-0.102
+- Added live admin web push delivery wiring for new orders.
+- Added admin real push test endpoint and button.
+- Added web-push dependency and VAPID env placeholders.
+- New orders now attempt immediate real push delivery to active admin subscriptions for the current tenant.
+- Customer notification flow remains staged in the database for the next build.
+
+
+## Ver-0.102 FIXED2
+- Added local TypeScript declaration for `web-push` to fix missing module type errors during build.

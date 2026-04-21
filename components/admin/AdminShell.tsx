@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import LogoutButton from "@/components/admin/LogoutButton";
+import { LIVE_VERSION } from "@/lib/version";
 
 type NavItem = {
   href: string;

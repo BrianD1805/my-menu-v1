@@ -23,7 +23,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    vapidConfigured: Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim()),
+    vapidConfigured: Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() && process.env.VAPID_PRIVATE_KEY?.trim() && process.env.VAPID_SUBJECT?.trim()),
     activeSubscriptions: count || 0,
     permissionHint: "Use an installed admin PWA on phone for the best result.",
   });
