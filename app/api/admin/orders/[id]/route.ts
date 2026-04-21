@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveAdminTenant } from "@/lib/admin-tenant";
+import { customerEventFromStatus, enqueueNotificationEvent } from "@/lib/notifications";
 
 const allowedStatuses = [
   "new",
@@ -38,6 +39,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Order not found for this tenant" }, { status: 404 });
     }
 
+    const nextCustomerEvent = customerEventFromStatus(body.status);
+
     const { data, error } = await db
       .from("orders")
       .update({ status: body.status })
@@ -49,6 +52,31 @@ export async function PATCH(
     if (error || !data) {
       return NextResponse.json({ error: "Failed to update order status" }, { status: 500 });
     }
+
+    await Promise.allSettled([
+      enqueueNotificationEvent({
+        tenantId: tenant.id,
+        orderId: id,
+        audience: "admin",
+        eventType: `admin_order_${body.status}`,
+        title: "Order status updated",
+        body: `Order ${id} is now ${body.status}.`,
+        payload: { orderId: id, status: body.status, route: "/admin/orders" },
+      }),
+      ...(nextCustomerEvent
+        ? [
+            enqueueNotificationEvent({
+              tenantId: tenant.id,
+              orderId: id,
+              audience: "customer",
+              eventType: nextCustomerEvent.eventType,
+              title: nextCustomerEvent.title,
+              body: nextCustomerEvent.body,
+              payload: { orderId: id, status: body.status },
+            }),
+          ]
+        : []),
+    ]);
 
     return NextResponse.json({ ok: true, order: data });
   } catch (error) {

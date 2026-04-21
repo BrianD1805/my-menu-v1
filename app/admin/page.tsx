@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminInstallCard from "@/components/admin/AdminInstallCard";
+import AdminPushNotificationsCard from "@/components/admin/AdminPushNotificationsCard";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 function StatCard({ label, value, hint, urgent }: { label: string; value: string; hint: string; urgent?: boolean }) {
@@ -68,6 +69,9 @@ export default async function AdminHomePage() {
       accentColor={branding.accentColor}
     >
       <AdminInstallCard />
+      <div className="mt-6">
+        <AdminPushNotificationsCard />
+      </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Orders" value={String(orderCount || 0)} hint="All orders shown here belong to this tenant only." />

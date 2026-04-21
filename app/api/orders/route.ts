@@ -4,6 +4,7 @@ import type { CreateOrderInput } from "@/lib/types";
 import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { buildWhatsAppAppUrl, buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { enqueueNotificationEvent } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -151,6 +152,27 @@ export async function POST(req: Request) {
     const whatsappAppUrl = buildWhatsAppAppUrl(tenant.whatsapp_number, message);
 
     await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
+
+    await Promise.allSettled([
+      enqueueNotificationEvent({
+        tenantId: tenant.id,
+        orderId: order.id,
+        audience: "admin",
+        eventType: "new_order",
+        title: "New order received",
+        body: `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        payload: { orderId: order.id, route: "/admin/orders" },
+      }),
+      enqueueNotificationEvent({
+        tenantId: tenant.id,
+        orderId: order.id,
+        audience: "customer",
+        eventType: "order_received",
+        title: "Order received",
+        body: "Your order has been received and is waiting for confirmation.",
+        payload: { orderId: order.id, status: "new" },
+      }),
+    ]);
 
     return NextResponse.json({
       ok: true,

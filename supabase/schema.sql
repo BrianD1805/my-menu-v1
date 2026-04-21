@@ -58,3 +58,35 @@ alter table public.categories enable row level security;
 alter table public.products enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
+
+
+create table if not exists admin_push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id) on delete cascade,
+  tenant_user_id uuid,
+  endpoint text not null unique,
+  p256dh_key text not null,
+  auth_key text not null,
+  expiration_time bigint,
+  user_agent text,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists notification_events (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id) on delete cascade,
+  order_id uuid references orders(id) on delete cascade,
+  audience text not null,
+  channel text not null default 'push',
+  event_type text not null,
+  title text not null,
+  body text not null,
+  payload jsonb,
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_push_subscriptions enable row level security;
+alter table public.notification_events enable row level security;

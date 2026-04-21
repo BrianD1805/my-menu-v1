@@ -289,6 +289,24 @@ export default function CheckoutPage() {
           <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_0.8fr]">
             <section className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer notification flow</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">This order now creates customer notification events ready for future push delivery. The live customer steps will follow this journey.</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["Received", "Your order has been placed successfully."],
+                    ["Accepted", "The business confirms the order and starts work."],
+                    ["Preparing", "Your food is being prepared."],
+                    ["Ready / Completed", "The order is ready or finished."],
+                  ].map(([title, body], index) => (
+                    <div key={title} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Step {index + 1}</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">{title}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
                 <div className="rounded-2xl border bg-white p-4" style={{ borderColor: checkoutBorder, backgroundColor: checkoutBackground }}>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Order type</p>
                   <p className="mt-2 text-base font-semibold capitalize text-gray-900">{successState.orderType}</p>

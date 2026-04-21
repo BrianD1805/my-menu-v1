@@ -67,3 +67,12 @@ Included in this patch:
 - Visible storefront version bumped to Ver: 0.100C so deployment integrity can be verified immediately on desktop and mobile.
 - Shared admin subdomain architecture files preserved in the baseline.
 - Use this build to confirm the storefront is actually updating before further PWA work.
+
+
+## Ver-0.101
+- Added admin push notification foundation card inside admin home.
+- Added admin service worker push handlers and notification click routing.
+- Added API route to save and disable admin push subscriptions per tenant.
+- Added notification event queue foundation for admin and customer order events.
+- Added customer notification journey block on the checkout success screen.
+- Added starter schema entries for admin push subscriptions and notification events.
