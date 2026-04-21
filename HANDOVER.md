@@ -106,3 +106,10 @@ Included in this patch:
 - Fixed admin push queries to use enabled/p256dh/auth columns.
 - Improved error reporting on Enable admin push so save failures are shown clearly.
 - Added clearly visible admin version labels in the push card and admin header.
+
+
+## Ver-0.102D
+- Hardened admin install branding isolation on the shared admin subdomain.
+- Root metadata now returns Orduva Admin on the admin host, not storefront branding.
+- Root manifest route now returns the admin manifest on the admin host to stop storefront name/icon bleed during install.
+- Middleware now marks all admin-host requests as admin route kind for stronger metadata isolation.

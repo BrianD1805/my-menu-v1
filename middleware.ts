@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
-import { getConfiguredAdminHostname, normalizeHostname } from "@/lib/admin-host";
+import { getConfiguredAdminHostname, isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 
 function isProtectedAdminPath(pathname: string) {
   return pathname.startsWith("/admin") || pathname.startsWith("/api/admin");
@@ -11,13 +11,17 @@ function isPublicAdminPath(pathname: string) {
   return pathname === "/admin/login" || pathname.startsWith("/api/admin/auth/");
 }
 
+function currentHostFromRequest(request: NextRequest) {
+  return normalizeHostname(
+    request.headers.get("x-forwarded-host") || request.headers.get("host") || ""
+  );
+}
+
 function maybeRedirectToSharedAdminHost(request: NextRequest, pathname: string) {
   const configuredAdminHost = getConfiguredAdminHostname();
   if (!configuredAdminHost) return null;
 
-  const currentHost = normalizeHostname(
-    request.headers.get("x-forwarded-host") || request.headers.get("host") || ""
-  );
+  const currentHost = currentHostFromRequest(request);
 
   if (!currentHost || currentHost === configuredAdminHost) return null;
   if (!isProtectedAdminPath(pathname)) return null;
@@ -32,9 +36,7 @@ function maybeRedirectAdminHostRoot(request: NextRequest, pathname: string) {
   const configuredAdminHost = getConfiguredAdminHostname();
   if (!configuredAdminHost) return null;
 
-  const currentHost = normalizeHostname(
-    request.headers.get("x-forwarded-host") || request.headers.get("host") || ""
-  );
+  const currentHost = currentHostFromRequest(request);
 
   if (currentHost !== configuredAdminHost) return null;
   if (pathname !== "/") return null;
@@ -55,8 +57,9 @@ export function middleware(request: NextRequest) {
   if (adminRootRedirect) return adminRootRedirect;
 
   const requestHeaders = new Headers(request.headers);
+  const currentHost = currentHostFromRequest(request);
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") || isSharedAdminHost(currentHost)) {
     requestHeaders.set("x-orduva-route-kind", "admin");
   }
 
@@ -87,5 +90,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/", "/admin/:path*", "/api/admin/:path*", "/manifest.webmanifest"],
 };
