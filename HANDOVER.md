@@ -127,3 +127,9 @@ Included in this patch:
 - Restored the white "Ord" lettering in the admin icon.
 - Removed only the unwanted white fringe connected to the outer edge of the icon.
 - Kept the improved bleed space around the letters.
+
+
+## Ver-0.102H
+- Replaced the admin icon/favicon assets throughout the admin app with the newly supplied icon.
+- Updated admin install icon files and apple touch icon so the new artwork is used consistently.
+- Bumped live version to Ver: 0.102H.
