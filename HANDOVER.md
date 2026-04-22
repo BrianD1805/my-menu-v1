@@ -167,3 +167,10 @@ Included in this patch:
 
 ## Ver-0.104B
 - Fixed the order queue popup runtime bug by changing `label.lower()` to `label.toLowerCase()`.
+
+
+## Ver-0.105
+- Improved order queue popup UX on desktop and mobile.
+- Centered the popup and increased bottom padding around the last order card.
+- Stopped background page scrolling while the queue popup is open.
+- Replaced the inline status dropdown with a popup-style status selector, matching desktop and mobile.

@@ -161,7 +161,7 @@ export default function AdminLoginPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current tenant</p>
-                <p className="mt-2 text-lg font-semibold text-slate-900">{tenantHint || "Shared admin domain"}</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">{"Shared admin domain"}</p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">
                   If you are using a shared admin subdomain, type the tenant slug directly below. On tenant storefront domains, the tenant hint should match the current business.
                 </p>

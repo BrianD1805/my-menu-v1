@@ -18,7 +18,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default function AdminPushNotificationsCard() {
-  const [permission, setPermission] = useState<string>(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
+  const [permission, setPermission] = useState<string>("unsupported");
   const [busy, setBusy] = useState(false);
   const [realBusy, setRealBusy] = useState(false);
   const [message, setMessage] = useState("");
