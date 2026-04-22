@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       password_hash: hashCustomerPassword(password),
       is_active: true,
     })
-    .select("id, tenant_id, email, full_name, phone, password_hash, is_active")
+    .select("id, tenant_id, email, full_name, phone, address_line_1, address_line_2, city, postcode, password_hash, is_active")
     .single();
 
   if (error || !data) {

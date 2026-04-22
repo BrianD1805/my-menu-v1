@@ -21,6 +21,10 @@ type CustomerAccountRow = {
   email: string;
   full_name: string | null;
   phone: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  city: string | null;
+  postcode: string | null;
   password_hash: string;
   is_active: boolean;
 };
@@ -114,7 +118,7 @@ export async function getCustomerByEmail(tenantId: string, email: string) {
   const normalizedEmail = normalizeCustomerEmail(email);
   const { data, error } = await db
     .from("customer_accounts")
-    .select("id, tenant_id, email, full_name, phone, password_hash, is_active")
+    .select("id, tenant_id, email, full_name, phone, address_line_1, address_line_2, city, postcode, password_hash, is_active")
     .eq("tenant_id", tenantId)
     .eq("email", normalizedEmail)
     .maybeSingle();
@@ -126,7 +130,7 @@ export async function getCustomerByEmail(tenantId: string, email: string) {
 export async function getCustomerById(customerId: string) {
   const { data, error } = await db
     .from("customer_accounts")
-    .select("id, tenant_id, email, full_name, phone, password_hash, is_active")
+    .select("id, tenant_id, email, full_name, phone, address_line_1, address_line_2, city, postcode, password_hash, is_active")
     .eq("id", customerId)
     .maybeSingle();
 

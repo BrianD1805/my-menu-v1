@@ -80,6 +80,9 @@ export default function CheckoutPage() {
           if (data.customer.phone) {
             setCustomerPhone((current) => current || data.customer.phone);
           }
+          if (data.customer.addressLine1) {
+            setCustomerAddress((current) => current || data.customer.addressLine1);
+          }
         } else {
           setCustomerAccount(null);
         }

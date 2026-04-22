@@ -14,6 +14,10 @@ export async function GET(req: Request) {
       email: session.user.email,
       fullName: session.user.full_name,
       phone: session.user.phone,
+      addressLine1: session.user.address_line_1,
+      addressLine2: session.user.address_line_2,
+      city: session.user.city,
+      postcode: session.user.postcode,
     },
     tenant: {
       id: session.tenant.id,

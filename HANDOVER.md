@@ -335,3 +335,19 @@ Included in this patch:
 - Moved customer push controls higher on the success page so they are visible without scrolling.
 - Updated customer push success copy to reflect account-linked device saving rather than only order-linked saving.
 - Kept unique device count logic from the database cleanup/migration path.
+
+
+## Ver-0.112
+- Added customer details edit popup with saved profile fields.
+- Added saved address fields to customer accounts.
+- Main account summary shows only address line 1.
+- Checkout now prefills the main address field from saved customer profile data when available.
+
+
+## Ver-0.112A
+- Fixed the customer signup route type mismatch by returning the full customer account shape expected by applyCustomerSession.
+
+
+## Ver-0.112B
+- Fixed customer details popup sizing and scrolling.
+- The popup now uses constrained height, internal vertical scrolling, better bottom padding, and a more app-consistent sheet/modal behaviour on mobile and desktop.
