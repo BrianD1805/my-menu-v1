@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
 import { DEFAULT_MONEY_SETTINGS, formatMoney, type MoneyFormatSettings } from "@/lib/money";
+import CustomerPushNotificationsCard from "@/components/checkout/CustomerPushNotificationsCard";
 
 type CartItem = {
   productId: string;
@@ -43,6 +44,7 @@ type SuccessState = {
   notes: string;
   total: number;
   itemCount: number;
+  tenantSlug: string;
   whatsappPaused: boolean;
   whatsappUrl: string | null;
   whatsappAppUrl: string | null;
@@ -235,6 +237,7 @@ export default function CheckoutPage() {
         notes: notes.trim(),
         total,
         itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
+        tenantSlug,
         whatsappPaused: PAUSE_WHATSAPP_FOR_TESTING,
         whatsappUrl: data.whatsappUrl || null,
         whatsappAppUrl: data.whatsappAppUrl || null
@@ -369,6 +372,15 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
+
+
+
+              <CustomerPushNotificationsCard
+                tenantSlug={successState.tenantSlug}
+                orderId={successState.orderId}
+                customerPhone={successState.customerPhone}
+                customerName={successState.customerName}
+              />
 
               {successState.notes ? (
                 <div className="rounded-[28px] border border-gray-200 bg-gray-50 p-5">

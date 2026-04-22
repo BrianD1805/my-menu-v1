@@ -174,3 +174,11 @@ Included in this patch:
 - Centered the popup and increased bottom padding around the last order card.
 - Stopped background page scrolling while the queue popup is open.
 - Replaced the inline status dropdown with a popup-style status selector, matching desktop and mobile.
+
+
+## Ver-0.106
+- Added customer push notification foundation on the storefront success page.
+- Added customer push subscription save/test API routes.
+- Added storefront service worker push handlers.
+- Added customer push delivery on admin order status changes.
+- Added Supabase migration for customer_push_subscriptions.

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveAdminTenant } from "@/lib/admin-tenant";
 import { customerEventFromStatus, enqueueNotificationEvent } from "@/lib/notifications";
+import { sendCustomerPushForOrder } from "@/lib/web-push";
 
 const allowedStatuses = [
   "new",
@@ -73,6 +74,12 @@ export async function PATCH(
               title: nextCustomerEvent.title,
               body: nextCustomerEvent.body,
               payload: { orderId: id, status: body.status },
+            }),
+            sendCustomerPushForOrder(id, {
+              title: nextCustomerEvent.title,
+              body: nextCustomerEvent.body,
+              url: "/",
+              tag: `orduva-customer-${id}-${body.status}`,
             }),
           ]
         : []),
