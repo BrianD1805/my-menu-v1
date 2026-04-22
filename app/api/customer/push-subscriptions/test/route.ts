@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { sendCustomerPushForOrder } from "@/lib/web-push";
+import { db } from "@/lib/db";
+import { sendCustomerPushForOrderWithFallback } from "@/lib/web-push";
 
 export async function POST(req: Request) {
   const body = (await req.json()) as { orderId?: string };
@@ -9,9 +10,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing order ID." }, { status: 400 });
   }
 
-  const result = await sendCustomerPushForOrder(orderId, {
+  const orderLookup = await db
+    .from("orders")
+    .select("tenant_id")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  const tenantId = orderLookup.data?.tenant_id;
+  if (!tenantId) {
+    return NextResponse.json({ error: "Could not resolve tenant for this order." }, { status: 400 });
+  }
+
+  const result = await sendCustomerPushForOrderWithFallback(tenantId, orderId, {
     title: "Order update test",
-    body: "Customer push test sent to this order subscription.",
+    body: "Customer push test sent to this saved customer device.",
     url: "/",
     tag: `orduva-customer-test-${orderId}`,
   });
@@ -21,7 +33,7 @@ export async function POST(req: Request) {
       result.reason === "missing_vapid"
         ? "VAPID keys are not configured yet."
         : result.reason === "no_subscriptions"
-          ? "No active customer push subscriptions found for this order."
+          ? "No active customer push subscriptions found for this customer."
           : "Customer push could not be delivered.";
 
     return NextResponse.json({ error: message, ...result }, { status: 400 });

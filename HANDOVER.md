@@ -222,3 +222,10 @@ Included in this patch:
 
 ## Ver-0.108D
 - Fixed duplicate `CustomerSubscriptionRow` type declaration in `lib/web-push.ts`.
+
+
+## Ver-0.108E
+- Fixed reusable customer push reuse and order lookup properly.
+- The customer push test now uses the same fallback lookup as live status pushes.
+- The success page now silently relinks a new order to the already-saved customer device when permission and subscription already exist.
+- Active customer devices now count unique endpoints, not duplicate rows.

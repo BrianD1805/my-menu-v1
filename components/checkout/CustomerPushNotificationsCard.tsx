@@ -12,6 +12,8 @@ function urlBase64ToUint8Array(base64String: string) {
 type RemoteStatus = {
   activeSubscriptions: number;
   vapidConfigured: boolean;
+  reusableDeviceRegistered?: boolean;
+  linkedToThisOrder?: boolean;
   orderStatus?: string;
   error?: string;
 };
@@ -37,7 +39,13 @@ export default function CustomerPushNotificationsCard({
 
   async function refreshStatus() {
     try {
-      const url = `/api/customer/push-subscriptions?tenantSlug=${encodeURIComponent(tenantSlug)}&orderId=${encodeURIComponent(orderId)}&customerPhone=${encodeURIComponent(customerPhone)}`;
+      let endpoint = "";
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        endpoint = subscription?.endpoint || "";
+      }
+      const url = `/api/customer/push-subscriptions?orderId=${encodeURIComponent(orderId)}&endpoint=${encodeURIComponent(endpoint)}`;
       const response = await fetch(url, { cache: "no-store" });
       const payload = await response.json();
       setRemoteStatus(payload);
@@ -57,6 +65,31 @@ export default function CustomerPushNotificationsCard({
   useEffect(() => {
     void refreshStatus();
   }, [tenantSlug, orderId, customerPhone]);
+useEffect(() => {
+  async function relinkCurrentOrderIfNeeded() {
+    if (!("serviceWorker" in navigator) || typeof Notification === "undefined") return;
+    if (Notification.permission !== "granted") return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return;
+
+    await fetch("/api/customer/push-subscriptions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        customerPhone,
+        customerName,
+        subscription: subscription.toJSON(),
+      }),
+    }).catch(() => null);
+
+    await refreshStatus();
+  }
+
+  void relinkCurrentOrderIfNeeded();
+}, [orderId, customerPhone, customerName]);
 
   const statusClass = useMemo(() => {
     if (tone === "success") return "border-emerald-200 bg-emerald-50 text-emerald-800";
@@ -198,13 +231,13 @@ export default function CustomerPushNotificationsCard({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer push notifications</p>
           <h3 className="mt-2 text-lg font-semibold text-slate-900">Get live order updates on this device</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Save this device if the customer wants push updates for this order. Future statuses like accepted, preparing, out for delivery, and delivered can then arrive as push notifications.
+            Save this device if the customer wants push updates. On later orders from the same device, Orduva now reuses that saved device and relinks the new order automatically.
           </p>
         </div>
 
         <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
           <p><span className="font-semibold text-slate-900">Permission:</span> {permission}</p>
-          <p className="mt-1"><span className="font-semibold text-slate-900">Saved devices:</span> {remoteStatus?.activeSubscriptions ?? 0}</p>
+          <p className="mt-1"><span className="font-semibold text-slate-900">Saved customer devices:</span> {remoteStatus?.activeSubscriptions ?? 0}</p>
           <p className="mt-1"><span className="font-semibold text-slate-900">VAPID:</span> {remoteStatus?.vapidConfigured ? "configured" : "missing"}</p>
         </div>
       </div>

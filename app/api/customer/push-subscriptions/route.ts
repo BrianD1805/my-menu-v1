@@ -24,14 +24,14 @@ async function resolveTenantId(orderId?: string | null, tenantId?: string | null
   return data?.tenant_id || null;
 }
 
-async function countActiveTenantDevices(tenantId: string) {
-  const { count } = await db
+async function countUniqueActiveTenantDevices(tenantId: string) {
+  const { data } = await db
     .from("customer_push_subscriptions")
-    .select("id", { count: "exact", head: true })
+    .select("endpoint")
     .eq("tenant_id", tenantId)
     .eq("enabled", true);
 
-  return count || 0;
+  return new Set((data || []).map((row: any) => row.endpoint)).size;
 }
 
 export async function GET(req: Request) {
@@ -85,15 +85,11 @@ export async function GET(req: Request) {
     );
   }
 
-  const activeSubscriptions = await countActiveTenantDevices(resolvedTenantId);
-  const reusableDeviceRegistered = Boolean(data?.length);
-  const linkedToThisOrder = Boolean(orderId && data?.some((row: any) => row.order_id === orderId));
-
   return NextResponse.json({
     ok: true,
-    activeSubscriptions,
-    reusableDeviceRegistered,
-    linkedToThisOrder,
+    activeSubscriptions: await countUniqueActiveTenantDevices(resolvedTenantId),
+    reusableDeviceRegistered: Boolean(data?.length),
+    linkedToThisOrder: Boolean(orderId && data?.some((row: any) => row.order_id === orderId)),
     vapidConfigured: Boolean(
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
         process.env.VAPID_PRIVATE_KEY?.trim() &&
@@ -147,14 +143,12 @@ export async function POST(req: Request) {
     );
   }
 
-  const activeSubscriptions = await countActiveTenantDevices(resolvedTenantId);
-
   return NextResponse.json({
     ok: true,
     message: orderId
       ? "This device is saved and linked to the current order for customer push updates."
       : "This device is saved for reusable customer push updates.",
-    activeSubscriptions,
+    activeSubscriptions: await countUniqueActiveTenantDevices(resolvedTenantId),
     reusableDeviceRegistered: true,
     linkedToThisOrder: Boolean(orderId),
   });
