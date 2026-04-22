@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     last_seen_at: new Date().toISOString(),
   };
 
-  const { error } = await db.from("customer_push_subscriptions").upsert(payload, { onConflict: "order_id,endpoint" });
+  const { error } = await db.from("customer_push_subscriptions").upsert(payload, { onConflict: "tenant_id,endpoint" });
 
   if (error) {
     return NextResponse.json({ error: `Failed to save customer push subscription: ${error.message}` }, { status: 500 });

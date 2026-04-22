@@ -187,3 +187,9 @@ Included in this patch:
 ## Ver-0.107
 - Added live customer order-status push delivery for accepted, preparing, out for delivery, and delivered.
 - Customer pushes are now sent to subscriptions saved against the order when the admin updates status.
+
+
+## Ver-0.108
+- Changed customer push subscription saving toward reusable device-level registration.
+- Customer push subscriptions now upsert by tenant + endpoint instead of order + endpoint.
+- Added Supabase migration for tenant + endpoint unique index.
