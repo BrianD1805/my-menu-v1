@@ -182,3 +182,8 @@ Included in this patch:
 - Added storefront service worker push handlers.
 - Added customer push delivery on admin order status changes.
 - Added Supabase migration for customer_push_subscriptions.
+
+
+## Ver-0.107
+- Added live customer order-status push delivery for accepted, preparing, out for delivery, and delivered.
+- Customer pushes are now sent to subscriptions saved against the order when the admin updates status.
