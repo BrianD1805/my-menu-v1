@@ -235,7 +235,7 @@ useEffect(() => {
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer push notifications</p>
           <h3 className="mt-2 text-lg font-semibold text-slate-900">Get live order updates on this device</h3>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Save this device if the customer wants push updates. On later orders from the same device, Orduva now reuses that saved device and relinks the new order automatically.
+            Save this device on the customer account for push updates. On later orders, Orduva can reuse the same saved device and relink the new order automatically.
           </p>
         </div>
 
@@ -268,7 +268,7 @@ useEffect(() => {
           Send local test notification
         </button>
         <button onClick={() => void disablePush()} className="rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50">
-          Disable on this device
+          Disable push on this device
         </button>
       </div>
 

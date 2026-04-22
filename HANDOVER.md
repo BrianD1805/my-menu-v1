@@ -329,3 +329,9 @@ Included in this patch:
 ## Ver-0.111D
 - Fixed checkout so the signed-in customer block is rendered in a guaranteed visible place in the main checkout form column.
 - Checkout now also prefills customer name and phone from the signed-in account when available.
+
+
+## Ver-0.111E
+- Moved customer push controls higher on the success page so they are visible without scrolling.
+- Updated customer push success copy to reflect account-linked device saving rather than only order-linked saving.
+- Kept unique device count logic from the database cleanup/migration path.

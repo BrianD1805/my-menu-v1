@@ -366,7 +366,19 @@ useEffect(() => {
                   </span>
                 </div>
 
-                <div className="space-y-3">
+                
+
+
+
+              <CustomerPushNotificationsCard
+                tenantSlug={successState.tenantSlug}
+                orderId={successState.orderId}
+                customerPhone={successState.customerPhone}
+                customerName={successState.customerName}
+                customerAccountId={customerAccount?.id || null}
+              />
+
+                  <div className="space-y-3">
                   {successState.whatsappAppUrl || successState.whatsappUrl ? (
                     <p className="text-xs leading-5 text-gray-500">
                       WhatsApp auto-open is paused for now. Use the button below only when the customer wants to send manually.
@@ -399,16 +411,6 @@ useEffect(() => {
                   </div>
                 </div>
               </div>
-
-
-
-              <CustomerPushNotificationsCard
-                tenantSlug={successState.tenantSlug}
-                orderId={successState.orderId}
-                customerPhone={successState.customerPhone}
-                customerName={successState.customerName}
-                customerAccountId={customerAccount?.id || null}
-              />
 
               {successState.notes ? (
                 <div className="rounded-[28px] border border-gray-200 bg-gray-50 p-5">

@@ -148,8 +148,8 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     message: orderId
-      ? "This device is saved and linked to the current order for customer push updates."
-      : "This device is saved for reusable customer push updates.",
+      ? "This device is saved on your customer account and linked to this order for push updates."
+      : "This device is saved on your customer account for future push updates.",
     activeSubscriptions: await countUniqueActiveTenantDevices(resolvedTenantId),
     reusableDeviceRegistered: true,
     linkedToThisOrder: Boolean(orderId),
