@@ -24,6 +24,16 @@ async function resolveTenantId(orderId?: string | null, tenantId?: string | null
   return data?.tenant_id || null;
 }
 
+async function countActiveTenantDevices(tenantId: string) {
+  const { count } = await db
+    .from("customer_push_subscriptions")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", tenantId)
+    .eq("enabled", true);
+
+  return count || 0;
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const orderId = url.searchParams.get("orderId");
@@ -36,17 +46,18 @@ export async function GET(req: Request) {
       ok: true,
       activeSubscriptions: 0,
       reusableDeviceRegistered: false,
+      linkedToThisOrder: false,
       vapidConfigured: Boolean(
         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
-        process.env.VAPID_PRIVATE_KEY?.trim() &&
-        process.env.VAPID_SUBJECT?.trim()
+          process.env.VAPID_PRIVATE_KEY?.trim() &&
+          process.env.VAPID_SUBJECT?.trim()
       ),
     });
   }
 
   let query = db
     .from("customer_push_subscriptions")
-    .select("id, endpoint, order_id", { count: "exact" })
+    .select("id, endpoint, order_id")
     .eq("tenant_id", resolvedTenantId)
     .eq("enabled", true);
 
@@ -54,34 +65,39 @@ export async function GET(req: Request) {
     query = query.eq("endpoint", endpoint);
   }
 
-  const { data, count, error } = await query;
+  const { data, error } = await query;
 
   if (error) {
-    return NextResponse.json({
-      ok: false,
-      error: `Could not load customer push status: ${error.message}`,
-      activeSubscriptions: 0,
-      reusableDeviceRegistered: false,
-      vapidConfigured: Boolean(
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
-        process.env.VAPID_PRIVATE_KEY?.trim() &&
-        process.env.VAPID_SUBJECT?.trim()
-      ),
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Could not load customer push status: ${error.message}`,
+        activeSubscriptions: 0,
+        reusableDeviceRegistered: false,
+        linkedToThisOrder: false,
+        vapidConfigured: Boolean(
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
+            process.env.VAPID_PRIVATE_KEY?.trim() &&
+            process.env.VAPID_SUBJECT?.trim()
+        ),
+      },
+      { status: 500 }
+    );
   }
 
+  const activeSubscriptions = await countActiveTenantDevices(resolvedTenantId);
   const reusableDeviceRegistered = Boolean(data?.length);
   const linkedToThisOrder = Boolean(orderId && data?.some((row: any) => row.order_id === orderId));
 
   return NextResponse.json({
     ok: true,
-    activeSubscriptions: count || 0,
+    activeSubscriptions,
     reusableDeviceRegistered,
     linkedToThisOrder,
     vapidConfigured: Boolean(
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
-      process.env.VAPID_PRIVATE_KEY?.trim() &&
-      process.env.VAPID_SUBJECT?.trim()
+        process.env.VAPID_PRIVATE_KEY?.trim() &&
+        process.env.VAPID_SUBJECT?.trim()
     ),
   });
 }
@@ -105,8 +121,7 @@ export async function POST(req: Request) {
 
   const endpoint = subscription.endpoint;
 
-  // First, reuse or create the device-level registration for this tenant+endpoint
-  const devicePayload = {
+  const payload = {
     tenant_id: resolvedTenantId,
     order_id: orderId,
     customer_name: customerName,
@@ -123,7 +138,7 @@ export async function POST(req: Request) {
 
   const { error: upsertError } = await db
     .from("customer_push_subscriptions")
-    .upsert(devicePayload, { onConflict: "tenant_id,endpoint" });
+    .upsert(payload, { onConflict: "tenant_id,endpoint" });
 
   if (upsertError) {
     return NextResponse.json(
@@ -132,41 +147,14 @@ export async function POST(req: Request) {
     );
   }
 
-  // Then, if a new order exists, ensure the current order is linked to the existing device registration
-  if (orderId) {
-    const { error: linkError } = await db
-      .from("customer_push_subscriptions")
-      .update({
-        order_id: orderId,
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        enabled: true,
-        updated_at: new Date().toISOString(),
-        last_seen_at: new Date().toISOString(),
-      })
-      .eq("tenant_id", resolvedTenantId)
-      .eq("endpoint", endpoint);
-
-    if (linkError) {
-      return NextResponse.json(
-        { error: `Saved device but failed to link current order: ${linkError.message}` },
-        { status: 500 }
-      );
-    }
-  }
-
-  const { count } = await db
-    .from("customer_push_subscriptions")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", resolvedTenantId)
-    .eq("enabled", true);
+  const activeSubscriptions = await countActiveTenantDevices(resolvedTenantId);
 
   return NextResponse.json({
     ok: true,
     message: orderId
       ? "This device is saved and linked to the current order for customer push updates."
       : "This device is saved for reusable customer push updates.",
-    activeSubscriptions: count || 0,
+    activeSubscriptions,
     reusableDeviceRegistered: true,
     linkedToThisOrder: Boolean(orderId),
   });

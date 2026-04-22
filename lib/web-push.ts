@@ -203,3 +203,93 @@ export async function sendCustomerPushForTenantAndOrder(tenantId: string, orderI
 
   return { ok: sent > 0, reason: sent > 0 ? null : "send_failed" as const, sent, failed };
 }
+
+
+
+async function sendCustomerRows(rows: CustomerSubscriptionRow[], payload: PushPayload) {
+  let sent = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    try {
+      await webpush.sendNotification(
+        buildSubscription({
+          endpoint: row.endpoint,
+          p256dh: row.p256dh,
+          auth: row.auth,
+        }),
+        JSON.stringify({
+          title: payload.title,
+          body: payload.body,
+          url: payload.url || "/",
+          tag: payload.tag || "orduva-customer-order-status",
+          icon: payload.icon || "/orduva-storefront-icon-192.png",
+          badge: payload.badge || "/orduva-storefront-icon-192.png",
+        })
+      );
+      sent += 1;
+    } catch (error: any) {
+      failed += 1;
+    }
+  }
+
+  return { ok: sent > 0, reason: sent > 0 ? null : "send_failed" as const, sent, failed };
+}
+
+export async function sendCustomerPushForOrderWithFallback(
+  tenantId: string,
+  orderId: string,
+  payload: PushPayload
+) {
+  if (!configureWebPush()) {
+    return { ok: false, reason: "missing_vapid" as const, sent: 0, failed: 0 };
+  }
+
+  const direct = await db
+    .from("customer_push_subscriptions")
+    .select("endpoint,p256dh,auth,enabled,order_id")
+    .eq("tenant_id", tenantId)
+    .eq("order_id", orderId)
+    .eq("enabled", true);
+
+  if (direct.data?.length) {
+    return sendCustomerRows(direct.data as CustomerSubscriptionRow[], payload);
+  }
+
+  const orderLookup = await db
+    .from("orders")
+    .select("customer_name,customer_phone")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  const customerPhone = orderLookup.data?.customer_phone || null;
+  const customerName = orderLookup.data?.customer_name || null;
+
+  if (customerPhone) {
+    const byPhone = await db
+      .from("customer_push_subscriptions")
+      .select("endpoint,p256dh,auth,enabled,order_id")
+      .eq("tenant_id", tenantId)
+      .eq("customer_phone", customerPhone)
+      .eq("enabled", true);
+
+    if (byPhone.data?.length) {
+      return sendCustomerRows(byPhone.data as CustomerSubscriptionRow[], payload);
+    }
+  }
+
+  if (customerName) {
+    const byName = await db
+      .from("customer_push_subscriptions")
+      .select("endpoint,p256dh,auth,enabled,order_id")
+      .eq("tenant_id", tenantId)
+      .eq("customer_name", customerName)
+      .eq("enabled", true);
+
+    if (byName.data?.length) {
+      return sendCustomerRows(byName.data as CustomerSubscriptionRow[], payload);
+    }
+  }
+
+  return { ok: false, reason: "no_subscriptions" as const, sent: 0, failed: 0 };
+}

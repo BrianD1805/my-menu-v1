@@ -207,3 +207,18 @@ Included in this patch:
 
 ## Ver-0.108A FIXED2
 - Fixed customer push build error in lib/web-push.ts by removing the unsupported `enabled` property from the buildSubscription object literal.
+
+
+## Ver-1.108B
+- Fixed customer push recipient lookup across reused orders.
+- Status pushes now try direct order linkage first, then same customer phone within tenant, then same customer name within tenant.
+- Reusable customer device saving remains tenant + endpoint based.
+
+
+## Ver-0.108C
+- Fixed app/api/admin/orders/[id]/route.ts to call sendCustomerPushForOrderWithFallback instead of the removed sendCustomerPushForOrder helper.
+- Reset visible version label to Ver: 0.108C as requested.
+
+
+## Ver-0.108D
+- Fixed duplicate `CustomerSubscriptionRow` type declaration in `lib/web-push.ts`.
