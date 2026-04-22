@@ -9,7 +9,7 @@ export default async function CustomerAccountPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer account</p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">Welcome back</h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          This is the account foundation for {tenant.name}. Later builds can add order history, saved addresses, repeat order, and account-linked push notifications.
+          You are signed in for {tenant.name}. Return to the storefront to place linked orders with your customer account, then we can build order history and account-linked push next.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -31,11 +31,11 @@ export default async function CustomerAccountPage() {
           </div>
         </div>
 
-        <form action="/api/customer/auth/logout" method="post" className="mt-6">
+        <div className="mt-6 flex flex-wrap gap-3"><a href="/" className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">Back to storefront</a><form action="/api/customer/auth/logout?next=/" method="post">
           <button className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
             Sign out
           </button>
-        </form>
+        </form></div>
       </section>
     </main>
   );

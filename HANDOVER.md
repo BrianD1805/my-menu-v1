@@ -236,3 +236,70 @@ Included in this patch:
 - Added cookie-based customer session helper.
 - Added Supabase migration for customer_accounts.
 - This foundation prepares future builds for account-linked push subscriptions and customer order history.
+
+
+## Ver-0.110
+- Connected customer login into the storefront and checkout flow.
+- Added a storefront account status block with login/signup/account/sign out entry points.
+- Checkout now recognises a signed-in customer and marks the order to link to that customer account.
+- Added orders.customer_account_id groundwork for future account-linked push, order history, and saved details.
+
+
+## Ver-0.110A
+- Fixed the checkout syntax error caused by customerAccountId being inserted into the useState declaration for customerPhone.
+- Kept customerAccountId in the order submit payload where it belongs.
+
+
+## Ver-0.110B
+- Repaired the malformed checkout state declaration for customerPhone/customerAccountId.
+- Scanned TypeScript files for the same accidental insertion pattern and cleaned any matches.
+
+
+## Ver-0.110C
+- Fixed accidental JSX fragment wrappers inserted into checkout return blocks, which caused `Expression expected` build errors.
+
+
+## Ver-0.110D
+- Restored the missing `customerAccount` / `setCustomerAccount` state hook in checkout so the customer account prefill effect can compile correctly.
+
+
+## Ver-0.110E
+- Fixed storefront customer account links/navigation by switching the visible account actions to explicit Next Link navigation.
+- Login now targets /account/login and Create account now targets /account/signup reliably.
+
+
+## Ver-0.110F
+- Moved customer account actions into the live storefront header to fix stagnant / non-clickable account buttons.
+- Desktop: account icons now sit inline in the header row next to search and cart.
+- Mobile: account icons now sit on the left side of the header with search and cart remaining on the right.
+
+
+## Ver-0.110G
+- Repaired the malformed MenuBrowser header JSX block introduced during the storefront account header icon move.
+- Restored proper closing structure before the welcome section so the storefront build can parse again.
+
+
+## Ver-0.110H
+- Fixed the MenuBrowser JSX structure properly by removing the stray brace before the main return block and re-stabilising the header action area.
+
+
+## Ver-0.110J
+- Fixed the real MenuBrowser header parse issue by restoring the missing closing `</div>` tags before the welcome section.
+
+
+## Ver-0.110K
+- Fixed the final missing closing brace in `components/menu/MenuBrowser.tsx` that caused the `Expected '}', got '<eof>'` build error.
+
+
+## Ver-0.110L
+- Fixed the extra closing brace at the end of `components/menu/MenuBrowser.tsx` so `MenuBrowser` returns JSX again instead of compiling as `void`.
+
+
+## Ver-0.110M
+- Fixed the actual lingering parse break in `components/menu/MenuBrowser.tsx` by restoring the missing closing brace on `addToCart(productId)` before the component return block.
+
+
+## Ver-0.110N
+- Fixed customer logout so it redirects back to the storefront instead of showing raw JSON.
+- After login/signup, customer auth now returns the user to the storefront so the signed-in header state is immediately useful.
+- Added a back-to-storefront path from the account page and kept header/account sign-out wired to redirect cleanly.

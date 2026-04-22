@@ -41,8 +41,8 @@ export default function CustomerAuthForm({
       return;
     }
 
-    setSuccess(mode === "signup" ? "Account created. Redirecting to your account..." : "Signed in. Redirecting to your account...");
-    window.location.href = "/account";
+    setSuccess(mode === "signup" ? "Account created. Redirecting to storefront..." : "Signed in. Redirecting to storefront...");
+    window.location.href = "/";
   }
 
   return (

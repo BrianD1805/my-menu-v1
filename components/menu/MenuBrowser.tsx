@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import CartButton from "@/components/menu/CartButton";
+import CustomerAccountHeaderActions from "@/components/account/CustomerAccountHeaderActions";
 import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
@@ -192,11 +193,19 @@ export default function MenuBrowser({
                 )}
               </div>
 
+              <div className="absolute left-0 top-1/2 flex -translate-y-1/2 items-center gap-2 sm:hidden">
+                <CustomerAccountHeaderActions />
+              </div>
+
               <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-2 sm:gap-2.5">
+                <div className="hidden sm:flex sm:items-center sm:gap-2.5">
+                  <CustomerAccountHeaderActions />
+                </div>
                 <button
                   type="button"
                   onClick={() => setSearchOpen(true)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.07)] transition hover:-translate-y-[1px] hover:bg-white sm:h-11 sm:w-11" style={accentColor ? { borderColor: `${accentColor}44` } : undefined}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.07)] transition hover:-translate-y-[1px] hover:bg-white sm:h-11 sm:w-11"
+                  style={accentColor ? { borderColor: `${accentColor}44` } : undefined}
                   aria-label="Search menu"
                   title="Search menu"
                 >

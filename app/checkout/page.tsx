@@ -55,6 +55,7 @@ export default function CheckoutPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [tenantSlug, setTenantSlug] = useState("");
   const [tenantResolved, setTenantResolved] = useState(false);
+  const [customerAccount, setCustomerAccount] = useState<{id:string;email:string;fullName:string|null;phone:string|null} | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -65,7 +66,22 @@ export default function CheckoutPage() {
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
   const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ ...DEFAULT_MONEY_SETTINGS });
 
-  useEffect(() => {
+  
+useEffect(() => {
+  async function loadCustomerAccount() {
+    try {
+      const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.customer) {
+        setCustomerAccount(data.customer);
+      }
+    } catch {}
+  }
+
+  void loadCustomerAccount();
+}, []);
+
+useEffect(() => {
     const slug = resolveTenantSlugFromHost(window.location.host);
     setTenantSlug(slug);
     setTenantResolved(true);
