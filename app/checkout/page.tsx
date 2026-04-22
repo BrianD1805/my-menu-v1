@@ -66,20 +66,30 @@ export default function CheckoutPage() {
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
   const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ ...DEFAULT_MONEY_SETTINGS });
 
-  
-useEffect(() => {
-  async function loadCustomerAccount() {
-    try {
-      const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data?.customer) {
-        setCustomerAccount(data.customer);
-      }
-    } catch {}
-  }
+  useEffect(() => {
+    async function loadCustomerAccount() {
+      try {
+        const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
 
-  void loadCustomerAccount();
-}, []);
+        if (res.ok && data?.customer) {
+          setCustomerAccount(data.customer);
+          if (data.customer.fullName) {
+            setCustomerName((current) => current || data.customer.fullName);
+          }
+          if (data.customer.phone) {
+            setCustomerPhone((current) => current || data.customer.phone);
+          }
+        } else {
+          setCustomerAccount(null);
+        }
+      } catch {
+        setCustomerAccount(null);
+      }
+    }
+
+    void loadCustomerAccount();
+  }, []);
 
 useEffect(() => {
     const slug = resolveTenantSlugFromHost(window.location.host);
@@ -224,6 +234,7 @@ useEffect(() => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+        customerAccountId: customerAccount?.id || null,
           tenantSlug,
           customerName,
           customerPhone,
@@ -396,6 +407,7 @@ useEffect(() => {
                 orderId={successState.orderId}
                 customerPhone={successState.customerPhone}
                 customerName={successState.customerName}
+                customerAccountId={customerAccount?.id || null}
               />
 
               {successState.notes ? (
@@ -478,6 +490,17 @@ useEffect(() => {
 
       <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4 rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: checkoutBorder }}>
+          {customerAccount ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              <p className="font-semibold">Signed in as {customerAccount.fullName || customerAccount.email}</p>
+              <p className="mt-1 text-emerald-800">This order will be linked to your customer account.</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+              <p className="font-semibold text-slate-900">Guest checkout</p>
+              <p className="mt-1 text-slate-600">You can still order as a guest, or <a href="/account/login" className="font-semibold underline">sign in</a> to link your order to your account.</p>
+            </div>
+          )}
           {errorMessage ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {errorMessage}

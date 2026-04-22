@@ -23,11 +23,13 @@ export default function CustomerPushNotificationsCard({
   orderId,
   customerPhone,
   customerName,
+  customerAccountId,
 }: {
   tenantSlug: string;
   orderId: string;
   customerPhone: string;
   customerName: string;
+  customerAccountId?: string | null;
 }) {
   const [permission, setPermission] = useState<string>("unsupported");
   const [busy, setBusy] = useState(false);
@@ -81,6 +83,7 @@ useEffect(() => {
         orderId,
         customerPhone,
         customerName,
+  customerAccountId,
         subscription: subscription.toJSON(),
       }),
     }).catch(() => null);
@@ -141,6 +144,7 @@ useEffect(() => {
           orderId,
           customerPhone,
           customerName,
+  customerAccountId,
           subscription: subscription.toJSON(),
         }),
       });

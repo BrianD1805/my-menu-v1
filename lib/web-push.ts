@@ -163,7 +163,7 @@ export async function sendCustomerPushForOrderWithFallback(
 
   const orderLookup = await db
     .from("orders")
-    .select("customer_name,customer_phone")
+    .select("customer_name,customer_phone,customer_account_id")
     .eq("id", orderId)
     .maybeSingle();
 

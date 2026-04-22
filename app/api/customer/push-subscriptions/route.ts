@@ -105,6 +105,7 @@ export async function POST(req: Request) {
   const tenantId = body.tenantId ? String(body.tenantId) : null;
   const customerName = body.customerName ? String(body.customerName) : null;
   const customerPhone = body.customerPhone ? String(body.customerPhone) : null;
+  const customerAccountId = body.customerAccountId ? String(body.customerAccountId) : null;
 
   if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
     return NextResponse.json({ error: "Invalid customer push subscription payload" }, { status: 400 });
@@ -122,6 +123,7 @@ export async function POST(req: Request) {
     order_id: orderId,
     customer_name: customerName,
     customer_phone: customerPhone,
+    customer_account_id: customerAccountId,
     endpoint,
     p256dh: subscription.keys.p256dh,
     auth: subscription.keys.auth,

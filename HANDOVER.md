@@ -303,3 +303,29 @@ Included in this patch:
 - Fixed customer logout so it redirects back to the storefront instead of showing raw JSON.
 - After login/signup, customer auth now returns the user to the storefront so the signed-in header state is immediately useful.
 - Added a back-to-storefront path from the account page and kept header/account sign-out wired to redirect cleanly.
+
+
+## Ver-0.111
+- Linked orders and customer push subscriptions to logged-in customer accounts.
+- Orders can now carry `customer_account_id` and customer push subscriptions can also store `customer_account_id`.
+- Customer push lookup now prefers the customer account before falling back to phone/name matching.
+
+
+## Ver-0.111A
+- Fixed the malformed `customerAccountId` insertion in `app/checkout/page.tsx` where it had been accidentally injected into the `customerPhone` state declaration.
+- Scanned TypeScript files for the same insertion pattern and cleaned any matches.
+
+
+## Ver-0.111B
+- Fixed checkout signed-in customer recognition by ensuring the current customer session is loaded and rendered as a visible signed-in block.
+- Checkout now also prefills customer name and phone from the signed-in account when available.
+
+
+## Ver-0.111C
+- Fixed the malformed `customerAccountId` insertion that kept breaking the `customerPhone` state declaration in checkout.
+- Scanned TypeScript files again for the same insertion pattern and cleaned any matches.
+
+
+## Ver-0.111D
+- Fixed checkout so the signed-in customer block is rendered in a guaranteed visible place in the main checkout form column.
+- Checkout now also prefills customer name and phone from the signed-in account when available.
