@@ -157,3 +157,49 @@ export async function sendCustomerPushForOrder(orderId: string, payload: PushPay
 
   return { ok: sent > 0, reason: sent > 0 ? null : "send_failed" as const, sent, failed };
 }
+
+
+export async function sendCustomerPushForTenantAndOrder(tenantId: string, orderId: string, payload: PushPayload) {
+  if (!configureWebPush()) {
+    return { ok: false, reason: "missing_vapid" as const, sent: 0, failed: 0 };
+  }
+
+  const { data, error } = await db
+    .from("customer_push_subscriptions")
+    .select("endpoint,p256dh,auth,enabled,order_id")
+    .eq("tenant_id", tenantId)
+    .eq("enabled", true)
+    .eq("order_id", orderId);
+
+  if (error || !data?.length) {
+    return { ok: false, reason: error ? "query_failed" as const : "no_subscriptions" as const, sent: 0, failed: 0 };
+  }
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const row of data as CustomerSubscriptionRow[]) {
+    try {
+      await webpush.sendNotification(
+        buildSubscription({
+          endpoint: row.endpoint,
+          p256dh: row.p256dh,
+          auth: row.auth,
+        }),
+        JSON.stringify({
+          title: payload.title,
+          body: payload.body,
+          url: payload.url || "/",
+          tag: payload.tag || "orduva-customer-order-status",
+          icon: payload.icon || "/orduva-storefront-icon-192.png",
+          badge: payload.badge || "/orduva-storefront-icon-192.png",
+        })
+      );
+      sent += 1;
+    } catch (error: any) {
+      failed += 1;
+    }
+  }
+
+  return { ok: sent > 0, reason: sent > 0 ? null : "send_failed" as const, sent, failed };
+}

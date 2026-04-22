@@ -193,3 +193,17 @@ Included in this patch:
 - Changed customer push subscription saving toward reusable device-level registration.
 - Customer push subscriptions now upsert by tenant + endpoint instead of order + endpoint.
 - Added Supabase migration for tenant + endpoint unique index.
+
+
+## Ver-0.108A
+- Completed reusable customer push linkage across new orders.
+- Customer device registrations now save by tenant + endpoint and relink the current order automatically.
+- The current order can now reuse an already-saved customer device instead of starting from zero again.
+
+
+## Ver-0.108A FIXED
+- Fixed customer push type reference in lib/web-push.ts by using the existing CustomerSubscriptionRow type name.
+
+
+## Ver-0.108A FIXED2
+- Fixed customer push build error in lib/web-push.ts by removing the unsupported `enabled` property from the buildSubscription object literal.
