@@ -229,3 +229,10 @@ Included in this patch:
 - The customer push test now uses the same fallback lookup as live status pushes.
 - The success page now silently relinks a new order to the already-saved customer device when permission and subscription already exist.
 - Active customer devices now count unique endpoints, not duplicate rows.
+
+
+## Ver-0.109
+- Added customer account foundation with signup, login, logout, and a basic account page.
+- Added cookie-based customer session helper.
+- Added Supabase migration for customer_accounts.
+- This foundation prepares future builds for account-linked push subscriptions and customer order history.
