@@ -358,3 +358,9 @@ Included in this patch:
 - Parallelised storefront product/category loading.
 - Moved customer account header actions to a lazy client-side load so the basic storefront shell can appear first while account state resolves in the background.
 - Added timeout-safe background loading for storefront customer account state.
+
+
+## Ver-0.114
+- Mobile only: changed each category product list into a premium swipe-left card carousel with one product visible at a time.
+- Added snap scrolling, edge fade hints, and a subtle swipe cue.
+- Desktop product presentation remains unchanged.
