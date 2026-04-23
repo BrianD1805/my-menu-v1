@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import CartButton from "@/components/menu/CartButton";
 import ProductCard from "@/components/menu/ProductCard";
+import MobileCategoryCarousel from "@/components/menu/MobileCategoryCarousel";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
@@ -255,7 +256,14 @@ export default function MenuBrowser({
                 {categoryProducts.length} {categoryProducts.length === 1 ? "item" : "items"}
               </span>
             </div>
-            <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <MobileCategoryCarousel
+              products={categoryProducts}
+              tenantSlug={tenantSlug}
+              moneySettings={moneySettings}
+              accentColor={accentColor}
+            />
+
+            <div className="hidden gap-4 sm:grid sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
               {categoryProducts.map((product) => (
                 <ProductCard
                   key={product.id}
