@@ -255,28 +255,7 @@ export default function MenuBrowser({
                 {categoryProducts.length} {categoryProducts.length === 1 ? "item" : "items"}
               </span>
             </div>
-            <div className="sm:hidden">
-              <div className="flex snap-x snap-mandatory overflow-x-auto px-[10px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {categoryProducts.map((product) => (
-                  <div key={product.id} className="w-full min-w-full snap-center px-0">
-                    <div className="rounded-[28px] bg-[#f7f4ef]">
-                    <ProductCard
-                      id={product.id}
-                      name={product.name}
-                      description={product.description}
-                      imageUrl={product.image_url}
-                      price={Number(product.price)}
-                      tenantSlug={tenantSlug}
-                      moneySettings={moneySettings}
-                      accentColor={accentColor}
-                    />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="hidden gap-4 sm:grid sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
               {categoryProducts.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -291,8 +270,6 @@ export default function MenuBrowser({
                 />
               ))}
             </div>
-
-
           </section>
         );
       })}

@@ -64,13 +64,13 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   return (
     <>
       <div
-        className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(250,247,244,0.98))] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:sm:shadow-[0_28px_70px_rgba(15,23,42,0.12)]"
+        className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(250,247,244,0.98))] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)]"
         style={{ boxShadow: `0 20px 52px color-mix(in srgb, ${brandPrimary} 8%, rgba(15,23,42,0.08))` }}
       >
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">
             <button type="button" onClick={() => setDetailsOpen(true)} className="block text-left" aria-label={`View details for ${name}`}>
-              <div className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 sm:shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
+              <div className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
                 {hasImage ? (
                   <img src={imageUrl!} alt={name} className="h-full w-full object-contain object-center p-4 sm:p-5" loading="lazy" />
                 ) : (
@@ -93,7 +93,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
           <div className="grid grid-cols-3 items-stretch gap-2 sm:gap-2.5 lg:gap-3">
             <div
-              className="flex min-h-[38px] flex-col items-center justify-center rounded-[14px] bg-white px-2.5 py-1.5 text-slate-950 sm:shadow-[0_6px_14px_rgba(15,23,42,0.04)] ring-1 sm:min-h-[42px] sm:px-3 sm:py-2 lg:min-h-[46px] lg:rounded-[16px]"
+              className="flex min-h-[38px] flex-col items-center justify-center rounded-[14px] bg-white px-2.5 py-1.5 text-slate-950 shadow-[0_6px_14px_rgba(15,23,42,0.04)] ring-1 sm:min-h-[42px] sm:px-3 sm:py-2 lg:min-h-[46px] lg:rounded-[16px]"
               style={{ borderColor: `color-mix(in srgb, ${brandAccent} 30%, white)` }}
             >
               {usesCodeAndSymbol ? (
@@ -108,7 +108,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
             <button
               type="button"
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-medium sm:shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
+              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-medium shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 8%, white), color-mix(in srgb, ${accentColor} 14%, white))` } : undefined}
               onClick={addToCart}
               disabled={buttonState === "adding"}
@@ -119,7 +119,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-medium sm:shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
+              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-medium shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 8%, white), color-mix(in srgb, ${accentColor} 14%, white))` } : undefined}
               aria-label={`More info for ${name}`}
               title="More info"
@@ -133,7 +133,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       {detailsOpen ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">
           <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
-            <div className="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white sm:shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)]">
+            <div className="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)]">
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
