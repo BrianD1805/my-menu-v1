@@ -256,43 +256,21 @@ export default function MenuBrowser({
               </span>
             </div>
             <div className="sm:hidden">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Swipe left for more
-                </p>
-                <div className="flex items-center gap-1.5">
-                  {categoryProducts.map((product, index) => (
-                    <span
-                      key={product.id}
-                      className="h-1.5 rounded-full bg-slate-300/80"
-                      style={{
-                        width: index === 0 ? "18px" : "6px",
-                        backgroundColor: index === 0 && accentColor ? `${accentColor}` : undefined,
-                      }}
+              <div className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {categoryProducts.map((product) => (
+                  <div key={product.id} className="w-full min-w-full snap-center">
+                    <ProductCard
+                      id={product.id}
+                      name={product.name}
+                      description={product.description}
+                      imageUrl={product.image_url}
+                      price={Number(product.price)}
+                      tenantSlug={tenantSlug}
+                      moneySettings={moneySettings}
+                      accentColor={accentColor}
                     />
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white via-white/75 to-transparent" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-white via-white/80 to-transparent" />
-                <div className="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {categoryProducts.map((product) => (
-                    <div key={product.id} className="min-w-[88%] snap-center">
-                      <ProductCard
-                        id={product.id}
-                        name={product.name}
-                        description={product.description}
-                        imageUrl={product.image_url}
-                        price={Number(product.price)}
-                        tenantSlug={tenantSlug}
-                        moneySettings={moneySettings}
-                        accentColor={accentColor}
-                      />
-                    </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -311,6 +289,7 @@ export default function MenuBrowser({
                 />
               ))}
             </div>
+
 
           </section>
         );

@@ -364,3 +364,9 @@ Included in this patch:
 - Mobile only: changed each category product list into a premium swipe-left card carousel with one product visible at a time.
 - Added snap scrolling, edge fade hints, and a subtle swipe cue.
 - Desktop product presentation remains unchanged.
+
+
+## Ver-0.114A
+- Mobile only: changed the category swipe carousel to show one full existing product card at a time.
+- Removed dots, fade overlays, and any style/background changes.
+- Kept desktop unchanged.
