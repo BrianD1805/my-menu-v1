@@ -351,3 +351,10 @@ Included in this patch:
 ## Ver-0.112B
 - Fixed customer details popup sizing and scrolling.
 - The popup now uses constrained height, internal vertical scrolling, better bottom padding, and a more app-consistent sheet/modal behaviour on mobile and desktop.
+
+
+## Ver-0.113
+- Added an animated app loading screen so startup feels alive instead of stuck.
+- Parallelised storefront product/category loading.
+- Moved customer account header actions to a lazy client-side load so the basic storefront shell can appear first while account state resolves in the background.
+- Added timeout-safe background loading for storefront customer account state.

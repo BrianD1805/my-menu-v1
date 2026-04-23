@@ -47,13 +47,18 @@ export default function CustomerAccountHeaderActions() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 2500);
+        const res = await fetch("/api/customer/auth/me", { cache: "no-store", signal: controller.signal });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data?.customer) {
           setCustomer(data.customer);
         } else {
           setCustomer(null);
         }
+        window.clearTimeout(timeout);
+      } catch {
+        setCustomer(null);
       } finally {
         setReady(true);
       }
@@ -65,8 +70,8 @@ export default function CustomerAccountHeaderActions() {
   if (!ready) {
     return (
       <div className="pointer-events-none flex items-center gap-2 sm:gap-2.5">
-        <span className="inline-flex h-10 w-10 rounded-2xl border border-slate-200 bg-white/80 sm:h-11 sm:w-11" />
-        <span className="hidden sm:inline-flex h-10 w-10 rounded-2xl border border-slate-200 bg-white/80 sm:h-11 sm:w-11" />
+        <span className="inline-flex h-10 w-10 animate-pulse rounded-2xl border border-slate-200 bg-white/80 sm:h-11 sm:w-11" />
+        <span className="hidden sm:inline-flex h-10 w-10 animate-pulse rounded-2xl border border-slate-200 bg-white/80 sm:h-11 sm:w-11" />
       </div>
     );
   }

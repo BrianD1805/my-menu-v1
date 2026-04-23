@@ -1,11 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import CartButton from "@/components/menu/CartButton";
-import CustomerAccountHeaderActions from "@/components/account/CustomerAccountHeaderActions";
 import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
+
+const CustomerAccountHeaderActions = dynamic(
+  () => import("@/components/account/CustomerAccountHeaderActions"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="pointer-events-none flex items-center gap-2 sm:gap-2.5">
+        <span className="inline-flex h-10 w-10 animate-pulse rounded-2xl border border-slate-200 bg-white/80 sm:h-11 sm:w-11" />
+        <span className="hidden sm:inline-flex h-10 w-10 animate-pulse rounded-2xl border border-slate-200 bg-white/80 sm:h-11 sm:w-11" />
+      </div>
+    ),
+  }
+);
+
 
 type Category = {
   id: string;

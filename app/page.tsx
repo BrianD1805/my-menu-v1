@@ -11,17 +11,18 @@ export default async function HomePage() {
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
-  const { data: categories } = await db
-    .from("categories")
-    .select("*")
-    .eq("tenant_id", tenant.id)
-    .order("sort_order", { ascending: true });
-
-  const { data: products } = await db
-    .from("products")
-    .select("*")
-    .eq("tenant_id", tenant.id)
-    .eq("is_active", true);
+  const [{ data: categories }, { data: products }] = await Promise.all([
+    db
+      .from("categories")
+      .select("*")
+      .eq("tenant_id", tenant.id)
+      .order("sort_order", { ascending: true }),
+    db
+      .from("products")
+      .select("*")
+      .eq("tenant_id", tenant.id)
+      .eq("is_active", true),
+  ]);
 
   return (
     <>
