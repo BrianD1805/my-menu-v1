@@ -370,3 +370,9 @@ Included in this patch:
 - Mobile only: changed the category swipe carousel to show one full existing product card at a time.
 - Removed dots, fade overlays, and any style/background changes.
 - Kept desktop unchanged.
+
+
+## Ver-0.114B
+- Mobile swipe view: added 10px extra left/right padding around the card.
+- Removed mobile card shadow to stop clipped/cut-off corners.
+- Added a cleaner soft card backdrop so the full-card swipe view looks neater.

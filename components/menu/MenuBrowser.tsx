@@ -256,9 +256,10 @@ export default function MenuBrowser({
               </span>
             </div>
             <div className="sm:hidden">
-              <div className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex snap-x snap-mandatory overflow-x-auto px-[10px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {categoryProducts.map((product) => (
-                  <div key={product.id} className="w-full min-w-full snap-center">
+                  <div key={product.id} className="w-full min-w-full snap-center px-0">
+                    <div className="rounded-[28px] bg-[#f7f4ef]">
                     <ProductCard
                       id={product.id}
                       name={product.name}
@@ -269,6 +270,7 @@ export default function MenuBrowser({
                       moneySettings={moneySettings}
                       accentColor={accentColor}
                     />
+                    </div>
                   </div>
                 ))}
               </div>
