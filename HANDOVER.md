@@ -383,3 +383,12 @@ Included in this patch:
 ## Ver-0.116E
 - Removed the broken `resolvedCustomerAccountId` variable dependency from checkout.
 - The order payload now sends `customerAccountId: customerAccount?.id || null` directly.
+
+
+## Ver-0.116F
+- Hard-fixed `/api/orders` to persist `customer_account_id` from the confirmed checkout request payload.
+- The order create response now also echoes the saved `customerAccountId` for easier verification.
+
+
+## Ver-0.116G
+- Fixed the `/api/orders` `customerAccountId` response scope issue by using a safely scoped saved customer account id variable.

@@ -8,6 +8,7 @@ import { enqueueNotificationEvent } from "@/lib/notifications";
 import { sendAdminPushForTenant } from "@/lib/web-push";
 
 export async function POST(req: Request) {
+  let savedCustomerAccountIdForResponse: string | null = null;
   try {
     const body = (await req.json()) as CreateOrderInput;
     const requestTenantSlug = resolveTenantSlugFromRequest(req);
@@ -182,13 +183,7 @@ export async function POST(req: Request) {
       }),
     ]);
 
-    return NextResponse.json({
-      ok: true,
-      orderId: order.id,
-      whatsappUrl,
-      whatsappAppUrl,
-      whatsappMessage: message,
-    });
+    return NextResponse.json({ ok: true, orderId: order.id, customerAccountId: savedCustomerAccountIdForResponse });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
