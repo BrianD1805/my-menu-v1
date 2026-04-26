@@ -369,3 +369,17 @@ Included in this patch:
 - Fixed storefront tenant resolution for order saves.
 - Checkout now carries explicit tenant id/slug from the storefront into order creation.
 - `/api/orders` now prefers the explicit tenant id and validates the slug before saving.
+
+
+## Ver-0.116C
+- Forced signed-in customer account id through checkout and into order persistence.
+- Checkout now submits a resolved `customerAccountId` and `/api/orders` persists it into `orders.customer_account_id`.
+
+
+## Ver-0.116D
+- Fixed the checkout `resolvedCustomerAccountId` scope issue so the order payload can compile and send correctly.
+
+
+## Ver-0.116E
+- Removed the broken `resolvedCustomerAccountId` variable dependency from checkout.
+- The order payload now sends `customerAccountId: customerAccount?.id || null` directly.
