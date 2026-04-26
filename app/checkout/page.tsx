@@ -54,6 +54,7 @@ export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [tenantSlug, setTenantSlug] = useState("");
+  const [tenantId, setTenantId] = useState("");
   const [tenantResolved, setTenantResolved] = useState(false);
   const [customerAccount, setCustomerAccount] = useState<{id:string;email:string;fullName:string|null;phone:string|null} | null>(null);
   const [customerName, setCustomerName] = useState("");
@@ -95,9 +96,16 @@ export default function CheckoutPage() {
   }, []);
 
 useEffect(() => {
-    const slug = resolveTenantSlugFromHost(window.location.host);
-    setTenantSlug(slug);
-    setTenantResolved(true);
+    try {
+      const savedSlug = window.localStorage.getItem("orduva_active_tenant_slug") || "";
+      const savedTenantId = window.localStorage.getItem("orduva_active_tenant_id") || "";
+      const fallbackSlug = resolveTenantSlugFromHost(window.location.host);
+
+      setTenantSlug(savedSlug || fallbackSlug);
+      setTenantId(savedTenantId || "");
+    } finally {
+      setTenantResolved(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -239,6 +247,7 @@ useEffect(() => {
         body: JSON.stringify({
         customerAccountId: customerAccount?.id || null,
           tenantSlug,
+          tenantId,
           customerName,
           customerPhone,
           customerAddress,

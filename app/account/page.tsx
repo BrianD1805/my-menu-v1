@@ -2,6 +2,19 @@
 
 import { useEffect, useState } from "react";
 
+type AccountOrder = {
+  id: string;
+  createdAt: string;
+  total: number;
+  status: string;
+  orderType: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  notes: string | null;
+  address: string | null;
+  itemsSummary: string[];
+};
+
 type Customer = {
   id: string;
   email: string;
@@ -19,12 +32,20 @@ export default function CustomerAccountPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [orders, setOrders] = useState<AccountOrder[]>([]);
 
   useEffect(() => {
     async function load() {
-      const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data?.customer) setCustomer(data.customer);
+      const [meRes, ordersRes] = await Promise.all([
+        fetch("/api/customer/auth/me", { cache: "no-store" }),
+        fetch("/api/customer/orders", { cache: "no-store" }),
+      ]);
+
+      const meData = await meRes.json().catch(() => ({}));
+      const ordersData = await ordersRes.json().catch(() => ({}));
+
+      if (meRes.ok && meData?.customer) setCustomer(meData.customer);
+      if (ordersRes.ok && Array.isArray(ordersData?.orders)) setOrders(ordersData.orders);
       setLoading(false);
     }
     void load();
@@ -99,6 +120,74 @@ export default function CustomerAccountPage() {
             <p className="mt-2 font-semibold text-slate-900">{customer.addressLine1 || "Not added yet"}</p>
           </div>
         </div>
+
+<div className="mt-8">
+  <div className="mb-4 flex items-center justify-between gap-3">
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Order history</p>
+      <h2 className="mt-1 text-xl font-bold text-slate-900">Your recent orders</h2>
+    </div>
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+      {orders.length} order{orders.length === 1 ? "" : "s"}
+    </div>
+  </div>
+
+  {orders.length ? (
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <div key={order.id} className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                {new Date(order.createdAt).toLocaleDateString()}
+              </p>
+              <h3 className="mt-1 text-lg font-bold text-slate-900">
+                {order.orderType ? order.orderType.charAt(0).toUpperCase() + order.orderType.slice(1) : "Order"} · {order.id.slice(0, 8)}
+              </h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                {order.status}
+              </span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                {order.total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {order.itemsSummary.length ? (
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Items</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{order.itemsSummary.join(", ")}</p>
+            </div>
+          ) : null}
+
+          {order.address || order.notes ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {order.address ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Address</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">{order.address}</p>
+                </div>
+              ) : null}
+              {order.notes ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Notes</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">{order.notes}</p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
+      No orders yet. Once you place an order while signed in, it will appear here.
+    </div>
+  )}
+</div>
+
 
         {message ? (
           <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">

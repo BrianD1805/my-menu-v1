@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     }
 
     const submittedTenantSlug = body.tenantSlug.trim();
+    const submittedTenantId = body.tenantId?.trim() || null;
 
     if (submittedTenantSlug !== requestTenantSlug) {
       return NextResponse.json(

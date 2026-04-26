@@ -31,6 +31,7 @@ export type CartItemInput = {
 
 export type CreateOrderInput = {
   tenantSlug: string;
+  tenantId?: string;
   customerName: string;
   customerPhone: string;
   customerAddress?: string;

@@ -353,8 +353,19 @@ Included in this patch:
 - The popup now uses constrained height, internal vertical scrolling, better bottom padding, and a more app-consistent sheet/modal behaviour on mobile and desktop.
 
 
-## Ver-0.113
-- Added an animated app loading screen so startup feels alive instead of stuck.
-- Parallelised storefront product/category loading.
-- Moved customer account header actions to a lazy client-side load so the basic storefront shell can appear first while account state resolves in the background.
-- Added timeout-safe background loading for storefront customer account state.
+## Ver-0.116
+- Added customer order history inside the account area.
+- Added /api/customer/orders to load signed-in customer orders only.
+- Account page now shows recent orders, status, total, item summary, and optional address/notes.
+
+
+## Ver-0.116A
+- Fixed signed-in checkout order linkage to `customer_account_id`.
+- Checkout now sends `customerAccountId` and `/api/orders` persists it onto the order row.
+- New signed-in orders should now appear in `/account` order history.
+
+
+## Ver-0.116B
+- Fixed storefront tenant resolution for order saves.
+- Checkout now carries explicit tenant id/slug from the storefront into order creation.
+- `/api/orders` now prefers the explicit tenant id and validates the slug before saving.
