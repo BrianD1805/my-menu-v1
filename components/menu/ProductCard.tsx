@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 
@@ -13,18 +13,25 @@ type Props = {
   tenantSlug: string;
   moneySettings?: MoneyFormatSettings;
   accentColor?: string | null;
+  onAddToCartAnimation?: (payload: { imageUrl: string | null; name: string; sourceRect: DOMRect | null }) => void;
 };
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, onAddToCartAnimation }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const imageFrameRef = useRef<HTMLDivElement | null>(null);
+  const modalImageFrameRef = useRef<HTMLDivElement | null>(null);
 
   const hasImage = !!imageUrl;
   const fullDescription = description?.trim() || "<p>A fresh favourite from the menu, ready to add to your order.</p>";
 
-  async function addToCart() {
+  async function addToCart(source: "card" | "modal" = "card") {
     if (buttonState === "adding") return;
     setButtonState("adding");
+
+    const sourceRect = (source === "modal" ? modalImageFrameRef.current : imageFrameRef.current)?.getBoundingClientRect() || null;
+    onAddToCartAnimation?.({ imageUrl, name, sourceRect });
+
     const existing = readCart<StoredCartItem>(tenantSlug);
     const found = existing.find((item) => item.productId === id);
     const updated = found
@@ -70,7 +77,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">
             <button type="button" onClick={() => setDetailsOpen(true)} className="block text-left" aria-label={`View details for ${name}`}>
-              <div className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
+              <div ref={imageFrameRef} className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
                 {hasImage ? (
                   <img src={imageUrl!} alt={name} className="h-full w-full object-contain object-center p-4 sm:p-5" loading="lazy" />
                 ) : (
@@ -110,7 +117,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               type="button"
               className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-medium shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 8%, white), color-mix(in srgb, ${accentColor} 14%, white))` } : undefined}
-              onClick={addToCart}
+              onClick={() => void addToCart("card")}
               disabled={buttonState === "adding"}
             >
               {buttonLabel()}
@@ -152,7 +159,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8 xl:py-7">
                 <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start xl:gap-7">
-                  <div className="overflow-hidden rounded-[24px] bg-slate-100 ring-1 ring-black/5">
+                  <div ref={modalImageFrameRef} className="overflow-hidden rounded-[24px] bg-slate-100 ring-1 ring-black/5">
                     {hasImage ? (
                       <img src={imageUrl!} alt={name} className="h-72 w-full object-contain object-center bg-white p-4 sm:h-[24rem] lg:h-[24rem] xl:h-[26rem]" />
                     ) : (
@@ -183,7 +190,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
-                  <button type="button" onClick={() => { addToCart(); setDetailsOpen(false); }} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 lg:px-8">{buttonState === "adding" ? "Adding..." : "Add"}</button>
+                  <button type="button" onClick={() => { void addToCart("modal"); setDetailsOpen(false); }} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 lg:px-8">{buttonState === "adding" ? "Adding..." : "Add"}</button>
                 </div>
               </div>
             </div>

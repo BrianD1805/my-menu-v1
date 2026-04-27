@@ -48,3 +48,17 @@ body {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
 }
+
+
+@keyframes orduva-cart-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.12); }
+  65% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@keyframes orduva-cart-ring {
+  0% { opacity: 0; transform: scale(0.78); }
+  20% { opacity: 0.38; }
+  100% { opacity: 0; transform: scale(1.5); }
+}

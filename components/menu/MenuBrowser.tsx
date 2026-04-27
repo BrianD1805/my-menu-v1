@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CartButton from "@/components/menu/CartButton";
 import CustomerAccountHeaderActions from "@/components/account/CustomerAccountHeaderActions";
 import ProductCard from "@/components/menu/ProductCard";
@@ -19,6 +19,19 @@ type Product = {
   description: string | null;
   image_url: string | null;
   price: number;
+};
+
+type FlyingCartItem = {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  startLeft: number;
+  startTop: number;
+  startWidth: number;
+  startHeight: number;
+  endCenterX: number;
+  endCenterY: number;
+  started: boolean;
 };
 
 function stripHtml(value: string | null | undefined) {
@@ -107,18 +120,22 @@ export default function MenuBrowser({
     currencySuffix,
   });
   const [searchOpen, setSearchOpen] = useState(false);
+  const cartButtonRef = useRef<HTMLAnchorElement | null>(null);
+  const searchCartIndicatorRef = useRef<HTMLDivElement | null>(null);
 
-useEffect(() => {
-  try {
-    window.localStorage.setItem("orduva_active_tenant_slug", tenantSlug);
-    window.localStorage.setItem("orduva_active_tenant_id", tenantId);
-  } catch {}
-}, [tenantSlug, tenantId]);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("orduva_active_tenant_slug", tenantSlug);
+      window.localStorage.setItem("orduva_active_tenant_id", tenantId);
+    } catch {}
+  }, [tenantSlug, tenantId]);
 
   const [query, setQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
   const [buttonStateById, setButtonStateById] = useState<Record<string, "idle" | "adding" | "added">>({});
   const [cartCount, setCartCount] = useState(0);
+  const [cartPulseKey, setCartPulseKey] = useState(0);
+  const [flyingItems, setFlyingItems] = useState<FlyingCartItem[]>([]);
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
@@ -165,10 +182,66 @@ useEffect(() => {
     };
   }, [searchOpen]);
 
-  async function addToCart(productId: string) {
+  const triggerCartPulse = useCallback(() => {
+    setCartPulseKey((current) => current + 1);
+  }, []);
+
+  const launchAddToCartAnimation = useCallback(
+    ({ imageUrl, name, sourceRect, destination = "header" }: { imageUrl: string | null; name: string; sourceRect: DOMRect | null; destination?: "header" | "search" }) => {
+      const targetElement = destination === "search" && searchCartIndicatorRef.current ? searchCartIndicatorRef.current : cartButtonRef.current;
+      if (!sourceRect || !targetElement) {
+        triggerCartPulse();
+        return;
+      }
+
+      const targetRect = targetElement.getBoundingClientRect();
+      const id = `fly-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const nextItem: FlyingCartItem = {
+        id,
+        name,
+        imageUrl,
+        startLeft: sourceRect.left,
+        startTop: sourceRect.top,
+        startWidth: sourceRect.width,
+        startHeight: sourceRect.height,
+        endCenterX: targetRect.left + targetRect.width / 2,
+        endCenterY: targetRect.top + targetRect.height / 2,
+        started: false,
+      };
+
+      setFlyingItems((current) => [...current, nextItem]);
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          setFlyingItems((current) => current.map((item) => (item.id === id ? { ...item, started: true } : item)));
+        });
+      });
+
+      window.setTimeout(() => {
+        setFlyingItems((current) => current.filter((item) => item.id !== id));
+        triggerCartPulse();
+      }, 2000);
+    },
+    [triggerCartPulse],
+  );
+
+  async function addToCart(
+    productId: string,
+    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; destination?: "header" | "search" },
+  ) {
     if (buttonStateById[productId] === "adding") return;
 
     setButtonStateById((current) => ({ ...current, [productId]: "adding" }));
+
+    const product = products.find((item) => item.id === productId);
+    if (options?.sourceRect || options?.imageUrl || options?.name) {
+      launchAddToCartAnimation({
+        imageUrl: options?.imageUrl ?? product?.image_url ?? null,
+        name: options?.name ?? product?.name ?? "Menu item",
+        sourceRect: options?.sourceRect ?? null,
+        destination: options?.destination ?? "header",
+      });
+    }
 
     const existing = readCart<StoredCartItem>(tenantSlug);
     const found = existing.find((item) => item.productId === productId);
@@ -186,10 +259,46 @@ useEffect(() => {
 
   return (
     <div className="space-y-5 sm:space-y-6">
+      <div className="pointer-events-none fixed inset-0 z-[80] overflow-hidden" aria-hidden="true">
+        {flyingItems.map((item) => {
+          const targetX = item.endCenterX - (item.startLeft + item.startWidth / 2);
+          const targetY = item.endCenterY - (item.startTop + item.startHeight / 2);
+          return (
+            <div
+              key={item.id}
+              className="absolute left-0 top-0 will-change-transform"
+              style={{
+                width: item.startWidth,
+                height: item.startHeight,
+                transform: item.started
+                  ? `translate3d(${item.startLeft + targetX}px, ${item.startTop + targetY}px, 0) scale(0.18) rotate(14deg)`
+                  : `translate3d(${item.startLeft}px, ${item.startTop}px, 0) scale(1) rotate(0deg)`,
+                opacity: item.started ? 0.16 : 1,
+                transition:
+                  "transform 2000ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 2000ms ease, filter 2000ms ease, box-shadow 2000ms ease",
+                filter: item.started ? "blur(1px) saturate(1.05)" : "blur(0px)",
+                boxShadow: item.started
+                  ? "0 24px 56px rgba(15,23,42,0.08)"
+                  : "0 30px 74px rgba(15,23,42,0.18)",
+              }}
+            >
+              <div className="relative h-full w-full overflow-hidden rounded-[28px] border border-white/90 bg-white/98 shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
+                <div className="absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.52),transparent_58%)]" />
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.name} className="h-full w-full object-contain bg-white p-3" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-white to-slate-200 text-4xl">📦</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:content-['']" style={{ backgroundColor: brandSurface }}>
         <div className="border-b shadow-[0_22px_60px_rgba(15,23,42,0.10)]" style={{ borderColor: brandBorder, background: `linear-gradient(180deg, ${brandSurface} 0%, color-mix(in srgb, ${brandSurface} 80%, white) 50%, white 100%)` }}>
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
-            <div className="relative flex items-center justify-center min-h-[78px] sm:min-h-[86px] lg:min-h-[94px]">
+            <div className="relative flex min-h-[78px] items-center justify-center sm:min-h-[86px] lg:min-h-[94px]">
               <div className="flex items-center justify-center">
                 {headerLogoUrl ? (
                   <img
@@ -224,7 +333,7 @@ useEffect(() => {
                     <path d="m20 20-3.5-3.5" />
                   </svg>
                 </button>
-                <CartButton tenantSlug={tenantSlug} accentColor={brandAccent} primaryColor={brandPrimary} />
+                <CartButton ref={cartButtonRef} tenantSlug={tenantSlug} accentColor={brandAccent} primaryColor={brandPrimary} pulseKey={cartPulseKey} />
               </div>
             </div>
           </div>
@@ -263,6 +372,7 @@ useEffect(() => {
                   tenantSlug={tenantSlug}
                   moneySettings={moneySettings}
                   accentColor={accentColor}
+                  onAddToCartAnimation={(payload) => launchAddToCartAnimation({ ...payload, destination: "header" })}
                 />
               ))}
             </div>
@@ -328,7 +438,7 @@ useEffect(() => {
                     <p className="mt-2 text-sm leading-6 text-slate-600">Search by product name, keyword, or narrow the results to a category.</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                    <div ref={searchCartIndicatorRef} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <circle cx="9" cy="20" r="1" />
                         <circle cx="18" cy="20" r="1" />
@@ -339,7 +449,7 @@ useEffect(() => {
                     <button
                       type="button"
                       onClick={() => setSearchOpen(false)}
-                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
                       aria-label="Close search"
                     >
                       ×
@@ -347,40 +457,32 @@ useEffect(() => {
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3 xl:grid-cols-[1fr_260px]">
-                  <div className="flex min-h-[54px] items-center rounded-2xl border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-emerald-400 focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.10)]">
-                    <span className="mr-3 text-lg text-slate-400">⌕</span>
+                <div className="mt-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
+                  <label className="block">
+                    <span className="sr-only">Search products</span>
                     <input
-                      autoFocus
+                      type="search"
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Search products or categories"
-                      className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                      placeholder="Search menu items"
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                     />
-                    {query ? (
-                      <button
-                        type="button"
-                        onClick={() => setQuery("")}
-                        className="ml-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-900"
-                        aria-label="Clear search"
-                      >
-                        ×
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <select
-                    value={activeCategoryId}
-                    onChange={(event) => setActiveCategoryId(event.target.value)}
-                    className="min-h-[54px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
-                  >
-                    <option value="all">All categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                  </label>
+                  <label className="block">
+                    <span className="sr-only">Filter by category</span>
+                    <select
+                      value={activeCategoryId}
+                      onChange={(event) => setActiveCategoryId(event.target.value)}
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                    >
+                      <option value="all">All categories</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               </div>
 
@@ -406,10 +508,11 @@ useEffect(() => {
                     {filteredProducts.map((product) => {
                       const categoryName = categories.find((category) => category.id === product.category_id)?.name || "Menu item";
                       const state = buttonStateById[product.id] || "idle";
+                      const thumbId = `search-thumb-${product.id}`;
                       return (
                         <div key={product.id} className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                            <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200">
+                            <div id={thumbId} className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200">
                               {product.image_url ? (
                                 <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
                               ) : (
@@ -436,7 +539,15 @@ useEffect(() => {
                                 </div>
                                 <button
                                   type="button"
-                                  onClick={() => void addToCart(product.id)}
+                                  onClick={() => {
+                                    const sourceRect = document.getElementById(thumbId)?.getBoundingClientRect() || null;
+                                    void addToCart(product.id, {
+                                      sourceRect,
+                                      imageUrl: product.image_url,
+                                      name: product.name,
+                                      destination: "search",
+                                    });
+                                  }}
                                   className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
                                 >
                                   {state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add"}
