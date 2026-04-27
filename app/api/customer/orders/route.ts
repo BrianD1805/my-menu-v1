@@ -3,17 +3,15 @@ import { db } from "@/lib/db";
 import { validateCustomerRequestSession } from "@/lib/customer-auth";
 
 function extractItemsSummary(raw: any): string[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) {
-    return raw
-      .map((item) => {
-        const name = item?.name || item?.productName || item?.title || "";
-        const qty = Number(item?.quantity || 0);
-        return name ? `${qty > 0 ? `${qty} × ` : ""}${name}` : "";
-      })
-      .filter(Boolean);
-  }
-  return [];
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((item) => {
+      const name = item?.product_name || item?.name || item?.productName || item?.title || "";
+      const qty = Number(item?.quantity || 0);
+      return name ? `${qty > 0 ? `${qty} × ` : ""}${name}` : "";
+    })
+    .filter(Boolean);
 }
 
 export async function GET(req: Request) {
@@ -24,7 +22,24 @@ export async function GET(req: Request) {
 
   const { data, error } = await db
     .from("orders")
-    .select("id, created_at, total_amount, status, order_type, customer_name, customer_phone, customer_address, notes, items_json, items")
+    .select(
+      `
+      id,
+      created_at,
+      total,
+      status,
+      order_type,
+      customer_name,
+      customer_phone,
+      customer_address,
+      notes,
+      order_items (
+        product_name,
+        quantity,
+        line_total
+      )
+    `
+    )
     .eq("tenant_id", session.tenant.id)
     .eq("customer_account_id", session.user.id)
     .order("created_at", { ascending: false })
@@ -37,14 +52,14 @@ export async function GET(req: Request) {
   const orders = (data || []).map((row: any) => ({
     id: row.id,
     createdAt: row.created_at,
-    total: Number(row.total_amount || 0),
+    total: Number(row.total || 0),
     status: row.status || "new",
     orderType: row.order_type || null,
     customerName: row.customer_name || null,
     customerPhone: row.customer_phone || null,
     notes: row.notes || null,
     address: row.customer_address || null,
-    itemsSummary: extractItemsSummary(row.items_json || row.items),
+    itemsSummary: extractItemsSummary(row.order_items),
   }));
 
   return NextResponse.json({ ok: true, orders });
