@@ -50,18 +50,38 @@ type SuccessState = {
   whatsappAppUrl: string | null;
 };
 
+type CustomerAccount = {
+  id: string;
+  email: string;
+  fullName: string | null;
+  phone: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  postcode?: string | null;
+};
+
+function buildSavedAddress(customer: CustomerAccount | null) {
+  if (!customer) return "";
+  return [customer.addressLine1, customer.addressLine2, customer.city, customer.postcode]
+    .map((part) => String(part || "").trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
 export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [tenantSlug, setTenantSlug] = useState("");
   const [tenantId, setTenantId] = useState("");
   const [tenantResolved, setTenantResolved] = useState(false);
-  const [customerAccount, setCustomerAccount] = useState<{id:string;email:string;fullName:string|null;phone:string|null} | null>(null);
+  const [customerAccount, setCustomerAccount] = useState<CustomerAccount | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [orderType, setOrderType] = useState<"delivery" | "collection">("delivery");
+  const [saveDetailsToAccount, setSaveDetailsToAccount] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
@@ -81,8 +101,9 @@ export default function CheckoutPage() {
           if (data.customer.phone) {
             setCustomerPhone((current) => current || data.customer.phone);
           }
-          if (data.customer.addressLine1) {
-            setCustomerAddress((current) => current || data.customer.addressLine1);
+          const savedAddress = buildSavedAddress(data.customer);
+          if (savedAddress) {
+            setCustomerAddress((current) => current || savedAddress);
           }
         } else {
           setCustomerAccount(null);
@@ -206,17 +227,52 @@ useEffect(() => {
     writeCart(tenantSlug, nextItems);
   }
 
+  function applySavedProfileToCheckout(customer = customerAccount) {
+    if (!customer) return;
+    setCustomerName(customer.fullName || "");
+    setCustomerPhone(customer.phone || "");
+    setCustomerAddress(buildSavedAddress(customer));
+  }
+
   function resetCheckoutForNewOrder() {
     setSuccessState(null);
-    setCustomerName("");
-    setCustomerPhone("");
-    setCustomerAddress("");
+    if (customerAccount) {
+      applySavedProfileToCheckout(customerAccount);
+    } else {
+      setCustomerName("");
+      setCustomerPhone("");
+      setCustomerAddress("");
+    }
     setNotes("");
     setOrderType("delivery");
     setErrorMessage("");
   }
 
   const PAUSE_WHATSAPP_FOR_TESTING = true;
+
+  async function saveCheckoutDetailsToProfile() {
+    if (!customerAccount || !saveDetailsToAccount) return;
+
+    const payload: Record<string, string> = {
+      fullName: customerName,
+      phone: customerPhone,
+    };
+    const savedAddress = buildSavedAddress(customerAccount);
+    if (customerAddress.trim() !== savedAddress) {
+      payload.checkoutAddress = customerAddress;
+    }
+
+    const res = await fetch("/api/customer/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data?.customer) {
+      setCustomerAccount(data.customer);
+    }
+  }
 
   async function placeOrder() {
     setErrorMessage("");
@@ -264,6 +320,8 @@ useEffect(() => {
         setLoading(false);
         return;
       }
+
+      await saveCheckoutDetailsToProfile();
 
       clearCart(tenantSlug);
       setItems([]);
@@ -506,13 +564,33 @@ useEffect(() => {
         <div className="space-y-4 rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: checkoutBorder }}>
           {customerAccount ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-              <p className="font-semibold">Signed in as {customerAccount.fullName || customerAccount.email}</p>
-              <p className="mt-1 text-emerald-800">This order will be linked to your customer account.</p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold">Signed in as {customerAccount.fullName || customerAccount.email}</p>
+                  <p className="mt-1 text-emerald-800">Saved profile details have been prefilled where available, and this order will be linked to your account.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => applySavedProfileToCheckout()}
+                  className="rounded-xl border border-emerald-300 bg-white px-3 py-2 text-xs font-semibold text-emerald-900 transition hover:bg-emerald-100"
+                >
+                  Use saved details
+                </button>
+              </div>
+              <label className="mt-3 flex items-start gap-2 text-xs font-semibold text-emerald-900">
+                <input
+                  type="checkbox"
+                  checked={saveDetailsToAccount}
+                  onChange={(event) => setSaveDetailsToAccount(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-emerald-300"
+                />
+                <span>Save these checkout details to my account for next time</span>
+              </label>
             </div>
           ) : (
             <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
               <p className="font-semibold text-slate-900">Guest checkout</p>
-              <p className="mt-1 text-slate-600">You can still order as a guest, or <a href="/account/login" className="font-semibold underline">sign in</a> to link your order to your account.</p>
+              <p className="mt-1 text-slate-600">You can still order as a guest, or <a href="/account/login" className="font-semibold underline">sign in</a> to link your order to your account and prefill your details next time.</p>
             </div>
           )}
           {errorMessage ? (

@@ -26,6 +26,14 @@ type Customer = {
   postcode?: string | null;
 };
 
+function buildSavedAddress(customer: Customer | null) {
+  if (!customer) return "";
+  return [customer.addressLine1, customer.addressLine2, customer.city, customer.postcode]
+    .map((part) => String(part || "").trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
 export default function CustomerAccountPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,7 +107,7 @@ export default function CustomerAccountPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer account</p>
         <h1 className="mt-2 text-3xl font-bold text-slate-900">Your details</h1>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Keep your saved details up to date for faster checkout. Only the first line of address is shown in the main account summary.
+          Keep your saved details up to date for faster checkout. These details can now prefill checkout when you are signed in.
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -117,7 +125,7 @@ export default function CustomerAccountPage() {
           </div>
           <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Address</p>
-            <p className="mt-2 font-semibold text-slate-900">{customer.addressLine1 || "Not added yet"}</p>
+            <p className="mt-2 font-semibold text-slate-900">{buildSavedAddress(customer) || "Not added yet"}</p>
           </div>
         </div>
 
@@ -270,7 +278,7 @@ export default function CustomerAccountPage() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 -mx-5 border-t border-slate-200 bg-white px-5 pb-1 pt-4 sm:-mx-6 sm:px-6"><div className="flex flex-wrap gap-3">
+              <div className="-mx-5 mt-6 border-t border-slate-200 bg-white px-5 pb-1 pt-4 sm:-mx-6 sm:px-6"><div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
                   disabled={saving}

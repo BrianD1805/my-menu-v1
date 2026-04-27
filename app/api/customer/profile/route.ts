@@ -9,15 +9,39 @@ export async function PATCH(req: Request) {
   }
 
   const body = await req.json().catch(() => ({}));
+  const payload: Record<string, string | null> = {};
 
-  const payload = {
-    full_name: String(body.fullName || "").trim() || null,
-    phone: String(body.phone || "").trim() || null,
-    address_line_1: String(body.addressLine1 || "").trim() || null,
-    address_line_2: String(body.addressLine2 || "").trim() || null,
-    city: String(body.city || "").trim() || null,
-    postcode: String(body.postcode || "").trim() || null,
-  };
+  if (Object.prototype.hasOwnProperty.call(body, "fullName")) {
+    payload.full_name = String(body.fullName || "").trim() || null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "phone")) {
+    payload.phone = String(body.phone || "").trim() || null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, "checkoutAddress")) {
+    payload.address_line_1 = String(body.checkoutAddress || "").trim() || null;
+    payload.address_line_2 = null;
+    payload.city = null;
+    payload.postcode = null;
+  } else {
+    if (Object.prototype.hasOwnProperty.call(body, "addressLine1")) {
+      payload.address_line_1 = String(body.addressLine1 || "").trim() || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(body, "addressLine2")) {
+      payload.address_line_2 = String(body.addressLine2 || "").trim() || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(body, "city")) {
+      payload.city = String(body.city || "").trim() || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(body, "postcode")) {
+      payload.postcode = String(body.postcode || "").trim() || null;
+    }
+  }
+
+  if (!Object.keys(payload).length) {
+    return NextResponse.json({ error: "No profile details supplied." }, { status: 400 });
+  }
 
   const { data, error } = await db
     .from("customer_accounts")
