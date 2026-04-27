@@ -76,6 +76,7 @@ export default function CheckoutPage() {
   const [tenantId, setTenantId] = useState("");
   const [tenantResolved, setTenantResolved] = useState(false);
   const [customerAccount, setCustomerAccount] = useState<CustomerAccount | null>(null);
+  const [customerAccountLoading, setCustomerAccountLoading] = useState(true);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -89,8 +90,13 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     async function loadCustomerAccount() {
+      setCustomerAccountLoading(true);
+      const startedAt = performance.now();
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 4000);
+
       try {
-        const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
+        const res = await fetch("/api/customer/auth/me", { cache: "no-store", signal: controller.signal });
         const data = await res.json().catch(() => ({}));
 
         if (res.ok && data?.customer) {
@@ -110,6 +116,10 @@ export default function CheckoutPage() {
         }
       } catch {
         setCustomerAccount(null);
+      } finally {
+        window.clearTimeout(timeout);
+        setCustomerAccountLoading(false);
+        console.info(`[Orduva load] checkout customer profile prefill: ${Math.round(performance.now() - startedAt)}ms`);
       }
     }
 
@@ -136,11 +146,16 @@ useEffect(() => {
 
   useEffect(() => {
     async function loadProducts() {
-      const res = await fetch(`/api/products?tenantSlug=${tenantSlug}`);
-      const data = await res.json();
-      if (res.ok) {
-        setProducts(data.products || []);
-        setTenantSettings({ ...DEFAULT_MONEY_SETTINGS, ...(data.settings || {}) });
+      const startedAt = performance.now();
+      try {
+        const res = await fetch(`/api/products?tenantSlug=${tenantSlug}`);
+        const data = await res.json();
+        if (res.ok) {
+          setProducts(data.products || []);
+          setTenantSettings({ ...DEFAULT_MONEY_SETTINGS, ...(data.settings || {}) });
+        }
+      } finally {
+        console.info(`[Orduva load] checkout products/settings: ${Math.round(performance.now() - startedAt)}ms`);
       }
     }
 
@@ -508,7 +523,17 @@ useEffect(() => {
 
       <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4 rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: checkoutBorder }}>
-          {customerAccount ? (
+          {customerAccountLoading ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-slate-800" aria-hidden="true" />
+                <div>
+                  <p className="font-semibold text-slate-900">Checking saved customer details…</p>
+                  <p className="mt-1 text-slate-600">We are looking for your saved profile so checkout can be quicker.</p>
+                </div>
+              </div>
+            </div>
+          ) : customerAccount ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

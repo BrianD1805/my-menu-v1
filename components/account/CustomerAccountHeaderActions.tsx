@@ -46,16 +46,24 @@ export default function CustomerAccountHeaderActions() {
 
   useEffect(() => {
     async function load() {
+      const startedAt = performance.now();
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 3500);
+
       try {
-        const res = await fetch("/api/customer/auth/me", { cache: "no-store" });
+        const res = await fetch("/api/customer/auth/me", { cache: "no-store", signal: controller.signal });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data?.customer) {
           setCustomer(data.customer);
         } else {
           setCustomer(null);
         }
+      } catch {
+        setCustomer(null);
       } finally {
+        window.clearTimeout(timeout);
         setReady(true);
+        console.info(`[Orduva load] storefront account header check: ${Math.round(performance.now() - startedAt)}ms`);
       }
     }
 

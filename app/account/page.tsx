@@ -26,6 +26,19 @@ type Customer = {
   postcode?: string | null;
 };
 
+function CustomerDataLoading({ title, message }: { title: string; message: string }) {
+  return (
+    <main className="mx-auto flex min-h-screen max-w-3xl items-center justify-center px-4 py-8 sm:px-5 lg:px-6">
+      <section className="w-full rounded-[28px] border border-slate-200 bg-white p-6 text-center shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" aria-hidden="true" />
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Customer account</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900">{title}</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-600">{message}</p>
+      </section>
+    </main>
+  );
+}
+
 function buildSavedAddress(customer: Customer | null) {
   if (!customer) return "";
   return [customer.addressLine1, customer.addressLine2, customer.city, customer.postcode]
@@ -41,23 +54,48 @@ export default function CustomerAccountPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [orders, setOrders] = useState<AccountOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      const [meRes, ordersRes] = await Promise.all([
-        fetch("/api/customer/auth/me", { cache: "no-store" }),
-        fetch("/api/customer/orders", { cache: "no-store" }),
-      ]);
+    async function loadProfileFirst() {
+      const profileStartedAt = performance.now();
+      try {
+        const meRes = await fetch("/api/customer/auth/me", { cache: "no-store" });
+        const meData = await meRes.json().catch(() => ({}));
 
-      const meData = await meRes.json().catch(() => ({}));
-      const ordersData = await ordersRes.json().catch(() => ({}));
-
-      if (meRes.ok && meData?.customer) setCustomer(meData.customer);
-      if (ordersRes.ok && Array.isArray(ordersData?.orders)) setOrders(ordersData.orders);
-      setLoading(false);
+        if (meRes.ok && meData?.customer) {
+          setCustomer(meData.customer);
+        } else {
+          setCustomer(null);
+        }
+      } catch {
+        setCustomer(null);
+      } finally {
+        setLoading(false);
+        console.info(`[Orduva load] account profile: ${Math.round(performance.now() - profileStartedAt)}ms`);
+      }
     }
-    void load();
+    void loadProfileFirst();
   }, []);
+
+  useEffect(() => {
+    if (!customer?.id) return;
+
+    async function loadOrdersAfterProfile() {
+      setOrdersLoading(true);
+      const ordersStartedAt = performance.now();
+      try {
+        const ordersRes = await fetch("/api/customer/orders", { cache: "no-store" });
+        const ordersData = await ordersRes.json().catch(() => ({}));
+        if (ordersRes.ok && Array.isArray(ordersData?.orders)) setOrders(ordersData.orders);
+      } finally {
+        setOrdersLoading(false);
+        console.info(`[Orduva load] account orders: ${Math.round(performance.now() - ordersStartedAt)}ms`);
+      }
+    }
+
+    void loadOrdersAfterProfile();
+  }, [customer?.id]);
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,7 +131,7 @@ export default function CustomerAccountPage() {
   }
 
   if (loading) {
-    return <main className="mx-auto min-h-screen max-w-3xl px-4 py-8 sm:px-5 lg:px-6">Loading account…</main>;
+    return <CustomerDataLoading title="Getting your account ready…" message="We are opening your saved profile details." />;
   }
 
   if (!customer) {
@@ -140,7 +178,11 @@ export default function CustomerAccountPage() {
     </div>
   </div>
 
-  {orders.length ? (
+  {ordersLoading ? (
+    <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+      Loading your recent orders…
+    </div>
+  ) : orders.length ? (
     <div className="space-y-4">
       {orders.map((order) => (
         <div key={order.id} className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_12px_34px_rgba(15,23,42,0.05)]">

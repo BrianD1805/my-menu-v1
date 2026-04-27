@@ -1,27 +1,44 @@
 import MenuBrowser from "@/components/menu/MenuBrowser";
 import StorefrontPwaRegistrar from "@/components/menu/StorefrontPwaRegistrar";
 import { db } from "@/lib/db";
+import { startLoadTimer } from "@/lib/load-diagnostics";
 import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { LIVE_VERSION } from "@/lib/version";
 
 export default async function HomePage() {
+  const totalTimer = startLoadTimer("storefront total server render");
+  const slugTimer = startLoadTimer("storefront tenant slug resolve");
   const slug = await resolveTenantSlug();
+  slugTimer.end({ slug });
+
+  const tenantTimer = startLoadTimer("storefront tenant lookup");
   const tenant = await getTenantBySlug(slug);
-  const settings = await getTenantSettings(tenant.id);
+  tenantTimer.end({ tenantId: tenant.id, slug: tenant.slug });
+
+  const storefrontDataTimer = startLoadTimer("storefront settings/categories/products parallel load");
+  const [settings, categoriesResult, productsResult] = await Promise.all([
+    getTenantSettings(tenant.id),
+    db
+      .from("categories")
+      .select("id, name, sort_order")
+      .eq("tenant_id", tenant.id)
+      .order("sort_order", { ascending: true }),
+    db
+      .from("products")
+      .select("id, category_id, name, description, image_url, price")
+      .eq("tenant_id", tenant.id)
+      .eq("is_active", true),
+  ]);
+  storefrontDataTimer.end({
+    categories: categoriesResult.data?.length || 0,
+    products: productsResult.data?.length || 0,
+    categoriesError: Boolean(categoriesResult.error),
+    productsError: Boolean(productsResult.error),
+  });
+
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
-
-  const { data: categories } = await db
-    .from("categories")
-    .select("*")
-    .eq("tenant_id", tenant.id)
-    .order("sort_order", { ascending: true });
-
-  const { data: products } = await db
-    .from("products")
-    .select("*")
-    .eq("tenant_id", tenant.id)
-    .eq("is_active", true);
+  totalTimer.end({ tenantSlug: slug });
 
   return (
     <>
@@ -32,8 +49,8 @@ export default async function HomePage() {
         tenantId={tenant.id}
         tenantName={branding.displayName}
         version={LIVE_VERSION}
-        categories={categories || []}
-        products={products || []}
+        categories={categoriesResult.data || []}
+        products={productsResult.data || []}
         logoUrl={branding.logoUrl}
         headerLogoUrl={branding.logoUrl}
         welcomeHeading={branding.storefrontHeading}
