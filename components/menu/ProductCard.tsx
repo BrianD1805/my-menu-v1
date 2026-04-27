@@ -13,10 +13,21 @@ type Props = {
   tenantSlug: string;
   moneySettings?: MoneyFormatSettings;
   accentColor?: string | null;
+  primaryColor?: string | null;
   onAddToCartAnimation?: (payload: { imageUrl: string | null; name: string; sourceRect: DOMRect | null }) => void;
 };
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, onAddToCartAnimation }: Props) {
+function withAlpha(color: string, alphaHex: string, fallback: string) {
+  const normalized = color.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(normalized)) return `${normalized}${alphaHex}`;
+  if (/^#[0-9a-fA-F]{3}$/.test(normalized)) {
+    const expanded = `#${normalized[1]}${normalized[1]}${normalized[2]}${normalized[2]}${normalized[3]}${normalized[3]}`;
+    return `${expanded}${alphaHex}`;
+  }
+  return fallback;
+}
+
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, primaryColor, onAddToCartAnimation }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -58,7 +69,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   const fullPrice = formatMoney(price, money);
   const brandAccent = accentColor || "#C7922F";
-  const brandPrimary = "#7B1E22";
+  const brandPrimary = primaryColor || "#7B1E22";
+  const cleanAccentSoft = withAlpha(brandAccent, "1F", "rgba(199,146,47,0.12)");
+  const cleanAccentSofter = withAlpha(brandAccent, "12", "rgba(199,146,47,0.07)");
+  const cleanAccentBorder = withAlpha(brandAccent, "66", "rgba(199,146,47,0.40)");
+  const cleanAccentSubtleBorder = withAlpha(brandAccent, "33", "rgba(199,146,47,0.20)");
   const stackedAmount = formatMoney(price, {
     ...money,
     currencyDisplayMode: "symbol",
@@ -117,10 +132,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               type="button"
               className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-semibold shadow-[0_7px_16px_rgba(15,23,42,0.065)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-85 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={buttonState === "added"
-                ? { borderColor: "rgba(16,185,129,0.42)", color: "#047857", background: "linear-gradient(180deg, rgba(236,253,245,0.98) 0%, rgba(209,250,229,0.98) 100%)", boxShadow: "0 8px 18px rgba(5,150,105,0.13)" }
-                : accentColor
-                  ? { borderColor: `color-mix(in srgb, ${accentColor} 42%, white)`, color: `color-mix(in srgb, ${accentColor} 86%, #111827)`, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 12%, white) 0%, color-mix(in srgb, ${accentColor} 24%, white) 100%)`, boxShadow: `0 7px 16px color-mix(in srgb, ${accentColor} 15%, rgba(15,23,42,0.09))` }
-                  : undefined}
+                ? { borderColor: "rgba(16,185,129,0.36)", color: "#047857", backgroundColor: "rgba(236,253,245,0.98)", boxShadow: "0 8px 18px rgba(5,150,105,0.10)" }
+                : { borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: cleanAccentSoft, boxShadow: "0 8px 18px rgba(15,23,42,0.065)" }}
               onClick={() => void addToCart("card")}
               disabled={buttonState === "adding"}
             >
@@ -131,7 +144,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               type="button"
               onClick={() => setDetailsOpen(true)}
               className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-semibold shadow-[0_7px_16px_rgba(15,23,42,0.055)] transition hover:-translate-y-[1px] sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
-              style={accentColor ? { borderColor: `color-mix(in srgb, ${accentColor} 36%, white)`, color: `color-mix(in srgb, ${accentColor} 76%, #1f2937)`, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 6%, white) 0%, color-mix(in srgb, ${accentColor} 16%, white) 100%)` } : undefined}
+              style={{ borderColor: cleanAccentSubtleBorder, color: brandPrimary, backgroundColor: cleanAccentSofter }}
               aria-label={`More info for ${name}`}
               title="More info"
             >
@@ -198,7 +211,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     type="button"
                     onClick={() => { void addToCart("modal"); }}
                     className="inline-flex min-h-12 items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] lg:px-8"
-                    style={accentColor ? { borderColor: `color-mix(in srgb, ${accentColor} 42%, white)`, color: `color-mix(in srgb, ${accentColor} 86%, #111827)`, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 12%, white) 0%, color-mix(in srgb, ${accentColor} 24%, white) 100%)`, boxShadow: `0 8px 18px color-mix(in srgb, ${accentColor} 15%, rgba(15,23,42,0.09))` } : undefined}
+                    style={{ borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: cleanAccentSoft, boxShadow: "0 8px 18px rgba(15,23,42,0.065)" }}
                   >
                     {buttonState === "adding" ? "Adding..." : "Add"}
                   </button>

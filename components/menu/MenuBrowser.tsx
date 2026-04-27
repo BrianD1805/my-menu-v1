@@ -372,6 +372,7 @@ export default function MenuBrowser({
                   tenantSlug={tenantSlug}
                   moneySettings={moneySettings}
                   accentColor={accentColor}
+                  primaryColor={primaryColor}
                   onAddToCartAnimation={(payload) => launchAddToCartAnimation({ ...payload, destination: "header" })}
                 />
               ))}
