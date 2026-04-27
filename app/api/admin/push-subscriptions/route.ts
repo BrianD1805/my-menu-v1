@@ -11,41 +11,66 @@ type PushSubscriptionPayload = {
   };
 };
 
+const vapidConfigured = () =>
+  Boolean(
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
+      process.env.VAPID_PRIVATE_KEY?.trim() &&
+      process.env.VAPID_SUBJECT?.trim()
+  );
+
 export async function GET(req: Request) {
   const auth = await requireAdminApiUser(req);
   if ("error" in auth) return auth.error;
 
-  const { count, error } = await db
+  const { data, error } = await db
     .from("admin_push_subscriptions")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", auth.tenant.id)
-    .eq("enabled", true);
+    .select("id,enabled,updated_at,last_seen_at")
+    .eq("tenant_id", auth.tenant.id);
 
   if (error) {
     return NextResponse.json(
       {
         ok: false,
         error: `Could not load saved devices: ${error.message}`,
-        vapidConfigured: Boolean(
-          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
-            process.env.VAPID_PRIVATE_KEY?.trim() &&
-            process.env.VAPID_SUBJECT?.trim()
-        ),
+        vapidConfigured: vapidConfigured(),
         activeSubscriptions: 0,
+        disabledSubscriptions: 0,
+        totalSubscriptions: 0,
+        alertStatus: "error",
+        warning: "Admin push health could not be checked. Please test admin push before relying on new order alerts.",
         permissionHint: "Use an installed admin PWA on phone for the best result.",
       },
       { status: 500 }
     );
   }
 
+  const rows = data || [];
+  const activeSubscriptions = rows.filter((row) => row.enabled === true).length;
+  const disabledSubscriptions = rows.filter((row) => row.enabled === false).length;
+  const totalSubscriptions = rows.length;
+  const latestSeenAt = rows
+    .map((row) => row.last_seen_at || row.updated_at)
+    .filter(Boolean)
+    .sort()
+    .at(-1) || null;
+
+  const alertStatus = activeSubscriptions > 0 ? "active" : disabledSubscriptions > 0 ? "disabled" : "missing";
+  const warning =
+    activeSubscriptions > 0
+      ? null
+      : disabledSubscriptions > 0
+        ? "Admin order alerts are currently disabled. You may miss new order notifications until admin push is re-enabled."
+        : "No active admin push device is saved. You may miss new order notifications until admin push is enabled.";
+
   return NextResponse.json({
     ok: true,
-    vapidConfigured: Boolean(
-      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() &&
-        process.env.VAPID_PRIVATE_KEY?.trim() &&
-        process.env.VAPID_SUBJECT?.trim()
-    ),
-    activeSubscriptions: count || 0,
+    vapidConfigured: vapidConfigured(),
+    activeSubscriptions,
+    disabledSubscriptions,
+    totalSubscriptions,
+    alertStatus,
+    warning,
+    latestSeenAt,
     permissionHint: "Use an installed admin PWA on phone for the best result.",
   });
 }

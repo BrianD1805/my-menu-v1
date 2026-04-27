@@ -5,7 +5,12 @@ import { LIVE_VERSION } from "@/lib/version";
 
 type RemoteStatus = {
   activeSubscriptions: number;
+  disabledSubscriptions?: number;
+  totalSubscriptions?: number;
   vapidConfigured: boolean;
+  alertStatus?: "active" | "disabled" | "missing" | "error";
+  warning?: string | null;
+  latestSeenAt?: string | null;
   permissionHint?: string;
   error?: string;
 };
@@ -195,10 +200,24 @@ export default function AdminPushNotificationsCard() {
 
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
           <p><span className="font-semibold text-slate-900">Permission:</span> {permission}</p>
-          <p className="mt-1"><span className="font-semibold text-slate-900">Saved devices:</span> {remoteStatus?.activeSubscriptions ?? 0}</p>
+          <p className="mt-1"><span className="font-semibold text-slate-900">Alert status:</span> {remoteStatus?.alertStatus === "active" ? "active" : "needs attention"}</p>
+          <p className="mt-1"><span className="font-semibold text-slate-900">Enabled devices:</span> {remoteStatus?.activeSubscriptions ?? 0}</p>
+          <p className="mt-1"><span className="font-semibold text-slate-900">Disabled devices:</span> {remoteStatus?.disabledSubscriptions ?? 0}</p>
           <p className="mt-1"><span className="font-semibold text-slate-900">VAPID:</span> {remoteStatus?.vapidConfigured ? "configured" : "missing"}</p>
         </div>
       </div>
+
+      {remoteStatus?.warning ? (
+        <div className="mt-5 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+          <p className="font-bold">⚠️ Admin order alerts need attention</p>
+          <p className="mt-1">{remoteStatus.warning}</p>
+          <p className="mt-2 font-semibold">Tap Enable admin push, then send a real push test before relying on new-order alerts.</p>
+        </div>
+      ) : remoteStatus?.activeSubscriptions ? (
+        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          Admin order alerts are active on {remoteStatus.activeSubscriptions} enabled device(s).
+        </div>
+      ) : null}
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">

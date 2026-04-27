@@ -100,8 +100,23 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
     .eq("tenant_id", tenantId)
     .eq("enabled", true);
 
-  if (error || !data?.length) {
-    return { ok: false, reason: error ? "query_failed" as const : "no_subscriptions" as const, sent: 0, failed: 0 };
+  if (error) {
+    return { ok: false, reason: "query_failed" as const, sent: 0, failed: 0 };
+  }
+
+  if (!data?.length) {
+    await db.from("notification_events").insert({
+      tenant_id: tenantId,
+      audience: "admin",
+      channel: "in_app",
+      event_type: "admin_push_no_enabled_devices",
+      title: "Admin push not active",
+      body: "A new-order admin push could not be sent because no enabled admin push devices were found for this tenant.",
+      payload: { route: "/admin", action: "enable_admin_push" },
+      status: "warning",
+    });
+
+    return { ok: false, reason: "no_subscriptions" as const, sent: 0, failed: 0 };
   }
 
   let sent = 0;

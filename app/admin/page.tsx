@@ -51,11 +51,13 @@ export default async function AdminHomePage() {
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
-  const [{ count: orderCount }, { count: productCount }, { count: categoryCount }, { count: newOrderCount }] = await Promise.all([
+  const [{ count: orderCount }, { count: productCount }, { count: categoryCount }, { count: newOrderCount }, { count: enabledAdminPushCount }, { count: disabledAdminPushCount }] = await Promise.all([
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("products").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("categories").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("status", "new"),
+    db.from("admin_push_subscriptions").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("enabled", true),
+    db.from("admin_push_subscriptions").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("enabled", false),
   ]);
 
   return (
@@ -69,6 +71,20 @@ export default async function AdminHomePage() {
       accentColor={branding.accentColor}
     >
       <AdminInstallCard />
+
+      {!enabledAdminPushCount ? (
+        <div className="mt-6 rounded-[28px] border border-amber-300 bg-amber-50 p-5 text-amber-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">Admin push health warning</p>
+          <h2 className="mt-2 text-xl font-bold text-amber-950">New order alerts are not active</h2>
+          <p className="mt-2 text-sm leading-6">
+            This tenant currently has no enabled admin push device. You may miss new-order notifications until admin push is enabled and tested again.
+          </p>
+          <p className="mt-2 text-sm font-semibold">
+            Enabled devices: {enabledAdminPushCount || 0} · Disabled devices: {disabledAdminPushCount || 0}
+          </p>
+        </div>
+      ) : null}
+
       <div className="mt-6">
         <AdminPushNotificationsCard />
       </div>
