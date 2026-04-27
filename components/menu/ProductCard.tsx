@@ -115,8 +115,12 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
             <button
               type="button"
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-medium shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition disabled:cursor-not-allowed disabled:opacity-80 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
-              style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 8%, white), color-mix(in srgb, ${accentColor} 14%, white))` } : undefined}
+              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-semibold shadow-[0_7px_16px_rgba(15,23,42,0.065)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-85 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
+              style={buttonState === "added"
+                ? { borderColor: "rgba(16,185,129,0.42)", color: "#047857", background: "linear-gradient(180deg, rgba(236,253,245,0.98) 0%, rgba(209,250,229,0.98) 100%)", boxShadow: "0 8px 18px rgba(5,150,105,0.13)" }
+                : accentColor
+                  ? { borderColor: `color-mix(in srgb, ${accentColor} 42%, white)`, color: `color-mix(in srgb, ${accentColor} 86%, #111827)`, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 12%, white) 0%, color-mix(in srgb, ${accentColor} 24%, white) 100%)`, boxShadow: `0 7px 16px color-mix(in srgb, ${accentColor} 15%, rgba(15,23,42,0.09))` }
+                  : undefined}
               onClick={() => void addToCart("card")}
               disabled={buttonState === "adding"}
             >
@@ -126,8 +130,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-medium shadow-[0_6px_14px_rgba(15,23,42,0.045)] transition sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
-              style={accentColor ? { borderColor: `${accentColor}55`, color: accentColor, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 8%, white), color-mix(in srgb, ${accentColor} 14%, white))` } : undefined}
+              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-semibold shadow-[0_7px_16px_rgba(15,23,42,0.055)] transition hover:-translate-y-[1px] sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
+              style={accentColor ? { borderColor: `color-mix(in srgb, ${accentColor} 36%, white)`, color: `color-mix(in srgb, ${accentColor} 76%, #1f2937)`, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 6%, white) 0%, color-mix(in srgb, ${accentColor} 16%, white) 100%)` } : undefined}
               aria-label={`More info for ${name}`}
               title="More info"
             >
@@ -190,7 +194,14 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
-                  <button type="button" onClick={() => { void addToCart("modal"); setDetailsOpen(false); }} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-medium text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 lg:px-8">{buttonState === "adding" ? "Adding..." : "Add"}</button>
+                  <button
+                    type="button"
+                    onClick={() => { void addToCart("modal"); }}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] lg:px-8"
+                    style={accentColor ? { borderColor: `color-mix(in srgb, ${accentColor} 42%, white)`, color: `color-mix(in srgb, ${accentColor} 86%, #111827)`, background: `linear-gradient(180deg, color-mix(in srgb, ${accentColor} 12%, white) 0%, color-mix(in srgb, ${accentColor} 24%, white) 100%)`, boxShadow: `0 8px 18px color-mix(in srgb, ${accentColor} 15%, rgba(15,23,42,0.09))` } : undefined}
+                  >
+                    {buttonState === "adding" ? "Adding..." : "Add"}
+                  </button>
                 </div>
               </div>
             </div>
