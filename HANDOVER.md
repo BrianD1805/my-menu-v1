@@ -392,3 +392,22 @@ Included in this patch:
 
 ## Ver-0.116G
 - Fixed the `/api/orders` `customerAccountId` response scope issue by using a safely scoped saved customer account id variable.
+
+
+## Ver-0.116H
+- Wrote `customer_account_id` directly into the real orders insert in `app/api/orders/route.ts`.
+- This avoids losing the signed-in customer account id through intermediate linkage logic.
+
+
+## Ver-0.116I
+- Fixed the `CreateOrderInput` type so `customerAccountId` and `tenantId` are recognised in `/api/orders`.
+- Also made the response echo safe even if local types lag behind.
+
+
+## Ver-0.116J
+- Fixed duplicate `tenantId` in `lib/types.ts` by normalising the `CreateOrderInput` type block.
+
+
+## Ver-0.116K
+- Directly wrote `customer_account_id` into the actual orders insert block in `app/api/orders/route.ts`.
+- This patch fixes the confirmed gap where checkout payload was correct but the final insert still omitted the field.

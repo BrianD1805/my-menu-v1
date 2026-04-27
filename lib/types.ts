@@ -31,13 +31,17 @@ export type CartItemInput = {
 
 export type CreateOrderInput = {
   tenantSlug: string;
-  tenantId?: string;
+  tenantId?: string | null;
   customerName: string;
   customerPhone: string;
-  customerAddress?: string;
+  customerAccountId?: string | null;
+  customerAddress?: string | null;
   orderType: "delivery" | "collection";
-  notes?: string;
-  items: CartItemInput[];
+  notes?: string | null;
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
 };
 
 

@@ -112,6 +112,7 @@ export async function POST(req: Request) {
         tenant_id: tenant.id,
         customer_name: body.customerName.trim(),
         customer_phone: body.customerPhone.trim(),
+        customer_account_id: body.customerAccountId?.trim() || null,
         customer_address:
           body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
         order_type: body.orderType,
@@ -183,7 +184,7 @@ export async function POST(req: Request) {
       }),
     ]);
 
-    return NextResponse.json({ ok: true, orderId: order.id, customerAccountId: savedCustomerAccountIdForResponse });
+    return NextResponse.json({ ok: true, orderId: order.id, customerAccountId: body.customerAccountId?.trim() || null });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
