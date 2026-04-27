@@ -130,6 +130,9 @@ export default function ProductManager({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const createImageInputRef = useRef<HTMLInputElement | null>(null);
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [newImagePreviewUrl, setNewImagePreviewUrl] = useState("");
 
   const sortedProducts = useMemo(() => [...products].sort((a, b) => a.name.localeCompare(b.name)), [products]);
   const filteredProducts = useMemo(() => {
@@ -156,8 +159,25 @@ export default function ProductManager({
     };
   }, [modalOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (newImagePreviewUrl) {
+        URL.revokeObjectURL(newImagePreviewUrl);
+      }
+    };
+  }, [newImagePreviewUrl]);
+
   function categoryNameFor(id: string) {
     return categories.find((category) => category.id === id)?.name || null;
+  }
+
+  function clearCreateImageSelection() {
+    if (newImagePreviewUrl) {
+      URL.revokeObjectURL(newImagePreviewUrl);
+    }
+    setNewImageFile(null);
+    setNewImagePreviewUrl("");
+    if (createImageInputRef.current) createImageInputRef.current.value = "";
   }
 
   function openCreateModal() {
@@ -165,12 +185,14 @@ export default function ProductManager({
     setEditingId(null);
     setEditingDraft(null);
     setNewDraft(emptyDraft(categories[0]?.id || ""));
+    clearCreateImageSelection();
     setGlobalMessage("");
   }
 
   function closeCreateModal() {
     setCreating(false);
     setNewDraft(emptyDraft(categories[0]?.id || ""));
+    clearCreateImageSelection();
   }
 
   function startEdit(product: ProductRow) {
@@ -192,9 +214,25 @@ export default function ProductManager({
     setEditingDraft(null);
   }
 
+  async function uploadImageForProduct(productId: string, file: File) {
+    const formData = new FormData();
+    formData.append("productId", productId);
+    formData.append("file", file);
+
+    const response = await fetch("/api/admin/products/image", {
+      method: "POST",
+      body: formData,
+    });
+
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Failed to upload image");
+
+    return payload.product?.image_url || "";
+  }
+
   async function createProduct() {
     setBusyCrud("create");
-    setGlobalMessage("Creating product...");
+    setGlobalMessage(newImageFile ? "Creating product and preparing image..." : "Creating product...");
     try {
       const response = await fetch("/api/admin/products", {
         method: "POST",
@@ -211,10 +249,17 @@ export default function ProductManager({
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to create product");
 
-      const product = {
+      let product = {
         ...payload.product,
         category_name: categoryNameFor(payload.product.category_id),
       } as ProductRow;
+
+      if (newImageFile) {
+        setUploadingId(product.id);
+        setGlobalMessage("Product created. Uploading image...");
+        const imageUrl = await uploadImageForProduct(product.id, newImageFile);
+        product = { ...product, image_url: imageUrl || null };
+      }
 
       setProducts((current) => [...current, product]);
       setCreating(false);
@@ -227,11 +272,13 @@ export default function ProductManager({
         isActive: !!product.is_active,
         imageUrl: product.image_url || "",
       });
-      setGlobalMessage("Product created. You can keep editing it here, including uploading an image file.");
+      clearCreateImageSelection();
+      setGlobalMessage(newImageFile ? "Product created with image" : "Product created");
     } catch (error) {
       setGlobalMessage(error instanceof Error ? error.message : "Failed to create product");
     } finally {
       setBusyCrud(null);
+      setUploadingId(null);
     }
   }
 
@@ -309,19 +356,7 @@ export default function ProductManager({
     setGlobalMessage("Uploading image...");
 
     try {
-      const formData = new FormData();
-      formData.append("productId", editingId);
-      formData.append("file", file);
-
-      const response = await fetch("/api/admin/products/image", {
-        method: "POST",
-        body: formData,
-      });
-
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Failed to upload image");
-
-      const imageUrl = payload.product?.image_url || "";
+      const imageUrl = await uploadImageForProduct(editingId, file);
       setEditingDraft((current) => (current ? { ...current, imageUrl } : current));
       setProducts((current) =>
         current.map((product) => (product.id === editingId ? { ...product, image_url: imageUrl || null } : product))
@@ -341,6 +376,8 @@ export default function ProductManager({
   }
 
   const activeDraft = creating ? newDraft : editingDraft;
+  const activeImagePreview = creating ? newImagePreviewUrl || activeDraft?.imageUrl || "" : activeDraft?.imageUrl || "";
+  const createImageButtonLabel = newImageFile ? `Selected: ${newImageFile.name}` : "Choose image file";
 
   return (
     <>
@@ -382,7 +419,7 @@ export default function ProductManager({
           </div>
         </section>
 
-        <div className="space-y-4">
+        <div className="grid gap-4 lg:grid-cols-2">
           {sortedProducts.length ? sortedProducts.map((product) => {
             const hasImage = !!product.image_url;
             return (
@@ -433,7 +470,7 @@ export default function ProductManager({
               </div>
             );
           }) : (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm lg:col-span-2">
               <p className="text-lg font-semibold text-slate-900">No products yet</p>
               <p className="mt-2 text-sm text-slate-600">Add your first product to start building the menu.</p>
             </div>
@@ -692,46 +729,61 @@ export default function ProductManager({
                         placeholder="https://example.com/product-image.jpg"
                         className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
                       />
-                      <p className="mt-2 text-xs text-slate-500">Paste a direct image link here, or upload an image file once the product exists.</p>
+                      <p className="mt-2 text-xs text-slate-500">Paste a direct image link, or choose an image file below. File uploads accept common image types up to 5MB.</p>
                     </div>
 
-                    {!creating ? (
-                      <div className="rounded-[24px] border border-dashed border-slate-300 bg-white p-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(event) => {
-                              const file = event.target.files?.[0] || null;
+                    <div className="rounded-[24px] border border-dashed border-slate-300 bg-white p-4">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <input
+                          ref={creating ? createImageInputRef : fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0] || null;
+                            if (creating) {
+                              if (newImagePreviewUrl) URL.revokeObjectURL(newImagePreviewUrl);
+                              setNewImageFile(file);
+                              setNewImagePreviewUrl(file ? URL.createObjectURL(file) : "");
+                            } else {
                               void uploadImage(file);
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadingId === editingId}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-green-200 bg-green-50 px-5 py-3 text-sm font-semibold text-green-800 transition hover:bg-green-100 disabled:opacity-60"
-                          >
-                            {uploadingId === editingId ? "Uploading..." : "Upload image file"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void removeImage()}
-                            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                          >
-                            Remove image
-                          </button>
-                        </div>
-                        <p className="mt-2 text-xs text-slate-500">Uploads accept common image types up to 5MB.</p>
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => (creating ? createImageInputRef.current?.click() : fileInputRef.current?.click())}
+                          disabled={!creating && uploadingId === editingId}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-green-200 bg-green-50 px-5 py-3 text-sm font-semibold text-green-800 transition hover:bg-green-100 disabled:opacity-60"
+                        >
+                          {creating ? createImageButtonLabel : uploadingId === editingId ? "Uploading..." : "Upload image file"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (creating) {
+                              clearCreateImageSelection();
+                              setNewDraft((current) => ({ ...current, imageUrl: "" }));
+                            } else {
+                              void removeImage();
+                            }
+                          }}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                        >
+                          Remove image
+                        </button>
                       </div>
-                    ) : null}
+                      <p className="mt-2 text-xs text-slate-500">
+                        {creating
+                          ? "Choose the image now and it will upload automatically when you create the product."
+                          : "Uploads update this product immediately."}
+                      </p>
+                    </div>
 
                     <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
                       <div className="aspect-[4/3] bg-slate-100">
-                        {activeDraft.imageUrl ? (
-                          <img src={activeDraft.imageUrl} alt={activeDraft.name || "Product preview"} className="h-full w-full object-cover" />
+                        {activeImagePreview ? (
+                          <img src={activeImagePreview} alt={activeDraft.name || "Product preview"} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">Image preview will appear here</div>
                         )}
