@@ -354,92 +354,43 @@ useEffect(() => {
 
   if (successState) {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center p-4 sm:p-6" style={{ backgroundColor: checkoutBackground }}>
-        <div className="w-full overflow-hidden rounded-[32px] border bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]" style={{ borderColor: checkoutBorder }}>
-          <div className="relative overflow-hidden px-6 py-8 text-white sm:px-8 sm:py-10" style={{ background: `linear-gradient(135deg, ${checkoutPrimary} 0%, color-mix(in srgb, ${checkoutPrimary} 78%, ${checkoutAccent}) 100%)` }}>
+      <main className="min-h-screen w-full px-4 py-6 sm:px-6 sm:py-8" style={{ backgroundColor: checkoutBackground }}>
+        <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-[32px] border bg-white shadow-[0_24px_80px_rgba(15,23,42,0.12)]" style={{ borderColor: checkoutBorder }}>
+          <section className="relative overflow-hidden px-6 py-8 text-white sm:px-8 sm:py-10" style={{ background: `linear-gradient(135deg, ${checkoutPrimary} 0%, color-mix(in srgb, ${checkoutPrimary} 78%, ${checkoutAccent}) 100%)` }}>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.18),transparent_24%)]" />
-            <div className="relative">
-              <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/18 text-3xl ring-1 ring-white/30 backdrop-blur-sm">
-                ✓
+            <div className="relative grid gap-6 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
+              <div>
+                <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/18 text-3xl ring-1 ring-white/30 backdrop-blur-sm">
+                  ✓
+                </div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">Order confirmed</p>
+                <h1 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
+                  Thanks, {successState.customerName}. Your order is in.
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
+                  We’ve received your order and sent it through to the team.
+                </p>
               </div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
-                Order confirmed
-              </p>
-              <h1 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-                Thanks, {successState.customerName}. Your order is in.
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
-                We’ve saved your order successfully and cleared your cart, so you’re ready whenever you’d like to place another one.
-              </p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
-                  Ref: <span className="font-semibold">{successState.orderId}</span>
+              <div className="rounded-[26px] bg-white/14 p-4 text-sm ring-1 ring-white/20 backdrop-blur-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-white/75">Total</span>
+                  <span className="text-lg font-bold">{formatMoney(successState.total, tenantSettings)}</span>
                 </div>
-                <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
-                  Total: <span className="font-semibold">{formatMoney(successState.total, tenantSettings)}</span>
+                <div className="mt-3 flex items-center justify-between gap-4 border-t border-white/15 pt-3">
+                  <span className="text-white/75">Items</span>
+                  <span className="font-semibold">{successState.itemCount}</span>
                 </div>
-                <div className="rounded-full bg-white/14 px-4 py-2 text-sm font-medium ring-1 ring-white/20 backdrop-blur-sm">
-                  {successState.itemCount} item{successState.itemCount === 1 ? "" : "s"}
+                <div className="mt-3 border-t border-white/15 pt-3">
+                  <p className="text-white/75">Reference</p>
+                  <p className="mt-1 break-all font-semibold">{successState.orderId}</p>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_0.8fr]">
-            <section className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer notification flow</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">This order now creates customer notification events ready for future push delivery. The live customer steps will follow this journey.</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["Received", "Your order has been placed successfully."],
-                    ["Accepted", "The business confirms the order and starts work."],
-                    ["Preparing", "Your food is being prepared."],
-                    ["Ready / Completed", "The order is ready or finished."],
-                  ].map(([title, body], index) => (
-                    <div key={title} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Step {index + 1}</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">{title}</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-                <div className="rounded-2xl border bg-white p-4" style={{ borderColor: checkoutBorder, backgroundColor: checkoutBackground }}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Order type</p>
-                  <p className="mt-2 text-base font-semibold capitalize text-gray-900">{successState.orderType}</p>
-                </div>
-                <div className="rounded-2xl border bg-white p-4" style={{ borderColor: checkoutBorder, backgroundColor: checkoutBackground }}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Phone</p>
-                  <p className="mt-2 text-base font-semibold text-gray-900">{successState.customerPhone}</p>
-                </div>
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:col-span-2 xl:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">{successState.orderType === "collection" ? "Collection" : "Delivery address"}</p>
-                  <p className="mt-2 text-base font-semibold text-gray-900">
-                    {successState.orderType === "collection"
-                      ? "Collection order confirmed"
-                      : successState.customerAddress || "No address supplied"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: checkoutBorder }}>
-                <div className="mb-4 flex items-center justify-between gap-4 border-b border-gray-100 pb-4">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">What happens next</p>
-                    <p className="mt-1 text-sm text-gray-600">A simple confirmation so the customer knows the order is safely through.</p>
-                  </div>
-                  <span className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }}>
-                    Saved
-                  </span>
-                </div>
-
-                
-
-
-
+          <section className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="space-y-5">
               <CustomerPushNotificationsCard
                 tenantSlug={successState.tenantSlug}
                 orderId={successState.orderId}
@@ -448,35 +399,28 @@ useEffect(() => {
                 customerAccountId={customerAccount?.id || null}
               />
 
-                  <div className="space-y-3">
-                  {successState.whatsappAppUrl || successState.whatsappUrl ? (
-                    <p className="text-xs leading-5 text-gray-500">
-                      WhatsApp auto-open is paused for now. Use the button below only when the customer wants to send manually.
-                    </p>
-                  ) : null}
+              <div className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: checkoutBorder }}>
+                <p className="text-sm font-semibold text-gray-950">What happens next</p>
+                <div className="mt-4 space-y-4">
                   <div className="flex gap-3">
                     <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }}>1</div>
                     <div>
-                      <p className="font-medium text-gray-900">Your order has been received</p>
-                      <p className="text-sm leading-6 text-gray-600">It has been saved successfully and is ready for the restaurant to review.</p>
+                      <p className="font-medium text-gray-900">The team reviews your order</p>
+                      <p className="text-sm leading-6 text-gray-600">You’ll be updated when it is accepted and being prepared.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }}>2</div>
                     <div>
-                      <p className="font-medium text-gray-900">Your cart is now empty</p>
-                      <p className="text-sm leading-6 text-gray-600">That keeps your next order clean and avoids old items carrying over.</p>
+                      <p className="font-medium text-gray-900">Keep this page or your phone nearby</p>
+                      <p className="text-sm leading-6 text-gray-600">If you enable updates, this device can receive order status notifications.</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">3</div>
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }}>3</div>
                     <div>
-                      <p className="font-medium text-gray-900">You can head back to the menu any time</p>
-                      <p className="text-sm leading-6 text-gray-600">
-                        {successState.whatsappPaused
-                          ? "Automatic WhatsApp opening is switched off for now. Use the manual button below only if the customer wants to send the order in WhatsApp."
-                          : "Automatic WhatsApp opening is switched off for now. Use the manual button below only if the customer wants to send the order in WhatsApp."}
-                      </p>
+                      <p className="font-medium text-gray-900">Come back to the menu any time</p>
+                      <p className="text-sm leading-6 text-gray-600">Your cart has been cleared so your next order starts fresh.</p>
                     </div>
                   </div>
                 </div>
@@ -484,27 +428,29 @@ useEffect(() => {
 
               {successState.notes ? (
                 <div className="rounded-[28px] border border-gray-200 bg-gray-50 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Order notes</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Your order notes</p>
                   <p className="mt-3 text-sm leading-6 text-gray-700">{successState.notes}</p>
                 </div>
               ) : null}
-            </section>
+            </div>
 
-            <aside className="space-y-4">
-              <div className="rounded-[28px] border border-emerald-100 bg-emerald-50 p-5 text-emerald-950">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Order summary</p>
-                <div className="mt-4 space-y-3 text-sm">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-emerald-800/80">Reference</span>
-                    <span className="font-semibold">{successState.orderId}</span>
+            <aside className="space-y-5">
+              <div className="rounded-[28px] border bg-white p-5 shadow-sm" style={{ borderColor: checkoutBorder }}>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Order details</p>
+                <div className="mt-4 space-y-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">Order type</p>
+                    <p className="mt-1 font-semibold capitalize text-gray-950">{successState.orderType}</p>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-emerald-800/80">Items</span>
-                    <span className="font-semibold">{successState.itemCount}</span>
+                  <div>
+                    <p className="text-gray-500">Phone</p>
+                    <p className="mt-1 font-semibold text-gray-950">{successState.customerPhone}</p>
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-emerald-800/80">Total</span>
-                    <span className="text-lg font-bold">{formatMoney(successState.total, tenantSettings)}</span>
+                  <div>
+                    <p className="text-gray-500">{successState.orderType === "collection" ? "Collection" : "Delivery address"}</p>
+                    <p className="mt-1 leading-6 font-semibold text-gray-950">
+                      {successState.orderType === "collection" ? "Collection order" : successState.customerAddress || "No address supplied"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -517,7 +463,7 @@ useEffect(() => {
                       className="w-full rounded-2xl px-5 py-3.5 text-sm font-semibold text-white transition"
                       style={{ backgroundColor: checkoutPrimary }}
                     >
-                      Send on WhatsApp manually
+                      Send on WhatsApp
                     </button>
                   ) : null}
                   <button
@@ -533,21 +479,21 @@ useEffect(() => {
                     onClick={() => resetCheckoutForNewOrder()}
                     className="w-full rounded-2xl border border-gray-300 bg-white px-5 py-3.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
                   >
-                    Start a new order
+                    Start another order
                   </button>
                 </div>
               </div>
+
+              <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                <p className="font-semibold text-slate-900">{tenantSettings.displayName || "Business details"}</p>
+                <div className="mt-2 space-y-1">
+                  {tenantSettings.contactPhone ? <p>Phone: {tenantSettings.contactPhone}</p> : null}
+                  {tenantSettings.contactEmail ? <p>Email: {tenantSettings.contactEmail}</p> : null}
+                  {tenantSettings.contactAddress ? <p>Address: {tenantSettings.contactAddress}</p> : null}
+                </div>
+              </div>
             </aside>
-          </div>
-          <div className="border-t border-slate-100 bg-slate-50 px-6 py-5 text-sm text-slate-600 sm:px-8">
-            <p className="font-semibold text-slate-900">{tenantSettings.displayName || "Business details"}</p>
-            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
-              {tenantSettings.contactPhone ? <span>Phone: {tenantSettings.contactPhone}</span> : null}
-              {tenantSettings.contactEmail ? <span>Email: {tenantSettings.contactEmail}</span> : null}
-              {tenantSettings.contactAddress ? <span>Address: {tenantSettings.contactAddress}</span> : null}
-            </div>
-            <p className="mt-3 text-xs leading-5 text-slate-500">{tenantSettings.footerNotice || "Prices and availability may change without notice."}</p>
-          </div>
+          </section>
         </div>
       </main>
     );
