@@ -24,7 +24,6 @@ export default function AdminShell({
   description,
   current,
   children,
-  logoUrl,
   accentColor,
 }: {
   tenantName: string;
@@ -51,8 +50,8 @@ export default function AdminShell({
         <header className="overflow-hidden rounded-[34px] border border-[#0E0E10]/10 bg-white/[0.84] shadow-[0_34px_100px_rgba(14,14,16,0.12)] backdrop-blur-xl">
           <div className="flex flex-col gap-5 border-b border-[#0E0E10]/10 px-5 py-5 sm:px-7 sm:py-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
             <div className="flex min-w-0 items-center gap-3.5">
-              <div className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-[#0E0E10] text-lg font-black text-[#FF6A3D] shadow-[0_16px_36px_rgba(14,14,16,0.18)]">
-                {logoUrl ? <img src={logoUrl} alt={tenantName} className="h-full w-full object-cover" /> : <span>O</span>}
+              <div className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center overflow-hidden rounded-[18px] bg-[#0E0E10] shadow-[0_16px_36px_rgba(14,14,16,0.18)]">
+                <img src="/orduva-platform-icon-192.png" alt="Orduva Admin" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xl font-black tracking-tight text-[#0E0E10]">Orduva Admin</p>
