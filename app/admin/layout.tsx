@@ -14,11 +14,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/orduva-admin-icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/orduva-admin-icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/orduva-platform-icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/orduva-platform-icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    shortcut: "/orduva-admin-icon-192.png",
-    apple: [{ url: "/orduva-admin-icon-192.png", sizes: "192x192", type: "image/png" }],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/orduva-apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   themeColor: "#0E0E10",
   other: {
