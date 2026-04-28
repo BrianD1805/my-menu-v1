@@ -45,6 +45,12 @@ function OrduvaPlatformLanding() {
                 Admin login
               </a>
               <a
+                href="/platform/onboarding"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]"
+              >
+                Platform onboarding
+              </a>
+              <a
                 href="https://zimzaexpress.orduva.com"
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(14,14,16,0.20)] transition hover:-translate-y-[1px] hover:bg-[#252528]"
               >
@@ -73,10 +79,10 @@ function OrduvaPlatformLanding() {
                   See the live example
                 </a>
                 <a
-                  href="https://admin.orduva.com"
+                  href="/platform/onboarding"
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-6 py-3 text-sm font-black text-[#0E0E10] shadow-sm transition hover:-translate-y-[1px] hover:bg-[#F5F2EE]"
                 >
-                  Open admin
+                  Client onboarding
                 </a>
               </div>
 

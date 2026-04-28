@@ -101,7 +101,7 @@ export default function AdminShell({
       </div>
 
       <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-5 gap-2">
+        <div className="mx-auto grid max-w-6xl grid-cols-5 gap-1.5">
           {nav.map((item) => (
             <a
               key={item.href}
