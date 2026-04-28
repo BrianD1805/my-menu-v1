@@ -3,6 +3,7 @@ import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 const ROOT_PLATFORM_HOSTS = new Set([
   "orduva.com",
   "www.orduva.com",
+  "orduva.netlify.app",
 ]);
 
 const RESERVED_SUBDOMAINS = new Set([
@@ -35,6 +36,11 @@ function getTenantAlias(subdomain: string) {
   return TENANT_SUBDOMAIN_ALIASES[subdomain] || subdomain;
 }
 
+export function isRootPlatformHost(host: string) {
+  const hostname = normalizeHostname(host);
+  return ROOT_PLATFORM_HOSTS.has(hostname);
+}
+
 export function getTenantSubdomainFromHost(host: string) {
   const hostname = normalizeHostname(host);
   if (!hostname) return "";
@@ -46,7 +52,7 @@ export function getTenantSubdomainFromHost(host: string) {
   }
 
   if (isSharedAdminHost(hostname)) return "";
-  if (ROOT_PLATFORM_HOSTS.has(hostname)) return "";
+  if (isRootPlatformHost(hostname)) return "";
 
   if (hostname.endsWith(".orduva.com")) {
     const subdomain = hostname.replace(/\.orduva\.com$/, "").split(".").pop() || "";
