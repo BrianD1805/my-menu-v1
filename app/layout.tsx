@@ -6,6 +6,42 @@ import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 
+function buildRootPlatformMetadata(): Metadata {
+  return {
+    title: "Orduva | Online Ordering Platform",
+    description: "Orduva is a modern online ordering platform for restaurants, cafés, takeaways, and local businesses.",
+    applicationName: "Orduva",
+    manifest: "/manifest.webmanifest",
+    themeColor: "#0E0E10",
+    icons: {
+      icon: [
+        { url: "/favicon.ico" },
+        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { url: "/orduva-platform-icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/orduva-platform-icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/orduva-apple-touch-icon.png",
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "Orduva",
+    },
+    openGraph: {
+      title: "Orduva | Online Ordering Platform",
+      description: "Beautiful tenant storefronts, shared admin, customer accounts, and order notifications for food businesses.",
+      siteName: "Orduva",
+      type: "website",
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-title": "Orduva",
+    },
+  };
+}
+
 function buildAdminMetadata(): Metadata {
   return {
     title: "Orduva Admin",
@@ -41,6 +77,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
   if (routeKind === "admin" || isSharedAdminHost(host)) {
     return buildAdminMetadata();
+  }
+
+  const rootHosts = new Set(["orduva.com", "www.orduva.com", "orduva.netlify.app"]);
+  if (rootHosts.has(host)) {
+    return buildRootPlatformMetadata();
   }
 
   try {

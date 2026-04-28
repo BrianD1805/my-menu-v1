@@ -25,6 +25,29 @@ function buildStorefrontIcons(icon: string): MetadataRoute.Manifest["icons"] {
   ];
 }
 
+function buildRootPlatformManifest(): MetadataRoute.Manifest {
+  return {
+    id: "/?app=orduva-platform",
+    name: "Orduva",
+    short_name: "Orduva",
+    description: "Modern online ordering for restaurants, cafés, takeaways, and local businesses.",
+    start_url: "/?source=pwa&app=orduva-platform",
+    scope: "/",
+    display: "standalone",
+    display_override: ["standalone", "minimal-ui", "browser"],
+    orientation: "portrait",
+    background_color: "#0E0E10",
+    theme_color: "#0E0E10",
+    categories: ["business", "food", "productivity"],
+    icons: [
+      { src: "/orduva-platform-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/orduva-platform-icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/orduva-platform-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/orduva-platform-icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+}
+
 function buildAdminManifest(): MetadataRoute.Manifest {
   return {
     id: "/admin/app/orduva-admin",
@@ -54,6 +77,11 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
 
   if (isSharedAdminHost(host)) {
     return buildAdminManifest();
+  }
+
+  const rootHosts = new Set(["orduva.com", "www.orduva.com", "orduva.netlify.app"]);
+  if (rootHosts.has(host)) {
+    return buildRootPlatformManifest();
   }
 
   try {
