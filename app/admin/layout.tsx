@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     shortcut: "/orduva-admin-icon-192.png",
     apple: [{ url: "/orduva-admin-icon-192.png", sizes: "192x192", type: "image/png" }],
   },
-  themeColor: "#000000",
+  themeColor: "#0E0E10",
   other: {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",

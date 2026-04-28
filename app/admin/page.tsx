@@ -7,10 +7,10 @@ import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 function StatCard({ label, value, hint, urgent }: { label: string; value: string; hint: string; urgent?: boolean }) {
   return (
-    <div className={`rounded-[28px] border p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] ${urgent ? "border-amber-200 bg-amber-50/60" : "border-black/5 bg-white"}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{label}</p>
-      <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
-      <p className="mt-2 text-sm text-slate-600">{hint}</p>
+    <div className={`rounded-[28px] border p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] ${urgent ? "border-[#FFB168] bg-[#FFF7F0]" : "border-[#E7D8CC] bg-white"}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">{label}</p>
+      <p className="mt-3 text-3xl font-bold text-[#1F2328]">{value}</p>
+      <p className="mt-2 text-sm text-[#5C5F66]">{hint}</p>
     </div>
   );
 }
@@ -29,15 +29,15 @@ function ActionCard({
   return (
     <a
       href={href}
-      className="group rounded-[30px] border border-black/5 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]"
+      className="group rounded-[30px] border border-[#E7D8CC] bg-white p-6 shadow-[0_18px_50px_rgba(14,14,16,0.08)] transition hover:-translate-y-0.5 hover:border-[#FFB168] hover:shadow-[0_24px_60px_rgba(14,14,16,0.12)]"
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{eyebrow}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF6A3D]">{eyebrow}</p>
       <div className="mt-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">{body}</p>
+          <h2 className="text-2xl font-bold text-[#1F2328]">{title}</h2>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[#5C5F66]">{body}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition group-hover:border-slate-900 group-hover:text-slate-900">
+        <div className="rounded-2xl border border-[#E7D8CC] bg-[#FFF7F0] px-4 py-2 text-sm font-semibold text-[#1F2328] transition group-hover:border-[#FF6A3D] group-hover:text-[#FF6A3D]">
           Open
         </div>
       </div>
@@ -73,9 +73,9 @@ export default async function AdminHomePage() {
       <AdminInstallCard />
 
       {!enabledAdminPushCount ? (
-        <div className="mt-6 rounded-[28px] border border-amber-300 bg-amber-50 p-5 text-amber-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">Admin push health warning</p>
-          <h2 className="mt-2 text-xl font-bold text-amber-950">New order alerts are not active</h2>
+        <div className="mt-6 rounded-[28px] border border-[#FFB168] bg-[#FFF7F0] p-5 text-[#1F2328] shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF6A3D]">Admin push health warning</p>
+          <h2 className="mt-2 text-xl font-bold text-[#1F2328]">New order alerts are not active</h2>
           <p className="mt-2 text-sm leading-6">
             This tenant currently has no enabled admin push device. You may miss new-order notifications until admin push is enabled and tested again.
           </p>
