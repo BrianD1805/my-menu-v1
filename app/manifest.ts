@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { headers } from "next/headers";
-import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
+import { getTenantBySlug, isRootPlatformRequest, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 
@@ -79,8 +79,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     return buildAdminManifest();
   }
 
-  const rootHosts = new Set(["orduva.com", "www.orduva.com", "orduva.netlify.app"]);
-  if (rootHosts.has(host)) {
+  if (await isRootPlatformRequest()) {
     return buildRootPlatformManifest();
   }
 

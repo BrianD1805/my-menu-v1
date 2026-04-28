@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
-import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
+import { getTenantBySlug, isRootPlatformRequest, resolveTenantSlug } from "@/lib/tenant-server";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 
@@ -79,8 +79,7 @@ export async function generateMetadata(): Promise<Metadata> {
     return buildAdminMetadata();
   }
 
-  const rootHosts = new Set(["orduva.com", "www.orduva.com", "orduva.netlify.app"]);
-  if (rootHosts.has(host)) {
+  if (await isRootPlatformRequest()) {
     return buildRootPlatformMetadata();
   }
 

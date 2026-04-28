@@ -1,8 +1,6 @@
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 
-const ROOT_PLATFORM_HOSTS = new Set([
-  "orduva.com",
-  "www.orduva.com",
+const NETLIFY_ROOT_HOSTS = new Set([
   "orduva.netlify.app",
 ]);
 
@@ -13,15 +11,28 @@ const RESERVED_SUBDOMAINS = new Set([
   "api",
   "assets",
   "static",
+  "platform",
   "localhost",
 ]);
 
 const TENANT_SUBDOMAIN_ALIASES: Record<string, string> = {
   // ZimZa Express currently uses the existing tenant slug "orduva" in Supabase.
-  // The public storefront should now be able to live at zimzaexpress.orduva.com.
+  // The public storefront lives at zimzaexpress.orduva.com until that tenant slug is migrated.
   zimzaexpress: "orduva",
   "zimza-express": "orduva",
 };
+
+export function getRootDomain() {
+  return String(
+    process.env.NEXT_PUBLIC_ROOT_DOMAIN ||
+      process.env.ORDUVA_ROOT_DOMAIN ||
+      "orduva.com",
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
+}
 
 function getDefaultTenantSlug() {
   return (
@@ -38,7 +49,13 @@ function getTenantAlias(subdomain: string) {
 
 export function isRootPlatformHost(host: string) {
   const hostname = normalizeHostname(host);
-  return ROOT_PLATFORM_HOSTS.has(hostname);
+  const rootDomain = getRootDomain();
+
+  return (
+    hostname === rootDomain ||
+    hostname === `www.${rootDomain}` ||
+    NETLIFY_ROOT_HOSTS.has(hostname)
+  );
 }
 
 export function getTenantSubdomainFromHost(host: string) {
@@ -54,8 +71,11 @@ export function getTenantSubdomainFromHost(host: string) {
   if (isSharedAdminHost(hostname)) return "";
   if (isRootPlatformHost(hostname)) return "";
 
-  if (hostname.endsWith(".orduva.com")) {
-    const subdomain = hostname.replace(/\.orduva\.com$/, "").split(".").pop() || "";
+  const rootDomain = getRootDomain();
+  const rootSuffix = `.${rootDomain}`;
+
+  if (hostname.endsWith(rootSuffix)) {
+    const subdomain = hostname.slice(0, -rootSuffix.length).split(".").pop() || "";
     return RESERVED_SUBDOMAINS.has(subdomain) ? "" : subdomain;
   }
 

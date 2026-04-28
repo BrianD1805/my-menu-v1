@@ -269,7 +269,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 "Country-based currency defaults",
                 "Starter menu category",
                 "Optional owner login",
-                "Subdomain storefront preview",
+                "Wildcard tenant subdomain preview",
               ].map((item) => (
                 <div key={item} className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">✓</span>
@@ -285,6 +285,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <h2 className="mt-2 text-xl font-bold">{created.tenant.name}</h2>
               <div className="mt-4 space-y-2 text-sm leading-6">
                 <p><span className="font-semibold">Storefront:</span> {created.storefrontUrl}</p>
+                <p className="text-xs leading-5 text-emerald-800/80">This URL works automatically once the wildcard domain alias/DNS is active in Netlify.</p>
                 <p><span className="font-semibold">Admin:</span> {created.adminUrl}</p>
                 <p><span className="font-semibold">Owner login:</span> {created.ownerCreated ? "Created" : "Not created"}</p>
               </div>
