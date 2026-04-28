@@ -444,7 +444,6 @@ export default function ProductManager({
                           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">Inactive</span>
                         ) : null}
                       </div>
-                      {product.description ? <p className="mt-1 text-sm text-gray-600">{stripHtml(product.description).slice(0, 180)}{stripHtml(product.description).length > 180 ? "..." : ""}</p> : null}
                       <p className="mt-2 text-sm font-medium text-gray-900">{formatMoney(Number(product.price), moneySettings)}</p>
                     </div>
 
@@ -579,11 +578,6 @@ export default function ProductManager({
                                   <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-700">Inactive</span>
                                 ) : null}
                               </div>
-                              {product.description ? (
-                                <p className="mt-2 text-sm leading-6 text-slate-600">
-                                  {stripHtml(product.description).slice(0, 160)}{stripHtml(product.description).length > 160 ? "..." : ""}
-                                </p>
-                              ) : null}
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                                 <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(product.price), moneySettings)}</p>
                                 <button
