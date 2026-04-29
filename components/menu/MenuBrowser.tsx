@@ -136,6 +136,7 @@ export default function MenuBrowser({
   const [cartCount, setCartCount] = useState(0);
   const [cartPulseKey, setCartPulseKey] = useState(0);
   const [flyingItems, setFlyingItems] = useState<FlyingCartItem[]>([]);
+  const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(null);
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
@@ -143,6 +144,39 @@ export default function MenuBrowser({
   const brandBorder = borderColor || "#D9C7A3";
   const brandText = textColor || "#2B2B2B";
   const brandAccentBorder = brandBorder;
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3500);
+
+    async function loadCustomerWelcomeName() {
+      try {
+        const res = await fetch("/api/customer/auth/me", { cache: "no-store", signal: controller.signal });
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok && data?.customer) {
+          const fullName = String(data.customer.fullName || "").trim();
+          const email = String(data.customer.email || "").trim();
+          const firstName = fullName.split(/\s+/).filter(Boolean)[0] || email.split("@")[0] || null;
+          setWelcomeCustomerName(firstName);
+        } else if (!cancelled) {
+          setWelcomeCustomerName(null);
+        }
+      } catch {
+        if (!cancelled) setWelcomeCustomerName(null);
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    }
+
+    void loadCustomerWelcomeName();
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -340,8 +374,8 @@ export default function MenuBrowser({
         </div>
       </div>
 
-      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(248,244,240,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ borderColor: brandAccentBorder, boxShadow: `0 18px 50px color-mix(in srgb, ${brandPrimary} 10%, rgba(15,23,42,0.07))` }}>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: brandAccent }}>Welcome</p>
+      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(248,244,240,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ borderColor: brandAccentBorder, boxShadow: `0 16px 36px color-mix(in srgb, ${brandAccent} 16%, transparent)` }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: brandAccent }}>{welcomeCustomerName ? `Welcome, ${welcomeCustomerName}` : "Welcome"}</p>
         <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight sm:text-[2.35rem] lg:text-[2.65rem]" style={{ color: brandPrimary }}>{welcomeHeading || "Browse the menu"}</h2>
         <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7" style={{ color: brandText }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
