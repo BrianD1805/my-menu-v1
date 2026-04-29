@@ -433,7 +433,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </div>
       </form>
 
-      <div className="space-y-5 xl:sticky xl:top-28 xl:self-start">
+      <div className="space-y-5 lg:sticky lg:top-[170px] lg:mt-28 lg:self-start xl:top-[190px]">
         <div className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
