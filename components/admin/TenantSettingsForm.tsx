@@ -433,16 +433,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </div>
       </form>
 
-      <div className="space-y-5 xl:sticky xl:top-6 xl:self-start">
-        <div className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
+      <div className="space-y-3 xl:sticky xl:top-5 xl:self-start">
+        <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Live section preview</p>
-              <h3 className="mt-1 text-xl font-bold text-slate-900">{labelForPreview(previewTarget)}</h3>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Live section preview</p>
+              <h3 className="mt-1 text-lg font-bold text-slate-900">{labelForPreview(previewTarget)}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
               {THEME_GROUPS.map((group) => (
-                <button key={group.id} type="button" onClick={() => setPreviewTarget(group.id)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${previewTarget === group.id ? "border-orange-300 bg-orange-50 text-orange-900" : "border-slate-200 bg-white text-slate-600"}`}>{group.title}</button>
+                <button key={group.id} type="button" onClick={() => setPreviewTarget(group.id)} className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${previewTarget === group.id ? "border-orange-300 bg-orange-50 text-orange-900" : "border-slate-200 bg-white text-slate-600"}`}>{group.title}</button>
               ))}
             </div>
           </div>
@@ -459,10 +459,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           />
         </div>
 
-        <div className="rounded-[30px] border border-orange-100 bg-orange-50 p-5 text-sm leading-6 text-orange-950 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-900">Suggested colours</p>
-          <p className="mt-2 text-sm leading-6 text-orange-950/80">Use these as reference colours while editing. Add your own hex colour below to keep it handy during this session.</p>
-          <div className="mt-4 flex flex-wrap gap-2">
+        <div className="rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">Suggested colours</p>
+          <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing. Add your own hex colour below.</p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {suggestedColours.map((colour) => (
               <button
                 key={colour}
@@ -472,29 +472,29 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   setTone("info");
                   setMessage(`Copied ${colour}. Paste it into any colour field.`);
                 }}
-                className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm"
                 title={`Copy ${colour}`}
               >
-                <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: colour }} />
+                <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ backgroundColor: colour }} />
                 {colour}
               </button>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-[1fr_42px_auto] gap-2">
+          <div className="mt-3 grid grid-cols-[1fr_38px_auto] gap-2">
             <input
               value={customSuggestedHex}
               onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
-              className="rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-400"
+              className="rounded-xl border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-400"
               placeholder="#FF6A3D"
             />
             <input
               type="color"
               value={/^#[0-9a-fA-F]{6}$/.test(customSuggestedHex) ? customSuggestedHex : "#ffffff"}
               onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
-              className="h-10 w-full rounded-xl border border-orange-200 bg-white p-1"
+              className="h-9 w-full rounded-xl border border-orange-200 bg-white p-1"
               aria-label="Custom suggested colour picker"
             />
-            <button type="button" onClick={addCustomSuggestedColour} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Add</button>
+            <button type="button" onClick={addCustomSuggestedColour} className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800">Add</button>
           </div>
         </div>
       </div>
@@ -514,12 +514,12 @@ function PreviewPanel({ target, theme, previewName, previewHeading, previewSubhe
   const background = normalizeThemeColor(theme.globalPageBackground, "#F8F4F0");
   const text = normalizeThemeColor(theme.globalText, "#2B2B2B");
   return (
-    <div className="mt-5 rounded-[28px] border p-4" style={{ backgroundColor: background, borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3"), color: text }}>
-      {target === "global" ? <div className="rounded-[24px] border bg-white p-5" style={{ borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3") }}><p className="text-sm font-bold">{previewName}</p><p className="mt-2 text-sm" style={{ color: normalizeThemeColor(theme.globalSoftText, "#64748B") }}>This shows the page background, main text and soft text treatment.</p></div> : null}
-      {target === "header" ? <div className="rounded-[24px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.headerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.headerText, "#2B2B2B") }}><div className="flex items-center justify-between"><strong>{previewName}</strong><div className="flex gap-2"><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Search</span><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Cart</span></div></div></div> : null}
-      {target === "welcome" ? <div className="rounded-[24px] border p-5" style={{ backgroundColor: normalizeThemeColor(theme.welcomeBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.welcomeBorder, "#D9C7A3"), boxShadow: `0 16px 36px ${normalizeThemeColor(theme.welcomeShadow, "#D9C7A3")}22` }}><p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: normalizeThemeColor(theme.welcomeLabel, "#C7922F") }}>Welcome</p><h4 className="mt-2 text-2xl font-bold" style={{ color: normalizeThemeColor(theme.welcomeHeading, "#0F172A") }}>{previewHeading}</h4><p className="mt-3 text-sm leading-6" style={{ color: normalizeThemeColor(theme.welcomeBody, "#2B2B2B") }}>{previewSubheading}</p></div> : null}
-      {target === "products" ? <div className="rounded-[26px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.productCardBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.productCardBorder, "#D9C7A3") }}><div className="grid grid-cols-[6rem_1fr] gap-3"><div className="rounded-2xl bg-slate-100" /><div><h4 className="font-bold" style={{ color: normalizeThemeColor(theme.productTitle, "#0F172A") }}>Sample product</h4><div className="mt-4 grid grid-cols-3 gap-2"><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.priceBoxBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.priceBoxBorder, "#D9C7A3"), color: normalizeThemeColor(theme.priceText, "#0F172A") }}>{money}</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.addButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.addButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.addButtonText, "#0F172A") }}>Add</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.moreButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.moreButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.moreButtonText, "#0F172A") }}>More</span></div></div></div></div> : null}
-      {target === "footer" ? <div className="rounded-[24px] border p-5" style={{ backgroundColor: normalizeThemeColor(theme.footerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3"), color: normalizeThemeColor(theme.footerText, "#2B2B2B") }}><p className="text-xs font-bold uppercase tracking-[0.2em]">Storefront footer</p><p className="mt-2 text-sm leading-6">{footerBlurb}</p><p className="mt-3 text-xs leading-5">{footerNotice}</p><span className="mt-4 inline-flex rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: normalizeThemeColor(theme.footerBadgeBackground, "#C7922F") }}>Currency badge</span></div> : null}
+    <div className="mt-3 rounded-[22px] border p-3" style={{ backgroundColor: background, borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3"), color: text }}>
+      {target === "global" ? <div className="rounded-[18px] border bg-white p-4" style={{ borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3") }}><p className="text-sm font-bold">{previewName}</p><p className="mt-2 text-sm" style={{ color: normalizeThemeColor(theme.globalSoftText, "#64748B") }}>This shows the page background, main text and soft text treatment.</p></div> : null}
+      {target === "header" ? <div className="rounded-[18px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.headerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.headerText, "#2B2B2B") }}><div className="flex items-center justify-between"><strong>{previewName}</strong><div className="flex gap-2"><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Search</span><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Cart</span></div></div></div> : null}
+      {target === "welcome" ? <div className="rounded-[18px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.welcomeBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.welcomeBorder, "#D9C7A3"), boxShadow: `0 10px 24px ${normalizeThemeColor(theme.welcomeShadow, "#D9C7A3")}18` }}><p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: normalizeThemeColor(theme.welcomeLabel, "#C7922F") }}>Welcome</p><h4 className="mt-2 text-xl font-bold" style={{ color: normalizeThemeColor(theme.welcomeHeading, "#0F172A") }}>{previewHeading}</h4><p className="mt-2 text-sm leading-5" style={{ color: normalizeThemeColor(theme.welcomeBody, "#2B2B2B") }}>{previewSubheading}</p></div> : null}
+      {target === "products" ? <div className="rounded-[20px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.productCardBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.productCardBorder, "#D9C7A3") }}><div className="grid grid-cols-[6rem_1fr] gap-3"><div className="rounded-2xl bg-slate-100" /><div><h4 className="font-bold" style={{ color: normalizeThemeColor(theme.productTitle, "#0F172A") }}>Sample product</h4><div className="mt-4 grid grid-cols-3 gap-2"><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.priceBoxBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.priceBoxBorder, "#D9C7A3"), color: normalizeThemeColor(theme.priceText, "#0F172A") }}>{money}</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.addButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.addButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.addButtonText, "#0F172A") }}>Add</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.moreButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.moreButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.moreButtonText, "#0F172A") }}>More</span></div></div></div></div> : null}
+      {target === "footer" ? <div className="rounded-[18px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.footerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3"), color: normalizeThemeColor(theme.footerText, "#2B2B2B") }}><p className="text-[11px] font-bold uppercase tracking-[0.18em]">Storefront footer</p><p className="mt-2 text-sm leading-5">{footerBlurb}</p><p className="mt-2 text-xs leading-5">{footerNotice}</p><span className="mt-3 inline-flex rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: normalizeThemeColor(theme.footerBadgeBackground, "#C7922F") }}>Currency badge</span></div> : null}
     </div>
   );
 }
