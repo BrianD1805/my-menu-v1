@@ -23,8 +23,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Order update';
   const options = {
     body: payload.body || 'There is an update for your order.',
-    icon: payload.icon || '/orduva-storefront-icon-192.png',
-    badge: payload.badge || '/orduva-storefront-icon-192.png',
+    icon: payload.icon || '/orduva-notification-icon-192.png',
+    badge: payload.badge || '/orduva-notification-badge-96.png',
     tag: payload.tag || 'orduva-storefront-push',
     data: {
       url: payload.url || '/',

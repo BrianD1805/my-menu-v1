@@ -76,8 +76,8 @@ async function sendRows(rows: CustomerSubscriptionRow[], payload: PushPayload) {
           body: payload.body,
           url: payload.url || "/",
           tag: payload.tag || "orduva-customer-order-status",
-          icon: payload.icon || "/orduva-storefront-icon-192.png",
-          badge: payload.badge || "/orduva-storefront-icon-192.png",
+          icon: payload.icon || "/orduva-notification-icon-192.png",
+          badge: payload.badge || "/orduva-notification-badge-96.png",
         })
       );
       sent += 1;
@@ -131,8 +131,8 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
           body: payload.body,
           url: payload.url || "/admin/orders",
           tag: payload.tag || "orduva-admin-push",
-          icon: payload.icon || "/orduva-admin-icon-192.png",
-          badge: payload.badge || "/orduva-admin-icon-192.png",
+          icon: payload.icon || "/orduva-notification-icon-192.png",
+          badge: payload.badge || "/orduva-notification-badge-96.png",
         })
       );
       sent += 1;

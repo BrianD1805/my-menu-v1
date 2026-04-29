@@ -86,8 +86,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   return (
     <>
       <div
-        className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(250,247,244,0.98))] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px] hover:shadow-[0_28px_70px_rgba(15,23,42,0.12)]"
-        style={{ boxShadow: `0 20px 52px color-mix(in srgb, ${brandPrimary} 8%, rgba(15,23,42,0.08))` }}
+        className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(250,247,244,0.98))] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px]"
       >
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">

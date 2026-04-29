@@ -1,6 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import AdminPwaRegistrar from "@/components/admin/AdminPwaRegistrar";
+
+
+export const viewport: Viewport = {
+  themeColor: "#0E0E10",
+  colorScheme: "light",
+};
 
 export const metadata: Metadata = {
   title: "Orduva Admin",

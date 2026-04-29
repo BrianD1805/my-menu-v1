@@ -12,6 +12,7 @@ export default function Head() {
       <meta name="apple-mobile-web-app-title" content="Orduva Admin" />
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="theme-color" content="#0E0E10" />
+      <meta name="msapplication-TileColor" content="#0E0E10" />
     </>
   );
 }

@@ -11,13 +11,19 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     display_override: ["standalone", "minimal-ui", "browser"],
     orientation: "portrait",
-    background_color: "#0E0E10",
+    background_color: "#FFF7F0",
     theme_color: "#0E0E10",
     categories: ["business", "productivity"],
     launch_handler: {
       client_mode: ["navigate-existing", "auto"],
     },
     icons: [
+      {
+        src: "/orduva-notification-icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
       {
         src: "/orduva-platform-icon-192.png",
         sizes: "192x192",

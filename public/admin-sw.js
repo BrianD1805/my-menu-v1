@@ -23,8 +23,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Orduva Admin';
   const options = {
     body: payload.body || 'You have a new admin notification.',
-    icon: payload.icon || '/orduva-admin-icon-192.png',
-    badge: payload.badge || '/orduva-admin-icon-192.png',
+    icon: payload.icon || '/orduva-notification-icon-192.png',
+    badge: payload.badge || '/orduva-notification-badge-96.png',
     tag: payload.tag || 'orduva-admin-push',
     data: {
       url: payload.url || '/admin/orders',
