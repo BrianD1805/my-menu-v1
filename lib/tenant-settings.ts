@@ -15,6 +15,7 @@ import {
   type CurrencySymbolPosition,
 } from "@/lib/money";
 import { getTenantBrandDefaults } from "@/lib/tenant-assets";
+import { normalizeStorefrontTheme, type StorefrontTheme } from "@/lib/storefront-theme";
 
 export type TenantSettings = {
   tenant_id: string;
@@ -29,6 +30,7 @@ export type TenantSettings = {
   background_tint: string | null;
   border_color: string | null;
   text_color: string | null;
+  storefront_theme_json: StorefrontTheme | null;
   contact_phone: string | null;
   contact_email: string | null;
   contact_whatsapp: string | null;
@@ -120,7 +122,7 @@ export function normalizeSeparator(value: unknown) {
   return text.slice(0, 1);
 }
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
 
 export async function getTenantSettings(tenantId: string): Promise<TenantSettings | null> {
   const { data, error } = await db
@@ -149,6 +151,7 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     background_tint: asStringOrNull((data as Record<string, unknown>).background_tint),
     border_color: asStringOrNull((data as Record<string, unknown>).border_color),
     text_color: asStringOrNull((data as Record<string, unknown>).text_color),
+    storefront_theme_json: normalizeStorefrontTheme((data as Record<string, unknown>).storefront_theme_json),
     contact_phone: asStringOrNull((data as Record<string, unknown>).contact_phone),
     contact_email: asStringOrNull((data as Record<string, unknown>).contact_email),
     contact_whatsapp: asStringOrNull((data as Record<string, unknown>).contact_whatsapp),
@@ -206,6 +209,7 @@ function _buildTenantBranding(slug: string, tenantName: string, settings: Tenant
     backgroundTint: settings?.background_tint || '#F8F4F0',
     borderColor: settings?.border_color || '#D9C7A3',
     textColor: settings?.text_color || '#2B2B2B',
+    storefrontTheme: settings?.storefront_theme_json || null,
     contactPhone: settings?.contact_phone || null,
     contactEmail: settings?.contact_email || null,
     contactWhatsApp: settings?.contact_whatsapp || null,

@@ -6,6 +6,7 @@ import CustomerAccountHeaderActions from "@/components/account/CustomerAccountHe
 import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
+import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
 
 type Category = {
   id: string;
@@ -74,6 +75,7 @@ export default function MenuBrowser({
   currencyDecimalSeparator,
   currencyThousandsSeparator,
   currencySuffix,
+  storefrontTheme,
 }: {
   tenantSlug: string;
   tenantId: string;
@@ -106,6 +108,7 @@ export default function MenuBrowser({
   currencyDecimalSeparator?: string | null;
   currencyThousandsSeparator?: string | null;
   currencySuffix?: string | null;
+  storefrontTheme?: StorefrontTheme | null;
 }) {
   const moneySettings = buildMoneySettings({
     currencyName,
@@ -140,10 +143,23 @@ export default function MenuBrowser({
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
-  const brandSurface = backgroundTint || "#F8F4F0";
-  const brandBorder = borderColor || "#D9C7A3";
-  const brandText = textColor || "#2B2B2B";
-  const brandAccentBorder = brandBorder;
+  const brandSurface = normalizeThemeColor(storefrontTheme?.globalPageBackground || backgroundTint, "#F8F4F0");
+  const brandBorder = normalizeThemeColor(storefrontTheme?.globalBorder || borderColor, "#D9C7A3");
+  const brandText = normalizeThemeColor(storefrontTheme?.globalText || textColor, "#2B2B2B");
+  const brandSoftText = normalizeThemeColor(storefrontTheme?.globalSoftText, brandText);
+  const headerBackground = normalizeThemeColor(storefrontTheme?.headerBackground, brandSurface);
+  const headerText = normalizeThemeColor(storefrontTheme?.headerText, brandText);
+  const headerButtonBorder = normalizeThemeColor(storefrontTheme?.headerButtonBorder, brandAccent);
+  const welcomeBackground = normalizeThemeColor(storefrontTheme?.welcomeBackground, "#FFFFFF");
+  const welcomeLabel = normalizeThemeColor(storefrontTheme?.welcomeLabel, brandAccent);
+  const welcomeHeadingColor = normalizeThemeColor(storefrontTheme?.welcomeHeading, brandPrimary);
+  const welcomeBody = normalizeThemeColor(storefrontTheme?.welcomeBody, brandText);
+  const welcomeBorder = normalizeThemeColor(storefrontTheme?.welcomeBorder, brandBorder);
+  const welcomeShadow = normalizeThemeColor(storefrontTheme?.welcomeShadow, brandAccent);
+  const footerBackground = normalizeThemeColor(storefrontTheme?.footerBackground, "#FFFFFF");
+  const footerText = normalizeThemeColor(storefrontTheme?.footerText, brandText);
+  const footerBadgeBackground = normalizeThemeColor(storefrontTheme?.footerBadgeBackground, brandAccent);
+  const brandAccentBorder = welcomeBorder;
 
   useEffect(() => {
     let cancelled = false;
@@ -330,7 +346,7 @@ export default function MenuBrowser({
       </div>
 
       <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:content-['']" style={{ backgroundColor: brandSurface }}>
-        <div className="border-b shadow-[0_22px_60px_rgba(15,23,42,0.10)]" style={{ borderColor: brandBorder, background: `linear-gradient(180deg, ${brandSurface} 0%, color-mix(in srgb, ${brandSurface} 80%, white) 50%, white 100%)` }}>
+        <div className="border-b shadow-[0_22px_60px_rgba(15,23,42,0.10)]" style={{ borderColor: brandBorder, background: headerBackground }}>
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="relative flex min-h-[78px] items-center justify-center sm:min-h-[86px] lg:min-h-[94px]">
               <div className="flex items-center justify-center">
@@ -342,7 +358,7 @@ export default function MenuBrowser({
                     loading="lazy"
                   />
                 ) : (
-                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight sm:text-[1.95rem] lg:text-[2.35rem]" style={{ color: brandText }}>{tenantName}</h1>
+                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight sm:text-[1.95rem] lg:text-[2.35rem]" style={{ color: headerText }}>{tenantName}</h1>
                 )}
               </div>
 
@@ -358,7 +374,7 @@ export default function MenuBrowser({
                   type="button"
                   onClick={() => setSearchOpen(true)}
                   className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border bg-white/95 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.07)] transition hover:-translate-y-[1px] hover:bg-white sm:h-11 sm:w-11"
-                  style={accentColor ? { borderColor: `${accentColor}44` } : undefined}
+                  style={{ borderColor: headerButtonBorder }}
                   aria-label="Search menu"
                   title="Search menu"
                 >
@@ -374,10 +390,10 @@ export default function MenuBrowser({
         </div>
       </div>
 
-      <section className="rounded-[28px] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.99),rgba(248,244,240,0.97))] px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ borderColor: brandAccentBorder, boxShadow: `0 16px 36px color-mix(in srgb, ${brandAccent} 16%, transparent)` }}>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: brandAccent }}>{welcomeCustomerName ? `Welcome, ${welcomeCustomerName}` : "Welcome"}</p>
-        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight sm:text-[2.35rem] lg:text-[2.65rem]" style={{ color: brandPrimary }}>{welcomeHeading || "Browse the menu"}</h2>
-        <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7" style={{ color: brandText }}>
+      <section className="rounded-[28px] border px-5 py-5 ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7 lg:text-center" style={{ backgroundColor: welcomeBackground, borderColor: brandAccentBorder, boxShadow: `0 16px 36px ${welcomeShadow}22` }}>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: welcomeLabel }}>{welcomeCustomerName ? `Welcome, ${welcomeCustomerName}` : "Welcome"}</p>
+        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight sm:text-[2.35rem] lg:text-[2.65rem]" style={{ color: welcomeHeadingColor }}>{welcomeHeading || "Browse the menu"}</h2>
+        <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7 lg:mx-auto" style={{ color: welcomeBody }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
       </section>
@@ -389,8 +405,8 @@ export default function MenuBrowser({
         return (
           <section key={category.id} className="mb-8 sm:mb-10">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-              <h2 className="text-[1.38rem] font-semibold tracking-tight text-slate-900 sm:text-[1.95rem]">{category.name}</h2>
-              <span className="rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]" style={accentColor ? { borderColor: `${accentColor}33`, color: accentColor } : undefined}>
+              <h2 className="text-[1.38rem] font-semibold tracking-tight sm:text-[1.95rem]" style={{ color: brandText }}>{category.name}</h2>
+              <span className="rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]" style={{ borderColor: brandBorder, color: brandSoftText }}>
                 {categoryProducts.length} {categoryProducts.length === 1 ? "item" : "items"}
               </span>
             </div>
@@ -407,6 +423,7 @@ export default function MenuBrowser({
                   moneySettings={moneySettings}
                   accentColor={accentColor}
                   primaryColor={primaryColor}
+                  themeColors={storefrontTheme}
                   onAddToCartAnimation={(payload) => launchAddToCartAnimation({ ...payload, destination: "header" })}
                 />
               ))}
@@ -415,16 +432,16 @@ export default function MenuBrowser({
         );
       })}
 
-      <section className="rounded-[28px] border border-white/80 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+      <section className="rounded-[28px] border px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
         <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Storefront footer</p>
-            <h3 className="mt-2 text-[1.2rem] font-semibold tracking-tight text-slate-900 sm:text-[1.45rem]">{tenantName}</h3>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">{footerBlurb || "Thank you for ordering with us."}</p>
-            <p className="mt-4 text-xs leading-5 text-slate-500">{footerNotice || "Prices and availability may change without notice."}</p>
+            <h3 className="mt-2 text-[1.2rem] font-semibold tracking-tight sm:text-[1.45rem]" style={{ color: footerText }}>{tenantName}</h3>
+            <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: footerText }}>{footerBlurb || "Thank you for ordering with us."}</p>
+            <p className="mt-4 text-xs leading-5" style={{ color: footerText }}>{footerNotice || "Prices and availability may change without notice."}</p>
           </div>
 
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+          <div className="rounded-[24px] border p-4 sm:p-5" style={{ borderColor: brandBorder, backgroundColor: "#FFFFFF" }}>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Business details</p>
             <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
               {contactPhone ? <p><span className="font-semibold text-slate-900">Phone:</span> {contactPhone}</p> : null}
@@ -440,10 +457,10 @@ export default function MenuBrowser({
         </div>
       </section>
 
-      <footer className="rounded-[24px] border border-slate-200 bg-white/90 px-5 py-5 text-sm text-slate-600 shadow-sm sm:px-6" style={accentColor ? { borderColor: `${accentColor}22` } : undefined}>
+      <footer className="rounded-[24px] border px-5 py-5 text-sm shadow-sm sm:px-6" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
         <div className="flex flex-col items-center justify-center gap-3">
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={accentColor ? { backgroundColor: accentColor } : undefined}>Orduva Online</span>
+            <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={{ backgroundColor: footerBadgeBackground }}>Orduva Online</span>
             <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
           </div>
 

@@ -233,7 +233,7 @@ export default async function HomePage() {
   return (
     <>
       <StorefrontPwaRegistrar />
-      <main className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6">
+      <main className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6" style={{ backgroundColor: branding.storefrontTheme?.globalPageBackground || branding.backgroundTint }}>
         <MenuBrowser
           tenantSlug={slug}
           tenantId={tenant.id}
@@ -266,6 +266,7 @@ export default async function HomePage() {
           currencyDecimalSeparator={branding.currencyDecimalSeparator}
           currencyThousandsSeparator={branding.currencyThousandsSeparator}
           currencySuffix={branding.currencySuffix}
+          storefrontTheme={branding.storefrontTheme}
         />
       </main>
     </>

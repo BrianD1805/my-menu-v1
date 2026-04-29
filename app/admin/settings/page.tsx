@@ -37,6 +37,7 @@ export default async function AdminSettingsPage() {
           backgroundTint: settings?.background_tint || "#F8F4F0",
           borderColor: settings?.border_color || "#D9C7A3",
           textColor: settings?.text_color || "#2B2B2B",
+          storefrontTheme: settings?.storefront_theme_json || branding.storefrontTheme || null,
           contactPhone: settings?.contact_phone || "",
           contactEmail: settings?.contact_email || "",
           contactWhatsApp: settings?.contact_whatsapp || "",

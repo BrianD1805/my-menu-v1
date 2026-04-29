@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
+import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
 
 type Props = {
   id: string;
@@ -14,6 +15,7 @@ type Props = {
   moneySettings?: MoneyFormatSettings;
   accentColor?: string | null;
   primaryColor?: string | null;
+  themeColors?: StorefrontTheme | null;
   onAddToCartAnimation?: (payload: { imageUrl: string | null; name: string; sourceRect: DOMRect | null }) => void;
 };
 
@@ -27,7 +29,7 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, primaryColor, onAddToCartAnimation }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -70,9 +72,21 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const fullPrice = formatMoney(price, money);
   const brandAccent = accentColor || "#C7922F";
   const brandPrimary = primaryColor || "#7B1E22";
-  const cleanAccentBorder = withAlpha(brandAccent, "80", "rgba(199,146,47,0.50)");
-  const cleanAccentSubtleBorder = withAlpha(brandAccent, "55", "rgba(199,146,47,0.33)");
-  const cleanAccentHairline = withAlpha(brandAccent, "2E", "rgba(199,146,47,0.18)");
+  const productCardBackground = normalizeThemeColor(themeColors?.productCardBackground, "#FFFFFF");
+  const productCardBorder = normalizeThemeColor(themeColors?.productCardBorder, "#E2E8F0");
+  const productTitle = normalizeThemeColor(themeColors?.productTitle, "#0F172A");
+  const priceBoxBackground = normalizeThemeColor(themeColors?.priceBoxBackground, "#FFFFFF");
+  const priceBoxBorder = normalizeThemeColor(themeColors?.priceBoxBorder, brandAccent);
+  const priceText = normalizeThemeColor(themeColors?.priceText, brandPrimary);
+  const addButtonBackground = normalizeThemeColor(themeColors?.addButtonBackground, "#FFFFFF");
+  const addButtonBorder = normalizeThemeColor(themeColors?.addButtonBorder, brandAccent);
+  const addButtonText = normalizeThemeColor(themeColors?.addButtonText, brandPrimary);
+  const moreButtonBackground = normalizeThemeColor(themeColors?.moreButtonBackground, "#FFFFFF");
+  const moreButtonBorder = normalizeThemeColor(themeColors?.moreButtonBorder, brandAccent);
+  const moreButtonText = normalizeThemeColor(themeColors?.moreButtonText, brandPrimary);
+  const cleanAccentBorder = withAlpha(addButtonBorder, "80", "rgba(199,146,47,0.50)");
+  const cleanAccentSubtleBorder = withAlpha(moreButtonBorder, "55", "rgba(199,146,47,0.33)");
+  const cleanAccentHairline = withAlpha(addButtonBorder, "2E", "rgba(199,146,47,0.18)");
   const stackedAmount = formatMoney(price, {
     ...money,
     currencyDisplayMode: "symbol",
@@ -85,7 +99,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   return (
     <>
       <div
-        className="group h-full overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(250,247,244,0.98))] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px]"
+        className="group h-full overflow-hidden rounded-[30px] border ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px]"
+        style={{ backgroundColor: productCardBackground, borderColor: productCardBorder }}
       >
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">
@@ -104,7 +119,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
             <div className="min-w-0">
               <button type="button" onClick={() => setDetailsOpen(true)} className="block min-w-0 text-left">
-                <h3 className="text-[1.1rem] font-semibold leading-[1.18] tracking-tight text-slate-950 sm:text-[1.32rem] lg:text-[1.15rem] xl:text-[1.235rem]">
+                <h3 className="text-[1.1rem] font-semibold leading-[1.18] tracking-tight sm:text-[1.32rem] lg:text-[1.15rem] xl:text-[1.235rem]" style={{ color: productTitle }}>
                   {name}
                 </h3>
               </button>
@@ -114,15 +129,15 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
           <div className="grid grid-cols-3 items-stretch gap-2 sm:gap-2.5 lg:gap-3">
             <div
               className="flex min-h-[38px] flex-col items-center justify-center rounded-[14px] border bg-white px-2.5 py-1.5 text-slate-950 ring-1 ring-black/[0.02] sm:min-h-[42px] sm:px-3 sm:py-2 lg:min-h-[46px] lg:rounded-[16px]"
-              style={{ borderColor: cleanAccentSubtleBorder, backgroundColor: "#FFFFFF" }}
+              style={{ borderColor: priceBoxBorder, backgroundColor: priceBoxBackground }}
             >
               {usesCodeAndSymbol ? (
                 <>
-                  <span className="-mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] sm:text-[9.5px] lg:text-[10px]" style={{ color: brandAccent }}>{codePart}</span>
-                  <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight sm:text-[0.88rem] lg:text-[0.96rem]" style={{ color: brandPrimary }}>{stackedAmount}</span>
+                  <span className="-mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] sm:text-[9.5px] lg:text-[10px]" style={{ color: priceBoxBorder }}>{codePart}</span>
+                  <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight sm:text-[0.88rem] lg:text-[0.96rem]" style={{ color: priceText }}>{stackedAmount}</span>
                 </>
               ) : (
-                <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight sm:text-[0.88rem] lg:text-[0.96rem]" style={{ color: brandPrimary }}>{fullPrice}</span>
+                <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight sm:text-[0.88rem] lg:text-[0.96rem]" style={{ color: priceText }}>{fullPrice}</span>
               )}
             </div>
 
@@ -130,8 +145,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               type="button"
               className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-not-allowed disabled:opacity-85 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={buttonState === "added"
-                ? { borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }
-                : { borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }}
+                ? { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }
+                : { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
               onClick={() => void addToCart("card")}
               disabled={buttonState === "adding"}
             >
@@ -142,7 +157,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               type="button"
               onClick={() => setDetailsOpen(true)}
               className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
-              style={{ borderColor: cleanAccentSubtleBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }}
+              style={{ borderColor: cleanAccentSubtleBorder, color: moreButtonText, backgroundColor: moreButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
               aria-label={`More info for ${name}`}
               title="More info"
             >
@@ -209,7 +224,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     type="button"
                     onClick={() => { void addToCart("modal"); }}
                     className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 lg:px-8"
-                    style={{ borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }}
+                    style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
                   >
                     {buttonState === "adding" ? "Adding..." : "Add"}
                   </button>
