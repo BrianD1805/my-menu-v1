@@ -161,6 +161,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget>("welcome");
+  const [customSuggestedHex, setCustomSuggestedHex] = useState("#FFFFFF");
+  const [extraSuggestedColours, setExtraSuggestedColours] = useState<string[]>([]);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -180,6 +182,31 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     currencyThousandsSeparator: form.currencyThousandsSeparator || ",",
     currencySuffix: form.currencySuffix,
   };
+
+  const suggestedColours = useMemo(() => {
+    const base = [
+      theme.globalPageBackground,
+      theme.globalText,
+      theme.globalSoftText,
+      theme.globalBorder,
+      theme.headerBackground,
+      theme.welcomeBackground,
+      theme.welcomeLabel,
+      theme.productCardBackground,
+      theme.addButtonBorder,
+      theme.moreButtonBorder,
+      theme.footerBadgeBackground,
+      form.primaryColor,
+      form.accentColor,
+      form.backgroundTint,
+      form.borderColor,
+      form.textColor,
+      ...extraSuggestedColours,
+    ]
+      .map((colour) => normalizeThemeColor(String(colour || ""), ""))
+      .filter((colour) => /^#[0-9A-F]{6}$/i.test(colour));
+    return Array.from(new Set(base.map((colour) => colour.toUpperCase()))).slice(0, 18);
+  }, [theme, form.primaryColor, form.accentColor, form.backgroundTint, form.borderColor, form.textColor, extraSuggestedColours]);
 
   const activePreset = THEME_PRESETS.find((preset) => theme.selectedPreset === preset.name);
   const messageClass = useMemo(() => {
@@ -203,6 +230,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         customised: true,
       },
     }));
+  }
+
+  function addCustomSuggestedColour() {
+    const next = normalizeThemeColor(customSuggestedHex, "").toUpperCase();
+    if (!/^#[0-9A-F]{6}$/i.test(next)) {
+      setTone("error");
+      setMessage("Enter a valid 6-digit hex colour, for example #FF6A3D.");
+      return;
+    }
+    setExtraSuggestedColours((current) => (current.includes(next) ? current : [...current, next]));
+    setTone("info");
+    setMessage(`Added ${next} to suggested colours for this editing session.`);
   }
 
   function applyThemePreset(preset: ThemePreset) {
@@ -275,7 +314,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
           <h2 className="mt-2 text-2xl font-bold text-slate-900">Storefront branding and theme editor</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Choose a preset as a starting point, then fine-tune each visible storefront section with preview controls.
+            Choose a preset as a starting point, then fine-tune each visible storefront section. Draft colours update the preview automatically.
           </p>
         </div>
 
@@ -338,8 +377,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                       key={field.key}
                       label={field.label}
                       value={String(theme[field.key] || "#FFFFFF")}
-                      onChange={(value) => updateThemeColor(field.key, value)}
-                      onPreview={() => setPreviewTarget(group.id)}
+                      onChange={(value) => {
+                        updateThemeColor(field.key, value);
+                        setPreviewTarget(group.id);
+                      }}
                     />
                   ))}
                 </div>
@@ -385,7 +426,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">Preview uses the current draft colours before saving.</p>
+          <p className="text-sm text-slate-500">Preview updates from the current draft colours before saving.</p>
           <button type="submit" disabled={saving} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
             {saving ? "Saving..." : "Save settings"}
           </button>
@@ -419,7 +460,42 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </div>
 
         <div className="rounded-[30px] border border-orange-100 bg-orange-50 p-5 text-sm leading-6 text-orange-950 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-6">
-          Each colour row has a Preview button that jumps this panel to the relevant storefront section with your draft colour applied.
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-900">Suggested colours</p>
+          <p className="mt-2 text-sm leading-6 text-orange-950/80">Use these as reference colours while editing. Add your own hex colour below to keep it handy during this session.</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {suggestedColours.map((colour) => (
+              <button
+                key={colour}
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard?.writeText(colour);
+                  setTone("info");
+                  setMessage(`Copied ${colour}. Paste it into any colour field.`);
+                }}
+                className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 shadow-sm"
+                title={`Copy ${colour}`}
+              >
+                <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: colour }} />
+                {colour}
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-[1fr_42px_auto] gap-2">
+            <input
+              value={customSuggestedHex}
+              onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
+              className="rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-400"
+              placeholder="#FF6A3D"
+            />
+            <input
+              type="color"
+              value={/^#[0-9a-fA-F]{6}$/.test(customSuggestedHex) ? customSuggestedHex : "#ffffff"}
+              onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
+              className="h-10 w-full rounded-xl border border-orange-200 bg-white p-1"
+              aria-label="Custom suggested colour picker"
+            />
+            <button type="button" onClick={addCustomSuggestedColour} className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800">Add</button>
+          </div>
         </div>
       </div>
     </div>
@@ -448,13 +524,27 @@ function PreviewPanel({ target, theme, previewName, previewHeading, previewSubhe
   );
 }
 
-function ColorRow({ label, value, onChange, onPreview }: { label: string; value: string; onChange: (value: string) => void; onPreview: () => void }) {
+function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const safeValue = /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#ffffff";
   return (
-    <div className="grid gap-2 rounded-2xl border border-slate-100 bg-slate-50/70 p-3 sm:grid-cols-[1fr_130px_44px_92px] sm:items-center">
+    <div className="grid gap-2 rounded-2xl border border-slate-100 bg-slate-50/70 p-3 sm:grid-cols-[1fr_190px_44px] sm:items-center">
       <span className="text-sm font-semibold text-slate-700">{label}</span>
-      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold uppercase outline-none focus:border-slate-400" />
-      <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : "#ffffff"} onChange={(e) => onChange(e.target.value)} className="h-10 w-full rounded-xl border border-slate-200 bg-white p-1" aria-label={`${label} colour picker`} />
-      <button type="button" onClick={onPreview} className="rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-bold text-orange-800 transition hover:bg-orange-50">Preview</button>
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 focus-within:border-slate-400">
+        <span className="h-7 w-7 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ backgroundColor: safeValue }} aria-hidden="true" />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="min-w-0 flex-1 bg-transparent px-1 py-1 text-sm font-semibold uppercase outline-none"
+        />
+      </div>
+      <input
+        type="color"
+        value={safeValue}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 w-full rounded-xl border border-slate-200 bg-white p-1"
+        aria-label={`${label} colour picker`}
+      />
     </div>
   );
 }
