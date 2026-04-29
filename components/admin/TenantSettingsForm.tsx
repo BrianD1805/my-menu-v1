@@ -426,14 +426,14 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">Preview updates from the current draft colours before saving.</p>
+          <p className="text-sm text-slate-500">Preview updates from the current draft colours before saving. On desktop, the preview stays lower on the right so it lines up better with the section you are editing.</p>
           <button type="submit" disabled={saving} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
             {saving ? "Saving..." : "Save settings"}
           </button>
         </div>
       </form>
 
-      <div className="space-y-5 xl:sticky xl:top-5 xl:self-start">
+      <div className="space-y-5 xl:sticky xl:top-28 xl:self-start">
         <div className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
