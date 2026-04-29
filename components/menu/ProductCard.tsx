@@ -70,10 +70,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const fullPrice = formatMoney(price, money);
   const brandAccent = accentColor || "#C7922F";
   const brandPrimary = primaryColor || "#7B1E22";
-  const cleanAccentSoft = withAlpha(brandAccent, "1F", "rgba(199,146,47,0.12)");
-  const cleanAccentSofter = withAlpha(brandAccent, "12", "rgba(199,146,47,0.07)");
-  const cleanAccentBorder = withAlpha(brandAccent, "66", "rgba(199,146,47,0.40)");
-  const cleanAccentSubtleBorder = withAlpha(brandAccent, "33", "rgba(199,146,47,0.20)");
+  const cleanAccentBorder = withAlpha(brandAccent, "80", "rgba(199,146,47,0.50)");
+  const cleanAccentSubtleBorder = withAlpha(brandAccent, "55", "rgba(199,146,47,0.33)");
+  const cleanAccentHairline = withAlpha(brandAccent, "2E", "rgba(199,146,47,0.18)");
   const stackedAmount = formatMoney(price, {
     ...money,
     currencyDisplayMode: "symbol",
@@ -114,25 +113,25 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
           <div className="grid grid-cols-3 items-stretch gap-2 sm:gap-2.5 lg:gap-3">
             <div
-              className="flex min-h-[38px] flex-col items-center justify-center rounded-[14px] bg-white px-2.5 py-1.5 text-slate-950 shadow-[0_6px_14px_rgba(15,23,42,0.04)] ring-1 sm:min-h-[42px] sm:px-3 sm:py-2 lg:min-h-[46px] lg:rounded-[16px]"
-              style={{ borderColor: `color-mix(in srgb, ${brandAccent} 30%, white)` }}
+              className="flex min-h-[38px] flex-col items-center justify-center rounded-[14px] border bg-white px-2.5 py-1.5 text-slate-950 ring-1 ring-black/[0.02] sm:min-h-[42px] sm:px-3 sm:py-2 lg:min-h-[46px] lg:rounded-[16px]"
+              style={{ borderColor: cleanAccentSubtleBorder, backgroundColor: "#FFFFFF" }}
             >
               {usesCodeAndSymbol ? (
                 <>
-                  <span className="-mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 sm:text-[9.5px] lg:text-[10px]">{codePart}</span>
-                  <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight text-slate-950 sm:text-[0.88rem] lg:text-[0.96rem]">{stackedAmount}</span>
+                  <span className="-mb-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] sm:text-[9.5px] lg:text-[10px]" style={{ color: brandAccent }}>{codePart}</span>
+                  <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight sm:text-[0.88rem] lg:text-[0.96rem]" style={{ color: brandPrimary }}>{stackedAmount}</span>
                 </>
               ) : (
-                <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight text-slate-950 sm:text-[0.88rem] lg:text-[0.96rem]">{fullPrice}</span>
+                <span className="whitespace-nowrap text-[0.78rem] font-semibold tracking-tight sm:text-[0.88rem] lg:text-[0.96rem]" style={{ color: brandPrimary }}>{fullPrice}</span>
               )}
             </div>
 
             <button
               type="button"
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-semibold shadow-[0_7px_16px_rgba(15,23,42,0.065)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-85 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
+              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-not-allowed disabled:opacity-85 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={buttonState === "added"
-                ? { borderColor: "rgba(16,185,129,0.36)", color: "#047857", backgroundColor: "rgba(236,253,245,0.98)", boxShadow: "0 8px 18px rgba(5,150,105,0.10)" }
-                : { borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: cleanAccentSoft, boxShadow: "0 8px 18px rgba(15,23,42,0.065)" }}
+                ? { borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }
+                : { borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }}
               onClick={() => void addToCart("card")}
               disabled={buttonState === "adding"}
             >
@@ -142,8 +141,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             <button
               type="button"
               onClick={() => setDetailsOpen(true)}
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border px-2.5 py-1.5 text-[0.8rem] font-semibold shadow-[0_7px_16px_rgba(15,23,42,0.055)] transition hover:-translate-y-[1px] sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
-              style={{ borderColor: cleanAccentSubtleBorder, color: brandPrimary, backgroundColor: cleanAccentSofter }}
+              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
+              style={{ borderColor: cleanAccentSubtleBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }}
               aria-label={`More info for ${name}`}
               title="More info"
             >
@@ -209,8 +208,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   <button
                     type="button"
                     onClick={() => { void addToCart("modal"); }}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] lg:px-8"
-                    style={{ borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: cleanAccentSoft, boxShadow: "0 8px 18px rgba(15,23,42,0.065)" }}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 lg:px-8"
+                    style={{ borderColor: cleanAccentBorder, color: brandPrimary, backgroundColor: "#FFFFFF", boxShadow: "none", outlineColor: cleanAccentHairline }}
                   >
                     {buttonState === "adding" ? "Adding..." : "Add"}
                   </button>
