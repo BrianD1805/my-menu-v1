@@ -44,7 +44,7 @@ export default function AdminShell({
   ];
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#FFF7F0] px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7">
+    <main className="relative min-h-screen overflow-x-clip bg-[#FFF7F0] px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_8%,rgba(255,106,61,0.18),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(14,14,16,0.08),transparent_28%),linear-gradient(135deg,#FFF7F0_0%,#F5F2EE_52%,#FFFFFF_100%)]" />
       <div className="mx-auto max-w-6xl">
         <header className="overflow-hidden rounded-[34px] border border-[#0E0E10]/10 bg-white/[0.84] shadow-[0_34px_100px_rgba(14,14,16,0.12)] backdrop-blur-xl">
