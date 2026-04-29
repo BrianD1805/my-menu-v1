@@ -308,7 +308,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] xl:items-start">
       <form onSubmit={onSubmit} className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
@@ -426,14 +426,14 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">Preview updates from the current draft colours before saving. On desktop, the preview stays lower on the right so it lines up better with the section you are editing.</p>
+          <p className="text-sm text-slate-500">Preview updates from the current draft colours before saving. On desktop, the preview stays sticky on the right while you edit colours on the left.</p>
           <button type="submit" disabled={saving} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
             {saving ? "Saving..." : "Save settings"}
           </button>
         </div>
       </form>
 
-      <div className="space-y-5 lg:sticky lg:top-[170px] lg:mt-28 lg:self-start xl:top-[190px]">
+      <div className="space-y-5 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
         <div className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
