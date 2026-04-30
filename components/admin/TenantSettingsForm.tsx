@@ -403,9 +403,6 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   >
                     <span aria-hidden="true">🎨</span> Suggested
                   </button>
-                  <button type="submit" disabled={saving} className="ml-auto inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
-                    {saving ? "Saving..." : `Save ${group.title}`}
-                  </button>
                 </div>
                 <div className="mt-4 space-y-3">
                   {group.fields.map((field) => (
@@ -419,6 +416,11 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                       }}
                     />
                   ))}
+                </div>
+                <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
+                  <button type="submit" disabled={saving} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+                    {saving ? "Saving..." : `Save ${group.title}`}
+                  </button>
                 </div>
               </details>
             ))}
@@ -604,14 +606,16 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     <section className="mb-6 rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">{title}</h3>
+      </div>
+      {children}
+      <div className="mt-4 flex justify-end border-t border-slate-200/70 pt-4">
         <button
           type="submit"
-          className="inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           Save section
         </button>
       </div>
-      {children}
     </section>
   );
 }
