@@ -166,6 +166,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
+  const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -437,50 +438,71 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
         <Section title="Per-item storefront colours">
           <div className="space-y-4">
-            {THEME_GROUPS.map((group) => (
-              <details key={group.id} className="rounded-[22px] border border-slate-200 bg-white p-4" open={group.id === "welcome" || group.id === "products"}>
-                <summary className="cursor-pointer text-sm font-bold text-slate-900">
-                  {group.title}
-                  <span className="ml-2 text-xs font-normal text-slate-500">{group.description}</span>
-                </summary>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
+            {THEME_GROUPS.map((group) => {
+              const isOpen = openThemeGroup === group.id;
+              return (
+                <div key={group.id} className="rounded-[22px] border border-slate-200 bg-white p-4">
                   <button
                     type="button"
-                    onClick={() => showPreview(group.id)}
-                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-900 transition hover:border-orange-300 hover:bg-orange-100"
-                    title={`Show ${group.title} preview`}
+                    onClick={() => {
+                      setOpenThemeGroup((current) => (current === group.id ? null : group.id));
+                      setPreviewTarget(group.id);
+                    }}
+                    className="flex w-full items-start justify-between gap-3 text-left"
+                    aria-expanded={isOpen}
                   >
-                    <span aria-hidden="true">👁</span> Preview
+                    <span>
+                      <span className="block text-sm font-bold text-slate-900">{group.title}</span>
+                      <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">{group.description}</span>
+                    </span>
+                    <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold transition ${isOpen ? "border-orange-200 bg-orange-50 text-orange-800" : "border-slate-200 bg-slate-50 text-slate-500"}`} aria-hidden="true">
+                      {isOpen ? "−" : "+"}
+                    </span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={showSuggestedColours}
-                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-                    title="Show suggested colours"
-                  >
-                    <span aria-hidden="true">🎨</span> Suggested
-                  </button>
+
+                  {isOpen ? (
+                    <>
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => showPreview(group.id)}
+                          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-900 transition hover:border-orange-300 hover:bg-orange-100"
+                          title={`Show ${group.title} preview`}
+                        >
+                          <span aria-hidden="true">👁</span> Preview
+                        </button>
+                        <button
+                          type="button"
+                          onClick={showSuggestedColours}
+                          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white"
+                          title="Show suggested colours"
+                        >
+                          <span aria-hidden="true">🎨</span> Suggested
+                        </button>
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        {group.fields.map((field) => (
+                          <ColorRow
+                            key={field.key}
+                            label={field.label}
+                            value={String(theme[field.key] || "#FFFFFF")}
+                            onChange={(value) => {
+                              updateThemeColor(field.key, value);
+                              setPreviewTarget(group.id);
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
+                        <button type="submit" disabled={saving} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+                          {saving ? "Saving..." : `Save ${group.title}`}
+                        </button>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
-                <div className="mt-4 space-y-3">
-                  {group.fields.map((field) => (
-                    <ColorRow
-                      key={field.key}
-                      label={field.label}
-                      value={String(theme[field.key] || "#FFFFFF")}
-                      onChange={(value) => {
-                        updateThemeColor(field.key, value);
-                        setPreviewTarget(group.id);
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
-                  <button type="submit" disabled={saving} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
-                    {saving ? "Saving..." : `Save ${group.title}`}
-                  </button>
-                </div>
-              </details>
-            ))}
+              );
+            })}
           </div>
         </Section>
 
