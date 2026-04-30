@@ -462,7 +462,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
                   {isOpen ? (
                     <>
-                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:hidden">
                         <button
                           type="button"
                           onClick={() => showPreview(group.id)}
@@ -550,7 +550,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </div>
       </form>
 
-      <div ref={previewPanelRef} className="space-y-3 xl:sticky xl:top-5 xl:self-start">
+      <div ref={previewPanelRef} className="hidden space-y-3 xl:sticky xl:top-5 xl:block xl:self-start">
         <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
