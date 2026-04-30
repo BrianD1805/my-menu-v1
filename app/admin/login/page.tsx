@@ -147,30 +147,59 @@ export default function AdminLoginPage() {
 
   return (
     <main className="min-h-screen bg-[#F5F2EE] px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="rounded-[32px] border border-[#E7D8CC] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.14)] sm:p-8">
-          <div className="mb-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#FF6A3D]">Orduva owner login</p>
-            <h1 className="mt-2 text-3xl font-bold text-[#1F2328] sm:text-4xl">Sign in to admin</h1>
+      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+        <section className="rounded-[32px] border border-[#E7D8CC] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.10)] sm:p-8">
+          <div className="mb-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#FF6A3D]">Orduva Admin</p>
+            <h1 className="mt-2 text-3xl font-bold text-[#1F2328] sm:text-4xl">Sign in to your workspace</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5C5F66] sm:text-base">
-              This login is tenant-specific. On a shared admin subdomain such as admin.orduva.com, enter the tenant slug you want to manage. Your session stays tied to that tenant only.
+              Manage orders, products and storefront settings for your business.
             </p>
           </div>
 
-          <div className="mb-6 rounded-[28px] border border-[#E7D8CC] bg-[linear-gradient(135deg,#FFF7F0_0%,#F5F2EE_100%)] p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+          {session.loading ? (
+            <div className="mb-5 rounded-2xl border border-[#E7D8CC] bg-[#FFF7F0] px-4 py-3 text-sm text-[#5C5F66]">Checking your sign-in status...</div>
+          ) : null}
+
+          {!session.loading && session.authenticated ? (
+            <div className="mb-5 space-y-4 rounded-[28px] border border-[#FFD8C8] bg-[#FFF7F0] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">Current tenant</p>
-                <p className="mt-2 text-lg font-semibold text-[#1F2328]">{"Shared admin domain"}</p>
-                <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
-                  If you are using a shared admin subdomain, type the tenant slug directly below. On tenant storefront domains, the tenant hint should match the current business.
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">Already signed in</p>
+                <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Continue to admin</h2>
+                <p className="mt-2 text-sm leading-6 text-[#5C5F66]">
+                  Signed in as {session.user.full_name || session.user.email} for {session.tenant.name}.
                 </p>
               </div>
-              <div className="rounded-2xl bg-[#FFF7F0]/80 px-4 py-3 text-sm text-[#5C5F66] ring-1 ring-[#E7D8CC]">
-                <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">Version</span>
-                <span className="mt-1 block font-semibold text-[#1F2328]">Owner login active</span>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="/admin"
+                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1F2328]"
+                >
+                  Open admin
+                </a>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={busy === "logout"}
+                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#1F2328] ring-1 ring-[#E7D8CC] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {busy === "logout" ? "Signing out..." : "Sign out"}
+                </button>
               </div>
             </div>
+          ) : null}
+
+          <div className="mb-5 rounded-[26px] border border-[#E7D8CC] bg-[#FFF7F0] p-4 sm:p-5">
+            <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Tenant slug</label>
+            <input
+              type="text"
+              value={tenantSlug}
+              onChange={(event) => setTenantSlug(event.target.value.toLowerCase())}
+              className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+              placeholder="orduva"
+              required
+            />
+            <p className="mt-2 text-xs leading-5 text-[#5C5F66]">This selects the tenant workspace you want to manage.</p>
           </div>
 
           <div className="mb-6 grid grid-cols-2 gap-3">
@@ -179,95 +208,45 @@ export default function AdminLoginPage() {
               onClick={() => setActivePanel("login")}
               className={`inline-flex min-h-12 items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                 activePanel === "login"
-                  ? "bg-slate-900 text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]"
-                  : "bg-slate-100 text-slate-700 ring-1 ring-[#E7D8CC] hover:bg-slate-200"
+                  ? "bg-[#0E0E10] text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)]"
+                  : "bg-white text-[#1F2328] ring-1 ring-[#E7D8CC] hover:bg-[#FFF7F0]"
               }`}
             >
-              Owner sign in
+              Sign in
             </button>
             <button
               type="button"
               onClick={() => setActivePanel("setup")}
               className={`inline-flex min-h-12 items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                 activePanel === "setup"
-                  ? "bg-emerald-600 text-white shadow-[0_12px_30px_rgba(5,150,105,0.2)]"
-                  : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
+                  ? "bg-[#FF6A3D] text-white shadow-[0_12px_30px_rgba(255,106,61,0.22)]"
+                  : "bg-white text-[#1F2328] ring-1 ring-[#E7D8CC] hover:bg-[#FFF7F0]"
               }`}
             >
               First owner setup
             </button>
           </div>
 
-          <div className="mb-6 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">Shared admin subdomain prep</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
-                On a shared host such as <span className="font-semibold">admin.orduva.com</span>, this page no longer depends on storefront host detection. Use the tenant slug field below to open the right admin safely.
-              </p>
-            </div>
-          </div>
-
-          {session.loading ? (
-            <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-[#5C5F66]">Checking for an existing owner session...</div>
-          ) : null}
-
-          {!session.loading && session.authenticated ? (
-            <div className="space-y-4 rounded-[28px] border border-emerald-200 bg-emerald-50 p-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Already signed in</p>
-                <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Continue to your admin</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  You are already signed in as {session.user.full_name || session.user.email} for {session.tenant.name}.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="/admin"
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                  Open admin
-                </a>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={busy === "logout"}
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#1F2328] ring-1 ring-[#E7D8CC] transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {busy === "logout" ? "Signing out..." : "Sign out"}
-                </button>
-              </div>
-            </div>
-          ) : activePanel === "login" ? (
+          {activePanel === "login" ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Tenant slug</label>
-                <input
-                  type="text"
-                  value={tenantSlug}
-                  onChange={(event) => setTenantSlug(event.target.value.toLowerCase())}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
-                  placeholder="orduva"
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Owner email</label>
+                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Owner email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
                   placeholder="owner@example.com"
                   required
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Password</label>
+                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
+                  className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
                   placeholder="Enter your password"
                   required
                 />
@@ -275,89 +254,67 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={busy === "login"}
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1F2328] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busy === "login" ? "Signing in..." : "Sign in to admin"}
               </button>
             </form>
           ) : (
-            <form onSubmit={handleBootstrap} className="space-y-4 rounded-[28px] border border-emerald-200 bg-emerald-50/70 p-5">
+            <form onSubmit={handleBootstrap} className="space-y-4 rounded-[28px] border border-[#FFD8C8] bg-[#FFF7F0] p-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Use once per tenant</p>
-                <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Create the first owner login</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  This is only for the very first owner on the current tenant. You will need the bootstrap access key from Netlify. Once the first owner exists, use the normal sign-in form instead.
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">First owner setup</p>
+                <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Create the first owner</h2>
+                <p className="mt-2 text-sm leading-6 text-[#5C5F66]">
+                  Use this once when setting up a tenant workspace for the first time.
                 </p>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Tenant slug</label>
-                <input
-                  type="text"
-                  value={tenantSlug}
-                  onChange={(event) => setTenantSlug(event.target.value.toLowerCase())}
-                  className="w-full rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400"
-                  placeholder="orduva"
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Full name</label>
+                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Full name</label>
                 <input
                   value={fullName}
                   onChange={(event) => setFullName(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400"
+                  className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
                   placeholder="Tenant owner"
                   required
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Tenant slug</label>
-                <input
-                  type="text"
-                  value={tenantSlug}
-                  onChange={(event) => setTenantSlug(event.target.value.toLowerCase())}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
-                  placeholder="orduva"
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Owner email</label>
+                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Owner email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400"
+                  className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
                   placeholder="owner@example.com"
                   required
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Password</label>
+                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400"
+                  className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
                   placeholder="Choose a password"
                   required
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">Bootstrap access key</label>
+                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Setup access key</label>
                 <input
                   type="password"
                   value={setupKey}
                   onChange={(event) => setSetupKey(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400"
-                  placeholder="ADMIN_ACCESS_KEY"
+                  className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                  placeholder="Enter setup key"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={busy === "setup"}
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#E95C32] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busy === "setup" ? "Creating first owner..." : "Create first owner"}
               </button>
@@ -367,34 +324,16 @@ export default function AdminLoginPage() {
           {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClasses}`}>{message}</div> : null}
         </section>
 
-        <aside className="rounded-[32px] border border-[#E7D8CC] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.1)] sm:p-8">
-          <div className="rounded-[28px] bg-slate-50 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">What changed</p>
-            <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Cleaner owner access flow</h2>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#5C5F66]">
-              <li>• Clear split between normal sign-in and first owner setup.</li>
-              <li>• Existing session now shows a continue-to-admin panel instead of confusion.</li>
-              <li>• Success and error messages are easier to read.</li>
-              <li>• First owner setup is highlighted so it no longer looks like plain text.</li>
-            </ul>
-          </div>
-
-          <div className="mt-5 rounded-[28px] border border-slate-200 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">Quick reminders</p>
-            <div className="mt-4 space-y-4 text-sm leading-6 text-[#5C5F66]">
-              <div>
-                <p className="font-semibold text-[#1F2328]">Normal sign-in</p>
-                <p>Use this after the first owner already exists for the current tenant.</p>
-              </div>
-              <div>
-                <p className="font-semibold text-[#1F2328]">First owner setup</p>
-                <p>Use this once only for the current tenant, together with the Netlify bootstrap access key.</p>
-              </div>
-              <div>
-                <p className="font-semibold text-[#1F2328]">Tenant hint</p>
-                <p>If the tenant hint is wrong, stop there and switch to the correct tenant before signing in.</p>
-              </div>
-            </div>
+        <aside className="rounded-[32px] border border-[#E7D8CC] bg-[#0E0E10] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)] sm:p-8">
+          <div className="inline-flex rounded-full bg-[#FF6A3D] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white">Tenant workspace</div>
+          <h2 className="mt-5 text-3xl font-bold tracking-tight">Orduva Admin</h2>
+          <p className="mt-4 text-sm leading-7 text-white/72">
+            A focused workspace for managing your business, products and incoming orders.
+          </p>
+          <div className="mt-8 grid gap-3 text-sm text-white/78">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">Manage products and categories</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">Track new and active orders</div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">Update storefront branding and settings</div>
           </div>
         </aside>
       </div>
