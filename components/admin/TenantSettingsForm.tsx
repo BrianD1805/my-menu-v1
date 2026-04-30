@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { DEFAULT_MONEY_SETTINGS, formatMoney } from "@/lib/money";
 import { buildThemeFromCore, normalizeThemeColor, type StorefrontTheme, type StorefrontThemeKey } from "@/lib/storefront-theme";
 
@@ -163,6 +163,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget>("welcome");
   const [customSuggestedHex, setCustomSuggestedHex] = useState("#FFFFFF");
   const [extraSuggestedColours, setExtraSuggestedColours] = useState<string[]>([]);
+  const previewPanelRef = useRef<HTMLDivElement | null>(null);
+  const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -257,6 +259,19 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     setPreviewTarget("welcome");
     setTone("info");
     setMessage(`Applied ${preset.name}. You can now fine-tune each storefront item before saving.`);
+  }
+
+  function showPreview(target: PreviewTarget) {
+    setPreviewTarget(target);
+    window.setTimeout(() => {
+      previewPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
+  function showSuggestedColours() {
+    window.setTimeout(() => {
+      suggestedColoursRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
   }
 
   async function uploadAsset(file: File, kind: "logo" | "favicon") {
@@ -371,6 +386,27 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   {group.title}
                   <span className="ml-2 text-xs font-normal text-slate-500">{group.description}</span>
                 </summary>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => showPreview(group.id)}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-900 transition hover:border-orange-300 hover:bg-orange-100"
+                    title={`Show ${group.title} preview`}
+                  >
+                    <span aria-hidden="true">👁</span> Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={showSuggestedColours}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white"
+                    title="Show suggested colours"
+                  >
+                    <span aria-hidden="true">🎨</span> Suggested
+                  </button>
+                  <button type="submit" disabled={saving} className="ml-auto inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                    {saving ? "Saving..." : `Save ${group.title}`}
+                  </button>
+                </div>
                 <div className="mt-4 space-y-3">
                   {group.fields.map((field) => (
                     <ColorRow
@@ -433,7 +469,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </div>
       </form>
 
-      <div className="space-y-3 xl:sticky xl:top-5 xl:self-start">
+      <div ref={previewPanelRef} className="space-y-3 xl:sticky xl:top-5 xl:self-start">
         <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -459,7 +495,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           />
         </div>
 
-        <div className="rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4">
+        <div ref={suggestedColoursRef} className="rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4">
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">Suggested colours</p>
           <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing. Add your own hex colour below.</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -527,24 +563,29 @@ function PreviewPanel({ target, theme, previewName, previewHeading, previewSubhe
 function ColorRow({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   const safeValue = /^#[0-9a-fA-F]{6}$/.test(value) ? value : "#ffffff";
   return (
-    <div className="grid gap-2 rounded-2xl border border-slate-100 bg-slate-50/70 p-3 sm:grid-cols-[1fr_190px_44px] sm:items-center">
-      <span className="text-sm font-semibold text-slate-700">{label}</span>
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 focus-within:border-slate-400">
-        <span className="h-7 w-7 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ backgroundColor: safeValue }} aria-hidden="true" />
+    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-sm font-semibold text-slate-700">{label}</span>
+        <span className="h-6 w-6 shrink-0 rounded-lg border border-black/10 shadow-sm sm:hidden" style={{ backgroundColor: safeValue }} aria-hidden="true" />
+      </div>
+      <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-2 sm:grid-cols-[minmax(0,190px)_44px] sm:justify-end">
+        <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 focus-within:border-slate-400">
+          <span className="hidden h-7 w-7 shrink-0 rounded-lg border border-black/10 shadow-sm sm:inline-flex" style={{ backgroundColor: safeValue }} aria-hidden="true" />
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="min-w-0 flex-1 bg-transparent px-1 py-1 text-sm font-semibold uppercase outline-none"
+          />
+        </div>
         <input
-          type="text"
-          value={value}
+          type="color"
+          value={safeValue}
           onChange={(e) => onChange(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent px-1 py-1 text-sm font-semibold uppercase outline-none"
+          className="h-10 w-11 rounded-xl border border-slate-200 bg-white p-1"
+          aria-label={`${label} colour picker`}
         />
       </div>
-      <input
-        type="color"
-        value={safeValue}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-10 w-full rounded-xl border border-slate-200 bg-white p-1"
-        aria-label={`${label} colour picker`}
-      />
     </div>
   );
 }
@@ -561,7 +602,15 @@ function UploadField({ label, busy, onFile }: { label: string; busy: boolean; on
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mb-6 rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
-      <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">{title}</h3>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">{title}</h3>
+        <button
+          type="submit"
+          className="inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Save section
+        </button>
+      </div>
       {children}
     </section>
   );
