@@ -165,6 +165,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [extraSuggestedColours, setExtraSuggestedColours] = useState<string[]>([]);
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
+  const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -261,16 +262,28 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     setMessage(`Applied ${preset.name}. You can now fine-tune each storefront item before saving.`);
   }
 
+  function isMobileThemeEditor() {
+    return typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+  }
+
   function showPreview(target: PreviewTarget) {
     setPreviewTarget(target);
+    if (isMobileThemeEditor()) {
+      setMobileThemeModal("preview");
+      return;
+    }
     window.setTimeout(() => {
-      previewPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      previewPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 50);
   }
 
   function showSuggestedColours() {
+    if (isMobileThemeEditor()) {
+      setMobileThemeModal("suggested");
+      return;
+    }
     window.setTimeout(() => {
-      suggestedColoursRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      suggestedColoursRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }, 50);
   }
 
@@ -320,6 +333,50 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     } finally {
       setSaving(false);
     }
+  }
+
+  function renderSuggestedColoursPanel(compact = false) {
+    return (
+      <div className={compact ? "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950" : "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4"}>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">Suggested colours</p>
+        <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing. Add your own hex colour below.</p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {suggestedColours.map((colour) => (
+            <button
+              key={colour}
+              type="button"
+              onClick={() => {
+                void navigator.clipboard?.writeText(colour);
+                setTone("info");
+                setMessage(`Copied ${colour}. Paste it into any colour field.`);
+                if (compact) setMobileThemeModal(null);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm"
+              title={`Copy ${colour}`}
+            >
+              <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ backgroundColor: colour }} />
+              {colour}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 grid grid-cols-[1fr_38px_auto] gap-2">
+          <input
+            value={customSuggestedHex}
+            onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
+            className="rounded-xl border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-400"
+            placeholder="#FF6A3D"
+          />
+          <input
+            type="color"
+            value={/^#[0-9a-fA-F]{6}$/.test(customSuggestedHex) ? customSuggestedHex : "#ffffff"}
+            onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
+            className="h-9 w-full rounded-xl border border-orange-200 bg-white p-1"
+            aria-label="Custom suggested colour picker"
+          />
+          <button type="button" onClick={addCustomSuggestedColour} className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800">Add</button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -497,45 +554,36 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           />
         </div>
 
-        <div ref={suggestedColoursRef} className="rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4">
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">Suggested colours</p>
-          <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing. Add your own hex colour below.</p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {suggestedColours.map((colour) => (
-              <button
-                key={colour}
-                type="button"
-                onClick={() => {
-                  void navigator.clipboard?.writeText(colour);
-                  setTone("info");
-                  setMessage(`Copied ${colour}. Paste it into any colour field.`);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm"
-                title={`Copy ${colour}`}
-              >
-                <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ backgroundColor: colour }} />
-                {colour}
-              </button>
-            ))}
-          </div>
-          <div className="mt-3 grid grid-cols-[1fr_38px_auto] gap-2">
-            <input
-              value={customSuggestedHex}
-              onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
-              className="rounded-xl border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-400"
-              placeholder="#FF6A3D"
-            />
-            <input
-              type="color"
-              value={/^#[0-9a-fA-F]{6}$/.test(customSuggestedHex) ? customSuggestedHex : "#ffffff"}
-              onChange={(event) => setCustomSuggestedHex(event.target.value.toUpperCase())}
-              className="h-9 w-full rounded-xl border border-orange-200 bg-white p-1"
-              aria-label="Custom suggested colour picker"
-            />
-            <button type="button" onClick={addCustomSuggestedColour} className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800">Add</button>
-          </div>
+        <div ref={suggestedColoursRef}>
+          {renderSuggestedColoursPanel()}
         </div>
       </div>
+
+      {mobileThemeModal ? (
+        <div className="fixed inset-0 z-[90] flex items-end bg-slate-950/55 px-3 pb-3 pt-8 backdrop-blur-[2px] md:hidden" onClick={() => setMobileThemeModal(null)}>
+          <div className="max-h-[88dvh] w-full overflow-y-auto rounded-[28px] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.35)]" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">{mobileThemeModal === "preview" ? "Live preview" : "Suggested colours"}</p>
+                <h3 className="mt-1 text-lg font-black text-slate-950">{mobileThemeModal === "preview" ? labelForPreview(previewTarget) : "Choose a colour"}</h3>
+              </div>
+              <button type="button" onClick={() => setMobileThemeModal(null)} className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-bold text-slate-500 shadow-sm" aria-label="Close popup">×</button>
+            </div>
+            {mobileThemeModal === "preview" ? (
+              <PreviewPanel
+                target={previewTarget}
+                theme={theme}
+                previewName={previewName}
+                previewHeading={previewHeading}
+                previewSubheading={previewSubheading}
+                footerBlurb={footerBlurb}
+                footerNotice={footerNotice}
+                money={formatMoney(295, moneySettings)}
+              />
+            ) : renderSuggestedColoursPanel(true)}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -568,11 +616,20 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-3">
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="text-sm font-semibold text-slate-700">{label}</span>
-        <span className="h-6 w-6 shrink-0 rounded-lg border border-black/10 shadow-sm sm:hidden" style={{ backgroundColor: safeValue }} aria-hidden="true" />
+        <label className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white text-base shadow-sm transition hover:border-orange-300 hover:bg-orange-50 sm:hidden" title={`${label} colour picker`} aria-label={`${label} colour picker`}>
+          <span aria-hidden="true">🎨</span>
+          <input
+            type="color"
+            value={safeValue}
+            onChange={(e) => onChange(e.target.value)}
+            className="sr-only"
+            tabIndex={-1}
+          />
+        </label>
       </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_44px] items-center gap-2 sm:grid-cols-[minmax(0,190px)_44px] sm:justify-end">
+      <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,190px)_44px] sm:justify-end">
         <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 focus-within:border-slate-400">
-          <span className="hidden h-7 w-7 shrink-0 rounded-lg border border-black/10 shadow-sm sm:inline-flex" style={{ backgroundColor: safeValue }} aria-hidden="true" />
+          <span className="h-7 w-7 shrink-0 rounded-lg border border-black/10 shadow-sm" style={{ backgroundColor: safeValue }} aria-hidden="true" />
           <input
             type="text"
             value={value}
@@ -584,7 +641,7 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
           type="color"
           value={safeValue}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-11 rounded-xl border border-slate-200 bg-white p-1"
+          className="hidden h-10 w-11 rounded-xl border border-slate-200 bg-white p-1 sm:block"
           aria-label={`${label} colour picker`}
         />
       </div>
