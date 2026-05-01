@@ -234,8 +234,26 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
       </a>
 
       {reminderOpen ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-[2px]" role="dialog" aria-modal="true" aria-labelledby="order-updates-title">
-          <div className="w-full max-w-md overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.26)]">
+        <div
+          className="fixed inset-0 z-[90] bg-slate-950/60 px-4 py-6 backdrop-blur-[2px]"
+          style={{
+            position: "fixed",
+            inset: 0,
+            width: "100vw",
+            minHeight: "100dvh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1.5rem 1rem",
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="order-updates-title"
+        >
+          <div
+            className="overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.26)]"
+            style={{ width: "min(92vw, 28rem)", maxWidth: "28rem", margin: "0 auto" }}
+          >
             <div className="relative px-5 pb-5 pt-6 sm:px-6 sm:pb-6">
               <button
                 type="button"
@@ -267,12 +285,12 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
                 </div>
               ) : null}
 
-              <div className="mt-5 grid gap-3">
+              <div className="mt-5 grid w-full gap-3">
                 <button
                   type="button"
                   onClick={() => void enableUpdates()}
                   disabled={busy}
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-65"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-65"
                   style={{ backgroundColor: brandPrimary }}
                 >
                   {busy ? "Turning on updates…" : "Enable order updates"}
@@ -280,7 +298,7 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
                 <button
                   type="button"
                   onClick={dismissForSession}
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Not now, continue to cart
                 </button>
