@@ -383,7 +383,7 @@ export default function MenuBrowser({
                     <path d="m20 20-3.5-3.5" />
                   </svg>
                 </button>
-                <CartButton ref={cartButtonRef} tenantSlug={tenantSlug} accentColor={brandAccent} primaryColor={brandPrimary} pulseKey={cartPulseKey} />
+                <CartButton ref={cartButtonRef} tenantSlug={tenantSlug} tenantId={tenantId} accentColor={brandAccent} primaryColor={brandPrimary} pulseKey={cartPulseKey} />
               </div>
             </div>
           </div>
