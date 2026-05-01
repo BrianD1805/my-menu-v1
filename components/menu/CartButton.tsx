@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, MouseEvent, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { readCart, subscribeToCartUpdates } from "@/lib/cart";
 
@@ -233,9 +234,9 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
         </span>
       </a>
 
-      {reminderOpen ? (
+      {reminderOpen && typeof document !== "undefined" ? createPortal(
         <div
-          className="fixed inset-0 z-[90] bg-slate-950/60 px-4 py-6 backdrop-blur-[2px]"
+          className="fixed inset-0 z-[9999] bg-slate-950/60 px-4 py-6 backdrop-blur-[2px]"
           style={{
             position: "fixed",
             inset: 0,
@@ -309,7 +310,8 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
               </p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       ) : null}
     </>
   );
