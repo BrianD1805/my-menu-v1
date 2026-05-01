@@ -15,20 +15,25 @@ export type NotificationEventInput = {
 };
 
 export async function enqueueNotificationEvent(input: NotificationEventInput) {
-  try {
-    await db.from("notification_events").insert({
-      tenant_id: input.tenantId,
-      order_id: input.orderId || null,
+  const { error } = await db.from("notification_events").insert({
+    tenant_id: input.tenantId,
+    order_id: input.orderId || null,
+    audience: input.audience,
+    channel: input.channel || "push",
+    event_type: input.eventType,
+    title: input.title,
+    body: input.body,
+    metadata: input.payload || {},
+    status: "pending",
+  });
+
+  if (error) {
+    console.error("[Orduva notifications] Failed to insert notification event", {
+      message: error.message,
+      eventType: input.eventType,
       audience: input.audience,
-      channel: input.channel || "push",
-      event_type: input.eventType,
-      title: input.title,
-      body: input.body,
-      payload: input.payload || null,
-      status: "pending",
+      orderId: input.orderId || null,
     });
-  } catch {
-    // Foundation-only for now. Notifications should never block orders or status updates.
   }
 }
 

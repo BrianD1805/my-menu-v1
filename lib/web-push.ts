@@ -70,9 +70,10 @@ async function logCustomerPushEvent(input: {
   eventType: string;
   title: string;
   body: string;
-  status: "sent" | "warning" | "failed";
-  payload: Record<string, unknown>;
+  status: "sent" | "skipped" | "failed";
+  metadata: Record<string, unknown>;
 }) {
+  const now = new Date().toISOString();
   const { error } = await db.from("notification_events").insert({
     tenant_id: input.tenantId,
     order_id: input.orderId,
@@ -81,12 +82,23 @@ async function logCustomerPushEvent(input: {
     event_type: input.eventType,
     title: input.title,
     body: input.body,
-    payload: input.payload,
     status: input.status,
+    metadata: input.metadata || {},
+    processed_at: input.status === "sent" || input.status === "skipped" ? now : null,
+    failed_at: input.status === "failed" ? now : null,
+    error_message:
+      input.status === "failed" && typeof input.metadata?.error === "string"
+        ? String(input.metadata.error)
+        : null,
   });
 
   if (error) {
-    console.error("[Orduva push] Failed to log customer notification event", error.message);
+    console.error("[Orduva push] Failed to log customer notification event", {
+      message: error.message,
+      eventType: input.eventType,
+      orderId: input.orderId,
+      status: input.status,
+    });
   }
 }
 
@@ -174,8 +186,9 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
       event_type: "admin_push_no_enabled_devices",
       title: "Admin push not active",
       body: "A new-order admin push could not be sent because no enabled admin push devices were found for this tenant.",
-      payload: { route: "/admin", action: "enable_admin_push" },
-      status: "warning",
+      metadata: { route: "/admin", action: "enable_admin_push" },
+      status: "skipped",
+      processed_at: new Date().toISOString(),
     });
 
     return { ok: false, reason: "no_subscriptions" as const, sent: 0, failed: 0 };
@@ -232,7 +245,7 @@ export async function sendCustomerPushForOrderWithFallback(
       title: "Customer status push not configured",
       body: "Customer status push could not be sent because VAPID configuration is missing.",
       status: "failed",
-      payload: { ...result, orderId },
+      metadata: { ...result, orderId },
     });
     return result;
   }
@@ -252,7 +265,7 @@ export async function sendCustomerPushForOrderWithFallback(
       title: "Customer status push lookup failed",
       body: "Customer status push could not load order details for fallback lookup.",
       status: "failed",
-      payload: { ...result, orderId, error: orderLookup.error.message },
+      metadata: { ...result, orderId, error: orderLookup.error.message },
     });
     return result;
   }
@@ -277,7 +290,7 @@ export async function sendCustomerPushForOrderWithFallback(
       title: "Customer status push lookup failed",
       body: "Customer status push could not query order-linked subscriptions.",
       status: "failed",
-      payload: { ...result, orderId, error: direct.error.message },
+      metadata: { ...result, orderId, error: direct.error.message },
     });
     return result;
   }
@@ -302,7 +315,7 @@ export async function sendCustomerPushForOrderWithFallback(
         title: "Customer status push lookup failed",
         body: "Customer status push could not query customer-account subscriptions.",
         status: "failed",
-        payload: { ...result, orderId, customerAccountId, error: byAccount.error.message },
+        metadata: { ...result, orderId, customerAccountId, error: byAccount.error.message },
       });
       return result;
     }
@@ -346,8 +359,8 @@ export async function sendCustomerPushForOrderWithFallback(
       eventType: "customer_status_push_no_subscriptions",
       title: "No customer push device found",
       body: "Customer status push could not be sent because no enabled customer push subscription was found for this order or customer account.",
-      status: "warning",
-      payload: { ...result, orderId, customerAccountId, customerPhone: Boolean(customerPhone), customerName: Boolean(customerName) },
+      status: "skipped",
+      metadata: { ...result, orderId, customerAccountId, customerPhone: Boolean(customerPhone), customerName: Boolean(customerName) },
     });
     return result;
   }
@@ -364,7 +377,7 @@ export async function sendCustomerPushForOrderWithFallback(
       ? `Customer status push was sent to ${sendResult.sent} device(s).`
       : "Customer status push found subscriptions but could not deliver to any device.",
     status: sendResult.ok ? "sent" : "failed",
-    payload: { ...result, orderId, customerAccountId, tag: payload.tag || null },
+    metadata: { ...result, orderId, customerAccountId, tag: payload.tag || null },
   });
 
   return result;
