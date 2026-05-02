@@ -16,11 +16,11 @@ export default function PlatformOnboardingPage() {
             </div>
             <div className="flex flex-wrap gap-2.5">
               <a href="/" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]">Platform home</a>
-              <a href="https://admin.orduva.com/admin" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]">Tenant admin</a>
+              <a href="https://admin.orduva.com/admin" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]">Store admin</a>
             </div>
           </div>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-            Create the foundation for a new Orduva client without mixing platform-owner tools into a tenant admin area. This page is for Orduva platform setup, not day-to-day ZimZa Express management.
+            Create the foundation for a new Orduva client without mixing platform-owner tools into a store admin area. This page is for Orduva platform setup, not day-to-day store management.
           </p>
           <div className="mt-4 inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</div>
         </header>

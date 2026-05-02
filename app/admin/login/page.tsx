@@ -42,6 +42,13 @@ export default function AdminLoginPage() {
   const tenantHint = useMemo(() => normalizeSlugFromHost(), []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const selectedStore = new URLSearchParams(window.location.search).get("tenant");
+    if (selectedStore) {
+      const normalizedStore = selectedStore.trim().toLowerCase();
+      if (tenantSlug !== normalizedStore) setTenantSlug(normalizedStore);
+      return;
+    }
     if (!tenantSlug) setTenantSlug(tenantHint || "orduva");
   }, [tenantHint, tenantSlug]);
 
@@ -153,7 +160,7 @@ export default function AdminLoginPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#FF6A3D]">Orduva Admin</p>
             <h1 className="mt-2 text-3xl font-bold text-[#1F2328] sm:text-4xl">Sign in to your workspace</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5C5F66] sm:text-base">
-              Manage orders, products and storefront settings for your business.
+              Manage orders, products and storefront settings for the selected store.
             </p>
           </div>
 
@@ -190,7 +197,7 @@ export default function AdminLoginPage() {
           ) : null}
 
           <div className="mb-5 rounded-[26px] border border-[#E7D8CC] bg-[#FFF7F0] p-4 sm:p-5">
-            <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Tenant slug</label>
+            <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Store address name</label>
             <input
               type="text"
               value={tenantSlug}
@@ -199,7 +206,7 @@ export default function AdminLoginPage() {
               placeholder="orduva"
               required
             />
-            <p className="mt-2 text-xs leading-5 text-[#5C5F66]">This selects the tenant workspace you want to manage.</p>
+            <p className="mt-2 text-xs leading-5 text-[#5C5F66]">This selects the store workspace you want to manage. Example: stamps-delivered opens stamps-delivered.orduva.com.</p>
           </div>
 
           <div className="mb-6 grid grid-cols-2 gap-3">
@@ -265,7 +272,7 @@ export default function AdminLoginPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">First owner setup</p>
                 <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Create the first owner</h2>
                 <p className="mt-2 text-sm leading-6 text-[#5C5F66]">
-                  Use this once when setting up a tenant workspace for the first time.
+                  Use this once when setting up a store workspace for the first time.
                 </p>
               </div>
               <div>
@@ -274,7 +281,7 @@ export default function AdminLoginPage() {
                   value={fullName}
                   onChange={(event) => setFullName(event.target.value)}
                   className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
-                  placeholder="Tenant owner"
+                  placeholder="Store owner"
                   required
                 />
               </div>
@@ -325,7 +332,7 @@ export default function AdminLoginPage() {
         </section>
 
         <aside className="rounded-[32px] border border-[#E7D8CC] bg-[#0E0E10] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)] sm:p-8">
-          <div className="inline-flex rounded-full bg-[#FF6A3D] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white">Tenant workspace</div>
+          <div className="inline-flex rounded-full bg-[#FF6A3D] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white">Store workspace</div>
           <h2 className="mt-5 text-3xl font-bold tracking-tight">Orduva Admin</h2>
           <p className="mt-4 text-sm leading-7 text-white/72">
             A focused workspace for managing your business, products and incoming orders.

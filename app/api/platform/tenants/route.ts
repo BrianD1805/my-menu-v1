@@ -153,10 +153,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Business name is required" }, { status: 400 });
     }
     if (!slug || slug.length < 3) {
-      return NextResponse.json({ error: "Storefront slug must be at least 3 characters" }, { status: 400 });
+      return NextResponse.json({ error: "Store address name must be at least 3 characters" }, { status: 400 });
     }
     if (RESERVED_SLUGS.has(slug)) {
-      return NextResponse.json({ error: "That slug is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
+      return NextResponse.json({ error: "That store address is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
     }
     if (!looksLikeEmail(contactEmail)) {
       return NextResponse.json({ error: "Contact email does not look valid" }, { status: 400 });
@@ -170,7 +170,7 @@ export async function POST(req: Request) {
 
     const { data: existing } = await db.from("tenants").select("id").eq("slug", slug).maybeSingle();
     if (existing) {
-      return NextResponse.json({ error: "That storefront slug is already in use" }, { status: 409 });
+      return NextResponse.json({ error: "That store address is already in use" }, { status: 409 });
     }
 
     const { data: tenant, error: tenantError } = await db
@@ -185,7 +185,7 @@ export async function POST(req: Request) {
       .single();
 
     if (tenantError || !tenant) {
-      return NextResponse.json({ error: tenantError?.message || "Failed to create tenant" }, { status: 500 });
+      return NextResponse.json({ error: tenantError?.message || "Failed to create store" }, { status: 500 });
     }
 
     const currency = COUNTRY_DEFAULTS[countryCode] || COUNTRY_DEFAULTS.GB;
@@ -248,19 +248,19 @@ export async function POST(req: Request) {
       storefrontUrl: `https://${slug}.orduva.com`,
       adminUrl: `https://admin.orduva.com`,
       checklist: [
-        "Tenant foundation created",
-        "Open the generated storefront URL",
-        "Open shared admin and confirm the active tenant",
+        "Store foundation created",
+        "Open the generated store address",
+        "Open shared admin and confirm the active store",
         "Upload logo and favicon",
         "Review storefront colours and currency formatting",
         "Add real categories and products",
         "Enable admin push notifications",
-        "Place a test order from the tenant subdomain",
+        "Place a test order from the store address",
         "Change the order status and confirm customer push updates",
       ],
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to create tenant";
+    const message = error instanceof Error ? error.message : "Failed to create store";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

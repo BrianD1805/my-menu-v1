@@ -70,10 +70,10 @@ export default function AdminShell({
                 {logoUrl ? <img src={logoUrl} alt={`${tenantName} logo`} className="h-full w-full object-cover" /> : tenantInitial}
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#FFB168]">Active tenant</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#FFB168]">Active store</p>
                 <p className="truncate text-xl font-black leading-tight text-white sm:text-2xl">{tenantName}</p>
                 <p className="mt-1 truncate text-xs font-semibold text-white/68">
-                  {tenantSlug ? `${tenantSlug}.orduva.com` : "Tenant slug unavailable"}
+                  {tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}
                 </p>
               </div>
             </div>
@@ -86,6 +86,12 @@ export default function AdminShell({
                 className="admin-pressable inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white transition hover:-translate-y-[1px] hover:bg-white/18"
               >
                 Open storefront
+              </a>
+              <a
+                href="/platform/onboarding#store-switcher"
+                className="admin-pressable inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white transition hover:-translate-y-[1px] hover:bg-white/18"
+              >
+                Owner store list
               </a>
               <span className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/40 bg-[#FF6A3D] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(255,106,61,0.20)]">
                 {LIVE_VERSION.replace("Ver: ", "V ")}
@@ -102,7 +108,7 @@ export default function AdminShell({
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xl font-black tracking-tight text-[#0E0E10]">Orduva Admin</p>
-                <p className="mt-0.5 truncate text-xs font-black uppercase tracking-[0.24em] text-[#FF6A3D]">Tenant workspace</p>
+                <p className="mt-0.5 truncate text-xs font-black uppercase tracking-[0.24em] text-[#FF6A3D]">Store workspace</p>
               </div>
             </div>
 
@@ -112,7 +118,7 @@ export default function AdminShell({
               </span>
               {tenantSlug ? (
                 <span className="inline-flex min-h-10 items-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FF6A3D]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#C84F2A] shadow-sm">
-                  {tenantSlug}
+                  Store address: {tenantSlug}.orduva.com
                 </span>
               ) : null}
               <span className="inline-flex min-h-10 items-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_16px_34px_rgba(14,14,16,0.20)]">
@@ -122,7 +128,7 @@ export default function AdminShell({
           </div>
 
           <div className="px-5 py-6 sm:px-7 lg:px-8 lg:py-7">
-            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="grid gap-6 lg:grid-cols-[1fr_18rem_18rem] lg:items-stretch">
               <div>
                 <p className="inline-flex w-fit rounded-full border border-[#FF6A3D]/25 bg-[#FF6A3D]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">
                   {current} dashboard
@@ -145,9 +151,19 @@ export default function AdminShell({
                 </p>
                 {tenantSlug ? (
                   <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
-                    Tenant slug <span className="font-black text-[#0E0E10]">{tenantSlug}</span>
+                    Store address <span className="font-black text-[#0E0E10]">{tenantSlug}.orduva.com</span>
                   </p>
                 ) : null}
+              </div>
+
+              <div className="rounded-[26px] border border-[#FF6A3D]/20 bg-white p-4 shadow-[0_18px_48px_rgba(14,14,16,0.06)] lg:min-w-[18rem]">
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Owner switcher foundation</p>
+                <p className="mt-2 text-sm leading-6 text-[#5C5F66]">
+                  Need another store? Use the owner store list to open a different store address, then sign in for that store.
+                </p>
+                <a href="/platform/onboarding#store-switcher" className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#252528]">
+                  Open owner store list
+                </a>
               </div>
             </div>
 
