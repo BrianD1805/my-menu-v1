@@ -1,3 +1,4 @@
+import TenantOnboardingManager from "@/components/admin/TenantOnboardingManager";
 import MenuBrowser from "@/components/menu/MenuBrowser";
 import StorefrontPwaRegistrar from "@/components/menu/StorefrontPwaRegistrar";
 import { db } from "@/lib/db";
@@ -45,7 +46,7 @@ function OrduvaPlatformLanding() {
                 Admin login
               </a>
               <a
-                href="/platform/onboarding"
+                href="#client-onboarding"
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]"
               >
                 Start your store
@@ -73,7 +74,7 @@ function OrduvaPlatformLanding() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
-                  href="/platform/onboarding"
+                  href="#client-onboarding"
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.28)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]"
                 >
                   Create your Orduva store
@@ -87,17 +88,17 @@ function OrduvaPlatformLanding() {
               </div>
 
               <div className="mt-6 rounded-[30px] border border-[#FF6A3D]/20 bg-white/80 p-5 shadow-[0_18px_48px_rgba(14,14,16,0.07)]">
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Controlled client onboarding</p>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Client store onboarding</p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10]">Ready to launch your own ordering store?</h2>
                 <p className="mt-3 text-sm leading-6 text-[#68707A]">
-                  Start your Orduva setup from the public landing page. For now, new stores are still approved through a protected onboarding step so we can keep every launch tidy, checked, and correctly connected.
+                  Start your Orduva setup directly from this page. Store creation remains controlled with an onboarding code, while the separate platform area stays for the Orduva owner only.
                 </p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                   <a
-                    href="/platform/onboarding"
+                    href="#client-onboarding"
                     className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(14,14,16,0.18)] transition hover:-translate-y-[1px] hover:bg-[#252528]"
                   >
-                    Start controlled onboarding
+                    Start setup on this page
                   </a>
                   <a
                     href="https://admin.orduva.com/admin"
@@ -189,11 +190,11 @@ function OrduvaPlatformLanding() {
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FFB168]">New client setup</p>
                 <h2 className="mt-2 text-3xl font-black tracking-tight">Create a store, then launch it properly.</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
-                  Public visitors can now find the onboarding entry point from the landing page, while Orduva keeps the actual store creation step controlled until self-service launch is ready.
+                  New clients can start their controlled onboarding from this public landing page. The owner platform remains separate and is not part of the client journey.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-                <a href="/platform/onboarding" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
+                <a href="#client-onboarding" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
                   Start your store
                 </a>
                 <a href="https://admin.orduva.com/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-6 py-3 text-sm font-black text-white transition hover:-translate-y-[1px] hover:bg-white/20">
@@ -201,6 +202,17 @@ function OrduvaPlatformLanding() {
                 </a>
               </div>
             </div>
+          </section>
+
+          <section id="client-onboarding" className="scroll-mt-6 border-t border-[#0E0E10]/10 bg-[#FFF7F0] px-5 py-8 sm:px-7 lg:px-9">
+            <div className="mb-6 max-w-3xl">
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">Client onboarding</p>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-[#0E0E10]">Start your Orduva store setup here.</h2>
+              <p className="mt-3 text-sm leading-7 text-[#68707A]">
+                This is the public client onboarding entry point. Enter the onboarding code supplied by Orduva, complete the store details, and we will create the controlled store foundation for launch checks.
+              </p>
+            </div>
+            <TenantOnboardingManager initialTenants={[]} apiPath="/api/platform/tenants" platformMode clientMode />
           </section>
 
           <section className="border-t border-[#0E0E10]/10 bg-[#F5F2EE]/70 px-5 py-7 sm:px-7 lg:px-9">

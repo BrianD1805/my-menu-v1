@@ -22,6 +22,7 @@ type Props = {
   initialTenants: TenantSummary[];
   apiPath?: string;
   platformMode?: boolean;
+  clientMode?: boolean;
 };
 
 const RESERVED_SLUGS = new Set(["admin", "api", "app", "assets", "static", "www", "orduva", "localhost", "support", "help", "login", "platform"]);
@@ -67,7 +68,7 @@ function buildAdminLoginUrl(slug: string) {
   return `/admin/login?tenant=${encodeURIComponent(slug)}`;
 }
 
-export default function TenantOnboardingManager({ initialTenants, apiPath = "/api/admin/tenants", platformMode = false }: Props) {
+export default function TenantOnboardingManager({ initialTenants, apiPath = "/api/admin/tenants", platformMode = false, clientMode = false }: Props) {
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
   const [countryCode, setCountryCode] = useState("GB");
@@ -107,6 +108,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const invalidContactEmail = !looksLikeEmail(contactEmail);
   const invalidOwnerEmail = !looksLikeEmail(ownerEmail);
   const incompleteOwnerLogin = Boolean(ownerEmail.trim() || ownerPassword.trim() || ownerName.trim()) && (!ownerEmail.trim() || ownerPassword.length < 8);
+  const ownerFacing = platformMode && !clientMode;
 
   const formWarnings = [
     !businessName.trim() ? "Business name is required." : null,
@@ -145,7 +147,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       if (!response.ok) throw new Error(data?.error || "Failed to unlock platform onboarding");
       setTenants(data.tenants || []);
       setPlatformUnlocked(true);
-      setMessage("Controlled onboarding unlocked. Recent store addresses are now checked before launch.");
+      setMessage(clientMode ? "Onboarding unlocked. You can now complete your store setup request." : "Controlled onboarding unlocked. Recent store addresses are now checked before launch.");
     } catch (error) {
       setPlatformUnlocked(false);
       setMessage(error instanceof Error ? error.message : "Failed to unlock platform onboarding");
@@ -209,9 +211,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     <div className="space-y-6">
       {platformMode ? (
         <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Controlled onboarding access</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Unlock store creation</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">Public landing page visitors can now find this onboarding entry point, but new store creation still requires the Orduva platform access key. This keeps client self-signup controlled until full public self-service is ready.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{clientMode ? "Client onboarding access" : "Owner onboarding access"}</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{clientMode ? "Start your store setup" : "Unlock store creation"}</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{clientMode ? "Enter the onboarding code supplied by Orduva, then complete the store setup form below. The Orduva owner area stays separate from this public landing page." : "This owner-only area requires the Orduva platform access key before creating or reviewing client store foundations."}</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <input
               type="password"
@@ -220,7 +222,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 setPlatformKey(event.target.value);
                 setPlatformUnlocked(false);
               }}
-              placeholder="Platform access key"
+              placeholder={clientMode ? "Onboarding access code" : "Platform access key"}
               className="min-h-12 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
             <button
@@ -235,7 +237,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
         </section>
       ) : null}
 
-      {platformMode ? (
+      {ownerFacing ? (
         <section className="rounded-[30px] border border-[#0E0E10]/10 bg-[#0E0E10] p-5 text-white shadow-[0_22px_60px_rgba(14,14,16,0.18)] sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -304,10 +306,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Create client foundation</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">New client store</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{clientMode ? "Client store setup" : "Create client foundation"}</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{clientMode ? "Tell us about your store" : "New client store"}</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            This creates the store record, default settings, starter category, generated store address, and optional owner login foundation.
+            {clientMode ? "Complete the details below so Orduva can create and check your ordering store before launch." : "This creates the store record, default settings, starter category, generated store address, and optional owner login foundation."}
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -396,7 +398,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             disabled={busy || formWarnings.length > 0 || (platformMode && !platformKey.trim())}
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
-            {busy ? "Creating client..." : "Create client foundation"}
+            {busy ? "Creating store..." : clientMode ? "Submit store setup" : "Create client foundation"}
           </button>
         </section>
 
@@ -438,6 +440,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
         </aside>
       </div>
 
+      {ownerFacing ? (
       <section id="store-switcher" className="scroll-mt-6 rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -475,6 +478,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           {!tenants.length ? <p className="text-sm text-slate-500">No stores found yet.</p> : null}
         </div>
       </section>
+      ) : null}
     </div>
   );
 }
