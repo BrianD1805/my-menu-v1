@@ -27,6 +27,7 @@ const RESERVED_SLUGS = new Set([
   "support",
   "help",
   "login",
+  "platform",
 ]);
 
 const COUNTRY_DEFAULTS: Record<string, CurrencyDefaults> = {
@@ -79,6 +80,11 @@ function normalizeSlug(value: unknown) {
 function normalizeOptionalText(value: unknown, maxLength: number) {
   const text = String(value || "").trim();
   return text ? text.slice(0, maxLength) : null;
+}
+
+function looksLikeEmail(value: string | null) {
+  if (!value) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function getCountryCode(value: unknown) {
@@ -136,10 +142,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Storefront slug must be at least 3 characters" }, { status: 400 });
     }
     if (RESERVED_SLUGS.has(slug)) {
-      return NextResponse.json({ error: "That slug is reserved. Please choose another." }, { status: 400 });
+      return NextResponse.json({ error: "That slug is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
     }
-    if (ownerEmail && ownerPassword.length < 8) {
-      return NextResponse.json({ error: "Owner password must be at least 8 characters" }, { status: 400 });
+    if (!looksLikeEmail(contactEmail)) {
+      return NextResponse.json({ error: "Contact email does not look valid" }, { status: 400 });
+    }
+    if (!looksLikeEmail(ownerEmail)) {
+      return NextResponse.json({ error: "Owner email does not look valid" }, { status: 400 });
+    }
+    if ((ownerEmail || ownerPassword) && (!ownerEmail || ownerPassword.length < 8)) {
+      return NextResponse.json({ error: "Owner login needs an owner email and a temporary password of at least 8 characters" }, { status: 400 });
     }
 
     const { data: existing } = await db.from("tenants").select("id").eq("slug", slug).maybeSingle();
@@ -222,12 +234,15 @@ export async function POST(req: Request) {
       storefrontUrl: `https://${slug}.orduva.com`,
       adminUrl: `https://admin.orduva.com`,
       checklist: [
-        "Add logo and favicon",
-        "Review colour palette",
-        "Add categories and products",
+        "Tenant foundation created",
+        "Open the generated storefront URL",
+        "Open shared admin and confirm the active tenant",
+        "Upload logo and favicon",
+        "Review storefront colours and currency formatting",
+        "Add real categories and products",
         "Enable admin push notifications",
-        "Place a test order",
-        "Install storefront PWA from the tenant subdomain",
+        "Place a test order from the tenant subdomain",
+        "Change the order status and confirm customer push updates",
       ],
     });
   } catch (error) {

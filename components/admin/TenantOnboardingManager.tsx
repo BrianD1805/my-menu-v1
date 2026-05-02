@@ -24,10 +24,24 @@ type Props = {
   platformMode?: boolean;
 };
 
+const RESERVED_SLUGS = new Set(["admin", "api", "app", "assets", "static", "www", "orduva", "localhost", "support", "help", "login", "platform"]);
+
 const COUNTRY_OPTIONS = [
   { code: "GB", label: "United Kingdom", hint: "GBP / Stripe-friendly" },
   { code: "ZA", label: "South Africa", hint: "ZAR / Yoco-friendly" },
   { code: "KE", label: "Kenya", hint: "KES / Pesapal & M-Pesa-friendly" },
+];
+
+const PRE_LAUNCH_STEPS = [
+  "Create tenant foundation and starter Menu category",
+  "Open the generated storefront URL",
+  "Open shared admin and confirm the active tenant",
+  "Upload logo and favicon",
+  "Review storefront colours and currency formatting",
+  "Add real categories and products",
+  "Enable admin push notifications",
+  "Place a test order from the tenant subdomain",
+  "Change the order status and confirm customer push updates",
 ];
 
 function slugify(value: string) {
@@ -38,6 +52,11 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
+}
+
+function looksLikeEmail(value: string) {
+  if (!value.trim()) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
 export default function TenantOnboardingManager({ initialTenants, apiPath = "/api/admin/tenants", platformMode = false }: Props) {
@@ -60,6 +79,22 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const suggestedSlug = useMemo(() => slugify(businessName), [businessName]);
   const effectiveSlug = slugify(slug || suggestedSlug);
   const storefrontPreview = effectiveSlug ? `https://${effectiveSlug}.orduva.com` : "https://clientname.orduva.com";
+  const adminPreview = "https://admin.orduva.com/admin";
+  const duplicateSlug = tenants.some((tenant) => tenant.slug === effectiveSlug);
+  const reservedSlug = RESERVED_SLUGS.has(effectiveSlug);
+  const invalidContactEmail = !looksLikeEmail(contactEmail);
+  const invalidOwnerEmail = !looksLikeEmail(ownerEmail);
+  const incompleteOwnerLogin = Boolean(ownerEmail.trim() || ownerPassword.trim() || ownerName.trim()) && (!ownerEmail.trim() || ownerPassword.length < 8);
+
+  const formWarnings = [
+    !businessName.trim() ? "Business name is required." : null,
+    !effectiveSlug || effectiveSlug.length < 3 ? "Storefront slug must be at least 3 characters." : null,
+    reservedSlug ? "That slug is reserved for Orduva platform routing. Please choose another." : null,
+    duplicateSlug ? "That slug is already listed in recent tenants. Choose another before creating." : null,
+    invalidContactEmail ? "Contact email does not look valid." : null,
+    invalidOwnerEmail ? "Owner email does not look valid." : null,
+    incompleteOwnerLogin ? "Owner login needs an owner email and a temporary password of at least 8 characters." : null,
+  ].filter(Boolean) as string[];
 
   function updateBusinessName(value: string) {
     setBusinessName(value);
@@ -88,7 +123,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       if (!response.ok) throw new Error(data?.error || "Failed to unlock platform onboarding");
       setTenants(data.tenants || []);
       setPlatformUnlocked(true);
-      setMessage("Platform onboarding unlocked.");
+      setMessage("Platform onboarding unlocked. Recent tenant slugs are now checked before launch.");
     } catch (error) {
       setPlatformUnlocked(false);
       setMessage(error instanceof Error ? error.message : "Failed to unlock platform onboarding");
@@ -99,6 +134,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
   async function createTenant() {
     if (busy) return;
+    if (formWarnings.length) {
+      setMessage(formWarnings[0]);
+      return;
+    }
     setBusy(true);
     setMessage(null);
     setCreated(null);
@@ -136,7 +175,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setOwnerName("");
       setOwnerEmail("");
       setOwnerPassword("");
-      setMessage("Client tenant foundation created.");
+      setMessage("Client tenant foundation created. Use the launch links and checklist on the right.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to create tenant");
     } finally {
@@ -173,12 +212,13 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           </div>
         </section>
       ) : null}
+
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Create client foundation</p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">New client / tenant</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            This creates the tenant record, default settings, starter category, subdomain preview, and optional owner login foundation.
+            This creates the tenant record, default settings, starter category, generated tenant URL, and optional owner login foundation.
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -188,7 +228,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 value={businessName}
                 onChange={(event) => updateBusinessName(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                placeholder="Example Café"
+                placeholder="Stamps Delivered"
               />
             </label>
 
@@ -197,12 +237,18 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <input
                 value={slug}
                 onChange={(event) => setSlug(slugify(event.target.value))}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                placeholder="example-cafe"
+                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${reservedSlug || duplicateSlug ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`}
+                placeholder="stamps-delivered"
               />
-              <p className="mt-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-900">
-                Storefront preview: {storefrontPreview}
-              </p>
+              <div className="mt-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-950">
+                <p className="font-semibold">Storefront preview: {storefrontPreview}</p>
+                <p className="mt-1 text-xs leading-5 text-blue-900/75">Reserved slugs blocked: admin, www, api, assets, static, platform, support, help and login.</p>
+              </div>
+              {reservedSlug || duplicateSlug ? (
+                <p className="mt-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
+                  {reservedSlug ? "This slug is reserved for Orduva itself." : "This slug already appears in your recent tenant list."}
+                </p>
+              ) : null}
             </label>
 
             <label className="block sm:col-span-2">
@@ -220,30 +266,37 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Phone</span>
-              <input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+              <input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Client phone" />
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">WhatsApp</span>
-              <input value={contactWhatsApp} onChange={(event) => setContactWhatsApp(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+              <input value={contactWhatsApp} onChange={(event) => setContactWhatsApp(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Order WhatsApp number" />
             </label>
             <label className="block sm:col-span-2">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Contact email</span>
-              <input value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" />
+              <input value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${invalidContactEmail ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder="client@example.com" />
             </label>
           </div>
 
           <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Optional owner login</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Add these now if you want a first owner login created for the new tenant.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Add these now if you want a first owner login created for the new tenant. Leave all three blank to skip.</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Owner name" />
-              <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Owner email" />
-              <input value={ownerPassword} onChange={(event) => setOwnerPassword(event.target.value)} type="password" className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 sm:col-span-2" placeholder="Temporary password, minimum 8 characters" />
+              <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${invalidOwnerEmail ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder="Owner email" />
+              <input value={ownerPassword} onChange={(event) => setOwnerPassword(event.target.value)} type="password" className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 sm:col-span-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder="Temporary password, minimum 8 characters" />
             </div>
           </div>
 
+          {formWarnings.length ? (
+            <div className="mt-5 space-y-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-bold">Before creating this tenant:</p>
+              {formWarnings.map((warning) => <p key={warning}>• {warning}</p>)}
+            </div>
+          ) : null}
+
           {message ? (
-            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${message.includes("Failed") || message.includes("required") || message.includes("reserved") || message.includes("already") ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${message.includes("Failed") || message.includes("required") || message.includes("reserved") || message.includes("already") || message.includes("valid") || message.includes("password") ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
               {message}
             </div>
           ) : null}
@@ -251,7 +304,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           <button
             type="button"
             onClick={createTenant}
-            disabled={busy || !businessName.trim() || !effectiveSlug || (platformMode && !platformKey.trim())}
+            disabled={busy || formWarnings.length > 0 || (platformMode && !platformKey.trim())}
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {busy ? "Creating client..." : "Create client foundation"}
@@ -259,43 +312,40 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
         </section>
 
         <aside className="space-y-5">
+          {created ? (
+            <section className="rounded-[30px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Tenant created</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight">{created.tenant.name}</h2>
+              <p className="mt-2 text-sm leading-6 text-emerald-900/80">The tenant foundation is ready. Use these links for the immediate launch test.</p>
+              <div className="mt-5 grid gap-3">
+                <a href={created.storefrontUrl} target="_blank" rel="noreferrer" className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-emerald-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                  Open storefront →
+                  <span className="mt-1 block break-all text-xs font-semibold text-emerald-800/75">{created.storefrontUrl}</span>
+                </a>
+                <a href={adminPreview} target="_blank" rel="noreferrer" className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-emerald-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                  Open admin →
+                  <span className="mt-1 block break-all text-xs font-semibold text-emerald-800/75">{adminPreview}</span>
+                </a>
+              </div>
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-white/70 px-4 py-3 text-sm leading-6">
+                <p><span className="font-semibold">Owner login:</span> {created.ownerCreated ? "Created" : "Not created"}</p>
+                <p><span className="font-semibold">Tenant slug:</span> {created.tenant.slug}</p>
+              </div>
+            </section>
+          ) : null}
+
           <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Launch checklist</p>
-            <h2 className="mt-2 text-xl font-bold text-slate-900">What this prepares</h2>
+            <h2 className="mt-2 text-xl font-bold text-slate-900">Tenant go-live steps</h2>
             <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-              {[
-                "Tenant database record",
-                "Default storefront settings",
-                "Country-based currency defaults",
-                "Starter menu category",
-                "Optional owner login",
-                "Wildcard tenant subdomain preview",
-              ].map((item) => (
+              {(created?.checklist?.length ? created.checklist : PRE_LAUNCH_STEPS).map((item, index) => (
                 <div key={item} className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">✓</span>
+                  <span className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${created && index === 0 ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-700"}`}>{created && index === 0 ? "✓" : index + 1}</span>
                   <span>{item}</span>
                 </div>
               ))}
             </div>
           </section>
-
-          {created ? (
-            <section className="rounded-[30px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Created</p>
-              <h2 className="mt-2 text-xl font-bold">{created.tenant.name}</h2>
-              <div className="mt-4 space-y-2 text-sm leading-6">
-                <p><span className="font-semibold">Storefront:</span> {created.storefrontUrl}</p>
-                <p className="text-xs leading-5 text-emerald-800/80">This URL works automatically once the wildcard domain alias/DNS is active in Netlify.</p>
-                <p><span className="font-semibold">Admin:</span> {created.adminUrl}</p>
-                <p><span className="font-semibold">Owner login:</span> {created.ownerCreated ? "Created" : "Not created"}</p>
-              </div>
-              <div className="mt-4 space-y-2">
-                {created.checklist.map((item) => (
-                  <p key={item} className="rounded-xl bg-white/70 px-3 py-2 text-sm">• {item}</p>
-                ))}
-              </div>
-            </section>
-          ) : null}
         </aside>
       </div>
 
@@ -314,7 +364,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-slate-900">{tenant.name}</h3>
-                  <p className="mt-1 text-sm text-slate-600">{tenant.slug}.orduva.com</p>
+                  <a href={`https://${tenant.slug}.orduva.com`} target="_blank" rel="noreferrer" className="mt-1 inline-block break-all text-sm font-semibold text-blue-700 hover:text-blue-900">{tenant.slug}.orduva.com</a>
                 </div>
                 <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">{tenant.status || "active"}</span>
               </div>
