@@ -91,7 +91,7 @@ function OrduvaPlatformLanding() {
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Client store onboarding</p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10]">Ready to launch your own ordering store?</h2>
                 <p className="mt-3 text-sm leading-6 text-[#68707A]">
-                  Start your Orduva setup directly from this page. Store creation remains controlled with an onboarding code, while the separate platform area stays for the Orduva owner only.
+                  Start your Orduva setup directly from this page. No access code is needed — complete the form and Orduva will create your store foundation automatically.
                 </p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                   <a
@@ -190,7 +190,7 @@ function OrduvaPlatformLanding() {
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FFB168]">New client setup</p>
                 <h2 className="mt-2 text-3xl font-black tracking-tight">Create a store, then launch it properly.</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
-                  New clients can start their controlled onboarding from this public landing page. The owner platform remains separate and is not part of the client journey.
+                  New clients can create their store foundation directly from this public landing page. The owner platform remains separate and is not part of the client journey.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
@@ -209,10 +209,10 @@ function OrduvaPlatformLanding() {
               <p className="text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">Client onboarding</p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-[#0E0E10]">Start your Orduva store setup here.</h2>
               <p className="mt-3 text-sm leading-7 text-[#68707A]">
-                This is the public client onboarding entry point. Enter the onboarding code supplied by Orduva, complete the store details, and we will create the controlled store foundation for launch checks.
+                This is the public client onboarding entry point. Complete the setup form below and Orduva will automatically create your store address, starter setup, and owner login.
               </p>
             </div>
-            <TenantOnboardingManager initialTenants={[]} apiPath="/api/platform/tenants" platformMode clientMode />
+            <TenantOnboardingManager initialTenants={[]} apiPath="/api/public/tenants" clientMode />
           </section>
 
           <section className="border-t border-[#0E0E10]/10 bg-[#F5F2EE]/70 px-5 py-7 sm:px-7 lg:px-9">

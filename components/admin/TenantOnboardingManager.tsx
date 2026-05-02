@@ -84,6 +84,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const [message, setMessage] = useState<string | null>(null);
   const [platformKey, setPlatformKey] = useState("");
   const [platformUnlocked, setPlatformUnlocked] = useState(false);
+  const [website, setWebsite] = useState("");
 
   const suggestedSlug = useMemo(() => slugify(businessName), [businessName]);
   const effectiveSlug = slugify(slug || suggestedSlug);
@@ -107,7 +108,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   }, [tenants]);
   const invalidContactEmail = !looksLikeEmail(contactEmail);
   const invalidOwnerEmail = !looksLikeEmail(ownerEmail);
-  const incompleteOwnerLogin = Boolean(ownerEmail.trim() || ownerPassword.trim() || ownerName.trim()) && (!ownerEmail.trim() || ownerPassword.length < 8);
+  const incompleteOwnerLogin = clientMode
+    ? (!ownerName.trim() || !ownerEmail.trim() || ownerPassword.length < 8)
+    : Boolean(ownerEmail.trim() || ownerPassword.trim() || ownerName.trim()) && (!ownerEmail.trim() || ownerPassword.length < 8);
   const ownerFacing = platformMode && !clientMode;
 
   const formWarnings = [
@@ -117,7 +120,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     duplicateSlug ? "That store address is already listed in recent stores. Choose another before creating." : null,
     invalidContactEmail ? "Contact email does not look valid." : null,
     invalidOwnerEmail ? "Owner email does not look valid." : null,
-    incompleteOwnerLogin ? "Owner login needs an owner email and a temporary password of at least 8 characters." : null,
+    incompleteOwnerLogin ? (clientMode ? "Your owner login needs your name, email and a password of at least 8 characters." : "Owner login needs an owner email and a temporary password of at least 8 characters.") : null,
   ].filter(Boolean) as string[];
 
   function updateBusinessName(value: string) {
@@ -129,7 +132,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
   function platformHeaders() {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (platformMode) headers["x-orduva-platform-key"] = platformKey.trim();
+    if (platformMode && !clientMode) headers["x-orduva-platform-key"] = platformKey.trim();
     return headers;
   }
 
@@ -167,7 +170,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     setCreated(null);
 
     try {
-      if (platformMode && !platformKey.trim()) {
+      if (platformMode && !clientMode && !platformKey.trim()) {
         throw new Error("Enter the Orduva platform access key first.");
       }
 
@@ -184,6 +187,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           ownerName,
           ownerEmail,
           ownerPassword,
+          website,
         }),
       });
       const data = await response.json();
@@ -199,7 +203,8 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setOwnerName("");
       setOwnerEmail("");
       setOwnerPassword("");
-      setMessage("Client store foundation created. Use the launch links and checklist on the right.");
+      setWebsite("");
+      setMessage(clientMode ? "Your Orduva store has been created. Use the store and admin links to start setup." : "Client store foundation created. Use the launch links and checklist on the right.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to create store");
     } finally {
@@ -209,7 +214,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
   return (
     <div className="space-y-6">
-      {platformMode ? (
+      {platformMode && !clientMode ? (
         <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{clientMode ? "Client onboarding access" : "Owner onboarding access"}</p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{clientMode ? "Start your store setup" : "Unlock store creation"}</h2>
@@ -243,7 +248,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner dashboard</p>
               <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Multi-store overview</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">Quick owner view for onboarded stores, setup status and launch checks before you jump into a specific store admin. Public signup links now point here, while actual creation remains access-key controlled.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">Quick owner view for onboarded stores, setup status and launch checks before you jump into a specific store admin. This owner platform remains separate from the public client onboarding flow.</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-bold text-white/80">
               {platformUnlocked ? "Platform store list unlocked" : "Unlock to load live store list"}
@@ -370,12 +375,12 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           </div>
 
           <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Optional owner login</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Add these now if you want a first owner login created for the new store. Leave all three blank to skip.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{clientMode ? "Store owner login" : "Optional owner login"}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{clientMode ? "Create your store owner login now. You will use this to manage your products, orders, branding and launch setup." : "Add these now if you want a first owner login created for the new store. Leave all three blank to skip."}</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Owner name" />
-              <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${invalidOwnerEmail ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder="Owner email" />
-              <input value={ownerPassword} onChange={(event) => setOwnerPassword(event.target.value)} type="password" className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 sm:col-span-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder="Temporary password, minimum 8 characters" />
+              <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your name" : "Owner name"} />
+              <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${invalidOwnerEmail ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder={clientMode ? "Your email" : "Owner email"} />
+              <input value={ownerPassword} onChange={(event) => setOwnerPassword(event.target.value)} type="password" className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 sm:col-span-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder={clientMode ? "Create password, minimum 8 characters" : "Temporary password, minimum 8 characters"} />
             </div>
           </div>
 
@@ -392,13 +397,20 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             </div>
           ) : null}
 
+          {clientMode ? (
+            <label className="hidden" aria-hidden="true">
+              Website
+              <input tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} />
+            </label>
+          ) : null}
+
           <button
             type="button"
             onClick={createTenant}
-            disabled={busy || formWarnings.length > 0 || (platformMode && !platformKey.trim())}
+            disabled={busy || formWarnings.length > 0 || (platformMode && !clientMode && !platformKey.trim())}
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
-            {busy ? "Creating store..." : clientMode ? "Submit store setup" : "Create client foundation"}
+            {busy ? "Creating store..." : clientMode ? "Create my Orduva store" : "Create client foundation"}
           </button>
         </section>
 
