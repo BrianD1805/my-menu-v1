@@ -31,6 +31,7 @@ export default async function AdminProductsPage() {
   return (
     <AdminShell
       tenantName={branding.adminHeadingLabel}
+      tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="products"
       title="Products"

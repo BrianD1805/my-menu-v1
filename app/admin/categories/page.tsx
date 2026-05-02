@@ -34,6 +34,7 @@ export default async function AdminCategoriesPage() {
   return (
     <AdminShell
       tenantName={branding.adminHeadingLabel}
+      tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="categories"
       title="Categories"

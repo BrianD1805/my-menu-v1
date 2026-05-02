@@ -106,6 +106,7 @@ export default async function AdminOrdersPage() {
   return (
     <AdminShell
       tenantName={branding.adminHeadingLabel}
+      tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="orders"
       title="Orders"

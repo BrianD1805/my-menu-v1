@@ -63,6 +63,7 @@ export default async function AdminHomePage() {
   return (
     <AdminShell
       tenantName={branding.adminHeadingLabel}
+      tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="home"
       title={`Welcome back, ${user.full_name || user.email}`}

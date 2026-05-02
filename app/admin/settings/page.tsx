@@ -12,6 +12,7 @@ export default async function AdminSettingsPage() {
   return (
     <AdminShell
       tenantName={branding.adminHeadingLabel}
+      tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="settings"
       title="Tenant settings"
