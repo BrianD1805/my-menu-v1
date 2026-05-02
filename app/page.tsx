@@ -46,7 +46,7 @@ function OrduvaPlatformLanding() {
                 Admin login
               </a>
               <a
-                href="#client-onboarding"
+                href="/#client-onboarding"
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]"
               >
                 Start your store
@@ -74,7 +74,7 @@ function OrduvaPlatformLanding() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
-                  href="#client-onboarding"
+                  href="/#client-onboarding"
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.28)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]"
                 >
                   Create your Orduva store
@@ -95,7 +95,7 @@ function OrduvaPlatformLanding() {
                 </p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                   <a
-                    href="#client-onboarding"
+                    href="/#client-onboarding"
                     className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(14,14,16,0.18)] transition hover:-translate-y-[1px] hover:bg-[#252528]"
                   >
                     Start setup on this page
@@ -194,7 +194,7 @@ function OrduvaPlatformLanding() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-                <a href="#client-onboarding" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
+                <a href="/#client-onboarding" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
                   Start your store
                 </a>
                 <a href="https://admin.orduva.com/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-6 py-3 text-sm font-black text-white transition hover:-translate-y-[1px] hover:bg-white/20">
@@ -204,7 +204,7 @@ function OrduvaPlatformLanding() {
             </div>
           </section>
 
-          <section id="client-onboarding" className="scroll-mt-6 border-t border-[#0E0E10]/10 bg-[#FFF7F0] px-5 py-8 sm:px-7 lg:px-9">
+          <section id="client-onboarding" className="scroll-mt-28 border-t border-[#0E0E10]/10 bg-[#FFF7F0] px-5 py-8 sm:px-7 lg:px-9">
             <div className="mb-6 max-w-3xl">
               <p className="text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">Client onboarding</p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-[#0E0E10]">Start your Orduva store setup here.</h2>
