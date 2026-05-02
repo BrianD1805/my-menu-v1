@@ -145,7 +145,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       if (!response.ok) throw new Error(data?.error || "Failed to unlock platform onboarding");
       setTenants(data.tenants || []);
       setPlatformUnlocked(true);
-      setMessage("Platform onboarding unlocked. Recent store addresses are now checked before launch.");
+      setMessage("Controlled onboarding unlocked. Recent store addresses are now checked before launch.");
     } catch (error) {
       setPlatformUnlocked(false);
       setMessage(error instanceof Error ? error.message : "Failed to unlock platform onboarding");
@@ -209,9 +209,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     <div className="space-y-6">
       {platformMode ? (
         <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Platform access</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Unlock client onboarding</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">Enter the Orduva platform access key before creating or viewing client store foundations. This keeps onboarding and owner switching separate from ordinary store admin work.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Controlled onboarding access</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Unlock store creation</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">Public landing page visitors can now find this onboarding entry point, but new store creation still requires the Orduva platform access key. This keeps client self-signup controlled until full public self-service is ready.</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <input
               type="password"
@@ -229,7 +229,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               disabled={busy}
               className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {platformUnlocked ? "Unlocked" : busy ? "Checking..." : "Unlock"}
+              {platformUnlocked ? "Unlocked" : busy ? "Checking..." : "Unlock onboarding"}
             </button>
           </div>
         </section>
@@ -241,7 +241,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner dashboard</p>
               <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Multi-store overview</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">Quick owner view for onboarded stores, setup status and launch checks before you jump into a specific store admin.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">Quick owner view for onboarded stores, setup status and launch checks before you jump into a specific store admin. Public signup links now point here, while actual creation remains access-key controlled.</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-bold text-white/80">
               {platformUnlocked ? "Platform store list unlocked" : "Unlock to load live store list"}

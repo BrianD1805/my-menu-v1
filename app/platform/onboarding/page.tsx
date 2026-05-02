@@ -11,18 +11,21 @@ export default function PlatformOnboardingPage() {
               <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(14,14,16,0.16)]" />
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FF6A3D]">Orduva platform</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10] sm:text-4xl">Client onboarding</h1>
+                <h1 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10] sm:text-4xl">Controlled client onboarding</h1>
               </div>
             </div>
             <div className="flex flex-wrap gap-2.5">
               <a href="/" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]">Platform home</a>
-              <a href="https://admin.orduva.com/admin" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]">Store admin</a>
+              <a href="https://admin.orduva.com/admin" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]">Already have a store?</a>
             </div>
           </div>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-            Create the foundation for a new Orduva client without mixing platform-owner tools into a store admin area. This page is for Orduva platform setup, not day-to-day store management.
+            Clients can now reach this onboarding entry from the public landing page, but store creation remains controlled. Enter the Orduva platform access key before creating or reviewing client store foundations.
           </p>
-          <div className="mt-4 inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <div className="inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</div>
+            <div className="inline-flex rounded-full border border-[#FF6A3D]/20 bg-[#FF6A3D]/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#C84F2A]">Controlled onboarding</div>
+          </div>
         </header>
 
         <div className="mt-6">
