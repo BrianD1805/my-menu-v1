@@ -221,8 +221,21 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Failed to create store");
 
-      setCreated(data as CreatedTenant);
-      setTenants((current) => [data.tenant, ...current.filter((tenant) => tenant.id !== data.tenant.id)]);
+      const createdTenant = data as CreatedTenant;
+      setCreated(createdTenant);
+      setTenants((current) => [createdTenant.tenant, ...current.filter((tenant) => tenant.id !== createdTenant.tenant.id)]);
+
+      if (clientMode && typeof window !== "undefined") {
+        const params = new URLSearchParams({
+          name: createdTenant.tenant.name,
+          slug: createdTenant.tenant.slug,
+          ownerCreated: createdTenant.ownerCreated ? "1" : "0",
+          email: typeof createdTenant.emailNotifications?.client === "string" ? createdTenant.emailNotifications.client : "queued",
+        });
+        window.location.assign(`/start-your-store/success?${params.toString()}`);
+        return;
+      }
+
       setBusinessName("");
       setSlug("");
       setContactPhone("");
