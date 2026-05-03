@@ -91,7 +91,7 @@ function OrduvaPlatformLanding() {
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Client store onboarding</p>
                 <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10]">Ready to launch your own ordering store?</h2>
                 <p className="mt-3 text-sm leading-6 text-[#68707A]">
-                  Start your Orduva setup directly from this page. No access code is needed — complete the form and Orduva will create your store foundation automatically.
+                  Start your Orduva setup directly from this page. No access code is needed — complete the form, create your owner login, and follow the launch steps shown after your store is created.
                 </p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                   <a
@@ -209,8 +209,22 @@ function OrduvaPlatformLanding() {
               <p className="text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">Client onboarding</p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-[#0E0E10]">Start your Orduva store setup here.</h2>
               <p className="mt-3 text-sm leading-7 text-[#68707A]">
-                This is the public client onboarding entry point. Complete the setup form below and Orduva will automatically create your store address, starter setup, and owner login.
+                Complete the setup form below and Orduva will automatically create your store address and owner login. No payment is taken at this stage. After creation, you will see clear next steps to open your store, sign in to admin, add your products, and place your first test order.
               </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white px-4 py-3 shadow-sm">
+                  <p className="text-sm font-black text-[#0E0E10]">No payment today</p>
+                  <p className="mt-1 text-xs leading-5 text-[#68707A]">Payment and free-trial options will be added later.</p>
+                </div>
+                <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white px-4 py-3 shadow-sm">
+                  <p className="text-sm font-black text-[#0E0E10]">Real store setup</p>
+                  <p className="mt-1 text-xs leading-5 text-[#68707A]">Your store address and admin login are created automatically.</p>
+                </div>
+                <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white px-4 py-3 shadow-sm">
+                  <p className="text-sm font-black text-[#0E0E10]">Protected form</p>
+                  <p className="mt-1 text-xs leading-5 text-[#68707A]">Basic spam checks and setup terms help protect the platform.</p>
+                </div>
+              </div>
             </div>
             <TenantOnboardingManager initialTenants={[]} apiPath="/api/public/tenants" clientMode />
           </section>

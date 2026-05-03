@@ -30,6 +30,13 @@ const RESERVED_SLUGS = new Set([
   "platform",
 ]);
 
+type PublicOnboardingWindow = { count: number; resetAt: number };
+
+const PUBLIC_ONBOARDING_RATE_LIMIT = new Map<string, PublicOnboardingWindow>();
+const PUBLIC_ONBOARDING_WINDOW_MS = 60 * 60 * 1000;
+const PUBLIC_ONBOARDING_MAX_PER_WINDOW = 5;
+const PUBLIC_ONBOARDING_MIN_FORM_MS = 3000;
+
 const COUNTRY_DEFAULTS: Record<string, CurrencyDefaults> = {
   GB: {
     currencyName: "British Pound",
@@ -92,6 +99,24 @@ function getCountryCode(value: unknown) {
   return code === "GB" || code === "ZA" || code === "KE" ? code : "GB";
 }
 
+function getClientIp(req: Request) {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || "unknown";
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+function checkRateLimit(key: string) {
+  const now = Date.now();
+  const current = PUBLIC_ONBOARDING_RATE_LIMIT.get(key);
+  if (!current || current.resetAt < now) {
+    PUBLIC_ONBOARDING_RATE_LIMIT.set(key, { count: 1, resetAt: now + PUBLIC_ONBOARDING_WINDOW_MS });
+    return true;
+  }
+  if (current.count >= PUBLIC_ONBOARDING_MAX_PER_WINDOW) return false;
+  current.count += 1;
+  return true;
+}
+
 function defaultThemeForCountry(countryCode: string) {
   if (countryCode === "ZA") {
     return { primaryColor: "#1F4F3A", accentColor: "#D69E2E", backgroundTint: "#F7F4EA", borderColor: "#D9C7A3", textColor: "#1F2A24" };
@@ -105,9 +130,23 @@ function defaultThemeForCountry(countryCode: string) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    const clientIp = getClientIp(req);
     const botTrap = String(body?.website || "").trim();
     if (botTrap) {
       return NextResponse.json({ error: "Unable to create store" }, { status: 400 });
+    }
+
+    if (!checkRateLimit(clientIp)) {
+      return NextResponse.json({ error: "Too many store setup attempts from this connection. Please try again later." }, { status: 429 });
+    }
+
+    const formStartedAt = Number(body?.formStartedAt || 0);
+    if (!formStartedAt || Date.now() - formStartedAt < PUBLIC_ONBOARDING_MIN_FORM_MS) {
+      return NextResponse.json({ error: "Please take a moment to complete the form before submitting." }, { status: 400 });
+    }
+
+    if (body?.acceptedTerms !== true || body?.privacyAccepted !== true || body?.humanConfirmed !== true) {
+      return NextResponse.json({ error: "Please accept the setup terms and confirm this is a genuine business store." }, { status: 400 });
     }
 
     const businessName = normalizeOptionalText(body?.businessName, 120);
@@ -219,14 +258,14 @@ export async function POST(req: Request) {
       storefrontUrl: `https://${slug}.orduva.com`,
       adminUrl: `https://admin.orduva.com`,
       checklist: [
-        "Store foundation created",
-        "Open your generated store address",
-        "Open admin and sign in with the owner login you just created",
-        "Upload logo and favicon",
-        "Review storefront colours and currency formatting",
-        "Add real categories and products",
-        "Enable admin push notifications",
-        "Place a test order from your store address",
+        "Your Orduva store foundation has been created",
+        "Your setup consent was recorded with this request",
+        "Open your new store address and check the starter store loads",
+        "Sign in to admin using the owner email and password you just created",
+        "Add your real categories, products, prices and product photos",
+        "Upload your logo, check your colours, and confirm your currency",
+        "Enable admin order notifications when you are ready to test orders",
+        "Place one test order before sharing your store address with customers",
       ],
     });
   } catch (error) {

@@ -68,6 +68,10 @@ function buildAdminLoginUrl(slug: string) {
   return `/admin/login?tenant=${encodeURIComponent(slug)}`;
 }
 
+function buildPublicAdminLoginUrl(slug: string) {
+  return `https://admin.orduva.com/admin/login?tenant=${encodeURIComponent(slug)}`;
+}
+
 export default function TenantOnboardingManager({ initialTenants, apiPath = "/api/admin/tenants", platformMode = false, clientMode = false }: Props) {
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
@@ -85,6 +89,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const [platformKey, setPlatformKey] = useState("");
   const [platformUnlocked, setPlatformUnlocked] = useState(false);
   const [website, setWebsite] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [humanConfirmed, setHumanConfirmed] = useState(false);
+  const [formStartedAt, setFormStartedAt] = useState(() => Date.now());
 
   const suggestedSlug = useMemo(() => slugify(businessName), [businessName]);
   const effectiveSlug = slugify(slug || suggestedSlug);
@@ -121,6 +129,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     invalidContactEmail ? "Contact email does not look valid." : null,
     invalidOwnerEmail ? "Owner email does not look valid." : null,
     incompleteOwnerLogin ? (clientMode ? "Your owner login needs your name, email and a password of at least 8 characters." : "Owner login needs an owner email and a temporary password of at least 8 characters.") : null,
+    clientMode && !humanConfirmed ? "Please confirm you are creating a genuine business store." : null,
+    clientMode && !acceptedTerms ? "Please accept the Orduva terms before creating your store." : null,
+    clientMode && !privacyAccepted ? "Please confirm Orduva can use these details to create and manage your store." : null,
   ].filter(Boolean) as string[];
 
   function updateBusinessName(value: string) {
@@ -188,6 +199,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           ownerEmail,
           ownerPassword,
           website,
+          acceptedTerms,
+          privacyAccepted,
+          humanConfirmed,
+          formStartedAt,
         }),
       });
       const data = await response.json();
@@ -204,7 +219,11 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setOwnerEmail("");
       setOwnerPassword("");
       setWebsite("");
-      setMessage(clientMode ? "Your Orduva store has been created. Use the store and admin links to start setup." : "Client store foundation created. Use the launch links and checklist on the right.");
+      setAcceptedTerms(false);
+      setPrivacyAccepted(false);
+      setHumanConfirmed(false);
+      setFormStartedAt(Date.now());
+      setMessage(clientMode ? "Your Orduva store has been created. Follow the next steps below to finish your setup." : "Client store foundation created. Use the launch links and checklist on the right.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to create store");
     } finally {
@@ -216,9 +235,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     <div className="space-y-6">
       {platformMode && !clientMode ? (
         <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{clientMode ? "Client onboarding access" : "Owner onboarding access"}</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{clientMode ? "Start your store setup" : "Unlock store creation"}</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">{clientMode ? "Enter the onboarding code supplied by Orduva, then complete the store setup form below. The Orduva owner area stays separate from this public landing page." : "This owner-only area requires the Orduva platform access key before creating or reviewing client store foundations."}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Owner onboarding access</p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Unlock store creation</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">This owner-only area requires the Orduva platform access key before creating or reviewing client store foundations.</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <input
               type="password"
@@ -227,7 +246,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 setPlatformKey(event.target.value);
                 setPlatformUnlocked(false);
               }}
-              placeholder={clientMode ? "Onboarding access code" : "Platform access key"}
+              placeholder="Platform access key"
               className="min-h-12 flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
             />
             <button
@@ -314,7 +333,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{clientMode ? "Client store setup" : "Create client foundation"}</p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{clientMode ? "Tell us about your store" : "New client store"}</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            {clientMode ? "Complete the details below so Orduva can create and check your ordering store before launch." : "This creates the store record, default settings, starter category, generated store address, and optional owner login foundation."}
+            {clientMode ? "Complete the details below. Your store address and owner login will be created automatically, then you can start setting up your menu and branding." : "This creates the store record, default settings, starter category, generated store address, and optional owner login foundation."}
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -384,6 +403,28 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             </div>
           </div>
 
+          {clientMode ? (
+            <div className="mt-6 rounded-[24px] border border-[#FFB168]/40 bg-[#FFF7F0] p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Trust, terms and launch protection</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">Orduva will create a real store address and admin login from these details. Payment and free-trial options will be added later; this setup step does not take payment.</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-700">
+                <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
+                  <input type="checkbox" checked={humanConfirmed} onChange={(event) => setHumanConfirmed(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
+                  <span>I am creating a genuine business store and not submitting spam or test data.</span>
+                </label>
+                <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
+                  <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
+                  <span>I accept Orduva&apos;s basic service terms: I will use the store responsibly, add accurate business/product details, and understand Orduva may suspend abusive or misleading stores.</span>
+                </label>
+                <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
+                  <input type="checkbox" checked={privacyAccepted} onChange={(event) => setPrivacyAccepted(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
+                  <span>I agree that Orduva can use the details I submit to create my store, owner login, storefront, and setup records.</span>
+                </label>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-slate-500">Spam protection is active. Submissions that look automated, too fast, or repeated too often may be blocked.</p>
+            </div>
+          ) : null}
+
           {formWarnings.length ? (
             <div className="mt-5 space-y-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <p className="font-bold">Before creating this store:</p>
@@ -417,29 +458,41 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
         <aside className="space-y-5">
           {created ? (
             <section className="rounded-[30px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Store created</p>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Your store is ready</p>
               <h2 className="mt-2 text-2xl font-black tracking-tight">{created.tenant.name}</h2>
-              <p className="mt-2 text-sm leading-6 text-emerald-900/80">The store foundation is ready. Use these links for the immediate launch test.</p>
+              <p className="mt-2 text-sm leading-6 text-emerald-900/80">Your Orduva store foundation has been created. Keep this page open for a moment and use the steps below to finish your launch setup.</p>
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-white/80 px-4 py-3 text-sm leading-6">
+                <p><span className="font-semibold">Store address:</span> <span className="break-all">{created.tenant.slug}.orduva.com</span></p>
+                <p><span className="font-semibold">Owner login:</span> {created.ownerCreated ? "Created from the details you entered" : "Not created"}</p>
+              </div>
               <div className="mt-5 grid gap-3">
                 <a href={created.storefrontUrl} target="_blank" rel="noreferrer" className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-emerald-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                  Open storefront →
+                  1. View your new store →
                   <span className="mt-1 block break-all text-xs font-semibold text-emerald-800/75">{created.storefrontUrl}</span>
                 </a>
-                <a href={adminPreview} target="_blank" rel="noreferrer" className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-emerald-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                  Open admin →
-                  <span className="mt-1 block break-all text-xs font-semibold text-emerald-800/75">{adminPreview}</span>
+                <a href={buildPublicAdminLoginUrl(created.tenant.slug)} target="_blank" rel="noreferrer" className="rounded-2xl bg-[#0E0E10] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                  2. Sign in to manage your store →
+                  <span className="mt-1 block break-all text-xs font-semibold text-white/70">{`admin.orduva.com/admin/login?tenant=${created.tenant.slug}`}</span>
                 </a>
               </div>
-              <div className="mt-4 rounded-2xl border border-emerald-200 bg-white/70 px-4 py-3 text-sm leading-6">
-                <p><span className="font-semibold">Owner login:</span> {created.ownerCreated ? "Created" : "Not created"}</p>
-                <p><span className="font-semibold">Store address:</span> {created.tenant.slug}.orduva.com</p>
-              </div>
+              {clientMode ? (
+                <div className="mt-5 rounded-[24px] border border-emerald-200 bg-white/80 p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">What to do next</p>
+                  <div className="mt-3 space-y-2 text-sm leading-6 text-emerald-950">
+                    <p><span className="font-black">1.</span> Open your store address and check the starter store loads.</p>
+                    <p><span className="font-black">2.</span> Sign in to admin using the owner email and password you just created.</p>
+                    <p><span className="font-black">3.</span> Add your real categories, products, prices and product photos.</p>
+                    <p><span className="font-black">4.</span> Upload your logo, check your colours, and confirm your currency looks right.</p>
+                    <p><span className="font-black">5.</span> Place one test order before sharing your store address with customers.</p>
+                  </div>
+                </div>
+              ) : null}
             </section>
           ) : null}
 
           <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Launch checklist</p>
-            <h2 className="mt-2 text-xl font-bold text-slate-900">Store go-live steps</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{clientMode ? "Setup guide" : "Launch checklist"}</p>
+            <h2 className="mt-2 text-xl font-bold text-slate-900">{clientMode ? "Your first setup steps" : "Store go-live steps"}</h2>
             <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
               {(created?.checklist?.length ? created.checklist : PRE_LAUNCH_STEPS).map((item, index) => (
                 <div key={item} className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
