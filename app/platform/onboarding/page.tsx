@@ -20,7 +20,7 @@ export default function PlatformOnboardingPage() {
             </div>
           </div>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-            This is the Orduva owner platform area for reviewing stores, managing the multi-store overview, and controlled store creation. Clients should onboard from the public home page at www.orduva.com, not from this owner area.
+            This is the Orduva owner platform area for reviewing stores, managing the multi-store overview, and controlled store creation. Clients should start from the public Orduva website and use the dedicated client onboarding page, not this owner area.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <div className="inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</div>

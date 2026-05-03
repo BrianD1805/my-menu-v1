@@ -22,7 +22,7 @@ const RESERVED_SLUGS = new Set([
   "assets",
   "static",
   "www",
-  "orduva",
+  "orduva", "zimzaexpress", "zimza-express",
   "localhost",
   "support",
   "help",

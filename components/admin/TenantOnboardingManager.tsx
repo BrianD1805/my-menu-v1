@@ -25,7 +25,7 @@ type Props = {
   clientMode?: boolean;
 };
 
-const RESERVED_SLUGS = new Set(["admin", "api", "app", "assets", "static", "www", "orduva", "localhost", "support", "help", "login", "platform"]);
+const RESERVED_SLUGS = new Set(["admin", "api", "app", "assets", "static", "www", "orduva", "zimzaexpress", "zimza-express", "localhost", "support", "help", "login", "platform"]);
 
 const COUNTRY_OPTIONS = [
   { code: "GB", label: "United Kingdom", hint: "GBP / Stripe-friendly" },

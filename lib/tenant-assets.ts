@@ -6,7 +6,7 @@ export type TenantBrandDefaults = {
 };
 
 export function getTenantBrandDefaults(slug: string): TenantBrandDefaults {
-  if (slug === "orduva") {
+  if (slug === "zimzaexpress" || slug === "zimza-express" || slug === "orduva") {
     return {
       starterLogoUrl: "/tenant-assets/zimza-express/logo.png",
       starterFaviconUrl: "/tenant-assets/zimza-express/favicon.png",

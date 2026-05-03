@@ -27,9 +27,23 @@ export async function getTenantBySlug(slug: string) {
     .eq("slug", slug)
     .single();
 
-  if (error || !data) {
-    throw new Error(`Tenant not found for slug: ${slug}`);
+  if (!error && data) {
+    return data;
   }
 
-  return data;
+  // Ver-0.148A safety fallback while the ZimZa Express demo tenant is migrated
+  // from the legacy slug "orduva" to the public demo slug "zimzaexpress".
+  if (slug === "zimzaexpress") {
+    const legacyResult = await db
+      .from("tenants")
+      .select("*")
+      .eq("slug", "orduva")
+      .single();
+
+    if (!legacyResult.error && legacyResult.data) {
+      return legacyResult.data;
+    }
+  }
+
+  throw new Error(`Tenant not found for slug: ${slug}`);
 }

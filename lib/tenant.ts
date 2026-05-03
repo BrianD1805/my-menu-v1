@@ -16,10 +16,9 @@ const RESERVED_SUBDOMAINS = new Set([
 ]);
 
 const TENANT_SUBDOMAIN_ALIASES: Record<string, string> = {
-  // ZimZa Express currently uses the existing tenant slug "orduva" in Supabase.
-  // The public storefront lives at zimzaexpress.orduva.com until that tenant slug is migrated.
-  zimzaexpress: "orduva",
-  "zimza-express": "orduva",
+  // ZimZa Express is now the working demo storefront slug.
+  // Keep the hyphenated alias as a friendly fallback.
+  "zimza-express": "zimzaexpress",
 };
 
 export function getRootDomain() {
@@ -37,7 +36,7 @@ export function getRootDomain() {
 function getDefaultTenantSlug() {
   return (
     process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG ||
-    "orduva"
+    "zimzaexpress"
   )
     .trim()
     .toLowerCase();

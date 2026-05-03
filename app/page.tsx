@@ -1,4 +1,3 @@
-import TenantOnboardingManager from "@/components/admin/TenantOnboardingManager";
 import MenuBrowser from "@/components/menu/MenuBrowser";
 import StorefrontPwaRegistrar from "@/components/menu/StorefrontPwaRegistrar";
 import { db } from "@/lib/db";
@@ -16,6 +15,8 @@ function OrduvaPlatformLanding() {
     { name: "Soft Stone", value: "#F5F2EE", note: "card tint" },
     { name: "Charcoal Text", value: "#1F2328", note: "readable text" },
   ];
+
+  const onboardingHref = "/start-your-store";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#FFF7F0] text-[#1F2328]">
@@ -40,22 +41,22 @@ function OrduvaPlatformLanding() {
 
             <div className="flex flex-wrap gap-2.5">
               <a
-                href="https://admin.orduva.com"
+                href="https://admin.orduva.com/admin"
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] shadow-sm transition hover:-translate-y-[1px] hover:border-[#0E0E10]/20 hover:bg-[#F5F2EE]"
               >
                 Admin login
               </a>
               <a
-                href="/#client-onboarding"
+                href={onboardingHref}
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]"
               >
-                Start your store
+                Start your own store
               </a>
               <a
                 href="https://zimzaexpress.orduva.com"
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(14,14,16,0.20)] transition hover:-translate-y-[1px] hover:bg-[#252528]"
               >
-                View demo storefront
+                View ZimZa Express demo
               </a>
             </div>
           </header>
@@ -74,7 +75,7 @@ function OrduvaPlatformLanding() {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
-                  href="/#client-onboarding"
+                  href={onboardingHref}
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.28)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]"
                 >
                   Create your Orduva store
@@ -83,22 +84,22 @@ function OrduvaPlatformLanding() {
                   href="https://zimzaexpress.orduva.com"
                   className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-6 py-3 text-sm font-black text-[#0E0E10] shadow-sm transition hover:-translate-y-[1px] hover:bg-[#F5F2EE]"
                 >
-                  See the live example
+                  See ZimZa Express demo
                 </a>
               </div>
 
               <div className="mt-6 rounded-[30px] border border-[#FF6A3D]/20 bg-white/80 p-5 shadow-[0_18px_48px_rgba(14,14,16,0.07)]">
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Client store onboarding</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10]">Ready to launch your own ordering store?</h2>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10]">Launch your own ordering store.</h2>
                 <p className="mt-3 text-sm leading-6 text-[#68707A]">
-                  Start your Orduva setup directly from this page. No access code is needed — complete the form, create your owner login, and follow the launch steps shown after your store is created.
+                  Start your Orduva setup from a dedicated onboarding page. No access code is needed — create your store address, owner login, and first launch checklist in one guided flow.
                 </p>
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                   <a
-                    href="/#client-onboarding"
+                    href={onboardingHref}
                     className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(14,14,16,0.18)] transition hover:-translate-y-[1px] hover:bg-[#252528]"
                   >
-                    Start setup on this page
+                    Start your own store
                   </a>
                   <a
                     href="https://admin.orduva.com/admin"
@@ -135,9 +136,9 @@ function OrduvaPlatformLanding() {
                   <div className="rounded-[26px] border border-[#0E0E10]/10 bg-[#FFF7F0] p-4">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0E0E10] text-lg font-black text-[#FF6A3D]">O</div>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0E0E10] text-lg font-black text-[#FF6A3D]">Z</div>
                         <div>
-                          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Live setup</p>
+                          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Live demo storefront</p>
                           <p className="mt-1 text-xl font-black text-[#0E0E10]">ZimZa Express</p>
                         </div>
                       </div>
@@ -184,51 +185,6 @@ function OrduvaPlatformLanding() {
             </div>
           </div>
 
-          <section className="border-t border-[#0E0E10]/10 bg-white px-5 py-8 sm:px-7 lg:px-9">
-            <div className="grid gap-5 rounded-[32px] border border-[#0E0E10]/10 bg-[#0E0E10] p-5 text-white shadow-[0_24px_70px_rgba(14,14,16,0.18)] sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FFB168]">New client setup</p>
-                <h2 className="mt-2 text-3xl font-black tracking-tight">Create a store, then launch it properly.</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
-                  New clients can create their store foundation directly from this public landing page. The owner platform remains separate and is not part of the client journey.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-                <a href="/#client-onboarding" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
-                  Start your store
-                </a>
-                <a href="https://admin.orduva.com/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-6 py-3 text-sm font-black text-white transition hover:-translate-y-[1px] hover:bg-white/20">
-                  Store admin login
-                </a>
-              </div>
-            </div>
-          </section>
-
-          <section id="client-onboarding" className="scroll-mt-28 border-t border-[#0E0E10]/10 bg-[#FFF7F0] px-5 py-8 sm:px-7 lg:px-9">
-            <div className="mb-6 max-w-3xl">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">Client onboarding</p>
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-[#0E0E10]">Start your Orduva store setup here.</h2>
-              <p className="mt-3 text-sm leading-7 text-[#68707A]">
-                Complete the setup form below and Orduva will automatically create your store address and owner login. No payment is taken at this stage. After creation, you will see clear next steps to open your store, sign in to admin, add your products, and place your first test order.
-              </p>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white px-4 py-3 shadow-sm">
-                  <p className="text-sm font-black text-[#0E0E10]">No payment today</p>
-                  <p className="mt-1 text-xs leading-5 text-[#68707A]">Payment and free-trial options will be added later.</p>
-                </div>
-                <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white px-4 py-3 shadow-sm">
-                  <p className="text-sm font-black text-[#0E0E10]">Real store setup</p>
-                  <p className="mt-1 text-xs leading-5 text-[#68707A]">Your store address and admin login are created automatically.</p>
-                </div>
-                <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white px-4 py-3 shadow-sm">
-                  <p className="text-sm font-black text-[#0E0E10]">Protected form</p>
-                  <p className="mt-1 text-xs leading-5 text-[#68707A]">Basic spam checks and setup terms help protect the platform.</p>
-                </div>
-              </div>
-            </div>
-            <TenantOnboardingManager initialTenants={[]} apiPath="/api/public/tenants" clientMode />
-          </section>
-
           <section className="border-t border-[#0E0E10]/10 bg-[#F5F2EE]/70 px-5 py-7 sm:px-7 lg:px-9">
             <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
               <div>
@@ -248,8 +204,28 @@ function OrduvaPlatformLanding() {
             </div>
           </section>
 
+          <section className="border-t border-[#0E0E10]/10 bg-white px-5 py-8 sm:px-7 lg:px-9">
+            <div className="grid gap-5 rounded-[32px] border border-[#0E0E10]/10 bg-[#0E0E10] p-5 text-white shadow-[0_24px_70px_rgba(14,14,16,0.18)] sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FFB168]">New client setup</p>
+                <h2 className="mt-2 text-3xl font-black tracking-tight">Create a store, then launch it properly.</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
+                  New clients can create their own store foundation from a dedicated Orduva onboarding page. ZimZa Express remains the live working example and demo storefront.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+                <a href={onboardingHref} className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
+                  Start your own store
+                </a>
+                <a href="https://admin.orduva.com/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-6 py-3 text-sm font-black text-white transition hover:-translate-y-[1px] hover:bg-white/20">
+                  Store admin login
+                </a>
+              </div>
+            </div>
+          </section>
+
           <footer className="flex flex-col gap-3 border-t border-[#0E0E10]/10 px-5 py-5 text-sm text-[#68707A] sm:flex-row sm:items-center sm:justify-between sm:px-7 lg:px-9">
-            <p>Orduva platform landing page. Tenant storefronts live on their own subdomains.</p>
+            <p>Orduva platform landing page. ZimZa Express is the working demo storefront; client stores live on their own subdomains.</p>
             <p className="font-black text-[#0E0E10]">{LIVE_VERSION}</p>
           </footer>
         </div>
