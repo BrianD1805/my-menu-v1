@@ -261,3 +261,84 @@ export async function sendOnboardingLaunchNotifications(input: OnboardingEmailIn
 
   return result;
 }
+
+
+export function getOnboardingEmailRuntimeStatus() {
+  const hasResendApiKey = Boolean(process.env.RESEND_API_KEY?.trim());
+  const fromAddress = getEmailFromAddress();
+  const ownerRecipient = getOwnerNotificationAddress();
+
+  return {
+    provider: "resend",
+    configured: Boolean(hasResendApiKey && fromAddress),
+    hasResendApiKey,
+    fromAddress,
+    ownerRecipient,
+    ownerRecipientConfigured: Boolean(ownerRecipient),
+  };
+}
+
+export async function sendOwnerEmailSettingsTest(input: {
+  tenantId: string;
+  tenantName: string;
+  tenantSlug: string;
+  requestedBy: string;
+  recipient?: string | null;
+}) {
+  const status = getOnboardingEmailRuntimeStatus();
+  const recipient = String(input.recipient || status.ownerRecipient || "").trim();
+  const storeUrl = storefrontUrl(input.tenantSlug);
+  const adminUrl = adminLoginUrl(input.tenantSlug);
+  const subject = `Orduva email test for ${input.tenantName}`;
+  const text = [
+    `This is a live Orduva email settings test for ${input.tenantName}.`,
+    "",
+    `Store address: ${storeUrl}`,
+    `Admin login: ${adminUrl}`,
+    `Requested by: ${input.requestedBy}`,
+    "",
+    "If you received this, the Resend email foundation is working for Orduva onboarding notifications.",
+  ].join("\n");
+  const html = `<div style="font-family:Arial,sans-serif;line-height:1.55;color:#1F2328;max-width:640px;margin:0 auto;padding:24px;"><div style="border:1px solid #eee;border-radius:24px;padding:24px;background:#FFF7F0;"><p style="margin:0 0 8px;color:#FF6A3D;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;">Orduva email settings test</p><h1 style="margin:0 0 12px;font-size:26px;color:#0E0E10;">${escapeHtml(input.tenantName)}</h1><p>This is a live test email from the Orduva admin email settings panel.</p><p><strong>Store address:</strong><br><a href="${escapeHtml(storeUrl)}">${escapeHtml(storeUrl)}</a></p><p><strong>Admin login:</strong><br><a href="${escapeHtml(adminUrl)}">${escapeHtml(adminUrl)}</a></p><p style="font-size:13px;color:#68707A;">Requested by ${escapeHtml(input.requestedBy)}.</p></div></div>`;
+
+  if (!status.configured) {
+    await logEmailEvent({
+      tenantId: input.tenantId,
+      audience: "admin",
+      eventType: "owner_email_settings_test_skipped",
+      title: "Owner email settings test not sent",
+      body: "Email provider is not configured.",
+      status: "skipped",
+      metadata: { provider: "resend", reason: "email_not_configured", requestedBy: input.requestedBy, intendedRecipient: recipient || null, storeSlug: input.tenantSlug },
+    });
+    return { ok: false, skipped: true, message: "Email is not configured yet. Add RESEND_API_KEY, ORDUVA_EMAIL_FROM and ORDUVA_OWNER_EMAIL in Netlify environment variables.", status };
+  }
+
+  if (!recipient) {
+    await logEmailEvent({
+      tenantId: input.tenantId,
+      audience: "admin",
+      eventType: "owner_email_settings_test_skipped",
+      title: "Owner email settings test not sent",
+      body: "No owner/test recipient is configured.",
+      status: "skipped",
+      metadata: { provider: "resend", reason: "missing_recipient", requestedBy: input.requestedBy, storeSlug: input.tenantSlug },
+    });
+    return { ok: false, skipped: true, message: "No test recipient is configured. Add ORDUVA_OWNER_EMAIL or enter a test recipient.", status };
+  }
+
+  try {
+    const sendResult = await sendViaResend({ to: recipient, subject, text, html });
+    if (sendResult.ok) {
+      await logEmailEvent({ tenantId: input.tenantId, audience: "admin", eventType: "owner_email_settings_test_sent", title: subject, body: text, status: "sent", metadata: { provider: "resend", recipient, requestedBy: input.requestedBy, storeSlug: input.tenantSlug, providerResponse: sendResult.providerResponse } });
+      return { ok: true, skipped: false, message: `Test email sent to ${recipient}.`, status };
+    }
+
+    await logEmailEvent({ tenantId: input.tenantId, audience: "admin", eventType: "owner_email_settings_test_failed", title: subject, body: text, status: sendResult.skipped ? "skipped" : "failed", metadata: { provider: "resend", recipient, requestedBy: input.requestedBy, storeSlug: input.tenantSlug, error: sendResult.error } });
+    return { ok: false, skipped: Boolean(sendResult.skipped), message: sendResult.error || "Test email could not be sent.", status };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown email error";
+    await logEmailEvent({ tenantId: input.tenantId, audience: "admin", eventType: "owner_email_settings_test_failed", title: subject, body: text, status: "failed", metadata: { provider: "resend", recipient, requestedBy: input.requestedBy, storeSlug: input.tenantSlug, error: message } });
+    return { ok: false, skipped: false, message, status };
+  }
+}

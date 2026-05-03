@@ -1,5 +1,6 @@
 import AdminShell from "@/components/admin/AdminShell";
 import TenantSettingsForm from "@/components/admin/TenantSettingsForm";
+import OwnerEmailSettingsPanel from "@/components/admin/OwnerEmailSettingsPanel";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { DEFAULT_MONEY_SETTINGS } from "@/lib/money";
@@ -15,13 +16,13 @@ export default async function AdminSettingsPage() {
       tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="settings"
-      title="Tenant settings"
-      description="Set the business identity, contact details, footer wording, and advanced currency display for this tenant without disturbing the accepted product card layout."
+      title="Store settings"
+      description="Set the business identity, contact details, footer wording, advanced currency display, and owner email notification checks for this store without disturbing the accepted product card layout."
       logoUrl={branding.logoUrl}
       accentColor={branding.accentColor}
     >
       <div className="mb-6 rounded-[24px] border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900">
-        This tenant-scoped settings layer now covers branding, contact details, storefront footer info, and advanced currency display foundations.
+        This store-scoped settings layer now covers branding, contact details, storefront footer info, advanced currency display foundations, and the owner email test panel below.
       </div>
 
       <TenantSettingsForm
@@ -57,6 +58,8 @@ export default async function AdminSettingsPage() {
           currencySuffix: settings?.currency_suffix ?? DEFAULT_MONEY_SETTINGS.currencySuffix,
         }}
       />
+
+      <OwnerEmailSettingsPanel />
     </AdminShell>
   );
 }
