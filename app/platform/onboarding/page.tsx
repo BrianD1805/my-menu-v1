@@ -1,9 +1,11 @@
 import TenantOnboardingManager from "@/components/admin/TenantOnboardingManager";
 import OwnerEmailSettingsPanel from "@/components/admin/OwnerEmailSettingsPanel";
+import OwnerPlatformAccessGate from "@/components/admin/OwnerPlatformAccessGate";
 import { LIVE_VERSION } from "@/lib/version";
 
 export default function PlatformOnboardingPage() {
   return (
+    <OwnerPlatformAccessGate>
     <main className="min-h-screen bg-[#FFF7F0] px-4 py-5 text-[#1F2328] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <header className="rounded-[34px] border border-[#0E0E10]/10 bg-white/90 p-5 shadow-[0_28px_80px_rgba(14,14,16,0.12)] backdrop-blur sm:p-7">
@@ -67,5 +69,6 @@ export default function PlatformOnboardingPage() {
         </div>
       </div>
     </main>
+    </OwnerPlatformAccessGate>
   );
 }

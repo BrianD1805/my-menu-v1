@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
 
 type TenantSummary = {
   id: string;
@@ -94,6 +95,8 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [humanConfirmed, setHumanConfirmed] = useState(false);
   const [formStartedAt, setFormStartedAt] = useState(() => Date.now());
+  const ownerAccess = useOwnerPlatformAccess();
+  const autoLoadedOwnerTenants = useRef(false);
 
   const suggestedSlug = useMemo(() => slugify(businessName), [businessName]);
   const effectiveSlug = slugify(slug || suggestedSlug);
@@ -121,6 +124,8 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     ? (!ownerName.trim() || !ownerEmail.trim() || ownerPassword.length < 8)
     : Boolean(ownerEmail.trim() || ownerPassword.trim() || ownerName.trim()) && (!ownerEmail.trim() || ownerPassword.length < 8);
   const ownerFacing = platformMode && !clientMode;
+  const ownerGateUnlocked = ownerFacing && ownerAccess.unlocked && Boolean(ownerAccess.platformKey);
+  const effectivePlatformKey = ownerGateUnlocked ? ownerAccess.platformKey : platformKey;
 
   const formWarnings = [
     !businessName.trim() ? "Business name is required." : null,
@@ -144,14 +149,14 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
   function platformHeaders() {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (platformMode && !clientMode) headers["x-orduva-platform-key"] = platformKey.trim();
+    if (platformMode && !clientMode) headers["x-orduva-platform-key"] = effectivePlatformKey.trim();
     return headers;
   }
 
   async function loadPlatformTenants() {
     if (!platformMode) return;
-    if (!platformKey.trim()) {
-      setMessage("Enter the Orduva platform access key first.");
+    if (!effectivePlatformKey.trim()) {
+      setMessage("Unlock the Orduva owner platform first.");
       return;
     }
     setBusy(true);
@@ -171,6 +176,13 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     }
   }
 
+  useEffect(() => {
+    if (!ownerGateUnlocked || autoLoadedOwnerTenants.current) return;
+    autoLoadedOwnerTenants.current = true;
+    loadPlatformTenants();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownerGateUnlocked, ownerAccess.platformKey]);
+
   async function createTenant() {
     if (busy) return;
     if (formWarnings.length) {
@@ -182,8 +194,8 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     setCreated(null);
 
     try {
-      if (platformMode && !clientMode && !platformKey.trim()) {
-        throw new Error("Enter the Orduva platform access key first.");
+      if (platformMode && !clientMode && !effectivePlatformKey.trim()) {
+        throw new Error("Unlock the Orduva owner platform first.");
       }
 
       const response = await fetch(apiPath, {
@@ -234,7 +246,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
   return (
     <div className="space-y-6">
-      {platformMode && !clientMode ? (
+      {platformMode && !clientMode && !ownerGateUnlocked ? (
         <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Owner onboarding access</p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">Unlock store creation</h2>
@@ -449,7 +461,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           <button
             type="button"
             onClick={createTenant}
-            disabled={busy || formWarnings.length > 0 || (platformMode && !clientMode && !platformKey.trim())}
+            disabled={busy || formWarnings.length > 0 || (platformMode && !clientMode && !effectivePlatformKey.trim())}
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {busy ? "Creating store..." : clientMode ? "Create my Orduva store" : "Create client foundation"}

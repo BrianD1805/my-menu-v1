@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
 
 type EmailStatus = {
   provider: string;
@@ -53,17 +54,21 @@ export default function OwnerEmailSettingsPanel({
     "idle",
   );
   const [platformKey, setPlatformKey] = useState("");
+  const ownerAccess = useOwnerPlatformAccess();
+  const autoLoadedStatus = useRef(false);
+  const ownerGateUnlocked = platformMode && ownerAccess.unlocked && Boolean(ownerAccess.platformKey);
+  const effectivePlatformKey = ownerGateUnlocked ? ownerAccess.platformKey : platformKey;
 
   function requestHeaders() {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (platformMode) headers["x-orduva-platform-key"] = platformKey.trim();
+    if (platformMode) headers["x-orduva-platform-key"] = effectivePlatformKey.trim();
     return headers;
   }
 
   async function loadStatus() {
-    if (platformMode && !platformKey.trim()) {
+    if (platformMode && !effectivePlatformKey.trim()) {
       setLoading(false);
       setMessage(
         "Enter the Orduva platform access key to check global email settings.",
@@ -105,11 +110,18 @@ export default function OwnerEmailSettingsPanel({
   useEffect(() => {
     if (!platformMode) {
       loadStatus();
-    } else {
-      setLoading(false);
+      return;
     }
+    setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [platformMode, apiPath]);
+
+  useEffect(() => {
+    if (!ownerGateUnlocked || autoLoadedStatus.current) return;
+    autoLoadedStatus.current = true;
+    loadStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownerGateUnlocked, ownerAccess.platformKey]);
 
   const status = payload?.status;
   const messageClass = useMemo(() => {
@@ -128,7 +140,7 @@ export default function OwnerEmailSettingsPanel({
     setTone("info");
 
     try {
-      if (platformMode && !platformKey.trim()) {
+      if (platformMode && !effectivePlatformKey.trim()) {
         throw new Error(
           "Enter the Orduva platform access key before sending a test email.",
         );
@@ -171,7 +183,7 @@ export default function OwnerEmailSettingsPanel({
         </p>
       </div>
 
-      {platformMode ? (
+      {platformMode && !ownerGateUnlocked ? (
         <div className="border-b border-[#0E0E10]/10 bg-[#FFF7F0] px-5 py-5 sm:px-6">
           <label
             className="block text-sm font-black text-[#0E0E10]"
