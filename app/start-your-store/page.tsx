@@ -13,7 +13,7 @@ export default function StartYourStorePage() {
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FF6A3D]">Start your own store</p>
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-[#0E0E10] sm:text-5xl">Create your Orduva store.</h1>
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-                  Complete the setup form below and Orduva will automatically create your store address and owner login. No payment is taken at this stage; payment, free-trial and subscription options can be added later.
+                  Complete the setup form below and Orduva will automatically create your store address and owner login. After setup, Orduva prepares your launch links and sends them by email when email delivery is connected. No payment is taken at this stage; payment, free-trial and subscription options can be added later.
                 </p>
               </div>
             </div>
@@ -34,7 +34,7 @@ export default function StartYourStorePage() {
               </div>
               <div className="rounded-2xl bg-white/10 px-4 py-3">
                 <p className="text-sm font-black">3. Launch properly</p>
-                <p className="mt-1 text-xs leading-5 text-white/65">Add products, check branding and place a test order.</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">Use your launch email, add products, check branding and place a test order.</p>
               </div>
             </div>
           </div>

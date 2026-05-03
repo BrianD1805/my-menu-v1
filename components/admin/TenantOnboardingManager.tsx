@@ -15,6 +15,7 @@ type CreatedTenant = {
   storefrontUrl: string;
   adminUrl: string;
   ownerCreated: boolean;
+  emailNotifications?: Record<string, unknown>;
   checklist: string[];
 };
 
@@ -464,6 +465,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <div className="mt-4 rounded-2xl border border-emerald-200 bg-white/80 px-4 py-3 text-sm leading-6">
                 <p><span className="font-semibold">Store address:</span> <span className="break-all">{created.tenant.slug}.orduva.com</span></p>
                 <p><span className="font-semibold">Owner login:</span> {created.ownerCreated ? "Created from the details you entered" : "Not created"}</p>
+                {clientMode ? (
+                  <p><span className="font-semibold">Launch email:</span> {created.emailNotifications?.client === "sent" ? "Sent to your owner email" : created.emailNotifications?.client === "skipped_email_not_configured" ? "Ready once Orduva email is connected" : created.emailNotifications?.client === "failed" ? "Could not send automatically — keep these links safe" : "Queued where email is configured"}</p>
+                ) : null}
               </div>
               <div className="mt-5 grid gap-3">
                 <a href={created.storefrontUrl} target="_blank" rel="noreferrer" className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-emerald-950 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -479,11 +483,12 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 <div className="mt-5 rounded-[24px] border border-emerald-200 bg-white/80 p-4">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">What to do next</p>
                   <div className="mt-3 space-y-2 text-sm leading-6 text-emerald-950">
-                    <p><span className="font-black">1.</span> Open your store address and check the starter store loads.</p>
-                    <p><span className="font-black">2.</span> Sign in to admin using the owner email and password you just created.</p>
-                    <p><span className="font-black">3.</span> Add your real categories, products, prices and product photos.</p>
-                    <p><span className="font-black">4.</span> Upload your logo, check your colours, and confirm your currency looks right.</p>
-                    <p><span className="font-black">5.</span> Place one test order before sharing your store address with customers.</p>
+                    <p><span className="font-black">1.</span> Keep the launch email and this page open while you finish setup.</p>
+                    <p><span className="font-black">2.</span> Open your store address and check the starter store loads.</p>
+                    <p><span className="font-black">3.</span> Sign in to admin using the owner email and password you just created.</p>
+                    <p><span className="font-black">4.</span> Add your real categories, products, prices and product photos.</p>
+                    <p><span className="font-black">5.</span> Upload your logo, check your colours, and confirm your currency looks right.</p>
+                    <p><span className="font-black">6.</span> Place one test order before sharing your store address with customers.</p>
                   </div>
                 </div>
               ) : null}

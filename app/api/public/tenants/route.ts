@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { hashOwnerPassword, normalizeOwnerEmail } from "@/lib/admin-auth";
+import { sendOnboardingLaunchNotifications } from "@/lib/onboarding-email";
 
 type CurrencyDefaults = {
   currencyName: string;
@@ -251,15 +252,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: ownerError.message || "Store created, but owner login could not be created" }, { status: 500 });
     }
 
+    const emailNotifications = await sendOnboardingLaunchNotifications({
+      tenantId: tenant.id,
+      storeName: tenant.name,
+      storeSlug: tenant.slug,
+      ownerName,
+      ownerEmail,
+      contactEmail,
+      countryCode,
+    });
+
     return NextResponse.json({
       tenant,
       starterCategory: category || null,
       ownerCreated: true,
+      emailNotifications,
       storefrontUrl: `https://${slug}.orduva.com`,
       adminUrl: `https://admin.orduva.com`,
       checklist: [
         "Your Orduva store foundation has been created",
         "Your setup consent was recorded with this request",
+        "Your launch email and Orduva owner notification have been queued where email is configured",
         "Open your new store address and check the starter store loads",
         "Sign in to admin using the owner email and password you just created",
         "Add your real categories, products, prices and product photos",
