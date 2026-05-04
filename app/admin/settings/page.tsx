@@ -49,6 +49,11 @@ export default async function AdminSettingsPage() {
           contactAddress: settings?.contact_address || "",
           footerBlurb: settings?.footer_blurb || "",
           footerNotice: settings?.footer_notice || "",
+          socialFacebookUrl: settings?.social_facebook_url || "",
+          socialInstagramUrl: settings?.social_instagram_url || "",
+          socialTikTokUrl: settings?.social_tiktok_url || "",
+          socialXUrl: settings?.social_x_url || "",
+          socialWebsiteUrl: settings?.social_website_url || "",
           currencyName:
             settings?.currency_name ?? DEFAULT_MONEY_SETTINGS.currencyName,
           currencyCode:

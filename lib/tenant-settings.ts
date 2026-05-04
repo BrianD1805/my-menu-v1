@@ -37,6 +37,11 @@ export type TenantSettings = {
   contact_address: string | null;
   footer_blurb: string | null;
   footer_notice: string | null;
+  social_facebook_url: string | null;
+  social_instagram_url: string | null;
+  social_tiktok_url: string | null;
+  social_x_url: string | null;
+  social_website_url: string | null;
   currency_name: string | null;
   currency_code: string | null;
   currency_symbol: string | null;
@@ -122,7 +127,7 @@ export function normalizeSeparator(value: unknown) {
   return text.slice(0, 1);
 }
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
 
 export async function getTenantSettings(tenantId: string): Promise<TenantSettings | null> {
   const { data, error } = await db
@@ -158,6 +163,11 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     contact_address: asStringOrNull((data as Record<string, unknown>).contact_address),
     footer_blurb: asStringOrNull((data as Record<string, unknown>).footer_blurb),
     footer_notice: asStringOrNull((data as Record<string, unknown>).footer_notice),
+    social_facebook_url: asStringOrNull((data as Record<string, unknown>).social_facebook_url),
+    social_instagram_url: asStringOrNull((data as Record<string, unknown>).social_instagram_url),
+    social_tiktok_url: asStringOrNull((data as Record<string, unknown>).social_tiktok_url),
+    social_x_url: asStringOrNull((data as Record<string, unknown>).social_x_url),
+    social_website_url: asStringOrNull((data as Record<string, unknown>).social_website_url),
     currency_name: asStringOrNull((data as Record<string, unknown>).currency_name),
     currency_code: asStringOrNull((data as Record<string, unknown>).currency_code),
     currency_symbol: asStringOrNull((data as Record<string, unknown>).currency_symbol),
@@ -216,6 +226,11 @@ function _buildTenantBranding(slug: string, tenantName: string, settings: Tenant
     contactAddress: settings?.contact_address || null,
     footerBlurb: settings?.footer_blurb || "Thank you for ordering with us.",
     footerNotice: settings?.footer_notice || "Prices and availability may change without notice.",
+    socialFacebookUrl: settings?.social_facebook_url || null,
+    socialInstagramUrl: settings?.social_instagram_url || null,
+    socialTikTokUrl: settings?.social_tiktok_url || null,
+    socialXUrl: settings?.social_x_url || null,
+    socialWebsiteUrl: settings?.social_website_url || null,
     ...money,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import CartButton from "@/components/menu/CartButton";
 import CustomerAccountHeaderActions from "@/components/account/CustomerAccountHeaderActions";
 import ProductCard from "@/components/menu/ProductCard";
@@ -43,6 +43,47 @@ function stripHtml(value: string | null | undefined) {
     .trim();
 }
 
+function iconLinkClass() {
+  return "inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition hover:-translate-y-[1px] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-300";
+}
+
+function cleanDialString(value: string | null | undefined) {
+  return String(value || "").replace(/[^+\d]/g, "").replace(/(?!^)\+/g, "");
+}
+
+function cleanWhatsAppNumber(value: string | null | undefined) {
+  return String(value || "").replace(/[^\d]/g, "");
+}
+
+function normaliseExternalUrl(value: string | null | undefined) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  if (/^https?:\/\//i.test(text)) return text;
+  return `https://${text}`;
+}
+
+function FooterIcon({ label, href, children }: { label: string; href: string | null; children: ReactNode }) {
+  if (!href) return null;
+  return (
+    <a href={href} className={iconLinkClass()} aria-label={label} title={label} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noopener noreferrer" : undefined}>
+      {children}
+    </a>
+  );
+}
+
+function PhoneIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.1 5.18 2 2 0 0 1 5.11 3h3a2 2 0 0 1 2 1.72c.12.9.32 1.77.59 2.61a2 2 0 0 1-.45 2.11L9 10.69a16 16 0 0 0 4.31 4.31l1.25-1.25a2 2 0 0 1 2.11-.45c.84.27 1.71.47 2.61.59A2 2 0 0 1 22 16.92z" /></svg>;
+}
+function WhatsAppIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M12.04 2a9.86 9.86 0 0 0-8.5 14.86L2.5 22l5.29-1a9.9 9.9 0 1 0 4.25-19Zm0 17.9a8.02 8.02 0 0 1-4.08-1.12l-.29-.17-3.14.6.61-3.05-.19-.31a7.98 7.98 0 1 1 7.09 4.05Zm4.39-5.99c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.19-.47-.39-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.39 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" /></svg>;
+}
+function EmailIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>;
+}
+function SocialIcon({ label }: { label: string }) {
+  return <span className="text-xs font-black uppercase tracking-tight">{label}</span>;
+}
+
 export default function MenuBrowser({
   tenantSlug,
   tenantId,
@@ -65,6 +106,11 @@ export default function MenuBrowser({
   contactAddress,
   footerBlurb,
   footerNotice,
+  socialFacebookUrl,
+  socialInstagramUrl,
+  socialTikTokUrl,
+  socialXUrl,
+  socialWebsiteUrl,
   currencyName,
   currencyCode,
   currencySymbol,
@@ -98,6 +144,11 @@ export default function MenuBrowser({
   contactAddress?: string | null;
   footerBlurb?: string | null;
   footerNotice?: string | null;
+  socialFacebookUrl?: string | null;
+  socialInstagramUrl?: string | null;
+  socialTikTokUrl?: string | null;
+  socialXUrl?: string | null;
+  socialWebsiteUrl?: string | null;
   currencyName?: string | null;
   currencyCode?: string | null;
   currencySymbol?: string | null;
@@ -160,6 +211,16 @@ export default function MenuBrowser({
   const footerText = normalizeThemeColor(storefrontTheme?.footerText, brandText);
   const footerBadgeBackground = normalizeThemeColor(storefrontTheme?.footerBadgeBackground, brandAccent);
   const brandAccentBorder = welcomeBorder;
+  const phoneHref = cleanDialString(contactPhone) ? `tel:${cleanDialString(contactPhone)}` : null;
+  const whatsAppHref = cleanWhatsAppNumber(contactWhatsApp || contactPhone) ? `https://wa.me/${cleanWhatsAppNumber(contactWhatsApp || contactPhone)}` : null;
+  const emailHref = contactEmail?.trim() ? `mailto:${contactEmail.trim()}` : null;
+  const socialLinks = [
+    { label: "Facebook", short: "f", href: normaliseExternalUrl(socialFacebookUrl) },
+    { label: "Instagram", short: "IG", href: normaliseExternalUrl(socialInstagramUrl) },
+    { label: "TikTok", short: "TT", href: normaliseExternalUrl(socialTikTokUrl) },
+    { label: "X", short: "X", href: normaliseExternalUrl(socialXUrl) },
+    { label: "Website", short: "www", href: normaliseExternalUrl(socialWebsiteUrl) },
+  ].filter((item) => Boolean(item.href));
 
   useEffect(() => {
     let cancelled = false;
@@ -433,44 +494,44 @@ export default function MenuBrowser({
       })}
 
       <section className="rounded-[28px] border px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
-        <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Storefront footer</p>
-            <h3 className="mt-2 text-[1.2rem] font-semibold tracking-tight sm:text-[1.45rem]" style={{ color: footerText }}>{tenantName}</h3>
-            <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: footerText }}>{footerBlurb || "Thank you for ordering with us."}</p>
-            <p className="mt-4 text-xs leading-5" style={{ color: footerText }}>{footerNotice || "Prices and availability may change without notice."}</p>
-          </div>
-
-          <div className="rounded-[24px] border p-4 sm:p-5" style={{ borderColor: brandBorder, backgroundColor: "#FFFFFF" }}>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Business details</p>
-            <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-              {contactPhone ? <p><span className="font-semibold text-slate-900">Phone:</span> {contactPhone}</p> : null}
-              {contactWhatsApp ? <p><span className="font-semibold text-slate-900">WhatsApp:</span> {contactWhatsApp}</p> : null}
-              {contactEmail ? <p><span className="font-semibold text-slate-900">Email:</span> {contactEmail}</p> : null}
-              {contactAddress ? <p><span className="font-semibold text-slate-900">Address:</span> {contactAddress}</p> : null}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{moneySettings.currencyCode}</span>
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">{formatMoney(1000, moneySettings)} sample</span>
-            </div>
-          </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Storefront footer</p>
+          <h3 className="mt-2 text-[1.2rem] font-semibold tracking-tight sm:text-[1.45rem]" style={{ color: footerText }}>{tenantName}</h3>
+          <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: footerText }}>{footerBlurb || "Thank you for ordering with us."}</p>
+          <p className="mt-4 text-xs leading-5" style={{ color: footerText }}>{footerNotice || "Prices and availability may change without notice."}</p>
         </div>
       </section>
 
       <footer className="rounded-[24px] border px-5 py-5 text-sm shadow-sm sm:px-6" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
-        <div className="flex flex-col items-center justify-center gap-3">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={{ backgroundColor: footerBadgeBackground }}>Orduva Online</span>
-            <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+        <div className="flex flex-col items-center justify-center gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col items-center gap-3 lg:items-start">
+            <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+              <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={{ backgroundColor: footerBadgeBackground }}>Orduva Online</span>
+              <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+            </div>
+            <a
+              href="/admin/login"
+              className="inline-flex min-h-[38px] items-center justify-center rounded-[14px] border border-slate-200 bg-white px-4 py-2 text-[0.76rem] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+              title="Store admin login"
+            >
+              Admin Login
+            </a>
           </div>
 
-          <a
-            href="/admin/login"
-            className="inline-flex min-h-[38px] items-center justify-center rounded-[14px] border border-slate-200 bg-white px-4 py-2 text-[0.76rem] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
-            title="Temporary admin login link"
-          >
-            Admin Login
-          </a>
+          <div className="flex w-full flex-col items-center gap-3 lg:w-auto lg:items-end">
+            <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end" aria-label="Store contact links">
+              <FooterIcon label="Call store" href={phoneHref}><PhoneIcon /></FooterIcon>
+              <FooterIcon label="WhatsApp store" href={whatsAppHref}><WhatsAppIcon /></FooterIcon>
+              <FooterIcon label="Email store" href={emailHref}><EmailIcon /></FooterIcon>
+            </div>
+            {socialLinks.length ? (
+              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end" aria-label="Store social links">
+                {socialLinks.map((link) => (
+                  <FooterIcon key={link.label} label={link.label} href={link.href || null}><SocialIcon label={link.short} /></FooterIcon>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       </footer>
 

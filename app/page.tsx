@@ -300,6 +300,11 @@ export default async function HomePage() {
           contactAddress={branding.contactAddress}
           footerBlurb={branding.footerBlurb}
           footerNotice={branding.footerNotice}
+          socialFacebookUrl={branding.socialFacebookUrl}
+          socialInstagramUrl={branding.socialInstagramUrl}
+          socialTikTokUrl={branding.socialTikTokUrl}
+          socialXUrl={branding.socialXUrl}
+          socialWebsiteUrl={branding.socialWebsiteUrl}
           currencyName={branding.currencyName}
           currencyCode={branding.currencyCode}
           currencySymbol={branding.currencySymbol}

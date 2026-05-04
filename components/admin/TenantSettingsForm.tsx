@@ -24,6 +24,11 @@ type FormState = {
   contactAddress: string;
   footerBlurb: string;
   footerNotice: string;
+  socialFacebookUrl: string;
+  socialInstagramUrl: string;
+  socialTikTokUrl: string;
+  socialXUrl: string;
+  socialWebsiteUrl: string;
   currencyName: string;
   currencyCode: string;
   currencySymbol: string;
@@ -333,7 +338,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const formValueChanged = (keys: Array<keyof FormState>) => keys.some((key) => JSON.stringify(form[key]) !== JSON.stringify(savedForm[key]));
   const brandingDirty = formValueChanged(["businessDisplayName", "adminHeadingLabel", "storefrontHeading", "storefrontSubheading"]);
   const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
-  const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice"]);
+  const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) => group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || ""));
@@ -789,6 +794,17 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <Field label="Business address"><input value={form.contactAddress} onChange={(e) => update("contactAddress", e.target.value)} className="input" placeholder="Street, area, city" /></Field>
             <div className="md:col-span-2"><Field label="Footer blurb"><input value={form.footerBlurb} onChange={(e) => update("footerBlurb", e.target.value)} className="input" placeholder="Thank you for ordering with us." /></Field></div>
             <div className="md:col-span-2"><Field label="Footer notice"><input value={form.footerNotice} onChange={(e) => update("footerNotice", e.target.value)} className="input" placeholder="Prices and availability may change without notice." /></Field></div>
+          </div>
+          <div className="mt-5 rounded-[22px] border border-slate-100 bg-slate-50 p-4">
+            <p className="text-sm font-bold text-slate-900">Optional social links</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">These appear as a second icon row in the storefront footer. Leave blank to hide an icon.</p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <Field label="Facebook URL"><input value={form.socialFacebookUrl} onChange={(e) => update("socialFacebookUrl", e.target.value)} className="input" placeholder="https://facebook.com/..." /></Field>
+              <Field label="Instagram URL"><input value={form.socialInstagramUrl} onChange={(e) => update("socialInstagramUrl", e.target.value)} className="input" placeholder="https://instagram.com/..." /></Field>
+              <Field label="TikTok URL"><input value={form.socialTikTokUrl} onChange={(e) => update("socialTikTokUrl", e.target.value)} className="input" placeholder="https://tiktok.com/@..." /></Field>
+              <Field label="X / Twitter URL"><input value={form.socialXUrl} onChange={(e) => update("socialXUrl", e.target.value)} className="input" placeholder="https://x.com/..." /></Field>
+              <div className="md:col-span-2"><Field label="Website URL"><input value={form.socialWebsiteUrl} onChange={(e) => update("socialWebsiteUrl", e.target.value)} className="input" placeholder="https://example.com" /></Field></div>
+            </div>
           </div>
         </Section>
 
