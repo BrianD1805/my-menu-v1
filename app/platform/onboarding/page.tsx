@@ -1,6 +1,7 @@
 import TenantOnboardingManager from "@/components/admin/TenantOnboardingManager";
 import OwnerEmailSettingsPanel from "@/components/admin/OwnerEmailSettingsPanel";
 import OwnerOnboardingEventsPanel from "@/components/admin/OwnerOnboardingEventsPanel";
+import OwnerStoreReadinessPanel from "@/components/admin/OwnerStoreReadinessPanel";
 import OwnerPlatformAccessGate from "@/components/admin/OwnerPlatformAccessGate";
 import { LIVE_VERSION } from "@/lib/version";
 
@@ -62,6 +63,7 @@ export default function PlatformOnboardingPage() {
             apiPath="/api/platform/email-settings/test"
             platformMode
           />
+          <OwnerStoreReadinessPanel />
           <OwnerOnboardingEventsPanel />
           <TenantOnboardingManager
             initialTenants={[]}
