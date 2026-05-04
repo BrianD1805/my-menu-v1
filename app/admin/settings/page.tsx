@@ -18,7 +18,9 @@ export default async function AdminSettingsPage() {
       title="Store settings"
       description="Set the business identity, contact details, footer wording, advanced currency display, and storefront presentation for this store without disturbing the accepted product card layout."
       logoUrl={branding.logoUrl}
+      faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
+      settingsBackground
     >
       <div className="mb-6 rounded-[24px] border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900">
         This store-scoped settings layer covers branding, contact details,

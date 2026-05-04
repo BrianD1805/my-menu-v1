@@ -111,6 +111,9 @@ export default async function AdminOrdersPage() {
       current="orders"
       title="Orders"
       description="Tap a status card to open that live order queue directly in a popup. No scrolling hunt, just open the queue you want and work through it."
+      logoUrl={branding.logoUrl}
+      faviconUrl={branding.faviconUrl}
+      accentColor={branding.accentColor}
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">

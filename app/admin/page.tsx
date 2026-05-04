@@ -65,6 +65,7 @@ export default async function AdminHomePage() {
       title={`Welcome back, ${user.full_name || user.email}`}
       description="Start with the launch checklist, then open the area you need. The admin tools are kept quieter for first-time users."
       logoUrl={branding.logoUrl}
+      faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

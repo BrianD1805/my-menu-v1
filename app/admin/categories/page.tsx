@@ -39,6 +39,7 @@ export default async function AdminCategoriesPage() {
       current="categories"
       title="Categories"
       logoUrl={branding.logoUrl}
+      faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
       description="Add, rename, reorder, and safely remove categories for this tenant only."
     >

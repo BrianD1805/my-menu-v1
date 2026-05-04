@@ -33,7 +33,9 @@ export default function AdminShell({
   current,
   children,
   logoUrl,
+  faviconUrl,
   accentColor,
+  settingsBackground = false,
 }: {
   tenantName: string;
   tenantSlug?: string | null;
@@ -43,7 +45,9 @@ export default function AdminShell({
   current: "home" | "orders" | "products" | "categories" | "settings";
   children: ReactNode;
   logoUrl?: string | null;
+  faviconUrl?: string | null;
   accentColor?: string | null;
+  settingsBackground?: boolean;
 }) {
   const nav: NavItem[] = [
     { href: "/admin", label: "Home", current: current === "home" },
@@ -56,10 +60,15 @@ export default function AdminShell({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
   const tenantInitial = tenantName.trim().slice(0, 1).toUpperCase() || "O";
   const identityAccent = accentColor || "#FF6A3D";
+  const identityIconUrl = faviconUrl || null;
+  const adminBackgroundClass = settingsBackground ? "bg-[#F3F4F6]" : "bg-[#FFF7F0]";
+  const adminBackdropClass = settingsBackground
+    ? "bg-[radial-gradient(circle_at_16%_8%,rgba(148,163,184,0.20),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(15,23,42,0.08),transparent_28%),linear-gradient(135deg,#F3F4F6_0%,#EEF1F4_52%,#FFFFFF_100%)]"
+    : "bg-[radial-gradient(circle_at_16%_8%,rgba(255,106,61,0.18),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(14,14,16,0.08),transparent_28%),linear-gradient(135deg,#FFF7F0_0%,#F5F2EE_52%,#FFFFFF_100%)]";
 
   return (
-    <main className="relative min-h-screen overflow-x-clip bg-[#FFF7F0] px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_16%_8%,rgba(255,106,61,0.18),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(14,14,16,0.08),transparent_28%),linear-gradient(135deg,#FFF7F0_0%,#F5F2EE_52%,#FFFFFF_100%)]" />
+    <main className={`relative min-h-screen overflow-x-clip ${adminBackgroundClass} px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7`}>
+      <div className={`pointer-events-none absolute inset-0 -z-10 ${adminBackdropClass}`} />
       <div className="mx-auto max-w-6xl">
         <div className="mb-3 rounded-[26px] border border-[#0E0E10]/10 bg-[#0E0E10] p-3 text-white shadow-[0_20px_70px_rgba(14,14,16,0.18)] sm:mb-4 sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -68,7 +77,7 @@ export default function AdminShell({
                 className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 text-lg font-black shadow-[0_14px_34px_rgba(0,0,0,0.18)]"
                 style={{ boxShadow: `0 14px 34px ${identityAccent}26` }}
               >
-                {logoUrl ? <img src={logoUrl} alt={`${tenantName} logo`} className="h-full w-full object-cover" /> : tenantInitial}
+                {identityIconUrl ? <img src={identityIconUrl} alt={`${tenantName} favicon`} className="h-full w-full object-contain p-1" /> : tenantInitial}
               </div>
               <div className="min-w-0">
                 <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#FFB168]">Active store</p>

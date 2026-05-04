@@ -36,6 +36,7 @@ export default async function AdminProductsPage() {
       current="products"
       title="Products"
       logoUrl={branding.logoUrl}
+      faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
       description="Manage products, images, and rich descriptions for this tenant only."
     >
