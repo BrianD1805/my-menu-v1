@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { Fragment, FormEvent, useMemo, useRef, useState } from "react";
 import { DEFAULT_MONEY_SETTINGS, formatMoney } from "@/lib/money";
 import { buildThemeFromCore, normalizeThemeColor, type StorefrontTheme, type StorefrontThemeKey } from "@/lib/storefront-theme";
 
@@ -305,6 +305,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [logoPalettePreset, setLogoPalettePreset] = useState<ThemePreset | null>(initialForm.storefrontTheme?.selectedPreset === LOGO_PALETTE_PRESET_NAME ? buildLogoPalettePreset(initialForm.storefrontTheme.logoPaletteColours?.length ? initialForm.storefrontTheme.logoPaletteColours : [initialForm.primaryColor, initialForm.accentColor, initialForm.backgroundTint, initialForm.borderColor, initialForm.textColor]) : null);
   const [generatingLogoPalette, setGeneratingLogoPalette] = useState(false);
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
+  const themePresetsRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
@@ -420,7 +421,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       setTone("success");
       setMessage("Generated a suggested logo palette. Review it in Theme presets, then save that section to make it live.");
       window.setTimeout(() => {
-        suggestedColoursRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        themePresetsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }, 80);
     } catch (error) {
       setTone("error");
@@ -531,27 +532,32 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     }
   }
 
+  function renderLogoPaletteGeneratorCard() {
+    return (
+      <div className="rounded-[20px] border border-orange-200 bg-orange-50/70 p-3 text-left">
+        <div className="flex h-full flex-col justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Suggested logo palette</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">Create or refresh a selectable palette from the uploaded logo.</p>
+          </div>
+          <button
+            type="button"
+            onClick={generateLogoPalette}
+            disabled={generatingLogoPalette || !form.logoUrl.trim()}
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 sm:w-auto"
+          >
+            {generatingLogoPalette ? "Generating..." : logoPalettePreset ? "Refresh logo palette" : "Generate from logo"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   function renderSuggestedColoursPanel(compact = false) {
     return (
       <div className={compact ? "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950" : "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4"}>
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">Suggested colours</p>
-        <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing, or create a selectable palette from the uploaded logo.</p>
-        <div className="mt-3 rounded-2xl border border-orange-200 bg-white/80 p-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-black text-slate-900">Suggested logo palette</p>
-              <p className="mt-1 text-[11px] leading-4 text-slate-500">Create or refresh a selectable palette from the uploaded logo.</p>
-            </div>
-            <button
-              type="button"
-              onClick={generateLogoPalette}
-              disabled={generatingLogoPalette || !form.logoUrl.trim()}
-              className="inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-            >
-              {generatingLogoPalette ? "Generating..." : logoPalettePreset ? "Refresh logo palette" : "Generate from logo"}
-            </button>
-          </div>
-        </div>
+        <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing, or add your own hex colour below.</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {suggestedColours.map((colour) => (
             <button
@@ -676,29 +682,32 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             </p>
             <p className="mt-1 text-xs leading-5 text-slate-600">Selected presets now populate the full colour list below.</p>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
+          <div ref={themePresetsRef} className="grid gap-3 md:grid-cols-2">
             {availableThemePresets.map((preset) => {
               const selected = activePreset?.name === preset.name;
               return (
-                <button
-                  key={preset.name}
-                  type="button"
-                  onClick={() => applyThemePreset(preset)}
-                  className={`rounded-[20px] border bg-white p-3 text-left transition hover:-translate-y-[1px] ${selected ? "border-orange-400 ring-2 ring-orange-200" : "border-slate-200 hover:border-slate-300"}`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      {[preset.primaryColor, preset.accentColor, preset.backgroundTint, preset.borderColor, preset.textColor].map((color) => (
-                        <span key={color} className="h-4 w-4 rounded-full border border-black/5" style={{ backgroundColor: color }} />
-                      ))}
+                <Fragment key={preset.name}>
+                  <button
+                    type="button"
+                    onClick={() => applyThemePreset(preset)}
+                    className={`rounded-[20px] border bg-white p-3 text-left transition hover:-translate-y-[1px] ${selected ? "border-orange-400 ring-2 ring-orange-200" : "border-slate-200 hover:border-slate-300"}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        {[preset.primaryColor, preset.accentColor, preset.backgroundTint, preset.borderColor, preset.textColor].map((color) => (
+                          <span key={color} className="h-4 w-4 rounded-full border border-black/5" style={{ backgroundColor: color }} />
+                        ))}
+                      </div>
+                      {selected ? <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-bold text-orange-800">✓ Active</span> : null}
                     </div>
-                    {selected ? <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-bold text-orange-800">✓ Active</span> : null}
-                  </div>
-                  <p className="mt-3 text-sm font-semibold text-slate-900">{preset.name}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">{preset.description}</p>
-                </button>
+                    <p className="mt-3 text-sm font-semibold text-slate-900">{preset.name}</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">{preset.description}</p>
+                  </button>
+                  {preset.name === LOGO_PALETTE_PRESET_NAME ? renderLogoPaletteGeneratorCard() : null}
+                </Fragment>
               );
             })}
+            {!logoPalettePreset ? renderLogoPaletteGeneratorCard() : null}
           </div>
         </Section>
 
