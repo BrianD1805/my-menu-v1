@@ -154,7 +154,9 @@ function normaliseTheme(theme: StorefrontTheme | null | undefined, form: Pick<Fo
 }
 
 export default function TenantSettingsForm({ initial, tenantName }: { initial: FormState; tenantName: string }) {
-  const [form, setForm] = useState<FormState>({ ...initial, storefrontTheme: normaliseTheme(initial.storefrontTheme, initial) });
+  const initialForm = useMemo(() => ({ ...initial, storefrontTheme: normaliseTheme(initial.storefrontTheme, initial) }), [initial]);
+  const [form, setForm] = useState<FormState>(initialForm);
+  const [savedForm, setSavedForm] = useState<FormState>(initialForm);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"idle" | "success" | "error" | "info">("idle");
   const [saving, setSaving] = useState(false);
@@ -186,6 +188,15 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     currencyThousandsSeparator: form.currencyThousandsSeparator || ",",
     currencySuffix: form.currencySuffix,
   };
+
+  const savedTheme = normaliseTheme(savedForm.storefrontTheme, savedForm);
+  const formValueChanged = (keys: Array<keyof FormState>) => keys.some((key) => JSON.stringify(form[key]) !== JSON.stringify(savedForm[key]));
+  const brandingDirty = formValueChanged(["businessDisplayName", "adminHeadingLabel", "storefrontHeading", "storefrontSubheading", "logoUrl", "faviconUrl"]);
+  const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
+  const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice"]);
+  const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty;
+  const themeGroupDirty = (group: typeof THEME_GROUPS[number]) => group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || ""));
 
   const suggestedColours = useMemo(() => {
     const base = [
@@ -307,6 +318,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         ...current,
         [kind === "logo" ? "logoUrl" : "faviconUrl"]: uploadedUrl,
       }));
+      setSavedForm((current) => ({
+        ...current,
+        [kind === "logo" ? "logoUrl" : "faviconUrl"]: uploadedUrl,
+      }));
       if (kind === "logo") setPreviewTarget("header");
       setTone("success");
       setMessage(payload.message || `${kind === "logo" ? "Logo" : "Favicon"} uploaded and saved.`);
@@ -332,6 +347,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to save settings");
+      const savedPayload = { ...form, storefrontTheme: theme };
+      setForm(savedPayload);
+      setSavedForm(savedPayload);
       setTone("success");
       setMessage("Tenant settings saved.");
     } catch (error) {
@@ -397,7 +415,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </p>
         </div>
 
-        <Section title="Branding and wording">
+        <Section title="Branding and wording" showSave={false}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Business display name"><input value={form.businessDisplayName} onChange={(e) => update("businessDisplayName", e.target.value)} className="input" placeholder={tenantName} /></Field>
             <Field label="Admin heading label"><input value={form.adminHeadingLabel} onChange={(e) => update("adminHeadingLabel", e.target.value)} className="input" placeholder="Used in the admin shell" /></Field>
@@ -435,7 +453,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <div className="md:col-span-2">
               <Section title="Logo and favicon uploads" showSave={false} compact>
                 <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
-                  Logo and favicon uploads save automatically. Use the Save section button above only when you manually edit wording or URL fields.
+                  Logo and favicon uploads save automatically. No Save button is needed for this upload area.
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <UploadField
@@ -460,7 +478,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Theme presets">
+        <Section title="Theme presets" dirty={themeDirty} saving={saving}>
           <div className="mb-4 rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
             <p className="text-sm font-semibold text-slate-900">
               Active preset: {activePreset ? `${activePreset.name}${theme.customised ? " — customised" : ""}` : "Custom"}
@@ -551,8 +569,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                         ))}
                       </div>
                       <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
-                        <button type="submit" disabled={saving} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
-                          {saving ? "Saving..." : `Save ${group.title}`}
+                        <button type="submit" disabled={saving || !themeGroupDirty(group)} className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto">
+                          {saving ? "Saving..." : themeGroupDirty(group) ? `Save ${group.title}` : "Nothing to save"}
                         </button>
                       </div>
                     </>
@@ -563,7 +581,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Business contact details">
+        <Section title="Business contact details" dirty={contactDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Contact phone"><input value={form.contactPhone} onChange={(e) => update("contactPhone", e.target.value)} className="input" placeholder="+254..." /></Field>
             <Field label="WhatsApp"><input value={form.contactWhatsApp} onChange={(e) => update("contactWhatsApp", e.target.value)} className="input" placeholder="+254..." /></Field>
@@ -574,7 +592,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Advanced currency display">
+        <Section title="Advanced currency display" dirty={currencyDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="input" /></Field>
             <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="input uppercase" maxLength={3} /></Field>
@@ -601,8 +619,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-500">Preview updates from the current draft colours before saving. On desktop, the preview stays sticky on the right while you edit colours on the left.</p>
-          <button type="submit" disabled={saving} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
-            {saving ? "Saving..." : "Save settings"}
+          <button type="submit" disabled={saving || !hasUnsavedChanges} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100">
+            {saving ? "Saving..." : hasUnsavedChanges ? "Save settings" : "Nothing to save"}
           </button>
         </div>
       </form>
@@ -783,7 +801,21 @@ function UploadField({
   );
 }
 
-function Section({ title, children, showSave = true, compact = false }: { title: string; children: ReactNode; showSave?: boolean; compact?: boolean }) {
+function Section({
+  title,
+  children,
+  showSave = true,
+  compact = false,
+  dirty = true,
+  saving = false,
+}: {
+  title: string;
+  children: ReactNode;
+  showSave?: boolean;
+  compact?: boolean;
+  dirty?: boolean;
+  saving?: boolean;
+}) {
   return (
     <section className={`${compact ? "mb-0" : "mb-6"} rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5`}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -794,9 +826,10 @@ function Section({ title, children, showSave = true, compact = false }: { title:
         <div className="mt-4 flex justify-end border-t border-slate-200/70 pt-4">
           <button
             type="submit"
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            disabled={saving || !dirty}
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
           >
-            Save section
+            {saving ? "Saving..." : dirty ? "Save section" : "Nothing to save"}
           </button>
         </div>
       ) : null}
