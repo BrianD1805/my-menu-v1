@@ -330,7 +330,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
   const savedTheme = normaliseTheme(savedForm.storefrontTheme, savedForm);
   const formValueChanged = (keys: Array<keyof FormState>) => keys.some((key) => JSON.stringify(form[key]) !== JSON.stringify(savedForm[key]));
-  const brandingDirty = formValueChanged(["businessDisplayName", "adminHeadingLabel", "storefrontHeading", "storefrontSubheading", "logoUrl", "faviconUrl"]);
+  const brandingDirty = formValueChanged(["businessDisplayName", "adminHeadingLabel", "storefrontHeading", "storefrontSubheading"]);
   const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
@@ -355,7 +355,6 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       form.backgroundTint,
       form.borderColor,
       form.textColor,
-      ...(theme.logoPaletteColours || []),
       ...extraSuggestedColours,
     ]
       .map((colour) => normalizeThemeColor(String(colour || ""), ""))
@@ -416,7 +415,6 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       if (colours.length < 2) throw new Error("Could not find enough usable colours in this logo.");
       const preset = buildLogoPalettePreset(colours);
       setLogoPalettePreset(preset);
-      setExtraSuggestedColours((current) => Array.from(new Set([...colours, ...current])).slice(0, 18));
       applyThemePreset(preset);
       setPreviewTarget("welcome");
       setTone("success");
@@ -553,17 +551,6 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               {generatingLogoPalette ? "Generating..." : logoPalettePreset ? "Regenerate from logo" : "Generate from logo"}
             </button>
           </div>
-          {logoPalettePreset ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold text-slate-600">Generated palette:</span>
-              {[logoPalettePreset.primaryColor, logoPalettePreset.accentColor, logoPalettePreset.backgroundTint, logoPalettePreset.borderColor, logoPalettePreset.textColor].map((colour) => (
-                <span key={colour} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700">
-                  <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ backgroundColor: colour }} />
-                  {colour}
-                </span>
-              ))}
-            </div>
-          ) : null}
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {suggestedColours.map((colour) => (
@@ -615,66 +602,70 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </p>
         </div>
 
-        <Section title="Branding and wording" showSave={false}>
+        <Section title="Logo and favicon" showSave={false}>
+          <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
+            Logo and favicon uploads save automatically. No Save button is needed for this section.
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="rounded-[22px] border border-slate-200 bg-white p-4">
+              <div className="flex flex-col gap-4">
+                {form.logoUrl ? (
+                  <div className="flex min-h-28 w-full items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <img src={form.logoUrl} alt="Current logo preview" className="max-h-24 max-w-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="flex min-h-28 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">
+                    No logo uploaded yet.
+                  </div>
+                )}
+                <UploadField
+                  label={form.logoUrl ? "Change logo" : "Upload logo"}
+                  saved={Boolean(form.logoUrl)}
+                  busy={uploadingLogo}
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  help="PNG, JPG, WebP or SVG. Max 3MB. Autosaves immediately."
+                  onFile={(file) => uploadAsset(file, "logo")}
+                />
+                {form.logoUrl ? (
+                  <ReadOnlyAssetUrl label="Saved logo URL" value={form.logoUrl} />
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-[22px] border border-slate-200 bg-white p-4">
+              <div className="flex flex-col gap-4">
+                {form.faviconUrl ? (
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs text-slate-600">
+                    <img src={form.faviconUrl} alt="Current favicon preview" className="h-12 w-12 rounded-lg border border-slate-100 bg-white object-contain" />
+                    <span>Current favicon preview. Browser tabs may need a hard refresh before the new icon appears.</span>
+                  </div>
+                ) : (
+                  <div className="flex min-h-28 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">
+                    No favicon uploaded yet.
+                  </div>
+                )}
+                <UploadField
+                  label={form.faviconUrl ? "Change favicon" : "Upload favicon"}
+                  saved={Boolean(form.faviconUrl)}
+                  busy={uploadingFavicon}
+                  accept=".ico,image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml,image/webp"
+                  help="ICO, PNG, SVG or WebP. Max 1MB. Autosaves immediately."
+                  onFile={(file) => uploadAsset(file, "favicon")}
+                />
+                {form.faviconUrl ? (
+                  <ReadOnlyAssetUrl label="Saved favicon URL" value={form.faviconUrl} />
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        <Section title="Branding and wording" dirty={brandingDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Business display name"><input value={form.businessDisplayName} onChange={(e) => update("businessDisplayName", e.target.value)} className="input" placeholder={tenantName} /></Field>
             <Field label="Admin heading label"><input value={form.adminHeadingLabel} onChange={(e) => update("adminHeadingLabel", e.target.value)} className="input" placeholder="Used in the admin shell" /></Field>
             <div className="md:col-span-2"><Field label="Storefront heading"><input value={form.storefrontHeading} onChange={(e) => update("storefrontHeading", e.target.value)} className="input" placeholder="Browse the menu" /></Field></div>
             <div className="md:col-span-2"><Field label="Storefront subheading"><textarea value={form.storefrontSubheading} onChange={(e) => update("storefrontSubheading", e.target.value)} rows={3} className="input" placeholder="A short welcome line for this business" /></Field></div>
-            <div className="md:col-span-2">
-              <Field label="Logo URL">
-                <input value={form.logoUrl} onChange={(e) => update("logoUrl", e.target.value)} className="input" placeholder="https://..." />
-              </Field>
-              {form.logoUrl ? (
-                <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-600">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div className="flex min-h-24 w-full max-w-[260px] items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:w-[220px]">
-                      <img src={form.logoUrl} alt="Current logo preview" className="max-h-20 max-w-full object-contain" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">Current logo preview</p>
-                      <p className="mt-1 leading-5 text-slate-500">Shown at logo size, not favicon size. The live preview updates immediately after upload.</p>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            <div className="md:col-span-2">
-              <Field label="Favicon URL">
-                <input value={form.faviconUrl} onChange={(e) => update("faviconUrl", e.target.value)} className="input" placeholder="https://..." />
-              </Field>
-              {form.faviconUrl ? (
-                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                  <img src={form.faviconUrl} alt="Current favicon preview" className="h-10 w-10 rounded-lg border border-slate-100 object-contain" />
-                  <span>Current favicon preview. Browser tabs may need a hard refresh before the new icon appears.</span>
-                </div>
-              ) : null}
-            </div>
-            <div className="md:col-span-2">
-              <Section title="Logo and favicon uploads" showSave={false} compact>
-                <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
-                  Logo and favicon uploads save automatically. No Save button is needed for this upload area.
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <UploadField
-                    label={form.logoUrl ? "Change logo" : "Upload logo"}
-                    saved={Boolean(form.logoUrl)}
-                    busy={uploadingLogo}
-                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                    help="PNG, JPG, WebP or SVG. Max 3MB."
-                    onFile={(file) => uploadAsset(file, "logo")}
-                  />
-                  <UploadField
-                    label={form.faviconUrl ? "Change favicon" : "Upload favicon"}
-                    saved={Boolean(form.faviconUrl)}
-                    busy={uploadingFavicon}
-                    accept=".ico,image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml,image/webp"
-                    help="ICO, PNG, SVG or WebP. Max 1MB."
-                    onFile={(file) => uploadAsset(file, "favicon")}
-                  />
-                </div>
-              </Section>
-            </div>
           </div>
         </Section>
 
@@ -711,7 +702,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Per-item storefront colours">
+        <Section title="Per-item storefront colours" showSave={false}>
           <div className="space-y-4">
             {THEME_GROUPS.map((group) => {
               const isOpen = openThemeGroup === group.id;
@@ -946,6 +937,15 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
           aria-label={`${label} colour picker`}
         />
       </div>
+    </div>
+  );
+}
+
+function ReadOnlyAssetUrl({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
+      <p className="mt-1 break-all text-[11px] leading-5 text-slate-600">{value}</p>
     </div>
   );
 }
