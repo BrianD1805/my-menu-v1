@@ -49,6 +49,8 @@ type ThemePreset = {
   theme: StorefrontTheme;
 };
 
+const LOGO_PALETTE_PRESET_NAME = "Logo palette";
+
 const THEME_PRESETS: ThemePreset[] = [
   makePreset("Premium Blue & Orange", "Clean, professional and tech-led.", "#336699", "#F28C28", "#F3F8FC", "#BED3E8", "#16283A"),
   makePreset("Forest Green & Gold", "Warm, natural and restaurant-friendly.", "#1F5C3B", "#D8A63A", "#F4F7EF", "#C9D8B8", "#1D2B22"),
@@ -140,6 +142,141 @@ function makePreset(name: string, description: string, primaryColor: string, acc
   };
 }
 
+function hexToRgb(hex: string) {
+  const safe = normalizeThemeColor(hex, "#000000").replace("#", "");
+  return {
+    r: parseInt(safe.slice(0, 2), 16),
+    g: parseInt(safe.slice(2, 4), 16),
+    b: parseInt(safe.slice(4, 6), 16),
+  };
+}
+
+function rgbToHex(r: number, g: number, b: number) {
+  return `#${[r, g, b]
+    .map((value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, "0"))
+    .join("")}`.toUpperCase();
+}
+
+function colourLuminance(hex: string) {
+  const { r, g, b } = hexToRgb(hex);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+}
+
+function colourSaturation(hex: string) {
+  const { r, g, b } = hexToRgb(hex);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  return max === 0 ? 0 : (max - min) / max;
+}
+
+function blendHex(hex: string, target: string, amount: number) {
+  const sourceRgb = hexToRgb(hex);
+  const targetRgb = hexToRgb(target);
+  return rgbToHex(
+    sourceRgb.r + (targetRgb.r - sourceRgb.r) * amount,
+    sourceRgb.g + (targetRgb.g - sourceRgb.g) * amount,
+    sourceRgb.b + (targetRgb.b - sourceRgb.b) * amount,
+  );
+}
+
+function buildLogoPalettePreset(colours: string[]): ThemePreset {
+  const unique = Array.from(new Set(colours.map((colour) => normalizeThemeColor(colour, "")).filter(Boolean)));
+  const sortedByDark = [...unique].sort((a, b) => colourLuminance(a) - colourLuminance(b));
+  const sortedByLight = [...unique].sort((a, b) => colourLuminance(b) - colourLuminance(a));
+  const sortedBySaturation = [...unique].sort((a, b) => colourSaturation(b) - colourSaturation(a));
+  const primaryColor = sortedByDark.find((colour) => colourLuminance(colour) < 0.58) || unique[0] || "#0F172A";
+  const accentColor = sortedBySaturation.find((colour) => colour !== primaryColor && colourLuminance(colour) > 0.18 && colourLuminance(colour) < 0.82) || unique.find((colour) => colour !== primaryColor) || "#FF6A3D";
+  const lightBase = sortedByLight.find((colour) => colour !== primaryColor && colour !== accentColor) || accentColor;
+  const textColor = sortedByDark[0] || primaryColor;
+  const backgroundTint = blendHex(lightBase, "#FFFFFF", 0.86);
+  const borderColor = blendHex(accentColor, "#FFFFFF", 0.55);
+
+  return {
+    name: LOGO_PALETTE_PRESET_NAME,
+    description: "Generated from the uploaded logo. Review it, then save if it suits this store.",
+    primaryColor,
+    accentColor,
+    backgroundTint,
+    borderColor,
+    textColor,
+    theme: {
+      ...buildThemeFromCore({ primaryColor, accentColor, backgroundTint, borderColor, textColor, presetName: LOGO_PALETTE_PRESET_NAME }),
+      logoPaletteColours: unique.slice(0, 12),
+      selectedPreset: LOGO_PALETTE_PRESET_NAME,
+      customised: false,
+      headerBackground: backgroundTint,
+      welcomeLabel: accentColor,
+      welcomeHeading: primaryColor,
+      welcomeShadow: accentColor,
+      addButtonBorder: accentColor,
+      moreButtonBorder: accentColor,
+      footerBadgeBackground: accentColor,
+    },
+  };
+}
+
+async function extractLogoColours(logoUrl: string): Promise<string[]> {
+  const response = await fetch(logoUrl, { cache: "no-store" });
+  if (!response.ok) throw new Error("Could not read the uploaded logo. Please refresh and try again.");
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Could not analyse this logo image."));
+      img.src = objectUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    const maxSize = 96;
+    const ratio = Math.min(maxSize / Math.max(image.naturalWidth || 1, image.naturalHeight || 1), 1);
+    canvas.width = Math.max(1, Math.round((image.naturalWidth || maxSize) * ratio));
+    canvas.height = Math.max(1, Math.round((image.naturalHeight || maxSize) * ratio));
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("Could not analyse this logo image.");
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const buckets = new Map<string, number>();
+
+    for (let i = 0; i < pixels.length; i += 16) {
+      const alpha = pixels[i + 3];
+      if (alpha < 120) continue;
+      const r = pixels[i];
+      const g = pixels[i + 1];
+      const b = pixels[i + 2];
+      const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      const sat = Math.max(r, g, b) === 0 ? 0 : (Math.max(r, g, b) - Math.min(r, g, b)) / Math.max(r, g, b);
+      if (lum > 0.96 || lum < 0.04 || sat < 0.04) continue;
+      const key = rgbToHex(Math.round(r / 24) * 24, Math.round(g / 24) * 24, Math.round(b / 24) * 24);
+      buckets.set(key, (buckets.get(key) || 0) + 1);
+    }
+
+    const ranked = Array.from(buckets.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([colour]) => colour);
+
+    const selected: string[] = [];
+    for (const colour of ranked) {
+      if (selected.length >= 8) break;
+      const current = hexToRgb(colour);
+      const tooClose = selected.some((existing) => {
+        const other = hexToRgb(existing);
+        const distance = Math.sqrt((current.r - other.r) ** 2 + (current.g - other.g) ** 2 + (current.b - other.b) ** 2);
+        return distance < 56;
+      });
+      if (!tooClose) selected.push(colour);
+    }
+
+    return selected.length >= 2 ? selected : ranked.slice(0, 6);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function normaliseTheme(theme: StorefrontTheme | null | undefined, form: Pick<FormState, "primaryColor" | "accentColor" | "backgroundTint" | "borderColor" | "textColor">): StorefrontTheme {
   return {
     ...buildThemeFromCore({
@@ -165,6 +302,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget>("welcome");
   const [customSuggestedHex, setCustomSuggestedHex] = useState("#FFFFFF");
   const [extraSuggestedColours, setExtraSuggestedColours] = useState<string[]>([]);
+  const [logoPalettePreset, setLogoPalettePreset] = useState<ThemePreset | null>(initialForm.storefrontTheme?.selectedPreset === LOGO_PALETTE_PRESET_NAME ? buildLogoPalettePreset(initialForm.storefrontTheme.logoPaletteColours?.length ? initialForm.storefrontTheme.logoPaletteColours : [initialForm.primaryColor, initialForm.accentColor, initialForm.backgroundTint, initialForm.borderColor, initialForm.textColor]) : null);
+  const [generatingLogoPalette, setGeneratingLogoPalette] = useState(false);
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
@@ -216,6 +355,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       form.backgroundTint,
       form.borderColor,
       form.textColor,
+      ...(theme.logoPaletteColours || []),
       ...extraSuggestedColours,
     ]
       .map((colour) => normalizeThemeColor(String(colour || ""), ""))
@@ -223,7 +363,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     return Array.from(new Set(base.map((colour) => colour.toUpperCase()))).slice(0, 18);
   }, [theme, form.primaryColor, form.accentColor, form.backgroundTint, form.borderColor, form.textColor, extraSuggestedColours]);
 
-  const activePreset = THEME_PRESETS.find((preset) => theme.selectedPreset === preset.name);
+  const availableThemePresets = logoPalettePreset ? [...THEME_PRESETS, logoPalettePreset] : THEME_PRESETS;
+  const activePreset = availableThemePresets.find((preset) => theme.selectedPreset === preset.name);
   const messageClass = useMemo(() => {
     if (tone === "success") return "border-emerald-200 bg-emerald-50 text-emerald-800";
     if (tone === "error") return "border-rose-200 bg-rose-50 text-rose-800";
@@ -257,6 +398,38 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     setExtraSuggestedColours((current) => (current.includes(next) ? current : [...current, next]));
     setTone("info");
     setMessage(`Added ${next} to suggested colours for this editing session.`);
+  }
+
+  async function generateLogoPalette() {
+    if (!form.logoUrl.trim()) {
+      setTone("error");
+      setMessage("Upload a logo first, then generate a palette from it.");
+      return;
+    }
+
+    setGeneratingLogoPalette(true);
+    setTone("info");
+    setMessage("Generating a colour palette from the uploaded logo...");
+
+    try {
+      const colours = await extractLogoColours(form.logoUrl.trim());
+      if (colours.length < 2) throw new Error("Could not find enough usable colours in this logo.");
+      const preset = buildLogoPalettePreset(colours);
+      setLogoPalettePreset(preset);
+      setExtraSuggestedColours((current) => Array.from(new Set([...colours, ...current])).slice(0, 18));
+      applyThemePreset(preset);
+      setPreviewTarget("welcome");
+      setTone("success");
+      setMessage("Generated a Logo palette from the uploaded logo. Review the preview, then save the Theme presets section to make it live.");
+      window.setTimeout(() => {
+        suggestedColoursRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 80);
+    } catch (error) {
+      setTone("error");
+      setMessage(error instanceof Error ? error.message : "Could not generate a palette from this logo.");
+    } finally {
+      setGeneratingLogoPalette(false);
+    }
   }
 
   function applyThemePreset(preset: ThemePreset) {
@@ -364,7 +537,34 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     return (
       <div className={compact ? "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950" : "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4"}>
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">Suggested colours</p>
-        <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing. Add your own hex colour below.</p>
+        <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing. Generate from the uploaded logo or add your own hex colour below.</p>
+        <div className="mt-3 rounded-2xl border border-orange-200 bg-white/80 p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-slate-900">Logo palette</p>
+              <p className="mt-1 text-[11px] leading-4 text-slate-500">Create a selectable palette from the current uploaded logo. It will become the draft theme, then you save it deliberately.</p>
+            </div>
+            <button
+              type="button"
+              onClick={generateLogoPalette}
+              disabled={generatingLogoPalette || !form.logoUrl.trim()}
+              className="inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+            >
+              {generatingLogoPalette ? "Generating..." : logoPalettePreset ? "Regenerate from logo" : "Generate from logo"}
+            </button>
+          </div>
+          {logoPalettePreset ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-600">Generated palette:</span>
+              {[logoPalettePreset.primaryColor, logoPalettePreset.accentColor, logoPalettePreset.backgroundTint, logoPalettePreset.borderColor, logoPalettePreset.textColor].map((colour) => (
+                <span key={colour} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700">
+                  <span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ backgroundColor: colour }} />
+                  {colour}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {suggestedColours.map((colour) => (
             <button
@@ -486,7 +686,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <p className="mt-1 text-xs leading-5 text-slate-600">Selected presets now populate the full colour list below.</p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            {THEME_PRESETS.map((preset) => {
+            {availableThemePresets.map((preset) => {
               const selected = activePreset?.name === preset.name;
               return (
                 <button
