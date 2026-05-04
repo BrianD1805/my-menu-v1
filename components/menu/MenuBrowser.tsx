@@ -44,7 +44,7 @@ function stripHtml(value: string | null | undefined) {
 }
 
 function iconLinkClass() {
-  return "inline-flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/70 bg-white/90 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.10)] ring-1 ring-slate-900/5 backdrop-blur-sm transition hover:-translate-y-[2px] hover:scale-[1.03] hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_18px_42px_rgba(15,23,42,0.16)] focus:outline-none focus:ring-2 focus:ring-slate-300 active:translate-y-0 active:scale-[0.98]";
+  return "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/92 text-slate-700 shadow-[0_12px_26px_rgba(15,23,42,0.10)] ring-1 ring-slate-900/5 backdrop-blur-sm transition hover:-translate-y-[2px] hover:scale-[1.04] hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)] focus:outline-none focus:ring-2 focus:ring-slate-300 active:translate-y-0 active:scale-[0.97] sm:h-12 sm:w-12";
 }
 
 function cleanDialString(value: string | null | undefined) {
@@ -66,6 +66,7 @@ function FooterIcon({ label, href, children }: { label: string; href: string | n
   if (!href) return null;
   return (
     <a href={href} className={iconLinkClass()} aria-label={label} title={label} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noopener noreferrer" : undefined}>
+      <span className="sr-only">{label}</span>
       {children}
     </a>
   );
@@ -80,8 +81,20 @@ function WhatsAppIcon() {
 function EmailIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>;
 }
-function SocialIcon({ label }: { label: string }) {
-  return <span className="text-xs font-black uppercase tracking-tight">{label}</span>;
+function FacebookIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M14.2 8.4V6.7c0-.8.5-1 1-1h1.6V3.1A21.6 21.6 0 0 0 14.4 3c-2.4 0-4 1.5-4 4.1v1.3H7.7v3h2.7V21h3.3v-9.6h2.7l.4-3h-3.1Z" /></svg>;
+}
+function InstagramIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="4" /><circle cx="12" cy="12" r="3.25" /><circle cx="17.3" cy="6.7" r=".65" fill="currentColor" stroke="none" /></svg>;
+}
+function TikTokIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M14.6 3h2.8c.2 1.3.8 2.4 1.7 3.2.8.8 1.8 1.3 3 1.5v2.9a8.4 8.4 0 0 1-4.6-1.5v5.9c0 3.5-2.5 6-5.9 6A5.6 5.6 0 0 1 6 15.4c0-3.3 2.5-5.7 5.7-5.7.4 0 .8 0 1.1.1v3a3.5 3.5 0 0 0-1.1-.2 2.7 2.7 0 1 0 2.8 2.7V3Z" /></svg>;
+}
+function XIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M13.8 10.5 21 3h-1.7l-6.2 6.4L8.1 3H2.4l7.6 9.8L2.4 21h1.7l6.6-7 5.3 7h5.7l-7.9-10.5Zm-2.4 2.4-.8-1L4.5 4.3h2.8l4.9 6.1.8 1 6.4 8.2h-2.8l-5.2-6.7Z" /></svg>;
+}
+function WebsiteIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a13.7 13.7 0 0 1 0 18" /><path d="M12 3a13.7 13.7 0 0 0 0 18" /></svg>;
 }
 
 export default function MenuBrowser({
@@ -214,12 +227,15 @@ export default function MenuBrowser({
   const phoneHref = cleanDialString(contactPhone) ? `tel:${cleanDialString(contactPhone)}` : null;
   const whatsAppHref = cleanWhatsAppNumber(contactWhatsApp || contactPhone) ? `https://wa.me/${cleanWhatsAppNumber(contactWhatsApp || contactPhone)}` : null;
   const emailHref = contactEmail?.trim() ? `mailto:${contactEmail.trim()}` : null;
-  const socialLinks = [
-    { label: "Facebook", short: "f", href: normaliseExternalUrl(socialFacebookUrl) },
-    { label: "Instagram", short: "IG", href: normaliseExternalUrl(socialInstagramUrl) },
-    { label: "TikTok", short: "TT", href: normaliseExternalUrl(socialTikTokUrl) },
-    { label: "X", short: "X", href: normaliseExternalUrl(socialXUrl) },
-    { label: "Website", short: "www", href: normaliseExternalUrl(socialWebsiteUrl) },
+  const footerIconLinks = [
+    { label: "Call store", href: phoneHref, icon: <PhoneIcon /> },
+    { label: "WhatsApp store", href: whatsAppHref, icon: <WhatsAppIcon /> },
+    { label: "Email store", href: emailHref, icon: <EmailIcon /> },
+    { label: "Facebook", href: normaliseExternalUrl(socialFacebookUrl), icon: <FacebookIcon /> },
+    { label: "Instagram", href: normaliseExternalUrl(socialInstagramUrl), icon: <InstagramIcon /> },
+    { label: "TikTok", href: normaliseExternalUrl(socialTikTokUrl), icon: <TikTokIcon /> },
+    { label: "X", href: normaliseExternalUrl(socialXUrl), icon: <XIcon /> },
+    { label: "Website", href: normaliseExternalUrl(socialWebsiteUrl), icon: <WebsiteIcon /> },
   ].filter((item) => Boolean(item.href));
 
   useEffect(() => {
@@ -500,20 +516,13 @@ export default function MenuBrowser({
           <p className="mt-3 max-w-2xl text-center text-sm leading-6" style={{ color: footerText }}>{footerBlurb || "Thank you for ordering with us."}</p>
           <p className="mt-4 max-w-2xl text-center text-xs leading-5" style={{ color: footerText }}>{footerNotice || "Prices and availability may change without notice."}</p>
 
-          <div className="mt-6 flex w-full flex-col items-center gap-3">
-            <div className="flex flex-wrap items-center justify-center gap-2.5" aria-label="Store contact links">
-              <FooterIcon label="Call store" href={phoneHref}><PhoneIcon /></FooterIcon>
-              <FooterIcon label="WhatsApp store" href={whatsAppHref}><WhatsAppIcon /></FooterIcon>
-              <FooterIcon label="Email store" href={emailHref}><EmailIcon /></FooterIcon>
+          {footerIconLinks.length ? (
+            <div className="mt-6 grid grid-cols-4 justify-items-center gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-3 lg:flex-nowrap" aria-label="Store footer links">
+              {footerIconLinks.map((link) => (
+                <FooterIcon key={link.label} label={link.label} href={link.href || null}>{link.icon}</FooterIcon>
+              ))}
             </div>
-            {socialLinks.length ? (
-              <div className="flex flex-wrap items-center justify-center gap-2.5" aria-label="Store social links">
-                {socialLinks.map((link) => (
-                  <FooterIcon key={link.label} label={link.label} href={link.href || null}><SocialIcon label={link.short} /></FooterIcon>
-                ))}
-              </div>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </section>
 
