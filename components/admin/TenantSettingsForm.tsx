@@ -432,23 +432,30 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 </div>
               ) : null}
             </div>
-            <div>
-              <UploadField
-                label="Upload logo"
-                busy={uploadingLogo}
-                accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                help="PNG, JPG, WebP or SVG. Max 3MB."
-                onFile={(file) => uploadAsset(file, "logo")}
-              />
-            </div>
-            <div>
-              <UploadField
-                label="Upload favicon"
-                busy={uploadingFavicon}
-                accept=".ico,image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml,image/webp"
-                help="ICO, PNG, SVG or WebP. Max 1MB."
-                onFile={(file) => uploadAsset(file, "favicon")}
-              />
+            <div className="md:col-span-2">
+              <Section title="Logo and favicon uploads" showSave={false} compact>
+                <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
+                  Logo and favicon uploads save automatically. Use the Save section button above only when you manually edit wording or URL fields.
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <UploadField
+                    label={form.logoUrl ? "Change logo" : "Upload logo"}
+                    saved={Boolean(form.logoUrl)}
+                    busy={uploadingLogo}
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    help="PNG, JPG, WebP or SVG. Max 3MB."
+                    onFile={(file) => uploadAsset(file, "logo")}
+                  />
+                  <UploadField
+                    label={form.faviconUrl ? "Change favicon" : "Upload favicon"}
+                    saved={Boolean(form.faviconUrl)}
+                    busy={uploadingFavicon}
+                    accept=".ico,image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml,image/webp"
+                    help="ICO, PNG, SVG or WebP. Max 1MB."
+                    onFile={(file) => uploadAsset(file, "favicon")}
+                  />
+                </div>
+              </Section>
             </div>
           </div>
         </Section>
@@ -727,22 +734,33 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
 
 function UploadField({
   label,
+  saved,
   busy,
   accept,
   help,
   onFile,
 }: {
   label: string;
+  saved: boolean;
   busy: boolean;
   accept: string;
   help: string;
   onFile: (file: File) => void;
 }) {
+  const inputId = `tenant-asset-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
   return (
-    <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-      <span className="font-semibold">{busy ? "Uploading..." : label}</span>
-      <span className="mt-1 block text-xs leading-5 text-slate-500">{help}</span>
+    <div className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold text-slate-900">{busy ? "Uploading..." : label}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{help}</p>
+          {saved ? <p className="mt-1 text-xs font-semibold text-emerald-700">Current file saved. Upload a new file only if you want to change it.</p> : null}
+        </div>
+        {saved ? <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-emerald-700">Saved</span> : null}
+      </div>
       <input
+        id={inputId}
         type="file"
         accept={accept}
         disabled={busy}
@@ -751,27 +769,37 @@ function UploadField({
           if (file) onFile(file);
           e.currentTarget.value = "";
         }}
-        className="mt-2 block w-full text-xs"
+        className="sr-only"
       />
-    </label>
+      <label
+        htmlFor={inputId}
+        className={`mt-3 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl px-4 py-2 text-xs font-bold transition ${
+          busy ? "pointer-events-none bg-slate-200 text-slate-500" : "bg-slate-900 text-white hover:bg-slate-800"
+        }`}
+      >
+        {busy ? "Uploading..." : label}
+      </label>
+    </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, children, showSave = true, compact = false }: { title: string; children: ReactNode; showSave?: boolean; compact?: boolean }) {
   return (
-    <section className="mb-6 rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+    <section className={`${compact ? "mb-0" : "mb-6"} rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5`}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">{title}</h3>
       </div>
       {children}
-      <div className="mt-4 flex justify-end border-t border-slate-200/70 pt-4">
-        <button
-          type="submit"
-          className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-        >
-          Save section
-        </button>
-      </div>
+      {showSave ? (
+        <div className="mt-4 flex justify-end border-t border-slate-200/70 pt-4">
+          <button
+            type="submit"
+            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          >
+            Save section
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
