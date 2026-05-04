@@ -302,7 +302,12 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       const response = await fetch("/api/admin/upload-tenant-asset", { method: "POST", body });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `Failed to upload ${kind}`);
-      update(kind === "logo" ? "logoUrl" : "faviconUrl", payload.url || "");
+      const uploadedUrl = payload.url || "";
+      setForm((current) => ({
+        ...current,
+        [kind === "logo" ? "logoUrl" : "faviconUrl"]: uploadedUrl,
+      }));
+      if (kind === "logo") setPreviewTarget("header");
       setTone("success");
       setMessage(payload.message || `${kind === "logo" ? "Logo" : "Favicon"} uploaded and saved.`);
     } catch (error) {
@@ -403,9 +408,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 <input value={form.logoUrl} onChange={(e) => update("logoUrl", e.target.value)} className="input" placeholder="https://..." />
               </Field>
               {form.logoUrl ? (
-                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                  <img src={form.logoUrl} alt="Current logo preview" className="h-12 w-12 rounded-xl border border-slate-100 object-contain" />
-                  <span>Current logo preview</span>
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-600">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex min-h-24 w-full max-w-[260px] items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:w-[220px]">
+                      <img src={form.logoUrl} alt="Current logo preview" className="max-h-20 max-w-full object-contain" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">Current logo preview</p>
+                      <p className="mt-1 leading-5 text-slate-500">Shown at logo size, not favicon size. The live preview updates immediately after upload.</p>
+                    </div>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -611,6 +623,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             footerBlurb={footerBlurb}
             footerNotice={footerNotice}
             money={formatMoney(295, moneySettings)}
+            logoUrl={form.logoUrl}
+            faviconUrl={form.faviconUrl}
           />
         </div>
 
@@ -639,6 +653,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 footerBlurb={footerBlurb}
                 footerNotice={footerNotice}
                 money={formatMoney(295, moneySettings)}
+                logoUrl={form.logoUrl}
+                faviconUrl={form.faviconUrl}
               />
             ) : renderSuggestedColoursPanel(true)}
           </div>
@@ -656,14 +672,14 @@ function labelForPreview(target: PreviewTarget) {
   return "Footer";
 }
 
-function PreviewPanel({ target, theme, previewName, previewHeading, previewSubheading, footerBlurb, footerNotice, money }: { target: PreviewTarget; theme: StorefrontTheme; previewName: string; previewHeading: string; previewSubheading: string; footerBlurb: string; footerNotice: string; money: string }) {
+function PreviewPanel({ target, theme, previewName, previewHeading, previewSubheading, footerBlurb, footerNotice, money, logoUrl, faviconUrl }: { target: PreviewTarget; theme: StorefrontTheme; previewName: string; previewHeading: string; previewSubheading: string; footerBlurb: string; footerNotice: string; money: string; logoUrl?: string; faviconUrl?: string }) {
   const background = normalizeThemeColor(theme.globalPageBackground, "#F8F4F0");
   const text = normalizeThemeColor(theme.globalText, "#2B2B2B");
   return (
     <div className="mt-3 rounded-[22px] border p-3" style={{ backgroundColor: background, borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3"), color: text }}>
-      {target === "global" ? <div className="rounded-[18px] border bg-white p-4" style={{ borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3") }}><p className="text-sm font-bold">{previewName}</p><p className="mt-2 text-sm" style={{ color: normalizeThemeColor(theme.globalSoftText, "#64748B") }}>This shows the page background, main text and soft text treatment.</p></div> : null}
-      {target === "header" ? <div className="rounded-[18px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.headerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.headerText, "#2B2B2B") }}><div className="flex items-center justify-between"><strong>{previewName}</strong><div className="flex gap-2"><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Search</span><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Cart</span></div></div></div> : null}
-      {target === "welcome" ? <div className="rounded-[18px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.welcomeBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.welcomeBorder, "#D9C7A3"), boxShadow: `0 10px 24px ${normalizeThemeColor(theme.welcomeShadow, "#D9C7A3")}18` }}><p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: normalizeThemeColor(theme.welcomeLabel, "#C7922F") }}>Welcome</p><h4 className="mt-2 text-xl font-bold" style={{ color: normalizeThemeColor(theme.welcomeHeading, "#0F172A") }}>{previewHeading}</h4><p className="mt-2 text-sm leading-5" style={{ color: normalizeThemeColor(theme.welcomeBody, "#2B2B2B") }}>{previewSubheading}</p></div> : null}
+      {target === "global" ? <div className="rounded-[18px] border bg-white p-4" style={{ borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3") }}><div className="flex items-center gap-3">{logoUrl ? <img src={logoUrl} alt="Logo preview" className="max-h-12 max-w-[150px] object-contain" /> : null}<p className="text-sm font-bold">{previewName}</p></div><p className="mt-2 text-sm" style={{ color: normalizeThemeColor(theme.globalSoftText, "#64748B") }}>This shows the page background, main text and soft text treatment.</p></div> : null}
+      {target === "header" ? <div className="rounded-[18px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.headerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.headerText, "#2B2B2B") }}><div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3">{logoUrl ? <img src={logoUrl} alt="Logo preview" className="max-h-11 max-w-[145px] shrink-0 object-contain" /> : null}<strong className="truncate">{previewName}</strong></div><div className="flex shrink-0 gap-2"><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Search</span><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Cart</span></div></div>{faviconUrl ? <div className="mt-3 flex items-center gap-2 rounded-xl border border-black/5 bg-white/75 px-3 py-2 text-[11px] opacity-80"><img src={faviconUrl} alt="Favicon preview" className="h-5 w-5 object-contain" /><span>Favicon saved for browser tab / app icon preview</span></div> : null}</div> : null}
+      {target === "welcome" ? <div className="rounded-[18px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.welcomeBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.welcomeBorder, "#D9C7A3"), boxShadow: `0 10px 24px ${normalizeThemeColor(theme.welcomeShadow, "#D9C7A3")}18` }}>{logoUrl ? <img src={logoUrl} alt="Logo preview" className="mb-3 max-h-14 max-w-[180px] object-contain" /> : null}<p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: normalizeThemeColor(theme.welcomeLabel, "#C7922F") }}>Welcome</p><h4 className="mt-2 text-xl font-bold" style={{ color: normalizeThemeColor(theme.welcomeHeading, "#0F172A") }}>{previewHeading}</h4><p className="mt-2 text-sm leading-5" style={{ color: normalizeThemeColor(theme.welcomeBody, "#2B2B2B") }}>{previewSubheading}</p></div> : null}
       {target === "products" ? <div className="rounded-[20px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.productCardBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.productCardBorder, "#D9C7A3") }}><div className="grid grid-cols-[6rem_1fr] gap-3"><div className="rounded-2xl bg-slate-100" /><div><h4 className="font-bold" style={{ color: normalizeThemeColor(theme.productTitle, "#0F172A") }}>Sample product</h4><div className="mt-4 grid grid-cols-3 gap-2"><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.priceBoxBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.priceBoxBorder, "#D9C7A3"), color: normalizeThemeColor(theme.priceText, "#0F172A") }}>{money}</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.addButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.addButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.addButtonText, "#0F172A") }}>Add</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.moreButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.moreButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.moreButtonText, "#0F172A") }}>More</span></div></div></div></div> : null}
       {target === "footer" ? <div className="rounded-[18px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.footerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3"), color: normalizeThemeColor(theme.footerText, "#2B2B2B") }}><p className="text-[11px] font-bold uppercase tracking-[0.18em]">Storefront footer</p><p className="mt-2 text-sm leading-5">{footerBlurb}</p><p className="mt-2 text-xs leading-5">{footerNotice}</p><span className="mt-3 inline-flex rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: normalizeThemeColor(theme.footerBadgeBackground, "#C7922F") }}>Currency badge</span></div> : null}
     </div>
