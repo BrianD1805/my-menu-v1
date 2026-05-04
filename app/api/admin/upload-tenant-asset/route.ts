@@ -1,10 +1,32 @@
 import { NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { db } from "@/lib/db";
 import { resolveAdminTenant } from "@/lib/admin-tenant";
 
-function sanitizeFileName(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
+const BUCKET_NAME = "tenant-assets";
+
+const ALLOWED_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico"]);
+const ALLOWED_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+]);
+
+function sanitizeSlug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "store";
+}
+
+function safeExtension(fileName: string, mimeType: string) {
+  const ext = path.extname(fileName || "").toLowerCase();
+  if (ALLOWED_EXTENSIONS.has(ext)) return ext;
+  if (mimeType === "image/jpeg") return ".jpg";
+  if (mimeType === "image/webp") return ".webp";
+  if (mimeType === "image/svg+xml") return ".svg";
+  if (mimeType === "image/x-icon" || mimeType === "image/vnd.microsoft.icon") return ".ico";
+  return ".png";
 }
 
 export async function POST(req: Request) {
@@ -24,19 +46,68 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid asset type" }, { status: 400 });
     }
 
-    const bytes = Buffer.from(await file.arrayBuffer());
-    const ext = path.extname(file.name || "").toLowerCase() || ".png";
-    const safeExt = [".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico"].includes(ext) ? ext : ".png";
-    const folder = path.join(process.cwd(), "public", "tenant-assets", tenantLookup.tenant.slug);
-    await mkdir(folder, { recursive: true });
+    const mimeType = file.type || "application/octet-stream";
+    if (!ALLOWED_MIME_TYPES.has(mimeType)) {
+      return NextResponse.json(
+        { error: "Please upload a PNG, JPG, WebP, SVG or ICO image." },
+        { status: 400 }
+      );
+    }
 
-    const baseName = kind === "logo" ? "logo" : "favicon";
-    const fileName = sanitizeFileName(`${baseName}${safeExt}`);
-    const fullPath = path.join(folder, fileName);
-    await writeFile(fullPath, bytes);
+    const maxBytes = kind === "logo" ? 3 * 1024 * 1024 : 1024 * 1024;
+    if (file.size > maxBytes) {
+      return NextResponse.json(
+        { error: kind === "logo" ? "Logo must be under 3MB." : "Favicon must be under 1MB." },
+        { status: 400 }
+      );
+    }
 
-    const publicUrl = `/tenant-assets/${tenantLookup.tenant.slug}/${fileName}`;
-    return NextResponse.json({ url: publicUrl });
+    const arrayBuffer = await file.arrayBuffer();
+    const ext = safeExtension(file.name || "", mimeType);
+    const tenantSlug = sanitizeSlug(tenantLookup.tenant.slug);
+    const fileName = `${kind}-${Date.now()}${ext}`;
+    const storagePath = `${tenantSlug}/${fileName}`;
+
+    const { error: uploadError } = await db.storage
+      .from(BUCKET_NAME)
+      .upload(storagePath, arrayBuffer, {
+        cacheControl: "31536000",
+        contentType: mimeType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return NextResponse.json(
+        { error: `Supabase Storage upload failed: ${uploadError.message}` },
+        { status: 500 }
+      );
+    }
+
+    const { data: publicUrlData } = db.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
+    const publicUrl = publicUrlData.publicUrl;
+
+    const settingsPayload = {
+      tenant_id: tenantLookup.tenant.id,
+      ...(kind === "logo" ? { logo_url: publicUrl } : { favicon_url: publicUrl }),
+    };
+
+    const { error: settingsError } = await db
+      .from("tenant_settings")
+      .upsert(settingsPayload, { onConflict: "tenant_id" });
+
+    if (settingsError) {
+      return NextResponse.json(
+        { error: `Image uploaded, but settings could not be saved: ${settingsError.message}` },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      url: publicUrl,
+      storagePath,
+      saved: true,
+      message: kind === "logo" ? "Logo uploaded and saved." : "Favicon uploaded and saved.",
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to upload asset";
     return NextResponse.json({ error: message }, { status: 500 });

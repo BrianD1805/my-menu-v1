@@ -303,7 +303,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       if (!response.ok) throw new Error(payload.error || `Failed to upload ${kind}`);
       update(kind === "logo" ? "logoUrl" : "faviconUrl", payload.url || "");
       setTone("success");
-      setMessage(`${kind === "logo" ? "Logo" : "Favicon"} uploaded.`);
+      setMessage(payload.message || `${kind === "logo" ? "Logo" : "Favicon"} uploaded and saved.`);
     } catch (error) {
       setTone("error");
       setMessage(error instanceof Error ? error.message : `Failed to upload ${kind}`);
