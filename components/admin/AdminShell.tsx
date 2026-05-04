@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import LogoutButton from "@/components/admin/LogoutButton";
+import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 import { LIVE_VERSION } from "@/lib/version";
 
 type NavItem = {
@@ -176,6 +177,10 @@ export default function AdminShell({
             </div>
           </div>
         </header>
+
+        <div className="mt-5 sm:mt-6">
+          <AdminLaunchChecklist tenantSlug={tenantSlug || undefined} showSetupTools />
+        </div>
 
         <div className="mt-5 sm:mt-6">{children}</div>
 

@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
-import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 function StatCard({ label, value, hint, urgent }: { label: string; value: string; hint: string; urgent?: boolean }) {
@@ -68,9 +67,7 @@ export default async function AdminHomePage() {
       logoUrl={branding.logoUrl}
       accentColor={branding.accentColor}
     >
-      <AdminLaunchChecklist tenantSlug={tenant.slug} showSetupTools />
-
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Orders" value={String(orderCount || 0)} hint="All orders shown here belong to this tenant only." />
         <StatCard
           label="New orders"
