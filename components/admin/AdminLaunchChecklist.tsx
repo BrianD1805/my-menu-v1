@@ -190,19 +190,19 @@ export default function AdminLaunchChecklist({
   }
 
   return (
-    <section id="launch-checklist" className="rounded-[32px] border border-[#FFD8C8] bg-[linear-gradient(135deg,#ffffff_0%,#fff7f0_56%,#ffe7db_100%)] p-5 shadow-[0_20px_58px_rgba(14,14,16,0.08)] sm:p-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <section id="launch-checklist" className="rounded-[26px] border border-[#FFD8C8] bg-[linear-gradient(135deg,#ffffff_0%,#fff7f0_56%,#ffe7db_100%)] p-4 shadow-[0_16px_42px_rgba(14,14,16,0.06)] sm:p-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Interactive launch checklist</p>
-          <h2 className="mt-2 text-2xl font-black text-[#0E0E10] sm:text-3xl">Finish your launch setup</h2>
-          <p className="mt-3 text-sm leading-6 text-[#5C5F66]">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#C84F2A]">Interactive launch checklist</p>
+          <h2 className="mt-1.5 text-xl font-black text-[#0E0E10] sm:text-2xl">Finish your launch setup</h2>
+          <p className="mt-2 text-sm leading-6 text-[#5C5F66]">
             Click a task to open the right admin area. Orduva will tick the practical steps automatically where it can, and saves the progress for this store.
           </p>
-          <p className="mt-3 rounded-2xl border border-[#FFD8C8] bg-white/78 px-4 py-3 text-sm font-bold text-[#7A4B37]">
+          <p className="mt-2 rounded-2xl border border-[#FFD8C8] bg-white/78 px-4 py-2.5 text-sm font-bold text-[#7A4B37]">
             {calmProgressMessage}
           </p>
           {!isAuthenticated && !loading ? (
-            <p className="mt-3 rounded-2xl border border-[#FFD8C8] bg-white/78 px-4 py-3 text-sm font-semibold text-[#7A4B37]">
+            <p className="mt-2 rounded-2xl border border-[#FFD8C8] bg-white/78 px-4 py-2.5 text-sm font-semibold text-[#7A4B37]">
               Sign in first to save checklist progress across devices.
             </p>
           ) : null}
@@ -210,8 +210,8 @@ export default function AdminLaunchChecklist({
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-          <div className="rounded-[24px] border border-[#0E0E10]/10 bg-white px-5 py-4 text-center shadow-sm">
-            <p className="text-3xl font-black text-[#0E0E10]">{loading ? "…" : `${percentage}%`}</p>
+          <div className="rounded-[20px] border border-[#0E0E10]/10 bg-white px-4 py-3 text-center shadow-sm">
+            <p className="text-2xl font-black text-[#0E0E10]">{loading ? "…" : `${percentage}%`}</p>
             <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Launch progress</p>
           </div>
           {isAuthenticated ? (
@@ -219,7 +219,7 @@ export default function AdminLaunchChecklist({
               type="button"
               onClick={() => save("__collapsed", !collapsed)}
               disabled={savingKey === "__collapsed"}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:opacity-60"
+              className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2.5 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:opacity-60"
             >
               {collapsed ? "Maximise checklist" : "Minimise checklist"}
             </button>
@@ -228,19 +228,19 @@ export default function AdminLaunchChecklist({
       </div>
 
       {collapsed ? (
-        <div className="mt-5 rounded-[24px] border border-[#0E0E10]/10 bg-white/82 p-4 text-sm leading-6 text-[#5C5F66]">
+        <div className="mt-4 rounded-[22px] border border-[#0E0E10]/10 bg-white/82 p-4 text-sm leading-6 text-[#5C5F66]">
           Checklist minimised. Progress is saved for this store. {calmProgressMessage}
         </div>
       ) : (
         <>
-          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {items.map((item, index) => {
               const isDone = item.status === "complete";
               const canManualToggle = isAuthenticated && !item.autoComplete;
               return (
                 <div
                   key={item.key}
-                  className={`rounded-[24px] border p-4 transition ${
+                  className={`rounded-[20px] border p-3.5 transition ${
                     isDone ? "border-emerald-200 bg-emerald-50" : "border-[#0E0E10]/10 bg-white/88 hover:border-[#FF6A3D]/35"
                   }`}
                 >

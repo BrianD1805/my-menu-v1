@@ -163,35 +163,35 @@ export default function AdminLoginPage() {
         : "border-[#E7D8CC] bg-[#FFF7F0] text-[#1F2328]";
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_16%_8%,rgba(148,163,184,0.20),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(15,23,42,0.08),transparent_28%),linear-gradient(135deg,#F3F4F6_0%,#EEF1F4_52%,#FFFFFF_100%)] px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mx-auto w-full max-w-5xl space-y-6">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_16%_8%,rgba(148,163,184,0.20),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(15,23,42,0.08),transparent_28%),linear-gradient(135deg,#F3F4F6_0%,#EEF1F4_52%,#FFFFFF_100%)] px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto w-full max-w-5xl space-y-5">
         {tenantSlug ? <AdminLaunchChecklist tenantSlug={tenantSlug} /> : null}
 
-        <div className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
-          <section className="rounded-[32px] border border-[#E7D8CC] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.10)] sm:p-8">
-            <div className="mb-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#FF6A3D]">Orduva Admin</p>
-              <h1 className="mt-2 text-3xl font-bold text-[#1F2328] sm:text-4xl">Sign in to your store admin</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5C5F66] sm:text-base">
+        <div className="grid gap-5 lg:grid-cols-[1.04fr_0.96fr]">
+          <section className="rounded-[26px] border border-[#E7D8CC] bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.08)] sm:p-6">
+            <div className="mb-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF6A3D]">Orduva Admin</p>
+              <h1 className="mt-2 text-xl font-bold text-[#1F2328] sm:text-3xl">Sign in to your store admin</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C5F66]">
                 Use the email address and password you created when setting up your Orduva store. You do not need to enter your store address.
               </p>
             </div>
 
             {tenantSlug ? (
-              <div className="mb-5 rounded-[24px] border border-[#E7D8CC] bg-[#F8FAFC] px-4 py-3 text-sm leading-6 text-[#5C5F66]">
+              <div className="mb-4 rounded-[20px] border border-[#E7D8CC] bg-[#F8FAFC] px-4 py-3 text-sm leading-6 text-[#5C5F66]">
                 This sign-in link is ready for <span className="font-bold text-[#1F2328]">{tenantSlug}.orduva.com</span>. If you use the normal admin login later, your email and password will find your store automatically.
               </div>
             ) : null}
 
             {session.loading ? (
-              <div className="mb-5 rounded-2xl border border-[#E7D8CC] bg-[#FFF7F0] px-4 py-3 text-sm text-[#5C5F66]">Checking your sign-in status...</div>
+              <div className="mb-4 rounded-2xl border border-[#E7D8CC] bg-[#FFF7F0] px-4 py-3 text-sm text-[#5C5F66]">Checking your sign-in status...</div>
             ) : null}
 
             {!session.loading && session.authenticated ? (
-              <div className="mb-5 space-y-4 rounded-[28px] border border-[#FFD8C8] bg-[#FFF7F0] p-5">
+              <div className="mb-4 space-y-3 rounded-[22px] border border-[#FFD8C8] bg-[#FFF7F0] p-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">Already signed in</p>
-                  <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Continue to admin</h2>
+                  <h2 className="mt-2 text-xl font-bold text-[#1F2328]">Continue to admin</h2>
                   <p className="mt-2 text-sm leading-6 text-[#5C5F66]">
                     Signed in as {session.user.full_name || session.user.email} for {session.tenant.name}.
                   </p>
@@ -215,11 +215,11 @@ export default function AdminLoginPage() {
               </div>
             ) : null}
 
-            <div className="mb-6 grid grid-cols-2 gap-3">
+            <div className="mb-5 grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setActivePanel("login")}
-                className={`inline-flex min-h-12 items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                className={`inline-flex min-h-11 items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
                   activePanel === "login"
                     ? "bg-[#0E0E10] text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)]"
                     : "bg-white text-[#1F2328] ring-1 ring-[#E7D8CC] hover:bg-[#FFF7F0]"
@@ -230,7 +230,7 @@ export default function AdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setActivePanel("setup")}
-                className={`inline-flex min-h-12 items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                className={`inline-flex min-h-11 items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
                   activePanel === "setup"
                     ? "bg-[#FF6A3D] text-white shadow-[0_12px_30px_rgba(255,106,61,0.22)]"
                     : "bg-white text-[#1F2328] ring-1 ring-[#E7D8CC] hover:bg-[#FFF7F0]"
@@ -241,14 +241,14 @@ export default function AdminLoginPage() {
             </div>
 
             {activePanel === "login" ? (
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-3">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Email address</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                    className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
                     placeholder="owner@example.com"
                     required
                   />
@@ -259,7 +259,7 @@ export default function AdminLoginPage() {
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                    className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
                     placeholder="Enter your password"
                     required
                   />
@@ -267,16 +267,16 @@ export default function AdminLoginPage() {
                 <button
                   type="submit"
                   disabled={busy === "login"}
-                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1F2328] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1F2328] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {busy === "login" ? "Signing in..." : "Sign in to admin"}
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleBootstrap} className="space-y-4 rounded-[28px] border border-[#FFD8C8] bg-[#FFF7F0] p-5">
+              <form onSubmit={handleBootstrap} className="space-y-3 rounded-[22px] border border-[#FFD8C8] bg-[#FFF7F0] p-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#FF6A3D]">Owner setup</p>
-                  <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">Create the first owner</h2>
+                  <h2 className="mt-2 text-xl font-bold text-[#1F2328]">Create the first owner</h2>
                   <p className="mt-2 text-sm leading-6 text-[#5C5F66]">
                     Use this only when manually creating the first owner login for an existing store.
                   </p>
@@ -287,7 +287,7 @@ export default function AdminLoginPage() {
                     type="text"
                     value={tenantSlug}
                     onChange={(event) => setTenantSlug(normalizeStoreAddress(event.target.value))}
-                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
                     placeholder="pickelicious"
                     required
                   />
@@ -298,7 +298,7 @@ export default function AdminLoginPage() {
                   <input
                     value={fullName}
                     onChange={(event) => setFullName(event.target.value)}
-                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
                     placeholder="Store owner"
                     required
                   />
@@ -309,7 +309,7 @@ export default function AdminLoginPage() {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
                     placeholder="owner@example.com"
                     required
                   />
@@ -320,7 +320,7 @@ export default function AdminLoginPage() {
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
                     placeholder="Choose a password"
                     required
                   />
@@ -331,7 +331,7 @@ export default function AdminLoginPage() {
                     type="password"
                     value={setupKey}
                     onChange={(event) => setSetupKey(event.target.value)}
-                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#FF6A3D]"
+                    className="w-full rounded-2xl border border-[#E7D8CC] bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
                     placeholder="Owner setup key"
                     required
                   />
@@ -339,34 +339,34 @@ export default function AdminLoginPage() {
                 <button
                   type="submit"
                   disabled={busy === "setup"}
-                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#e85f35] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#e85f35] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {busy === "setup" ? "Creating owner..." : "Create first owner"}
                 </button>
               </form>
             )}
 
-            {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClasses}`}>{message}</div> : null}
+            {message ? <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${messageClasses}`}>{message}</div> : null}
           </section>
 
-          <aside className="space-y-4 rounded-[32px] border border-[#E7D8CC] bg-[#FFF7F0] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8">
+          <aside className="space-y-4 rounded-[26px] border border-[#E7D8CC] bg-[#FFF7F0] p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:p-6">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#FF6A3D]">For store owners</p>
-              <h2 className="mt-2 text-2xl font-bold text-[#1F2328]">A simpler sign-in</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF6A3D]">For store owners</p>
+              <h2 className="mt-2 text-xl font-bold text-[#1F2328]">A simpler sign-in</h2>
               <p className="mt-3 text-sm leading-6 text-[#5C5F66]">
                 Orduva now finds your store from your owner email and password, so you do not have to remember a technical store address field.
               </p>
             </div>
             <div className="grid gap-3 text-sm text-[#5C5F66]">
-              <div className="rounded-2xl bg-white p-4 ring-1 ring-[#E7D8CC]">
+              <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#E7D8CC]">
                 <p className="font-semibold text-[#1F2328]">After creating a store</p>
                 <p className="mt-1 leading-6">Click Continue to your admin setup, then sign in with the email and password you just created.</p>
               </div>
-              <div className="rounded-2xl bg-white p-4 ring-1 ring-[#E7D8CC]">
+              <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#E7D8CC]">
                 <p className="font-semibold text-[#1F2328]">Already have a store?</p>
                 <p className="mt-1 leading-6">Use the same email and password from any normal Orduva admin login page.</p>
               </div>
-              <div className="rounded-2xl bg-white p-4 ring-1 ring-[#E7D8CC]">
+              <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#E7D8CC]">
                 <p className="font-semibold text-[#1F2328]">Managing more than one store?</p>
                 <p className="mt-1 leading-6">For now, use the store-specific link from your Orduva email. A store picker can be added later.</p>
               </div>
