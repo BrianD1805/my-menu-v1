@@ -79,3 +79,35 @@ body {
   border-color: rgb(148 163 184);
   box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.18);
 }
+
+
+@keyframes orduva-float-soft {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes orduva-glow-sweep {
+  0% { transform: translateX(-130%); opacity: 0; }
+  20% { opacity: 0.22; }
+  60% { opacity: 0.16; }
+  100% { transform: translateX(180%); opacity: 0; }
+}
+
+@keyframes orduva-breathe {
+  0% { box-shadow: 0 18px 50px rgba(14,14,16,0.07); }
+  50% { box-shadow: 0 24px 62px rgba(255,106,61,0.13); }
+  100% { box-shadow: 0 18px 50px rgba(14,14,16,0.07); }
+}
+
+.orduva-float-soft {
+  animation: orduva-float-soft 7s ease-in-out infinite;
+}
+
+.orduva-breathe {
+  animation: orduva-breathe 6.5s ease-in-out infinite;
+}
+
+.orduva-glow-sweep {
+  animation: orduva-glow-sweep 6.8s ease-in-out infinite;
+}

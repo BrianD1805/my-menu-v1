@@ -12,21 +12,25 @@ function OrduvaPlatformLanding() {
   const sellingPoints = [
     {
       eyebrow: "Branding",
+      icon: "🎨",
       title: "Create a colour palette from the logo",
       body: "Upload a logo, generate a matching palette, then save it as the store's own theme. It makes a new client store feel polished without hours of design work.",
     },
     {
       eyebrow: "Live orders",
+      icon: "🔔",
       title: "Push notifications for new orders",
       body: "Store admins can receive new-order alerts, while customers can be kept updated as order statuses change.",
     },
     {
       eyebrow: "Guided setup",
+      icon: "✅",
       title: "A calm launch checklist",
       body: "New store owners are guided through categories, products, branding, test orders and launch steps without being overwhelmed.",
     },
     {
       eyebrow: "Pricing",
+      icon: "💰",
       title: "From only $5 a month",
       body: "$5 a month for a 20 product store, or $9.99 a month for up to 100 products. Simple, affordable, and easy to explain.",
     },
@@ -48,9 +52,9 @@ function OrduvaPlatformLanding() {
               </div>
               <div className="flex justify-center">
                 <img
-                  src="/orduva-logo-ubuntu-white.png"
+                  src="/orduva-logo-hero-updated.png"
                   alt="Orduva — Don't order it, ORDUVA it!"
-                  className="h-auto w-full max-w-[420px] object-contain sm:max-w-[520px]"
+                  className="h-auto w-full max-w-[360px] object-contain sm:max-w-[470px] lg:max-w-[520px]"
                 />
               </div>
               <div className="flex justify-center lg:justify-end">
@@ -75,17 +79,34 @@ function OrduvaPlatformLanding() {
             </div>
           </section>
 
-          <section className="border-t border-[#0E0E10]/10 bg-[#F5F2EE]/70 px-5 py-8 sm:px-7 lg:px-9 lg:py-10">
+          <section className="relative overflow-hidden border-t border-[#0E0E10]/10 bg-[#F5F2EE]/70 px-5 py-8 sm:px-7 lg:px-9 lg:py-10">
+            <div className="pointer-events-none absolute -left-16 top-10 h-32 w-32 rounded-full bg-[#FF6A3D]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -right-16 bottom-4 h-36 w-36 rounded-full bg-[#0E0E10]/8 blur-3xl" />
             <div className="mx-auto max-w-5xl text-center">
               <p className="text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">Top selling points</p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-[#0E0E10] sm:text-4xl">Simple to sell. Easy to launch.</h2>
+              <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-[#68707A] sm:text-base">A cleaner, more premium setup story for new clients — with practical tools that help them get live fast.</p>
             </div>
-            <div className="mt-7 grid gap-4 lg:grid-cols-4">
-              {sellingPoints.map((point) => (
-                <article key={point.title} className="rounded-[28px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.07)]">
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C84F2A]">{point.eyebrow}</p>
-                  <h3 className="mt-3 text-xl font-black tracking-tight text-[#0E0E10]">{point.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#68707A]">{point.body}</p>
+            <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+              {sellingPoints.map((point, index) => (
+                <article
+                  key={point.title}
+                  className={`group relative overflow-hidden rounded-[30px] border border-white/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(255,248,242,0.98)_100%)] p-5 shadow-[0_18px_50px_rgba(14,14,16,0.07)] transition duration-300 hover:-translate-y-[4px] hover:shadow-[0_28px_70px_rgba(14,14,16,0.12)] ${index % 2 === 0 ? 'orduva-float-soft' : 'orduva-breathe'}`}
+                >
+                  <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                    <div className="orduva-glow-sweep absolute left-0 top-0 h-full w-20 -skew-x-12 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.78),transparent)]" />
+                  </div>
+                  <div className="relative z-10 flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#C84F2A]">{point.eyebrow}</p>
+                      <h3 className="mt-3 text-xl font-black tracking-tight text-[#0E0E10]">{point.title}</h3>
+                    </div>
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#FF6A3D]/18 bg-[#FF6A3D]/10 text-2xl shadow-[0_14px_28px_rgba(255,106,61,0.12)]">
+                      <span aria-hidden="true">{point.icon}</span>
+                    </div>
+                  </div>
+                  <p className="relative z-10 mt-4 text-sm leading-6 text-[#68707A]">{point.body}</p>
+                  <div className="relative z-10 mt-5 h-1.5 w-16 rounded-full bg-[linear-gradient(90deg,#FF6A3D_0%,#FFB168_100%)]" />
                 </article>
               ))}
             </div>
