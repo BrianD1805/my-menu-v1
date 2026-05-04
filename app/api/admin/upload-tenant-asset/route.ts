@@ -15,6 +15,29 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/vnd.microsoft.icon",
 ]);
 
+function mimeTypeFromExtension(fileName: string) {
+  const ext = path.extname(fileName || "").toLowerCase();
+  if (ext === ".png") return "image/png";
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".webp") return "image/webp";
+  if (ext === ".svg") return "image/svg+xml";
+  if (ext === ".ico") return "image/x-icon";
+  return "";
+}
+
+function normalizeMimeType(fileName: string, rawMimeType: string) {
+  const trimmed = (rawMimeType || "").toLowerCase().trim();
+  if (ALLOWED_MIME_TYPES.has(trimmed)) return trimmed;
+
+  // Some browsers/operating systems upload .ico files with an empty type or
+  // application/octet-stream. Trust the extension only for the small, explicit
+  // image extensions we allow above.
+  const inferred = mimeTypeFromExtension(fileName);
+  if (inferred) return inferred;
+
+  return trimmed || "application/octet-stream";
+}
+
 function sanitizeSlug(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "store";
 }
@@ -46,7 +69,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid asset type" }, { status: 400 });
     }
 
-    const mimeType = file.type || "application/octet-stream";
+    const mimeType = normalizeMimeType(file.name || "", file.type || "");
     if (!ALLOWED_MIME_TYPES.has(mimeType)) {
       return NextResponse.json(
         { error: "Please upload a PNG, JPG, WebP, SVG or ICO image." },

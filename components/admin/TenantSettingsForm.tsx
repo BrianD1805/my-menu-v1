@@ -290,9 +290,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
   async function uploadAsset(file: File, kind: "logo" | "favicon") {
     const setUploading = kind === "logo" ? setUploadingLogo : setUploadingFavicon;
+    const label = kind === "logo" ? "logo" : "favicon";
     setUploading(true);
     setTone("info");
-    setMessage(`Uploading ${kind}...`);
+    setMessage(`Uploading ${label}...`);
 
     try {
       const body = new FormData();
@@ -397,9 +398,46 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <Field label="Admin heading label"><input value={form.adminHeadingLabel} onChange={(e) => update("adminHeadingLabel", e.target.value)} className="input" placeholder="Used in the admin shell" /></Field>
             <div className="md:col-span-2"><Field label="Storefront heading"><input value={form.storefrontHeading} onChange={(e) => update("storefrontHeading", e.target.value)} className="input" placeholder="Browse the menu" /></Field></div>
             <div className="md:col-span-2"><Field label="Storefront subheading"><textarea value={form.storefrontSubheading} onChange={(e) => update("storefrontSubheading", e.target.value)} rows={3} className="input" placeholder="A short welcome line for this business" /></Field></div>
-            <div className="md:col-span-2"><Field label="Logo URL"><input value={form.logoUrl} onChange={(e) => update("logoUrl", e.target.value)} className="input" placeholder="https://..." /></Field></div>
-            <div><UploadField label="Upload logo" busy={uploadingLogo} onFile={(file) => uploadAsset(file, "logo")} /></div>
-            <div><UploadField label="Upload favicon" busy={uploadingFavicon} onFile={(file) => uploadAsset(file, "favicon")} /></div>
+            <div className="md:col-span-2">
+              <Field label="Logo URL">
+                <input value={form.logoUrl} onChange={(e) => update("logoUrl", e.target.value)} className="input" placeholder="https://..." />
+              </Field>
+              {form.logoUrl ? (
+                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                  <img src={form.logoUrl} alt="Current logo preview" className="h-12 w-12 rounded-xl border border-slate-100 object-contain" />
+                  <span>Current logo preview</span>
+                </div>
+              ) : null}
+            </div>
+            <div className="md:col-span-2">
+              <Field label="Favicon URL">
+                <input value={form.faviconUrl} onChange={(e) => update("faviconUrl", e.target.value)} className="input" placeholder="https://..." />
+              </Field>
+              {form.faviconUrl ? (
+                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                  <img src={form.faviconUrl} alt="Current favicon preview" className="h-10 w-10 rounded-lg border border-slate-100 object-contain" />
+                  <span>Current favicon preview. Browser tabs may need a hard refresh before the new icon appears.</span>
+                </div>
+              ) : null}
+            </div>
+            <div>
+              <UploadField
+                label="Upload logo"
+                busy={uploadingLogo}
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                help="PNG, JPG, WebP or SVG. Max 3MB."
+                onFile={(file) => uploadAsset(file, "logo")}
+              />
+            </div>
+            <div>
+              <UploadField
+                label="Upload favicon"
+                busy={uploadingFavicon}
+                accept=".ico,image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml,image/webp"
+                help="ICO, PNG, SVG or WebP. Max 1MB."
+                onFile={(file) => uploadAsset(file, "favicon")}
+              />
+            </div>
           </div>
         </Section>
 
@@ -671,11 +709,34 @@ function ColorRow({ label, value, onChange }: { label: string; value: string; on
   );
 }
 
-function UploadField({ label, busy, onFile }: { label: string; busy: boolean; onFile: (file: File) => void }) {
+function UploadField({
+  label,
+  busy,
+  accept,
+  help,
+  onFile,
+}: {
+  label: string;
+  busy: boolean;
+  accept: string;
+  help: string;
+  onFile: (file: File) => void;
+}) {
   return (
     <label className="block rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
       <span className="font-semibold">{busy ? "Uploading..." : label}</span>
-      <input type="file" accept="image/*" disabled={busy} onChange={(e) => { const file = e.target.files?.[0]; if (file) onFile(file); e.currentTarget.value = ""; }} className="mt-2 block w-full text-xs" />
+      <span className="mt-1 block text-xs leading-5 text-slate-500">{help}</span>
+      <input
+        type="file"
+        accept={accept}
+        disabled={busy}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.currentTarget.value = "";
+        }}
+        className="mt-2 block w-full text-xs"
+      />
     </label>
   );
 }
