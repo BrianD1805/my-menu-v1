@@ -44,7 +44,7 @@ function stripHtml(value: string | null | undefined) {
 }
 
 function iconLinkClass() {
-  return "inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition hover:-translate-y-[1px] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-300";
+  return "inline-flex h-12 w-12 items-center justify-center rounded-[18px] border border-white/70 bg-white/90 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.10)] ring-1 ring-slate-900/5 backdrop-blur-sm transition hover:-translate-y-[2px] hover:scale-[1.03] hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_18px_42px_rgba(15,23,42,0.16)] focus:outline-none focus:ring-2 focus:ring-slate-300 active:translate-y-0 active:scale-[0.98]";
 }
 
 function cleanDialString(value: string | null | undefined) {
@@ -493,45 +493,43 @@ export default function MenuBrowser({
         );
       })}
 
-      <section className="rounded-[28px] border px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
-        <div>
+      <section className="rounded-[28px] border px-5 py-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-7 lg:px-8 lg:py-8" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
+        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Storefront footer</p>
           <h3 className="mt-2 text-[1.2rem] font-semibold tracking-tight sm:text-[1.45rem]" style={{ color: footerText }}>{tenantName}</h3>
-          <p className="mt-3 max-w-3xl text-sm leading-6" style={{ color: footerText }}>{footerBlurb || "Thank you for ordering with us."}</p>
-          <p className="mt-4 text-xs leading-5" style={{ color: footerText }}>{footerNotice || "Prices and availability may change without notice."}</p>
-        </div>
-      </section>
+          <p className="mt-3 max-w-2xl text-center text-sm leading-6" style={{ color: footerText }}>{footerBlurb || "Thank you for ordering with us."}</p>
+          <p className="mt-4 max-w-2xl text-center text-xs leading-5" style={{ color: footerText }}>{footerNotice || "Prices and availability may change without notice."}</p>
 
-      <footer className="rounded-[24px] border px-5 py-5 text-sm shadow-sm sm:px-6" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
-        <div className="flex flex-col items-center justify-center gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col items-center gap-3 lg:items-start">
-            <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-              <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={{ backgroundColor: footerBadgeBackground }}>Orduva Online</span>
-              <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
-            </div>
-            <a
-              href="/admin/login"
-              className="inline-flex min-h-[38px] items-center justify-center rounded-[14px] border border-slate-200 bg-white px-4 py-2 text-[0.76rem] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
-              title="Store admin login"
-            >
-              Admin Login
-            </a>
-          </div>
-
-          <div className="flex w-full flex-col items-center gap-3 lg:w-auto lg:items-end">
-            <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end" aria-label="Store contact links">
+          <div className="mt-6 flex w-full flex-col items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-2.5" aria-label="Store contact links">
               <FooterIcon label="Call store" href={phoneHref}><PhoneIcon /></FooterIcon>
               <FooterIcon label="WhatsApp store" href={whatsAppHref}><WhatsAppIcon /></FooterIcon>
               <FooterIcon label="Email store" href={emailHref}><EmailIcon /></FooterIcon>
             </div>
             {socialLinks.length ? (
-              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end" aria-label="Store social links">
+              <div className="flex flex-wrap items-center justify-center gap-2.5" aria-label="Store social links">
                 {socialLinks.map((link) => (
                   <FooterIcon key={link.label} label={link.label} href={link.href || null}><SocialIcon label={link.short} /></FooterIcon>
                 ))}
               </div>
             ) : null}
           </div>
+        </div>
+      </section>
+
+      <footer className="rounded-[24px] border px-5 py-5 text-center text-sm shadow-sm sm:px-6" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
+        <div className="flex flex-col items-center justify-center gap-3 text-center">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={{ backgroundColor: footerBadgeBackground }}>Orduva Online</span>
+            <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+          </div>
+          <a
+            href="/admin/login"
+            className="inline-flex min-h-[38px] items-center justify-center rounded-[14px] border border-slate-200 bg-white px-4 py-2 text-[0.76rem] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+            title="Store admin login"
+          >
+            Admin Login
+          </a>
         </div>
       </footer>
 
