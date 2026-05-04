@@ -418,7 +418,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       applyThemePreset(preset);
       setPreviewTarget("welcome");
       setTone("success");
-      setMessage("Generated a Logo palette from the uploaded logo. Review the preview, then save the Theme presets section to make it live.");
+      setMessage("Generated a suggested logo palette. Review it in Theme presets, then save that section to make it live.");
       window.setTimeout(() => {
         suggestedColoursRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }, 80);
@@ -535,12 +535,12 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     return (
       <div className={compact ? "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950" : "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4"}>
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">Suggested colours</p>
-        <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing. Generate from the uploaded logo or add your own hex colour below.</p>
+        <p className="mt-1.5 text-xs leading-5 text-orange-950/80">Use these as reference colours while editing, or create a selectable palette from the uploaded logo.</p>
         <div className="mt-3 rounded-2xl border border-orange-200 bg-white/80 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black text-slate-900">Logo palette</p>
-              <p className="mt-1 text-[11px] leading-4 text-slate-500">Create a selectable palette from the current uploaded logo. It will become the draft theme, then you save it deliberately.</p>
+              <p className="text-xs font-black text-slate-900">Suggested logo palette</p>
+              <p className="mt-1 text-[11px] leading-4 text-slate-500">Create or refresh a selectable palette from the uploaded logo.</p>
             </div>
             <button
               type="button"
@@ -548,7 +548,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               disabled={generatingLogoPalette || !form.logoUrl.trim()}
               className="inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
             >
-              {generatingLogoPalette ? "Generating..." : logoPalettePreset ? "Regenerate from logo" : "Generate from logo"}
+              {generatingLogoPalette ? "Generating..." : logoPalettePreset ? "Refresh logo palette" : "Generate from logo"}
             </button>
           </div>
         </div>
