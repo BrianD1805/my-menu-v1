@@ -349,16 +349,16 @@ export default function MenuBrowser({
         <div className="border-b shadow-[0_22px_60px_rgba(15,23,42,0.10)]" style={{ borderColor: brandBorder, background: headerBackground }}>
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="relative flex min-h-[78px] items-center justify-center sm:min-h-[86px] lg:min-h-[94px]">
-              <div className="flex items-center justify-center">
+              <div className="flex min-w-0 items-center justify-center px-[58px] sm:px-0">
                 {headerLogoUrl ? (
                   <img
                     src={headerLogoUrl}
                     alt={tenantName}
-                    className="h-auto max-h-[52px] w-auto max-w-[200px] object-contain sm:max-h-[60px] sm:max-w-[240px] lg:max-h-[68px] lg:max-w-[280px]"
+                    className="h-auto max-h-[46px] w-auto max-w-[min(42vw,150px)] object-contain sm:max-h-[60px] sm:max-w-[240px] lg:max-h-[68px] lg:max-w-[280px]"
                     loading="lazy"
                   />
                 ) : (
-                  <h1 className="truncate text-[1.56rem] font-semibold tracking-tight sm:text-[1.95rem] lg:text-[2.35rem]" style={{ color: headerText }}>{tenantName}</h1>
+                  <h1 className="max-w-[min(42vw,150px)] truncate text-center text-[1.35rem] font-semibold tracking-tight sm:max-w-none sm:text-[1.95rem] lg:text-[2.35rem]" style={{ color: headerText }}>{tenantName}</h1>
                 )}
               </div>
 
