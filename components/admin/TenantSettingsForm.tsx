@@ -666,7 +666,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Branding and wording" dirty={brandingDirty} saving={saving}>
+        <Section id="branding-and-wording" title="Branding and wording" dirty={brandingDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Business display name"><input value={form.businessDisplayName} onChange={(e) => update("businessDisplayName", e.target.value)} className="input" placeholder={tenantName} /></Field>
             <Field label="Admin heading label"><input value={form.adminHeadingLabel} onChange={(e) => update("adminHeadingLabel", e.target.value)} className="input" placeholder="Used in the admin shell" /></Field>
@@ -1011,6 +1011,7 @@ function UploadField({
 }
 
 function Section({
+  id,
   title,
   children,
   showSave = true,
@@ -1018,6 +1019,7 @@ function Section({
   dirty = true,
   saving = false,
 }: {
+  id?: string;
   title: string;
   children: ReactNode;
   showSave?: boolean;
@@ -1026,7 +1028,7 @@ function Section({
   saving?: boolean;
 }) {
   return (
-    <section className={`${compact ? "mb-0" : "mb-6"} rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5`}>
+    <section id={id} className={`${compact ? "mb-0" : "mb-6"} scroll-mt-28 rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5`}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">{title}</h3>
       </div>

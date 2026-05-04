@@ -184,6 +184,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "That store address is already in use" }, { status: 409 });
     }
 
+    const { data: existingOwnerLogin } = await db
+      .from("tenant_users")
+      .select("id, tenant_id")
+      .eq("email", ownerEmail)
+      .maybeSingle();
+
+    if (existingOwnerLogin) {
+      return NextResponse.json(
+        { error: "This email already has an Orduva store account. Please sign in to admin using that email, or use a different owner email for this new store." },
+        { status: 409 },
+      );
+    }
+
     const { data: tenant, error: tenantError } = await db
       .from("tenants")
       .insert({

@@ -14,6 +14,7 @@ type ChecklistItem = {
   status: "pending" | "complete";
   autoComplete?: boolean;
   manualComplete?: boolean;
+  completedAt?: string | null;
 };
 
 type ChecklistPayload = {
@@ -57,7 +58,21 @@ const FALLBACK_ITEMS: ChecklistItem[] = [
 function statusBadge(isDone: boolean, autoComplete?: boolean) {
   if (isDone && autoComplete) return "Auto-ticked";
   if (isDone) return "Done";
-  return "To do";
+  return "Next step";
+}
+
+function progressMessage(percentage: number) {
+  if (percentage >= 100) return "Everything is ticked. The store owner can hide this checklist when they are happy to launch.";
+  if (percentage >= 75) return "You are almost ready. Just finish the last few checks before sharing the store.";
+  if (percentage >= 45) return "Good progress. Keep going through the practical setup steps one at a time.";
+  if (percentage > 0) return "A few essentials are done. The next tasks will shape the store for customers.";
+  return "Start with categories and products. The checklist will tick items automatically where it can.";
+}
+
+function actionHint(item: ChecklistItem, isDone: boolean) {
+  if (isDone) return item.autoComplete ? "Detected and saved automatically." : "Marked done and saved for this store.";
+  if (item.auto) return "This will tick automatically after Orduva detects the change.";
+  return "Tick this manually once you have checked it.";
 }
 
 export default function AdminLaunchChecklist({
@@ -126,6 +141,20 @@ export default function AdminLaunchChecklist({
       window.open(payload?.tenant?.storefrontUrl || storefrontUrl, "_blank", "noopener,noreferrer");
       return;
     }
+
+    if (item.actionHref.includes("#setup-tools")) {
+      setShowTools(true);
+      if (window.location.pathname === "/admin") {
+        window.setTimeout(() => document.getElementById("setup-tools")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+        return;
+      }
+    }
+
+    if (item.actionHref.startsWith("/admin/settings")) {
+      window.location.href = item.actionHref;
+      return;
+    }
+
     window.location.href = item.actionHref;
   }
 
@@ -133,6 +162,7 @@ export default function AdminLaunchChecklist({
   const completed = items.filter((item) => item.status === "complete").length;
   const percentage = items.length ? Math.round((completed / items.length) * 100) : 0;
   const isAuthenticated = Boolean(payload);
+  const calmProgressMessage = progressMessage(percentage);
   const collapsed = Boolean(payload?.collapsed);
   const dismissed = Boolean(payload?.dismissed);
 
@@ -166,7 +196,10 @@ export default function AdminLaunchChecklist({
           <p className="text-xs font-black uppercase tracking-[0.22em] text-[#C84F2A]">Interactive launch checklist</p>
           <h2 className="mt-2 text-2xl font-black text-[#0E0E10] sm:text-3xl">Finish your launch setup</h2>
           <p className="mt-3 text-sm leading-6 text-[#5C5F66]">
-            Click a task to open the right admin area. Orduva automatically ticks off categories, products, product photos, push setup and test orders when it detects them. Manual review items can be ticked by the store owner.
+            Click a task to open the right admin area. Orduva will tick the practical steps automatically where it can, and saves the progress for this store.
+          </p>
+          <p className="mt-3 rounded-2xl border border-[#FFD8C8] bg-white/78 px-4 py-3 text-sm font-bold text-[#7A4B37]">
+            {calmProgressMessage}
           </p>
           {!isAuthenticated && !loading ? (
             <p className="mt-3 rounded-2xl border border-[#FFD8C8] bg-white/78 px-4 py-3 text-sm font-semibold text-[#7A4B37]">
@@ -196,7 +229,7 @@ export default function AdminLaunchChecklist({
 
       {collapsed ? (
         <div className="mt-5 rounded-[24px] border border-[#0E0E10]/10 bg-white/82 p-4 text-sm leading-6 text-[#5C5F66]">
-          Checklist minimised. Progress is saved for this store. Maximise it whenever you want the next step.
+          Checklist minimised. Progress is saved for this store. {calmProgressMessage}
         </div>
       ) : (
         <>
@@ -224,6 +257,7 @@ export default function AdminLaunchChecklist({
                       </div>
                       <h3 className="mt-2 text-base font-black text-[#0E0E10]">{item.title}</h3>
                       <p className="mt-1 text-sm leading-6 text-[#5C5F66]">{item.body}</p>
+                      <p className="mt-2 text-xs font-bold text-[#7A4B37]">{actionHint(item, isDone)}</p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
                           type="button"

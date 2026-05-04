@@ -46,11 +46,11 @@ const CHECKLIST_ITEMS: ChecklistDefinition[] = [
   },
   {
     key: "branding_checked",
-    title: "Check logo, colours, contact details and currency",
-    body: "Open Settings and make sure the store looks and reads like your business.",
+    title: "Set the store branding and contact details",
+    body: "Add the store logo/favicon, check colours, and make sure customers have a clear contact method. Orduva will tick this once the basics are present.",
     actionLabel: "Open settings",
-    actionHref: "/admin/settings",
-    auto: false,
+    actionHref: "/admin/settings#branding-and-wording",
+    auto: true,
   },
   {
     key: "admin_installed",
@@ -135,7 +135,7 @@ export async function GET(req: Request) {
     db.from("products").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).not("image_url", "is", null),
     db.from("admin_push_subscriptions").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("enabled", true),
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
-    db.from("tenant_settings").select("logo_url, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp, contact_address, currency_code").eq("tenant_id", tenant.id).maybeSingle(),
+    db.from("tenant_settings").select("logo_url, favicon_url, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp, contact_address, currency_code").eq("tenant_id", tenant.id).maybeSingle(),
     db.from("tenant_launch_checklists").select("checklist_key, title, status, completed_at, completed_by, metadata").eq("tenant_id", tenant.id),
   ]);
 
@@ -147,16 +147,19 @@ export async function GET(req: Request) {
   for (const row of rowsResult.data || []) existing.set(row.checklist_key, row);
 
   const settings = settingsResult.data || null;
-  const brandingLooksStarted = Boolean(
-    settings?.logo_url || settings?.primary_color || settings?.accent_color || settings?.contact_phone || settings?.contact_email || settings?.contact_whatsapp || settings?.contact_address || settings?.currency_code
-  );
+  const hasVisualIdentity = Boolean(settings?.logo_url || settings?.favicon_url);
+  const hasBrandColours = Boolean(settings?.primary_color || settings?.accent_color);
+  const hasContactMethod = Boolean(settings?.contact_phone || settings?.contact_email || settings?.contact_whatsapp || settings?.contact_address);
+  const hasCurrency = Boolean(settings?.currency_code);
+  const brandingLooksStarted = Boolean(hasVisualIdentity || hasBrandColours || hasContactMethod || hasCurrency);
+  const brandingBasicsComplete = Boolean(hasVisualIdentity && hasContactMethod && hasCurrency);
 
   const autoCompleteByKey: Record<string, boolean> = {
     signin: true,
     categories_added: (categoryCount || 0) > 0,
     products_added: (productCount || 0) > 0,
     product_photos: (photoCount || 0) > 0,
-    branding_checked: false,
+    branding_checked: brandingBasicsComplete,
     admin_installed: false,
     push_tested: (pushCount || 0) > 0,
     test_order_placed: (orderCount || 0) > 0,
@@ -210,6 +213,10 @@ export async function GET(req: Request) {
       adminPushDevices: pushCount || 0,
       orders: orderCount || 0,
       brandingLooksStarted,
+      brandingBasicsComplete,
+      hasVisualIdentity,
+      hasContactMethod,
+      hasCurrency,
     },
   });
 }
