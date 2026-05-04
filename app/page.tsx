@@ -41,15 +41,22 @@ function OrduvaPlatformLanding() {
 
         <div className="mx-auto max-w-7xl overflow-hidden rounded-[38px] border border-white/100 bg-white/[0.84] shadow-[0_34px_100px_rgba(14,14,16,0.14)] backdrop-blur-xl">
           <header className="border-b border-[#0E0E10]/10 px-5 py-5 sm:px-7 lg:px-9">
-            <div className="flex items-center justify-center gap-3.5 sm:justify-start">
-              <img
-                src="/orduva-platform-icon-192.png"
-                alt="Orduva"
-                className="h-[3.25rem] w-[3.25rem] rounded-[18px] shadow-[0_16px_36px_rgba(14,14,16,0.18)]"
-              />
-              <div>
+            <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6">
+              <div className="text-center lg:text-left">
                 <p className="text-xl font-black tracking-tight text-[#0E0E10]">Orduva</p>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#FF6A3D]">Online ordering platform</p>
+                <p className="mt-1 text-xs font-bold uppercase tracking-[0.24em] text-[#FF6A3D]">Online ordering platform</p>
+              </div>
+              <div className="flex justify-center">
+                <img
+                  src="/orduva-logo-ubuntu-white.png"
+                  alt="Orduva — Don't order it, ORDUVA it!"
+                  className="h-auto w-full max-w-[420px] object-contain sm:max-w-[520px]"
+                />
+              </div>
+              <div className="flex justify-center lg:justify-end">
+                <a href={onboardingHref} className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
+                  Start your own store
+                </a>
               </div>
             </div>
           </header>
@@ -59,13 +66,6 @@ function OrduvaPlatformLanding() {
               <p className="mx-auto inline-flex w-fit rounded-full border border-[#FF6A3D]/25 bg-[#FF6A3D]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">
                 Platform home
               </p>
-              <div className="mt-6 overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-[#0E0E10] p-2 shadow-[0_30px_85px_rgba(14,14,16,0.24)] sm:rounded-[36px] sm:p-3">
-                <img
-                  src="/orduva-logo-ubuntu-hero.png"
-                  alt="Orduva — Don't order it, ORDUVA it!"
-                  className="h-auto w-full rounded-[24px] object-cover sm:rounded-[30px]"
-                />
-              </div>
               <h1 className="mt-7 text-[2.35rem] font-black leading-[0.98] tracking-tight text-[#0E0E10] sm:text-[3.5rem] lg:text-[4.55rem]">
                 Give any local business a beautiful ordering store.
               </h1>
