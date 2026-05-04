@@ -57,21 +57,17 @@ function OrduvaPlatformLanding() {
                   className="h-auto w-full max-w-[360px] object-contain sm:max-w-[470px] lg:max-w-[520px]"
                 />
               </div>
-              <div className="flex justify-center lg:justify-end">
-                <a href={onboardingHref} className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
-                  Start your own store
-                </a>
-              </div>
+              <div className="hidden lg:block" aria-hidden="true" />
             </div>
           </header>
 
           <section className="px-5 py-8 text-center sm:px-7 lg:px-9 lg:py-11">
             <div className="mx-auto max-w-5xl">
               <p className="mx-auto inline-flex w-fit rounded-full border border-[#FF6A3D]/25 bg-[#FF6A3D]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-[#C84F2A]">
-                Platform home
+                Welcome to Orduva
               </p>
               <h1 className="mt-7 text-[2.35rem] font-black leading-[0.98] tracking-tight text-[#0E0E10] sm:text-[3.5rem] lg:text-[4.55rem]">
-                Give any local business a beautiful ordering store.
+                Give your business a beautiful storefront!
               </h1>
               <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5C5F66] sm:text-lg">
                 Orduva creates branded storefronts, guided admin setup, customer accounts, order notifications and practical launch tools for restaurants, cafés, takeaways and local sellers.
@@ -134,11 +130,8 @@ function OrduvaPlatformLanding() {
 
           <footer className="border-t border-[#0E0E10]/10 px-5 py-6 text-center text-sm text-[#68707A] sm:px-7 lg:px-9">
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-              <a href={onboardingHref} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.20)] transition hover:-translate-y-[1px] hover:bg-[#E95C34]">
-                Start your own store
-              </a>
               <a href="https://zimzaexpress.orduva.com" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-black text-[#0E0E10] shadow-sm transition hover:-translate-y-[1px] hover:bg-[#F5F2EE]">
-                View ZimZa Express demo
+                View a live store demo
               </a>
               <a href="https://admin.orduva.com/admin" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(14,14,16,0.18)] transition hover:-translate-y-[1px] hover:bg-[#252528]">
                 Admin login
