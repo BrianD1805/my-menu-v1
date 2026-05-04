@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 
 function normalizeSlugFromHost() {
   if (typeof window === "undefined") return "";
@@ -154,8 +155,11 @@ export default function AdminLoginPage() {
 
   return (
     <main className="min-h-screen bg-[#F5F2EE] px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1.04fr_0.96fr]">
-        <section className="rounded-[32px] border border-[#E7D8CC] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.10)] sm:p-8">
+      <div className="mx-auto w-full max-w-5xl space-y-6">
+        <AdminLaunchChecklist tenantSlug={tenantSlug || tenantHint || "current-store"} />
+
+        <div className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+          <section className="rounded-[32px] border border-[#E7D8CC] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.10)] sm:p-8">
           <div className="mb-5">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#FF6A3D]">Orduva Admin</p>
             <h1 className="mt-2 text-3xl font-bold text-[#1F2328] sm:text-4xl">Sign in to your workspace</h1>
@@ -342,7 +346,8 @@ export default function AdminLoginPage() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">Track new and active orders</div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">Update storefront branding and settings</div>
           </div>
-        </aside>
+          </aside>
+        </div>
       </div>
     </main>
   );

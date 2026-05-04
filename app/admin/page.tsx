@@ -1,8 +1,7 @@
 import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
-import AdminInstallCard from "@/components/admin/AdminInstallCard";
-import AdminPushNotificationsCard from "@/components/admin/AdminPushNotificationsCard";
+import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 
 function StatCard({ label, value, hint, urgent }: { label: string; value: string; hint: string; urgent?: boolean }) {
@@ -51,13 +50,11 @@ export default async function AdminHomePage() {
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
-  const [{ count: orderCount }, { count: productCount }, { count: categoryCount }, { count: newOrderCount }, { count: enabledAdminPushCount }, { count: disabledAdminPushCount }] = await Promise.all([
+  const [{ count: orderCount }, { count: productCount }, { count: categoryCount }, { count: newOrderCount }] = await Promise.all([
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("products").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("categories").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("status", "new"),
-    db.from("admin_push_subscriptions").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("enabled", true),
-    db.from("admin_push_subscriptions").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).eq("enabled", false),
   ]);
 
   return (
@@ -67,28 +64,11 @@ export default async function AdminHomePage() {
       signedInAs={user.full_name || user.email || "Owner"}
       current="home"
       title={`Welcome back, ${user.full_name || user.email}`}
-      description="Choose where you want to work today — orders, products, categories, settings, or a quick storefront check. Everything below belongs to this tenant only."
+      description="Start with the launch checklist, then open the area you need. The admin tools are kept quieter for first-time users."
       logoUrl={branding.logoUrl}
       accentColor={branding.accentColor}
     >
-      <AdminInstallCard />
-
-      {!enabledAdminPushCount ? (
-        <div className="mt-6 rounded-[28px] border border-[#FF6A3D]/35 bg-[#FF6A3D]/10 p-5 text-[#1F2328] shadow-[0_18px_48px_rgba(14,14,16,0.06)] sm:p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF6A3D]">Admin push health warning</p>
-          <h2 className="mt-2 text-xl font-bold text-[#1F2328]">New order alerts are not active</h2>
-          <p className="mt-2 text-sm leading-6">
-            This tenant currently has no enabled admin push device. You may miss new-order notifications until admin push is enabled and tested again.
-          </p>
-          <p className="mt-2 text-sm font-semibold">
-            Enabled devices: {enabledAdminPushCount || 0} · Disabled devices: {disabledAdminPushCount || 0}
-          </p>
-        </div>
-      ) : null}
-
-      <div className="mt-6">
-        <AdminPushNotificationsCard />
-      </div>
+      <AdminLaunchChecklist tenantSlug={tenant.slug} showSetupTools />
 
       <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Orders" value={String(orderCount || 0)} hint="All orders shown here belong to this tenant only." />
