@@ -56,7 +56,9 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   const favouriteSwipeText = normalizeThemeColor(themeColors?.favouritesSwipeText, accentColor);
   const trackedStock = !!product.stock_enabled;
   const availableStock = Math.max(0, Number(product.stock_quantity || 0));
+  const lowStockThreshold = Math.max(0, Number(product.low_stock_threshold || 5));
   const isOutOfStock = trackedStock && availableStock <= 0;
+  const isLowStock = trackedStock && availableStock > 0 && availableStock <= lowStockThreshold;
 
   return (
     <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 ring-1 ring-white/80 sm:w-[248px]" style={{ backgroundColor: favouriteCardBackground, borderColor: favouriteCardBorder, boxShadow: favouriteCardShadowEnabled ? `0 8px 18px ${favouriteCardShadow}14` : "none" }}>
@@ -102,9 +104,9 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
             {isOutOfStock ? "Sold out" : "Add"}
           </button>
         </div>
-        {trackedStock ? (
-          <p className={`mt-2 text-[10px] font-black uppercase tracking-[0.12em] ${isOutOfStock ? "text-red-600" : "text-emerald-700"}`}>
-            {isOutOfStock ? "Out of stock" : `${availableStock} in stock`}
+        {trackedStock && (isOutOfStock || isLowStock) ? (
+          <p className={`mt-2 text-[10px] font-black uppercase tracking-[0.12em] ${isOutOfStock ? "text-red-600" : "text-orange-600"}`}>
+            {isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
           </p>
         ) : null}
         <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: favouriteSwipeText }}>Swipe to view all favourites</p>
@@ -886,7 +888,9 @@ export default function MenuBrowser({
                       const thumbId = `search-thumb-${product.id}`;
                       const searchTrackedStock = !!product.stock_enabled;
                       const searchAvailableStock = Math.max(0, Number(product.stock_quantity || 0));
+                      const searchLowStockThreshold = Math.max(0, Number(product.low_stock_threshold || 5));
                       const searchOutOfStock = searchTrackedStock && searchAvailableStock <= 0;
+                      const searchLowStock = searchTrackedStock && searchAvailableStock > 0 && searchAvailableStock <= searchLowStockThreshold;
                       return (
                         <div key={product.id} className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -914,9 +918,9 @@ export default function MenuBrowser({
                                       In cart: {cartCount}
                                     </span>
                                   ) : null}
-                                  {searchTrackedStock ? (
-                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${searchOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"}`}>
-                                      {searchOutOfStock ? "Out of stock" : `${searchAvailableStock} in stock`}
+                                  {searchTrackedStock && (searchOutOfStock || searchLowStock) ? (
+                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${searchOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
+                                      {searchOutOfStock ? "Out of stock" : `Only ${searchAvailableStock} left`}
                                     </span>
                                   ) : null}
                                 </div>

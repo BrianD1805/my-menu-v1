@@ -167,9 +167,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   {name}
                 </h3>
               </button>
-              {trackedStock ? (
-                <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : isLowStock ? "bg-orange-50 text-orange-700 ring-1 ring-orange-100" : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"}`}>
-                  {isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : `${availableStock} in stock`}
+              {trackedStock && (isOutOfStock || isLowStock) ? (
+                <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
+                  {isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
                 </p>
               ) : null}
             </div>
@@ -230,9 +230,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         {formatMoney(price, moneySettings)}
                       </span>
-                      {trackedStock ? (
-                        <span className={`ml-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : isLowStock ? "bg-orange-50 text-orange-700 ring-1 ring-orange-100" : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"}`}>
-                          {isOutOfStock ? "Out of stock" : `${availableStock} in stock`}
+                      {trackedStock && (isOutOfStock || isLowStock) ? (
+                        <span className={`ml-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
+                          {isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
                         </span>
                       ) : null}
                     </div>
