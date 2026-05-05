@@ -78,6 +78,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const productCardBackground = normalizeThemeColor(themeColors?.productCardBackground, "#FFFFFF");
   const productCardBorder = normalizeThemeColor(themeColors?.productCardBorder, "#E2E8F0");
   const productTitle = normalizeThemeColor(themeColors?.productTitle, "#0F172A");
+  const productHeartTickedBackground = normalizeThemeColor(themeColors?.productHeartTickedBackground, "#FEF3C7");
+  const productHeartTickedText = normalizeThemeColor(themeColors?.productHeartTickedText, brandAccent);
+  const productHeartUntickedBackground = normalizeThemeColor(themeColors?.productHeartUntickedBackground, "#FFFFFF");
+  const productHeartUntickedText = normalizeThemeColor(themeColors?.productHeartUntickedText, "#64748B");
   const priceBoxBackground = normalizeThemeColor(themeColors?.priceBoxBackground, "#FFFFFF");
   const priceBoxBorder = normalizeThemeColor(themeColors?.priceBoxBorder, brandAccent);
   const priceText = normalizeThemeColor(themeColors?.priceText, brandPrimary);
@@ -113,7 +117,12 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               onToggleFavourite(id);
             }}
             disabled={favouriteBusy}
-            className={`absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-2xl border shadow-[0_12px_26px_rgba(15,23,42,0.12)] ring-1 ring-white/70 backdrop-blur-sm transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-70 ${isFavourite ? "border-amber-200 bg-amber-50 text-amber-600" : "border-white/80 bg-white/92 text-slate-500 hover:text-rose-500"}`}
+            className="absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-2xl border shadow-[0_12px_26px_rgba(15,23,42,0.12)] ring-1 ring-white/70 backdrop-blur-sm transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-70"
+            style={{
+              backgroundColor: isFavourite ? productHeartTickedBackground : productHeartUntickedBackground,
+              borderColor: isFavourite ? productHeartTickedText : productHeartUntickedBackground,
+              color: isFavourite ? productHeartTickedText : productHeartUntickedText,
+            }}
             aria-label={isFavourite ? `Remove ${name} from favourites` : `Add ${name} to favourites`}
             title={isFavourite ? "Remove favourite" : "Add favourite"}
           >
