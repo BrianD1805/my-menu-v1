@@ -41,7 +41,7 @@ type FormState = {
   currencySuffix: string;
 };
 
-type PreviewTarget = "global" | "header" | "welcome" | "products" | "footer";
+type PreviewTarget = "global" | "header" | "welcome" | "products" | "favourites" | "footer";
 
 type ThemePreset = {
   name: string;
@@ -120,6 +120,29 @@ const THEME_GROUPS: Array<{
       { key: "moreButtonBackground", label: "More background" },
       { key: "moreButtonBorder", label: "More border" },
       { key: "moreButtonText", label: "More text" },
+    ],
+  },
+  {
+    id: "favourites",
+    title: "Favourites",
+    description: "The swipeable favourite products strip after the welcome card.",
+    fields: [
+      { key: "favouritesBackground", label: "Section background" },
+      { key: "favouritesBorder", label: "Section border" },
+      { key: "favouritesText", label: "Section heading text" },
+      { key: "favouritesLabelText", label: "Small label text" },
+      { key: "favouritesCardBackground", label: "Card background" },
+      { key: "favouritesCardBorder", label: "Card border" },
+      { key: "favouritesCardTitle", label: "Product title" },
+      { key: "favouritesPriceBackground", label: "Price background" },
+      { key: "favouritesPriceBorder", label: "Price border" },
+      { key: "favouritesPriceText", label: "Price text" },
+      { key: "favouritesAddBackground", label: "Add button background" },
+      { key: "favouritesAddBorder", label: "Add button border" },
+      { key: "favouritesAddText", label: "Add button text" },
+      { key: "favouritesRemoveBackground", label: "Remove heart background" },
+      { key: "favouritesRemoveText", label: "Remove heart text" },
+      { key: "favouritesSwipeText", label: "Swipe hint text" },
     ],
   },
   {
@@ -236,6 +259,22 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
       welcomeShadow: accentColor,
       addButtonBorder: accentColor,
       moreButtonBorder: accentColor,
+      favouritesBackground: primaryColor,
+      favouritesBorder: accentColor,
+      favouritesText: "#FFFFFF",
+      favouritesLabelText: accentColor,
+      favouritesCardBackground: "#FFFFFF",
+      favouritesCardBorder: borderColor,
+      favouritesCardTitle: primaryColor,
+      favouritesPriceBackground: "#FFFFFF",
+      favouritesPriceBorder: accentColor,
+      favouritesPriceText: primaryColor,
+      favouritesAddBackground: primaryColor,
+      favouritesAddBorder: accentColor,
+      favouritesAddText: "#FFFFFF",
+      favouritesRemoveBackground: "#FFFFFF",
+      favouritesRemoveText: accentColor,
+      favouritesSwipeText: accentColor,
       footerBadgeBackground: accentColor,
     },
   };
@@ -420,6 +459,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       theme.productCardBackground,
       theme.addButtonBorder,
       theme.moreButtonBorder,
+      theme.favouritesBackground,
+      theme.favouritesCardBackground,
+      theme.favouritesAddBackground,
+      theme.favouritesRemoveBackground,
       theme.footerBadgeBackground,
       form.primaryColor,
       form.accentColor,
@@ -975,6 +1018,7 @@ function labelForPreview(target: PreviewTarget) {
   if (target === "header") return "Header";
   if (target === "welcome") return "Welcome card";
   if (target === "products") return "Product card";
+  if (target === "favourites") return "Favourites";
   return "Footer";
 }
 
@@ -987,6 +1031,7 @@ function PreviewPanel({ target, theme, previewName, previewHeading, previewSubhe
       {target === "header" ? <div className="rounded-[18px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.headerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.headerText, "#2B2B2B") }}><div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3">{logoUrl ? <img src={logoUrl} alt="Logo preview" className="max-h-11 max-w-[145px] shrink-0 object-contain" /> : null}<strong className="truncate">{previewName}</strong></div><div className="flex shrink-0 gap-2"><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Search</span><span className="rounded-xl border bg-white px-3 py-2 text-xs" style={{ borderColor: normalizeThemeColor(theme.headerButtonBorder, "#D9C7A3") }}>Cart</span></div></div>{faviconUrl ? <div className="mt-3 flex items-center gap-2 rounded-xl border border-black/5 bg-white/75 px-3 py-2 text-[11px] opacity-80"><img src={faviconUrl} alt="Favicon preview" className="h-5 w-5 object-contain" /><span>Favicon saved for browser tab / app icon preview</span></div> : null}</div> : null}
       {target === "welcome" ? <div className="rounded-[18px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.welcomeBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.welcomeBorder, "#D9C7A3"), boxShadow: `0 10px 24px ${normalizeThemeColor(theme.welcomeShadow, "#D9C7A3")}18` }}>{logoUrl ? <img src={logoUrl} alt="Logo preview" className="mb-3 max-h-14 max-w-[180px] object-contain" /> : null}<p className="text-xs font-bold uppercase tracking-[0.22em]" style={{ color: normalizeThemeColor(theme.welcomeLabel, "#C7922F") }}>Welcome</p><h4 className="mt-2 text-xl font-bold" style={{ color: normalizeThemeColor(theme.welcomeHeading, "#0F172A") }}>{previewHeading}</h4><p className="mt-2 text-sm leading-5" style={{ color: normalizeThemeColor(theme.welcomeBody, "#2B2B2B") }}>{previewSubheading}</p></div> : null}
       {target === "products" ? <div className="rounded-[20px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.productCardBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.productCardBorder, "#D9C7A3") }}><div className="grid grid-cols-[6rem_1fr] gap-3"><div className="rounded-2xl bg-slate-100" /><div><h4 className="font-bold" style={{ color: normalizeThemeColor(theme.productTitle, "#0F172A") }}>Sample product</h4><div className="mt-4 grid grid-cols-3 gap-2"><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.priceBoxBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.priceBoxBorder, "#D9C7A3"), color: normalizeThemeColor(theme.priceText, "#0F172A") }}>{money}</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.addButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.addButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.addButtonText, "#0F172A") }}>Add</span><span className="rounded-xl border px-2 py-2 text-center text-sm font-bold" style={{ backgroundColor: normalizeThemeColor(theme.moreButtonBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.moreButtonBorder, "#D9C7A3"), color: normalizeThemeColor(theme.moreButtonText, "#0F172A") }}>More</span></div></div></div></div> : null}
+      {target === "favourites" ? <div className="rounded-[20px] border p-3" style={{ backgroundColor: normalizeThemeColor(theme.favouritesBackground, "#451A03"), borderColor: normalizeThemeColor(theme.favouritesBorder, "#F59E0B"), color: normalizeThemeColor(theme.favouritesText, "#FFFFFF") }}><p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: normalizeThemeColor(theme.favouritesLabelText, "#FDE68A") }}>Your favourites</p><h4 className="mt-1 text-lg font-black">Saved favourites</h4><div className="mx-auto mt-3 max-w-[220px] rounded-[20px] border p-3 text-center" style={{ backgroundColor: normalizeThemeColor(theme.favouritesCardBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.favouritesCardBorder, "#FCD34D") }}><div className="mx-auto aspect-[1.25/1] rounded-2xl bg-slate-100" /><h5 className="mt-3 font-black" style={{ color: normalizeThemeColor(theme.favouritesCardTitle, "#0F172A") }}>Favourite product</h5><div className="mt-3 flex items-center justify-center gap-2"><span className="rounded-xl border px-2.5 py-1.5 text-xs font-black" style={{ backgroundColor: normalizeThemeColor(theme.favouritesPriceBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.favouritesPriceBorder, "#F59E0B"), color: normalizeThemeColor(theme.favouritesPriceText, "#0F172A") }}>{money}</span><span className="rounded-xl border px-3 py-1.5 text-xs font-black" style={{ backgroundColor: normalizeThemeColor(theme.favouritesAddBackground, "#0F172A"), borderColor: normalizeThemeColor(theme.favouritesAddBorder, "#F59E0B"), color: normalizeThemeColor(theme.favouritesAddText, "#FFFFFF") }}>Add</span><span className="inline-flex h-8 w-8 items-center justify-center rounded-xl" style={{ backgroundColor: normalizeThemeColor(theme.favouritesRemoveBackground, "#FFFFFF"), color: normalizeThemeColor(theme.favouritesRemoveText, "#F59E0B") }}>♥</span></div><p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: normalizeThemeColor(theme.favouritesSwipeText, "#D97706") }}>Swipe to view all favourites</p></div></div> : null}
       {target === "footer" ? <div className="rounded-[18px] border p-4" style={{ backgroundColor: normalizeThemeColor(theme.footerBackground, "#FFFFFF"), borderColor: normalizeThemeColor(theme.globalBorder, "#D9C7A3"), color: normalizeThemeColor(theme.footerText, "#2B2B2B") }}><p className="text-[11px] font-bold uppercase tracking-[0.18em]">Storefront footer</p><p className="mt-2 text-sm leading-5">{footerBlurb}</p><p className="mt-2 text-xs leading-5">{footerNotice}</p><div className="mt-3 flex flex-wrap items-center gap-2"><span className="inline-flex rounded-full px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: normalizeThemeColor(theme.footerBadgeBackground, "#C7922F") }}>Contact icons</span><span className="inline-flex rounded-full border border-black/10 bg-white/75 px-3 py-1.5 text-xs font-bold">Social links</span></div></div> : null}
     </div>
   );

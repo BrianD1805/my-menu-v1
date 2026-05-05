@@ -29,20 +29,33 @@ type FavouriteProductStripCardProps = {
   accentColor: string;
   primaryColor: string;
   isBusy: boolean;
-  onAddToCart: (productId: string) => void;
+  themeColors?: StorefrontTheme | null;
+  onAddToCart: (productId: string, options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string }) => void;
   onRemoveFavourite: (productId: string) => void;
 };
 
-function FavouriteProductStripCard({ product, moneySettings, accentColor, primaryColor, isBusy, onAddToCart, onRemoveFavourite }: FavouriteProductStripCardProps) {
+function FavouriteProductStripCard({ product, moneySettings, accentColor, primaryColor, isBusy, themeColors, onAddToCart, onRemoveFavourite }: FavouriteProductStripCardProps) {
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
   const money = buildMoneySettings(moneySettings);
+  const favouriteCardBackground = normalizeThemeColor(themeColors?.favouritesCardBackground, "#FFFFFF");
+  const favouriteCardBorder = normalizeThemeColor(themeColors?.favouritesCardBorder, "#FCD34D");
+  const favouriteCardTitle = normalizeThemeColor(themeColors?.favouritesCardTitle, "#0F172A");
+  const favouritePriceBackground = normalizeThemeColor(themeColors?.favouritesPriceBackground, "#FFFFFF");
+  const favouritePriceBorder = normalizeThemeColor(themeColors?.favouritesPriceBorder, accentColor);
+  const favouritePriceText = normalizeThemeColor(themeColors?.favouritesPriceText, primaryColor);
+  const favouriteAddBackground = normalizeThemeColor(themeColors?.favouritesAddBackground, primaryColor);
+  const favouriteAddBorder = normalizeThemeColor(themeColors?.favouritesAddBorder, accentColor);
+  const favouriteAddText = normalizeThemeColor(themeColors?.favouritesAddText, "#FFFFFF");
+  const favouriteRemoveBackground = normalizeThemeColor(themeColors?.favouritesRemoveBackground, "#FFFFFF");
+  const favouriteRemoveText = normalizeThemeColor(themeColors?.favouritesRemoveText, accentColor);
+  const favouriteSwipeText = normalizeThemeColor(themeColors?.favouritesSwipeText, accentColor);
 
   return (
-    <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-amber-200/80 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_48%,#FEF3C7_100%)] p-3 shadow-[0_18px_44px_rgba(120,53,15,0.15)] ring-1 ring-white/80 sm:w-[248px]">
+    <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 shadow-[0_18px_44px_rgba(120,53,15,0.15)] ring-1 ring-white/80 sm:w-[248px]" style={{ backgroundColor: favouriteCardBackground, borderColor: favouriteCardBorder }}>
       <div className="pointer-events-none absolute -right-11 -top-11 h-28 w-28 rounded-full bg-amber-300/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-rose-300/18 blur-3xl" />
       <div className="relative z-10 flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/85 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-amber-700 shadow-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/85 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] shadow-sm" style={{ borderColor: favouritePriceBorder, color: favouriteSwipeText }}>
           <span aria-hidden="true">♥</span>
           Favourite
         </span>
@@ -50,7 +63,8 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
           type="button"
           onClick={() => onRemoveFavourite(product.id)}
           disabled={isBusy}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-amber-600 shadow-[0_8px_18px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] hover:text-rose-600 disabled:cursor-wait disabled:opacity-70"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/80 shadow-[0_8px_18px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-70"
+          style={{ backgroundColor: favouriteRemoveBackground, color: favouriteRemoveText }}
           aria-label={`Remove ${product.name} from favourites`}
           title="Remove favourite"
         >
@@ -58,7 +72,7 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
         </button>
       </div>
 
-      <div ref={imageFrameRef} className="relative z-10 mx-auto mt-3 aspect-[1.25/1] w-full overflow-hidden rounded-[20px] border border-white/80 bg-white/92 shadow-[0_13px_30px_rgba(15,23,42,0.10)]">
+      <div ref={imageFrameRef} className="relative z-10 mx-auto mt-3 aspect-[1.25/1] w-full overflow-hidden rounded-[20px] border border-white/80 shadow-[0_13px_30px_rgba(15,23,42,0.10)]" style={{ backgroundColor: favouritePriceBackground }}>
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-3" loading="lazy" />
         ) : (
@@ -67,19 +81,19 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
       </div>
 
       <div className="relative z-10 mt-3 flex flex-1 flex-col text-center">
-        <h3 className="mx-auto line-clamp-2 text-[0.94rem] font-black leading-tight tracking-tight text-slate-950">{product.name}</h3>
+        <h3 className="mx-auto line-clamp-2 text-[0.94rem] font-black leading-tight tracking-tight" style={{ color: favouriteCardTitle }}>{product.name}</h3>
         <div className="mt-3 flex items-center justify-center gap-2">
-          <span className="rounded-xl border border-amber-200 bg-white/88 px-2.5 py-1.5 text-xs font-black text-slate-950 shadow-sm">{formatMoney(Number(product.price), money)}</span>
+          <span className="rounded-xl border px-2.5 py-1.5 text-xs font-black shadow-sm" style={{ backgroundColor: favouritePriceBackground, borderColor: favouritePriceBorder, color: favouritePriceText }}>{formatMoney(Number(product.price), money)}</span>
           <button
             type="button"
-            onClick={() => onAddToCart(product.id)}
-            className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black text-white shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
-            style={{ backgroundColor: primaryColor, borderColor: accentColor }}
+            onClick={() => onAddToCart(product.id, { sourceRect: imageFrameRef.current?.getBoundingClientRect() || null, imageUrl: product.image_url, name: product.name })}
+            className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
+            style={{ backgroundColor: favouriteAddBackground, borderColor: favouriteAddBorder, color: favouriteAddText }}
           >
             Add
           </button>
         </div>
-        <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em] text-amber-700/80">Swipe to view all favourites</p>
+        <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: favouriteSwipeText }}>Swipe to view all favourites</p>
       </div>
     </article>
   );
@@ -292,6 +306,10 @@ export default function MenuBrowser({
   const footerBackground = normalizeThemeColor(storefrontTheme?.footerBackground, "#FFFFFF");
   const footerText = normalizeThemeColor(storefrontTheme?.footerText, brandText);
   const footerBadgeBackground = normalizeThemeColor(storefrontTheme?.footerBadgeBackground, brandAccent);
+  const favouritesBackground = normalizeThemeColor(storefrontTheme?.favouritesBackground, "#451A03");
+  const favouritesBorder = normalizeThemeColor(storefrontTheme?.favouritesBorder, brandAccent);
+  const favouritesText = normalizeThemeColor(storefrontTheme?.favouritesText, "#FFFFFF");
+  const favouritesLabelText = normalizeThemeColor(storefrontTheme?.favouritesLabelText, "#FDE68A");
   const brandAccentBorder = welcomeBorder;
   const phoneHref = cleanDialString(contactPhone) ? `tel:${cleanDialString(contactPhone)}` : null;
   const whatsAppHref = cleanWhatsAppNumber(contactWhatsApp || contactPhone) ? `https://wa.me/${cleanWhatsAppNumber(contactWhatsApp || contactPhone)}` : null;
@@ -631,15 +649,15 @@ export default function MenuBrowser({
       </section>
 
       {(favouriteProducts.length || favouritesMessage) ? (
-        <section className="relative overflow-hidden rounded-[26px] border border-amber-200/80 bg-[linear-gradient(135deg,#451A03_0%,#78350F_45%,#B45309_100%)] px-3 py-4 text-white shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:px-4 sm:py-5 lg:px-5" aria-label="Favourite products">
+        <section className="relative overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:px-4 sm:py-5 lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Favourite products">
           <div className="pointer-events-none absolute -right-12 -top-16 h-[10.5rem] w-[10.5rem] rounded-full bg-amber-200/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-orange-300/18 blur-3xl" />
           <div className="relative z-10 mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200">Your favourites</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">Saved favourites</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: favouritesLabelText }}>Your favourites</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl" style={{ color: favouritesText }}>Saved favourites</h2>
             </div>
-            {favouriteProducts.length > 1 ? <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/72 lg:hidden">Swipe sideways</p> : null}
+            {favouriteProducts.length > 1 ? <p className="text-[10px] font-bold uppercase tracking-[0.15em] lg:hidden" style={{ color: favouritesText }}>Swipe sideways</p> : null}
           </div>
 
           {favouritesMessage ? (
@@ -676,8 +694,9 @@ export default function MenuBrowser({
                     moneySettings={moneySettings}
                     accentColor={brandAccent}
                     primaryColor={brandPrimary}
+                    themeColors={storefrontTheme}
                     isBusy={Boolean(favouriteBusyById[product.id])}
-                    onAddToCart={(productId) => void addToCart(productId)}
+                    onAddToCart={(productId, options) => void addToCart(productId, options)}
                     onRemoveFavourite={(productId) => void toggleFavourite(productId)}
                   />
                 ))}
