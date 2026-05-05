@@ -30,6 +30,7 @@ export const STOREFRONT_THEME_KEYS = [
   "favouritesLabelText",
   "favouritesCardBackground",
   "favouritesCardBorder",
+  "favouritesCardShadow",
   "favouritesCardTitle",
   "favouritesPriceBackground",
   "favouritesPriceBorder",
@@ -46,7 +47,7 @@ export const STOREFRONT_THEME_KEYS = [
 ] as const;
 
 export type StorefrontThemeKey = (typeof STOREFRONT_THEME_KEYS)[number];
-export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & { selectedPreset?: string | null; customised?: boolean; logoPaletteColours?: string[] };
+export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & { selectedPreset?: string | null; customised?: boolean; logoPaletteColours?: string[]; favouritesCardShadowEnabled?: boolean };
 
 export function isHexColor(value: unknown): value is string {
   return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value.trim());
@@ -67,6 +68,7 @@ export function normalizeStorefrontTheme(value: unknown): StorefrontTheme | null
 
   if (typeof input.selectedPreset === "string") output.selectedPreset = input.selectedPreset.slice(0, 80);
   if (typeof input.customised === "boolean") output.customised = input.customised;
+  if (typeof input.favouritesCardShadowEnabled === "boolean") output.favouritesCardShadowEnabled = input.favouritesCardShadowEnabled;
   if (Array.isArray(input.logoPaletteColours)) {
     const colours = input.logoPaletteColours
       .map((colour) => (typeof colour === "string" ? colour.trim().toUpperCase() : ""))
@@ -125,6 +127,8 @@ export function buildThemeFromCore(input: {
     favouritesLabelText: accent,
     favouritesCardBackground: "#FFFFFF",
     favouritesCardBorder: border,
+    favouritesCardShadow: accent,
+    favouritesCardShadowEnabled: true,
     favouritesCardTitle: primary,
     favouritesPriceBackground: "#FFFFFF",
     favouritesPriceBorder: accent,

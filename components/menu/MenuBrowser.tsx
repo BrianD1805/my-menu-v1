@@ -39,6 +39,8 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   const money = buildMoneySettings(moneySettings);
   const favouriteCardBackground = normalizeThemeColor(themeColors?.favouritesCardBackground, "#FFFFFF");
   const favouriteCardBorder = normalizeThemeColor(themeColors?.favouritesCardBorder, "#FCD34D");
+  const favouriteCardShadow = normalizeThemeColor(themeColors?.favouritesCardShadow, accentColor);
+  const favouriteCardShadowEnabled = themeColors?.favouritesCardShadowEnabled !== false;
   const favouriteCardTitle = normalizeThemeColor(themeColors?.favouritesCardTitle, "#0F172A");
   const favouritePriceBackground = normalizeThemeColor(themeColors?.favouritesPriceBackground, "#FFFFFF");
   const favouritePriceBorder = normalizeThemeColor(themeColors?.favouritesPriceBorder, accentColor);
@@ -51,9 +53,9 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   const favouriteSwipeText = normalizeThemeColor(themeColors?.favouritesSwipeText, accentColor);
 
   return (
-    <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 shadow-[0_18px_44px_rgba(120,53,15,0.15)] ring-1 ring-white/80 sm:w-[248px]" style={{ backgroundColor: favouriteCardBackground, borderColor: favouriteCardBorder }}>
-      <div className="pointer-events-none absolute -right-11 -top-11 h-28 w-28 rounded-full bg-amber-300/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-rose-300/18 blur-3xl" />
+    <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 ring-1 ring-white/80 sm:w-[248px]" style={{ backgroundColor: favouriteCardBackground, borderColor: favouriteCardBorder, boxShadow: favouriteCardShadowEnabled ? `0 8px 18px ${favouriteCardShadow}14` : "none" }}>
+      <div className="pointer-events-none absolute -right-11 -top-11 h-24 w-24 rounded-full bg-amber-300/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-12 -left-10 h-28 w-28 rounded-full bg-rose-300/8 blur-3xl" />
       <div className="relative z-10 flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/85 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] shadow-sm" style={{ borderColor: favouritePriceBorder, color: favouriteSwipeText }}>
           <span aria-hidden="true">♥</span>
