@@ -84,6 +84,18 @@ export async function POST(req: Request) {
       );
     }
 
+    for (const item of body.items) {
+      const product = products.find((p) => p.id === item.productId);
+      const stockEnabled = Boolean(product?.stock_enabled);
+      const stockQuantity = Math.max(0, Number(product?.stock_quantity || 0));
+      if (stockEnabled && item.quantity > stockQuantity) {
+        return NextResponse.json(
+          { error: `${product?.name || "This product"} only has ${stockQuantity} in stock.` },
+          { status: 409 }
+        );
+      }
+    }
+
     let total = 0;
 
     const orderItems = body.items.map((item) => {
@@ -136,6 +148,22 @@ export async function POST(req: Request) {
 
     if (itemsError) {
       return NextResponse.json({ error: "Failed to create order items" }, { status: 500 });
+    }
+
+    for (const item of body.items) {
+      const product = products.find((p) => p.id === item.productId);
+      if (!product?.stock_enabled) continue;
+
+      const nextStock = Math.max(0, Number(product.stock_quantity || 0) - item.quantity);
+      const { error: stockError } = await db
+        .from("products")
+        .update({ stock_quantity: nextStock })
+        .eq("id", product.id)
+        .eq("tenant_id", tenant.id);
+
+      if (stockError) {
+        console.error("Failed to reduce product stock", stockError);
+      }
     }
 
     const settings = await getTenantSettings(tenant.id);

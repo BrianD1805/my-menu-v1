@@ -171,7 +171,7 @@ export default async function HomePage() {
       .order("sort_order", { ascending: true }),
     db
       .from("products")
-      .select("id, category_id, name, description, image_url, price")
+      .select("id, category_id, name, description, image_url, price, stock_enabled, stock_quantity, low_stock_threshold")
       .eq("tenant_id", tenant.id)
       .eq("is_active", true),
   ]);

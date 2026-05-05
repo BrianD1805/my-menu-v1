@@ -17,6 +17,9 @@ type ProductRow = {
   price: number;
   category_id: string;
   category_name: string | null;
+  stock_enabled: boolean | null;
+  stock_quantity: number | null;
+  low_stock_threshold: number | null;
 };
 
 type DraftState = {
@@ -26,6 +29,9 @@ type DraftState = {
   categoryId: string;
   isActive: boolean;
   imageUrl: string;
+  stockEnabled: boolean;
+  stockQuantity: string;
+  lowStockThreshold: string;
 };
 
 function emptyDraft(defaultCategoryId: string): DraftState {
@@ -36,6 +42,9 @@ function emptyDraft(defaultCategoryId: string): DraftState {
     categoryId: defaultCategoryId,
     isActive: true,
     imageUrl: "",
+    stockEnabled: false,
+    stockQuantity: "0",
+    lowStockThreshold: "5",
   };
 }
 
@@ -205,6 +214,9 @@ export default function ProductManager({
       categoryId: product.category_id,
       isActive: !!product.is_active,
       imageUrl: product.image_url || "",
+      stockEnabled: !!product.stock_enabled,
+      stockQuantity: String(product.stock_quantity ?? 0),
+      lowStockThreshold: String(product.low_stock_threshold ?? 5),
     });
     setGlobalMessage("");
   }
@@ -244,6 +256,9 @@ export default function ProductManager({
           categoryId: newDraft.categoryId,
           isActive: newDraft.isActive,
           imageUrl: newDraft.imageUrl,
+          stockEnabled: newDraft.stockEnabled,
+          stockQuantity: newDraft.stockQuantity,
+          lowStockThreshold: newDraft.lowStockThreshold,
         }),
       });
       const payload = await response.json();
@@ -271,6 +286,9 @@ export default function ProductManager({
         categoryId: product.category_id,
         isActive: !!product.is_active,
         imageUrl: product.image_url || "",
+        stockEnabled: !!product.stock_enabled,
+        stockQuantity: String(product.stock_quantity ?? 0),
+        lowStockThreshold: String(product.low_stock_threshold ?? 5),
       });
       clearCreateImageSelection();
       setGlobalMessage(newImageFile ? "Product created with image" : "Product created");
@@ -299,6 +317,9 @@ export default function ProductManager({
           categoryId: editingDraft.categoryId,
           isActive: editingDraft.isActive,
           imageUrl: editingDraft.imageUrl,
+          stockEnabled: editingDraft.stockEnabled,
+          stockQuantity: editingDraft.stockQuantity,
+          lowStockThreshold: editingDraft.lowStockThreshold,
         }),
       });
       const payload = await response.json();
@@ -443,6 +464,13 @@ export default function ProductManager({
                         {!product.is_active ? (
                           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">Inactive</span>
                         ) : null}
+                        {product.stock_enabled ? (
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${Number(product.stock_quantity || 0) <= 0 ? "bg-red-100 text-red-700" : Number(product.stock_quantity || 0) <= Number(product.low_stock_threshold || 5) ? "bg-orange-100 text-orange-700" : "bg-emerald-100 text-emerald-700"}`}>
+                            Stock: {Number(product.stock_quantity || 0)}
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">Stock off</span>
+                        )}
                       </div>
                       <p className="mt-2 text-sm font-medium text-gray-900">{formatMoney(Number(product.price), moneySettings)}</p>
                     </div>
@@ -577,6 +605,9 @@ export default function ProductManager({
                                 {!product.is_active ? (
                                   <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-amber-700">Inactive</span>
                                 ) : null}
+                                {product.stock_enabled ? (
+                                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${Number(product.stock_quantity || 0) <= 0 ? "bg-red-100 text-red-700" : Number(product.stock_quantity || 0) <= Number(product.low_stock_threshold || 5) ? "bg-orange-100 text-orange-700" : "bg-emerald-100 text-emerald-700"}`}>Stock: {Number(product.stock_quantity || 0)}</span>
+                                ) : null}
                               </div>
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                                 <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(product.price), moneySettings)}</p>
@@ -708,6 +739,57 @@ export default function ProductManager({
                         />
                         Visible on the live menu
                       </label>
+                    </div>
+
+                    <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">
+                      <FieldLabel>Basic stock control</FieldLabel>
+                      <label className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={activeDraft.stockEnabled}
+                          onChange={(event) =>
+                            creating
+                              ? setNewDraft((current) => ({ ...current, stockEnabled: event.target.checked }))
+                              : setEditingDraft((current) => (current ? { ...current, stockEnabled: event.target.checked } : current))
+                          }
+                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        Track stock for this product
+                      </label>
+
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <FieldLabel>Stock quantity</FieldLabel>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={activeDraft.stockQuantity}
+                            onChange={(event) =>
+                              creating
+                                ? setNewDraft((current) => ({ ...current, stockQuantity: event.target.value }))
+                                : setEditingDraft((current) => (current ? { ...current, stockQuantity: event.target.value } : current))
+                            }
+                            className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel>Low stock warning</FieldLabel>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={activeDraft.lowStockThreshold}
+                            onChange={(event) =>
+                              creating
+                                ? setNewDraft((current) => ({ ...current, lowStockThreshold: event.target.value }))
+                                : setEditingDraft((current) => (current ? { ...current, lowStockThreshold: event.target.value } : current))
+                            }
+                            className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                          />
+                        </div>
+                      </div>
+                      <p className="mt-3 text-xs leading-5 text-slate-500">When enabled, checkout reduces stock automatically when an order is saved. Set stock to 0 to show the item as out of stock.</p>
                     </div>
 
                     <div>

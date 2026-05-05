@@ -22,6 +22,9 @@ export type Product = {
   image_url: string | null;
   price: number;
   is_active: boolean;
+  stock_enabled?: boolean | null;
+  stock_quantity?: number | null;
+  low_stock_threshold?: number | null;
 };
 
 export type CartItemInput = {

@@ -26,6 +26,9 @@ create table if not exists products (
   image_url text,
   price numeric(10,2) not null,
   is_active boolean not null default true,
+  stock_enabled boolean not null default false,
+  stock_quantity integer not null default 0 check (stock_quantity >= 0),
+  low_stock_threshold integer not null default 5 check (low_stock_threshold >= 0),
   created_at timestamptz not null default now()
 );
 

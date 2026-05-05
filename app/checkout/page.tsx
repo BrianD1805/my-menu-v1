@@ -15,6 +15,8 @@ type Product = {
   id: string;
   name: string;
   price: number;
+  stock_enabled?: boolean | null;
+  stock_quantity?: number | null;
 };
 
 type TenantViewSettings = MoneyFormatSettings & {
@@ -176,7 +178,9 @@ useEffect(() => {
           ...item,
           name: product.name,
           unitPrice: product.price,
-          lineTotal
+          lineTotal,
+          stockEnabled: !!product.stock_enabled,
+          stockQuantity: Math.max(0, Number(product.stock_quantity || 0)),
         };
       })
       .filter(Boolean) as Array<{
@@ -185,6 +189,8 @@ useEffect(() => {
       name: string;
       unitPrice: number;
       lineTotal: number;
+      stockEnabled: boolean;
+      stockQuantity: number;
     }>;
   }, [items, products]);
 
@@ -231,11 +237,13 @@ useEffect(() => {
 
 
   function updateQuantity(productId: string, nextQuantity: number) {
+    const product = products.find((p) => p.id === productId);
+    const cappedQuantity = product?.stock_enabled ? Math.min(nextQuantity, Math.max(0, Number(product.stock_quantity || 0))) : nextQuantity;
     const nextItems =
-      nextQuantity <= 0
+      cappedQuantity <= 0
         ? items.filter((x) => x.productId !== productId)
         : items.map((x) =>
-            x.productId === productId ? { ...x, quantity: nextQuantity } : x
+            x.productId === productId ? { ...x, quantity: cappedQuantity } : x
           );
 
     setItems(nextItems);
@@ -304,6 +312,12 @@ useEffect(() => {
 
     if (!items.length) {
       setErrorMessage("Your cart is empty.");
+      return;
+    }
+
+    const overStock = cartRows.find((row) => row.stockEnabled && row.quantity > row.stockQuantity);
+    if (overStock) {
+      setErrorMessage(`${overStock.name} only has ${overStock.stockQuantity} in stock. Please adjust your cart.`);
       return;
     }
 
@@ -634,6 +648,11 @@ useEffect(() => {
                     <div>
                       <p className="font-medium">{row.name}</p>
                       <p className="text-sm text-gray-600">{formatMoney(row.unitPrice, tenantSettings)} each</p>
+                      {row.stockEnabled ? (
+                        <p className={`mt-1 text-xs font-semibold ${row.stockQuantity <= 0 ? "text-red-600" : row.quantity >= row.stockQuantity ? "text-orange-600" : "text-emerald-700"}`}>
+                          {row.stockQuantity <= 0 ? "Out of stock" : `${row.stockQuantity} in stock`}
+                        </p>
+                      ) : null}
                     </div>
                     <p className="font-medium">{formatMoney(row.lineTotal, tenantSettings)}</p>
                   </div>
@@ -647,8 +666,9 @@ useEffect(() => {
                     </button>
                     <span>{row.quantity}</span>
                     <button
-                      className="rounded border px-3 py-1" style={{ borderColor: checkoutBorder }}
+                      className="rounded border px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: checkoutBorder }}
                       onClick={() => updateQuantity(row.productId, row.quantity + 1)}
+                      disabled={row.stockEnabled && row.quantity >= row.stockQuantity}
                     >
                       +
                     </button>

@@ -30,6 +30,22 @@ function normalizeActive(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1;
 }
 
+function normalizeStockQuantity(value: unknown) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return null;
+  return Math.floor(num);
+}
+
+function normalizeLowStockThreshold(value: unknown) {
+  const num = Number(value);
+  if (!Number.isFinite(num) || num < 0) return 5;
+  return Math.floor(num);
+}
+
+function normalizeStockEnabled(value: unknown) {
+  return value === true || value === "true" || value === "1" || value === 1;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -39,9 +55,12 @@ export async function POST(req: Request) {
     const price = normalizePrice(body?.price);
     const isActive = normalizeActive(body?.isActive);
     const imageUrl = normalizeImageUrl(body?.imageUrl);
+    const stockEnabled = normalizeStockEnabled(body?.stockEnabled);
+    const stockQuantity = normalizeStockQuantity(body?.stockQuantity);
+    const lowStockThreshold = normalizeLowStockThreshold(body?.lowStockThreshold);
 
-    if (!name || !categoryId || price === null) {
-      return NextResponse.json({ error: "Missing name, categoryId, or valid price" }, { status: 400 });
+    if (!name || !categoryId || price === null || stockQuantity === null) {
+      return NextResponse.json({ error: "Missing name, categoryId, valid price, or valid stock quantity" }, { status: 400 });
     }
 
     const tenantLookup = await resolveAdminTenant(req);
@@ -61,8 +80,11 @@ export async function POST(req: Request) {
         image_url: imageUrl,
         price,
         is_active: isActive,
+        stock_enabled: stockEnabled,
+        stock_quantity: stockQuantity,
+        low_stock_threshold: lowStockThreshold,
       })
-      .select("id, name, description, image_url, price, is_active, category_id")
+      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold")
       .single();
 
     if (error || !product) {
@@ -86,9 +108,12 @@ export async function PATCH(req: Request) {
     const price = normalizePrice(body?.price);
     const isActive = normalizeActive(body?.isActive);
     const imageUrl = normalizeImageUrl(body?.imageUrl);
+    const stockEnabled = normalizeStockEnabled(body?.stockEnabled);
+    const stockQuantity = normalizeStockQuantity(body?.stockQuantity);
+    const lowStockThreshold = normalizeLowStockThreshold(body?.lowStockThreshold);
 
-    if (!productId || !name || !categoryId || price === null) {
-      return NextResponse.json({ error: "Missing productId, name, categoryId, or valid price" }, { status: 400 });
+    if (!productId || !name || !categoryId || price === null || stockQuantity === null) {
+      return NextResponse.json({ error: "Missing productId, name, categoryId, valid price, or valid stock quantity" }, { status: 400 });
     }
 
     const tenantLookup = await resolveAdminTenant(req);
@@ -110,10 +135,13 @@ export async function PATCH(req: Request) {
         image_url: imageUrl,
         price,
         is_active: isActive,
+        stock_enabled: stockEnabled,
+        stock_quantity: stockQuantity,
+        low_stock_threshold: lowStockThreshold,
       })
       .eq("id", productId)
       .eq("tenant_id", tenant.id)
-      .select("id, name, description, image_url, price, is_active, category_id")
+      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold")
       .single();
 
     if (error || !product) {

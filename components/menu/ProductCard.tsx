@@ -12,6 +12,9 @@ type Props = {
   imageUrl: string | null;
   price: number;
   tenantSlug: string;
+  stockEnabled?: boolean | null;
+  stockQuantity?: number | null;
+  lowStockThreshold?: number | null;
   moneySettings?: MoneyFormatSettings;
   accentColor?: string | null;
   primaryColor?: string | null;
@@ -32,7 +35,7 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -40,18 +43,29 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   const hasImage = !!imageUrl;
   const fullDescription = description?.trim() || "<p>A fresh favourite from the menu, ready to add to your order.</p>";
+  const trackedStock = !!stockEnabled;
+  const availableStock = Math.max(0, Number(stockQuantity || 0));
+  const isOutOfStock = trackedStock && availableStock <= 0;
+  const isLowStock = trackedStock && availableStock > 0 && availableStock <= Math.max(0, Number(lowStockThreshold || 5));
 
   async function addToCart(source: "card" | "modal" = "card") {
-    if (buttonState === "adding") return;
+    if (buttonState === "adding" || isOutOfStock) return;
+
+    const existing = readCart<StoredCartItem>(tenantSlug);
+    const found = existing.find((item) => item.productId === id);
+    if (trackedStock && found && found.quantity >= availableStock) {
+      setButtonState("added");
+      setTimeout(() => setButtonState("idle"), 1200);
+      return;
+    }
+
     setButtonState("adding");
 
     const sourceRect = (source === "modal" ? modalImageFrameRef.current : imageFrameRef.current)?.getBoundingClientRect() || null;
     onAddToCartAnimation?.({ imageUrl, name, sourceRect });
 
-    const existing = readCart<StoredCartItem>(tenantSlug);
-    const found = existing.find((item) => item.productId === id);
     const updated = found
-      ? existing.map((item) => (item.productId === id ? { ...item, quantity: item.quantity + 1 } : item))
+      ? existing.map((item) => (item.productId === id ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, availableStock) : item.quantity + 1 } : item))
       : [...existing, { productId: id, quantity: 1 }];
     writeCart(tenantSlug, updated);
     setButtonState("added");
@@ -59,6 +73,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   }
 
   function buttonLabel() {
+    if (isOutOfStock) return "Sold out";
     if (buttonState === "adding") return "Adding";
     if (buttonState === "added") return "Added ✓";
     return "Add";
@@ -152,6 +167,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   {name}
                 </h3>
               </button>
+              {trackedStock ? (
+                <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : isLowStock ? "bg-orange-50 text-orange-700 ring-1 ring-orange-100" : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"}`}>
+                  {isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : `${availableStock} in stock`}
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -177,7 +197,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 ? { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }
                 : { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
               onClick={() => void addToCart("card")}
-              disabled={buttonState === "adding"}
+              disabled={buttonState === "adding" || isOutOfStock}
             >
               {buttonLabel()}
             </button>
@@ -210,6 +230,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         {formatMoney(price, moneySettings)}
                       </span>
+                      {trackedStock ? (
+                        <span className={`ml-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : isLowStock ? "bg-orange-50 text-orange-700 ring-1 ring-orange-100" : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"}`}>
+                          {isOutOfStock ? "Out of stock" : `${availableStock} in stock`}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                   <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close details">×</button>
@@ -252,10 +277,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   <button
                     type="button"
                     onClick={() => { void addToCart("modal"); }}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 lg:px-8"
+                    disabled={buttonState === "adding" || isOutOfStock}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-not-allowed disabled:opacity-70 lg:px-8"
                     style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
                   >
-                    {buttonState === "adding" ? "Adding..." : "Add"}
+                    {buttonState === "adding" ? "Adding..." : isOutOfStock ? "Sold out" : "Add"}
                   </button>
                 </div>
               </div>

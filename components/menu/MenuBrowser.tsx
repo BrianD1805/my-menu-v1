@@ -20,6 +20,9 @@ type Product = {
   description: string | null;
   image_url: string | null;
   price: number;
+  stock_enabled?: boolean | null;
+  stock_quantity?: number | null;
+  low_stock_threshold?: number | null;
 };
 
 
@@ -51,6 +54,9 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   const favouriteRemoveBackground = normalizeThemeColor(themeColors?.favouritesRemoveBackground, "#FFFFFF");
   const favouriteRemoveText = normalizeThemeColor(themeColors?.favouritesRemoveText, accentColor);
   const favouriteSwipeText = normalizeThemeColor(themeColors?.favouritesSwipeText, accentColor);
+  const trackedStock = !!product.stock_enabled;
+  const availableStock = Math.max(0, Number(product.stock_quantity || 0));
+  const isOutOfStock = trackedStock && availableStock <= 0;
 
   return (
     <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 ring-1 ring-white/80 sm:w-[248px]" style={{ backgroundColor: favouriteCardBackground, borderColor: favouriteCardBorder, boxShadow: favouriteCardShadowEnabled ? `0 8px 18px ${favouriteCardShadow}14` : "none" }}>
@@ -89,12 +95,18 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
           <button
             type="button"
             onClick={() => onAddToCart(product.id, { sourceRect: imageFrameRef.current?.getBoundingClientRect() || null, imageUrl: product.image_url, name: product.name })}
-            className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
+            disabled={isOutOfStock}
+            className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-65"
             style={{ backgroundColor: favouriteAddBackground, borderColor: favouriteAddBorder, color: favouriteAddText }}
           >
-            Add
+            {isOutOfStock ? "Sold out" : "Add"}
           </button>
         </div>
+        {trackedStock ? (
+          <p className={`mt-2 text-[10px] font-black uppercase tracking-[0.12em] ${isOutOfStock ? "text-red-600" : "text-emerald-700"}`}>
+            {isOutOfStock ? "Out of stock" : `${availableStock} in stock`}
+          </p>
+        ) : null}
         <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: favouriteSwipeText }}>Swipe to view all favourites</p>
       </div>
     </article>
@@ -533,9 +545,22 @@ export default function MenuBrowser({
   ) {
     if (buttonStateById[productId] === "adding") return;
 
-    setButtonStateById((current) => ({ ...current, [productId]: "adding" }));
-
     const product = products.find((item) => item.id === productId);
+    const trackedStock = !!product?.stock_enabled;
+    const availableStock = Math.max(0, Number(product?.stock_quantity || 0));
+    if (trackedStock && availableStock <= 0) return;
+
+    const existing = readCart<StoredCartItem>(tenantSlug);
+    const found = existing.find((item) => item.productId === productId);
+    if (trackedStock && found && found.quantity >= availableStock) {
+      setButtonStateById((current) => ({ ...current, [productId]: "added" }));
+      window.setTimeout(() => {
+        setButtonStateById((current) => ({ ...current, [productId]: "idle" }));
+      }, 1200);
+      return;
+    }
+
+    setButtonStateById((current) => ({ ...current, [productId]: "adding" }));
     if (options?.sourceRect || options?.imageUrl || options?.name) {
       launchAddToCartAnimation({
         imageUrl: options?.imageUrl ?? product?.image_url ?? null,
@@ -545,10 +570,8 @@ export default function MenuBrowser({
       });
     }
 
-    const existing = readCart<StoredCartItem>(tenantSlug);
-    const found = existing.find((item) => item.productId === productId);
     const updated = found
-      ? existing.map((item) => (item.productId === productId ? { ...item, quantity: item.quantity + 1 } : item))
+      ? existing.map((item) => (item.productId === productId ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, availableStock) : item.quantity + 1 } : item))
       : [...existing, { productId, quantity: 1 }];
 
     writeCart(tenantSlug, updated);
@@ -730,6 +753,9 @@ export default function MenuBrowser({
                   imageUrl={product.image_url}
                   price={Number(product.price)}
                   tenantSlug={tenantSlug}
+                  stockEnabled={product.stock_enabled}
+                  stockQuantity={product.stock_quantity}
+                  lowStockThreshold={product.low_stock_threshold}
                   moneySettings={moneySettings}
                   accentColor={accentColor}
                   primaryColor={primaryColor}
@@ -858,6 +884,9 @@ export default function MenuBrowser({
                       const categoryName = categories.find((category) => category.id === product.category_id)?.name || "Menu item";
                       const state = buttonStateById[product.id] || "idle";
                       const thumbId = `search-thumb-${product.id}`;
+                      const searchTrackedStock = !!product.stock_enabled;
+                      const searchAvailableStock = Math.max(0, Number(product.stock_quantity || 0));
+                      const searchOutOfStock = searchTrackedStock && searchAvailableStock <= 0;
                       return (
                         <div key={product.id} className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -885,6 +914,11 @@ export default function MenuBrowser({
                                       In cart: {cartCount}
                                     </span>
                                   ) : null}
+                                  {searchTrackedStock ? (
+                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${searchOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"}`}>
+                                      {searchOutOfStock ? "Out of stock" : `${searchAvailableStock} in stock`}
+                                    </span>
+                                  ) : null}
                                 </div>
                                 <button
                                   type="button"
@@ -897,9 +931,10 @@ export default function MenuBrowser({
                                       destination: "search",
                                     });
                                   }}
-                                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+                                  disabled={searchOutOfStock}
+                                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                  {state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add"}
+                                  {searchOutOfStock ? "Sold out" : state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add"}
                                 </button>
                               </div>
                             </div>
