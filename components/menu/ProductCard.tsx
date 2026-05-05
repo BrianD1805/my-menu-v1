@@ -17,6 +17,9 @@ type Props = {
   primaryColor?: string | null;
   themeColors?: StorefrontTheme | null;
   onAddToCartAnimation?: (payload: { imageUrl: string | null; name: string; sourceRect: DOMRect | null }) => void;
+  isFavourite?: boolean;
+  favouriteBusy?: boolean;
+  onToggleFavourite?: (productId: string) => void;
 };
 
 function withAlpha(color: string, alphaHex: string, fallback: string) {
@@ -29,7 +32,7 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -99,9 +102,26 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   return (
     <>
       <div
-        className="group h-full overflow-hidden rounded-[30px] border ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px]"
+        className="group relative h-full overflow-hidden rounded-[30px] border ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-[2px]"
         style={{ backgroundColor: productCardBackground, borderColor: productCardBorder }}
       >
+        {onToggleFavourite ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleFavourite(id);
+            }}
+            disabled={favouriteBusy}
+            className={`absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-2xl border shadow-[0_12px_26px_rgba(15,23,42,0.12)] ring-1 ring-white/70 backdrop-blur-sm transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-70 ${isFavourite ? "border-amber-200 bg-amber-50 text-amber-600" : "border-white/80 bg-white/92 text-slate-500 hover:text-rose-500"}`}
+            aria-label={isFavourite ? `Remove ${name} from favourites` : `Add ${name} to favourites`}
+            title={isFavourite ? "Remove favourite" : "Add favourite"}
+          >
+            <svg viewBox="0 0 24 24" className="h-[21px] w-[21px]" fill={isFavourite ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
+            </svg>
+          </button>
+        ) : null}
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">
             <button type="button" onClick={() => setDetailsOpen(true)} className="block text-left" aria-label={`View details for ${name}`}>

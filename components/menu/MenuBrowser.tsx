@@ -22,6 +22,69 @@ type Product = {
   price: number;
 };
 
+
+type FavouriteProductStripCardProps = {
+  product: Product;
+  moneySettings: MoneyFormatSettings;
+  accentColor: string;
+  primaryColor: string;
+  isBusy: boolean;
+  onAddToCart: (productId: string) => void;
+  onRemoveFavourite: (productId: string) => void;
+};
+
+function FavouriteProductStripCard({ product, moneySettings, accentColor, primaryColor, isBusy, onAddToCart, onRemoveFavourite }: FavouriteProductStripCardProps) {
+  const imageFrameRef = useRef<HTMLDivElement | null>(null);
+  const money = buildMoneySettings(moneySettings);
+
+  return (
+    <article className="relative flex w-[78vw] max-w-[310px] shrink-0 snap-start flex-col overflow-hidden rounded-[30px] border border-amber-200/80 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_48%,#FEF3C7_100%)] p-4 shadow-[0_22px_55px_rgba(120,53,15,0.15)] ring-1 ring-white/80 sm:w-[310px]">
+      <div className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-amber-300/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-rose-300/18 blur-3xl" />
+      <div className="relative z-10 flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/85 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-amber-700 shadow-sm">
+          <span aria-hidden="true">♥</span>
+          Favourite
+        </span>
+        <button
+          type="button"
+          onClick={() => onRemoveFavourite(product.id)}
+          disabled={isBusy}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-amber-600 shadow-[0_10px_22px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] hover:text-rose-600 disabled:cursor-wait disabled:opacity-70"
+          aria-label={`Remove ${product.name} from favourites`}
+          title="Remove favourite"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
+        </button>
+      </div>
+
+      <div ref={imageFrameRef} className="relative z-10 mt-4 aspect-[1.25/1] overflow-hidden rounded-[24px] border border-white/80 bg-white/92 shadow-[0_16px_38px_rgba(15,23,42,0.10)]">
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-4" loading="lazy" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 via-white to-slate-100 text-4xl">📦</div>
+        )}
+      </div>
+
+      <div className="relative z-10 mt-4 flex flex-1 flex-col">
+        <h3 className="line-clamp-2 text-[1.08rem] font-black leading-tight tracking-tight text-slate-950">{product.name}</h3>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span className="rounded-2xl border border-amber-200 bg-white/88 px-3 py-2 text-sm font-black text-slate-950 shadow-sm">{formatMoney(Number(product.price), money)}</span>
+          <button
+            type="button"
+            onClick={() => onAddToCart(product.id)}
+            className="inline-flex min-h-[40px] items-center justify-center rounded-2xl border px-4 py-2 text-sm font-black text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
+            style={{ backgroundColor: primaryColor, borderColor: accentColor }}
+          >
+            Add
+          </button>
+        </div>
+        <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.16em] text-amber-700/80">Swipe to view all favourites</p>
+      </div>
+    </article>
+  );
+}
+
 type FlyingCartItem = {
   id: string;
   name: string;
@@ -204,6 +267,11 @@ export default function MenuBrowser({
   const [cartPulseKey, setCartPulseKey] = useState(0);
   const [flyingItems, setFlyingItems] = useState<FlyingCartItem[]>([]);
   const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(null);
+  const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
+  const [favouritesReady, setFavouritesReady] = useState(false);
+  const [favouritesSignedIn, setFavouritesSignedIn] = useState(false);
+  const [favouriteBusyById, setFavouriteBusyById] = useState<Record<string, boolean>>({});
+  const [favouritesMessage, setFavouritesMessage] = useState<string | null>(null);
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
@@ -270,6 +338,84 @@ export default function MenuBrowser({
       controller.abort();
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFavourites() {
+      setFavouritesReady(false);
+      try {
+        const res = await fetch("/api/customer/favourites", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok && Array.isArray(data?.productIds)) {
+          setFavouriteIds(data.productIds.map((id: unknown) => String(id)).filter(Boolean));
+          setFavouritesSignedIn(true);
+          setFavouritesMessage(null);
+        } else if (res.status === 401) {
+          setFavouriteIds([]);
+          setFavouritesSignedIn(false);
+          setFavouritesMessage(null);
+        } else {
+          setFavouritesMessage(String(data?.error || "Favourites could not be loaded."));
+        }
+      } catch {
+        if (!cancelled) setFavouritesMessage("Favourites could not be loaded.");
+      } finally {
+        if (!cancelled) setFavouritesReady(true);
+      }
+    }
+
+    void loadFavourites();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const favouriteProducts = useMemo(() => {
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return favouriteIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
+  }, [favouriteIds, products]);
+
+  const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
+
+  async function toggleFavourite(productId: string) {
+    if (favouriteBusyById[productId]) return;
+    if (!favouritesSignedIn) {
+      setFavouritesMessage("Please sign in to save favourites.");
+      window.setTimeout(() => setFavouritesMessage(null), 2500);
+      return;
+    }
+
+    const isFavourite = favouriteIdSet.has(productId);
+    setFavouriteBusyById((current) => ({ ...current, [productId]: true }));
+    setFavouritesMessage(null);
+
+    const previousIds = favouriteIds;
+    setFavouriteIds((current) => isFavourite ? current.filter((id) => id !== productId) : [productId, ...current.filter((id) => id !== productId)]);
+
+    try {
+      const res = await fetch(isFavourite ? `/api/customer/favourites?productId=${encodeURIComponent(productId)}` : "/api/customer/favourites", {
+        method: isFavourite ? "DELETE" : "POST",
+        headers: isFavourite ? undefined : { "Content-Type": "application/json" },
+        body: isFavourite ? undefined : JSON.stringify({ productId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFavouriteIds(previousIds);
+        if (res.status === 401) setFavouritesSignedIn(false);
+        setFavouritesMessage(String(data?.error || "Favourite could not be updated."));
+        window.setTimeout(() => setFavouritesMessage(null), 3000);
+      }
+    } catch {
+      setFavouriteIds(previousIds);
+      setFavouritesMessage("Favourite could not be updated.");
+      window.setTimeout(() => setFavouritesMessage(null), 3000);
+    } finally {
+      setFavouriteBusyById((current) => ({ ...current, [productId]: false }));
+    }
+  }
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -475,6 +621,41 @@ export default function MenuBrowser({
         </p>
       </section>
 
+      {(favouriteProducts.length || favouritesMessage) ? (
+        <section className="relative overflow-hidden rounded-[32px] border border-amber-200/80 bg-[linear-gradient(135deg,#451A03_0%,#78350F_45%,#B45309_100%)] px-4 py-5 text-white shadow-[0_24px_70px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:px-5 sm:py-6 lg:px-6" aria-label="Favourite products">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-amber-200/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-orange-300/18 blur-3xl" />
+          <div className="relative z-10 mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-200">Your favourites</p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Saved favourites</h2>
+            </div>
+            {favouriteProducts.length > 1 ? <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/72">Swipe sideways</p> : null}
+          </div>
+
+          {favouritesMessage ? (
+            <div className="relative z-10 rounded-2xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-semibold text-white/90">{favouritesMessage}</div>
+          ) : null}
+
+          {favouriteProducts.length ? (
+            <div className="relative z-10 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 pt-1 [scrollbar-width:thin] sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6">
+              {favouriteProducts.map((product) => (
+                <FavouriteProductStripCard
+                  key={product.id}
+                  product={product}
+                  moneySettings={moneySettings}
+                  accentColor={brandAccent}
+                  primaryColor={brandPrimary}
+                  isBusy={Boolean(favouriteBusyById[product.id])}
+                  onAddToCart={(productId) => void addToCart(productId)}
+                  onRemoveFavourite={(productId) => void toggleFavourite(productId)}
+                />
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {categories.map((category) => {
         const categoryProducts = products.filter((product) => product.category_id === category.id);
         if (!categoryProducts.length) return null;
@@ -501,6 +682,9 @@ export default function MenuBrowser({
                   accentColor={accentColor}
                   primaryColor={primaryColor}
                   themeColors={storefrontTheme}
+                  isFavourite={favouriteIdSet.has(product.id)}
+                  favouriteBusy={Boolean(favouriteBusyById[product.id])}
+                  onToggleFavourite={(productId) => void toggleFavourite(productId)}
                   onAddToCartAnimation={(payload) => launchAddToCartAnimation({ ...payload, destination: "header" })}
                 />
               ))}
