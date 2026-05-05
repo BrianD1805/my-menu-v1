@@ -797,7 +797,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
           <div className="mt-5 rounded-[22px] border border-slate-100 bg-slate-50 p-4">
             <p className="text-sm font-bold text-slate-900">Optional social links</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">These appear as a second icon row in the storefront footer. Leave blank to hide an icon.</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">These appear in the storefront footer as centred icon-only links, with up to 8 icons shown in rows of 4. Leave blank to hide an icon.</p>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Field label="Facebook URL"><input value={form.socialFacebookUrl} onChange={(e) => update("socialFacebookUrl", e.target.value)} className="input" placeholder="https://facebook.com/..." /></Field>
               <Field label="Instagram URL"><input value={form.socialInstagramUrl} onChange={(e) => update("socialInstagramUrl", e.target.value)} className="input" placeholder="https://instagram.com/..." /></Field>

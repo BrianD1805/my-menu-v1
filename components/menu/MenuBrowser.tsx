@@ -44,7 +44,7 @@ function stripHtml(value: string | null | undefined) {
 }
 
 function iconLinkClass() {
-  return "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/92 text-slate-700 shadow-[0_12px_26px_rgba(15,23,42,0.10)] ring-1 ring-slate-900/5 backdrop-blur-sm transition hover:-translate-y-[2px] hover:scale-[1.04] hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_18px_38px_rgba(15,23,42,0.16)] focus:outline-none focus:ring-2 focus:ring-slate-300 active:translate-y-0 active:scale-[0.97] sm:h-12 sm:w-12";
+  return "inline-flex h-[50px] w-[50px] items-center justify-center rounded-[18px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.92))] text-slate-700 shadow-[0_14px_32px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.88)] ring-1 ring-slate-900/5 backdrop-blur-sm transition duration-200 hover:-translate-y-[2px] hover:scale-[1.03] hover:border-white hover:bg-white hover:text-slate-950 hover:shadow-[0_20px_42px_rgba(15,23,42,0.16)] focus:outline-none focus:ring-2 focus:ring-slate-300 active:translate-y-0 active:scale-[0.98] sm:h-[52px] sm:w-[52px]";
 }
 
 function cleanDialString(value: string | null | undefined) {
@@ -73,28 +73,28 @@ function FooterIcon({ label, href, children }: { label: string; href: string | n
 }
 
 function PhoneIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.1 5.18 2 2 0 0 1 5.11 3h3a2 2 0 0 1 2 1.72c.12.9.32 1.77.59 2.61a2 2 0 0 1-.45 2.11L9 10.69a16 16 0 0 0 4.31 4.31l1.25-1.25a2 2 0 0 1 2.11-.45c.84.27 1.71.47 2.61.59A2 2 0 0 1 22 16.92z" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.1 5.18 2 2 0 0 1 5.11 3h3a2 2 0 0 1 2 1.72c.12.9.32 1.77.59 2.61a2 2 0 0 1-.45 2.11L9 10.69a16 16 0 0 0 4.31 4.31l1.25-1.25a2 2 0 0 1 2.11-.45c.84.27 1.71.47 2.61.59A2 2 0 0 1 22 16.92z" /></svg>;
 }
 function WhatsAppIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M12.04 2a9.86 9.86 0 0 0-8.5 14.86L2.5 22l5.29-1a9.9 9.9 0 1 0 4.25-19Zm0 17.9a8.02 8.02 0 0 1-4.08-1.12l-.29-.17-3.14.6.61-3.05-.19-.31a7.98 7.98 0 1 1 7.09 4.05Zm4.39-5.99c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.19-.47-.39-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.39 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M12.04 2a9.86 9.86 0 0 0-8.5 14.86L2.5 22l5.29-1a9.9 9.9 0 1 0 4.25-19Zm0 17.9a8.02 8.02 0 0 1-4.08-1.12l-.29-.17-3.14.6.61-3.05-.19-.31a7.98 7.98 0 1 1 7.09 4.05Zm4.39-5.99c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.19-.47-.39-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.39 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" /></svg>;
 }
 function EmailIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>;
 }
 function FacebookIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M14.2 8.4V6.7c0-.8.5-1 1-1h1.6V3.1A21.6 21.6 0 0 0 14.4 3c-2.4 0-4 1.5-4 4.1v1.3H7.7v3h2.7V21h3.3v-9.6h2.7l.4-3h-3.1Z" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M14.2 8.4V6.7c0-.8.5-1 1-1h1.6V3.1A21.6 21.6 0 0 0 14.4 3c-2.4 0-4 1.5-4 4.1v1.3H7.7v3h2.7V21h3.3v-9.6h2.7l.4-3h-3.1Z" /></svg>;
 }
 function InstagramIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="4" /><circle cx="12" cy="12" r="3.25" /><circle cx="17.3" cy="6.7" r=".65" fill="currentColor" stroke="none" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="4" /><circle cx="12" cy="12" r="3.25" /><circle cx="17.3" cy="6.7" r=".65" fill="currentColor" stroke="none" /></svg>;
 }
 function TikTokIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M14.6 3h2.8c.2 1.3.8 2.4 1.7 3.2.8.8 1.8 1.3 3 1.5v2.9a8.4 8.4 0 0 1-4.6-1.5v5.9c0 3.5-2.5 6-5.9 6A5.6 5.6 0 0 1 6 15.4c0-3.3 2.5-5.7 5.7-5.7.4 0 .8 0 1.1.1v3a3.5 3.5 0 0 0-1.1-.2 2.7 2.7 0 1 0 2.8 2.7V3Z" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M14.6 3h2.8c.2 1.3.8 2.4 1.7 3.2.8.8 1.8 1.3 3 1.5v2.9a8.4 8.4 0 0 1-4.6-1.5v5.9c0 3.5-2.5 6-5.9 6A5.6 5.6 0 0 1 6 15.4c0-3.3 2.5-5.7 5.7-5.7.4 0 .8 0 1.1.1v3a3.5 3.5 0 0 0-1.1-.2 2.7 2.7 0 1 0 2.8 2.7V3Z" /></svg>;
 }
 function XIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M13.8 10.5 21 3h-1.7l-6.2 6.4L8.1 3H2.4l7.6 9.8L2.4 21h1.7l6.6-7 5.3 7h5.7l-7.9-10.5Zm-2.4 2.4-.8-1L4.5 4.3h2.8l4.9 6.1.8 1 6.4 8.2h-2.8l-5.2-6.7Z" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M13.8 10.5 21 3h-1.7l-6.2 6.4L8.1 3H2.4l7.6 9.8L2.4 21h1.7l6.6-7 5.3 7h5.7l-7.9-10.5Zm-2.4 2.4-.8-1L4.5 4.3h2.8l4.9 6.1.8 1 6.4 8.2h-2.8l-5.2-6.7Z" /></svg>;
 }
 function WebsiteIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a13.7 13.7 0 0 1 0 18" /><path d="M12 3a13.7 13.7 0 0 0 0 18" /></svg>;
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a13.7 13.7 0 0 1 0 18" /><path d="M12 3a13.7 13.7 0 0 0 0 18" /></svg>;
 }
 
 export default function MenuBrowser({
@@ -236,7 +236,7 @@ export default function MenuBrowser({
     { label: "TikTok", href: normaliseExternalUrl(socialTikTokUrl), icon: <TikTokIcon /> },
     { label: "X", href: normaliseExternalUrl(socialXUrl), icon: <XIcon /> },
     { label: "Website", href: normaliseExternalUrl(socialWebsiteUrl), icon: <WebsiteIcon /> },
-  ].filter((item) => Boolean(item.href));
+  ].filter((item) => Boolean(item.href)).slice(0, 8);
 
   useEffect(() => {
     let cancelled = false;
@@ -509,22 +509,15 @@ export default function MenuBrowser({
         );
       })}
 
-      <section className="rounded-[28px] border px-5 py-6 text-center shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-7 lg:px-8 lg:py-8" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
-        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Storefront footer</p>
-          <h3 className="mt-2 text-[1.2rem] font-semibold tracking-tight sm:text-[1.45rem]" style={{ color: footerText }}>{tenantName}</h3>
-          <p className="mt-3 max-w-2xl text-center text-sm leading-6" style={{ color: footerText }}>{footerBlurb || "Thank you for ordering with us."}</p>
-          <p className="mt-4 max-w-2xl text-center text-xs leading-5" style={{ color: footerText }}>{footerNotice || "Prices and availability may change without notice."}</p>
-
-          {footerIconLinks.length ? (
-            <div className="mt-6 grid grid-cols-4 justify-items-center gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-3 lg:flex-nowrap" aria-label="Store footer links">
-              {footerIconLinks.map((link) => (
-                <FooterIcon key={link.label} label={link.label} href={link.href || null}>{link.icon}</FooterIcon>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </section>
+      {footerIconLinks.length ? (
+        <section className="rounded-[28px] border px-5 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
+          <div className="mx-auto flex w-full max-w-[244px] flex-wrap items-center justify-center gap-3 sm:max-w-[256px]" aria-label="Store footer links">
+            {footerIconLinks.map((link) => (
+              <FooterIcon key={link.label} label={link.label} href={link.href || null}>{link.icon}</FooterIcon>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <footer className="rounded-[24px] border px-5 py-5 text-center text-sm shadow-sm sm:px-6" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
         <div className="flex flex-col items-center justify-center gap-3 text-center">
