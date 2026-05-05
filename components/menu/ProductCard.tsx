@@ -47,6 +47,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const availableStock = Math.max(0, Number(stockQuantity || 0));
   const isOutOfStock = trackedStock && availableStock <= 0;
   const isLowStock = trackedStock && availableStock > 0 && availableStock <= Math.max(0, Number(lowStockThreshold || 5));
+  const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
 
   async function addToCart(source: "card" | "modal" = "card") {
     if (buttonState === "adding" || isOutOfStock) return;
@@ -148,16 +149,25 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
         ) : null}
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">
-            <button type="button" onClick={() => setDetailsOpen(true)} className="block text-left" aria-label={`View details for ${name}`}>
-              <div ref={imageFrameRef} className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
-                {hasImage ? (
-                  <img src={imageUrl!} alt={name} className="h-full w-full object-contain object-center p-4 sm:p-5" loading="lazy" />
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500">
-                    <div className="mb-1 text-3xl">📦</div>
-                    <p className="text-xs font-medium text-gray-600">Image coming soon</p>
+            <button type="button" onClick={() => setDetailsOpen(true)} className="block overflow-visible text-left" aria-label={`View details for ${name}`}>
+              <div className="relative overflow-visible pt-2">
+                {stockRibbonLabel ? (
+                  <div className="pointer-events-none absolute left-[10px] top-[10px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[12px] sm:top-[12px]"
+                    style={isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
+                  >
+                    {stockRibbonLabel}
                   </div>
-                )}
+                ) : null}
+                <div ref={imageFrameRef} className="aspect-square overflow-hidden rounded-[28px] bg-gray-100 ring-1 ring-black/5 shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
+                  {hasImage ? (
+                    <img src={imageUrl!} alt={name} className="h-full w-full object-contain object-center p-4 sm:p-5" loading="lazy" />
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-3 text-center text-gray-500">
+                      <div className="mb-1 text-3xl">📦</div>
+                      <p className="text-xs font-medium text-gray-600">Image coming soon</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </button>
 
@@ -167,11 +177,6 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   {name}
                 </h3>
               </button>
-              {trackedStock && (isOutOfStock || isLowStock) ? (
-                <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
-                  {isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
-                </p>
-              ) : null}
             </div>
           </div>
 

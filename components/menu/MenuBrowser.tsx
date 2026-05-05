@@ -59,6 +59,7 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   const lowStockThreshold = Math.max(0, Number(product.low_stock_threshold || 5));
   const isOutOfStock = trackedStock && availableStock <= 0;
   const isLowStock = trackedStock && availableStock > 0 && availableStock <= lowStockThreshold;
+  const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
 
   return (
     <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 ring-1 ring-white/80 sm:w-[248px]" style={{ backgroundColor: favouriteCardBackground, borderColor: favouriteCardBorder, boxShadow: favouriteCardShadowEnabled ? `0 8px 18px ${favouriteCardShadow}14` : "none" }}>
@@ -82,18 +83,28 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
         </button>
       </div>
 
-      <div ref={imageFrameRef} className="relative z-10 mx-auto mt-3 aspect-[1.25/1] w-full overflow-hidden rounded-[20px] border border-white/80 shadow-[0_13px_30px_rgba(15,23,42,0.10)]" style={{ backgroundColor: favouritePriceBackground }}>
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-3" loading="lazy" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 via-white to-slate-100 text-3xl">📦</div>
-        )}
+      <div className="relative z-10 mx-auto mt-4 w-full overflow-visible pt-3">
+        {stockRibbonLabel ? (
+          <div
+            className="pointer-events-none absolute left-[10px] top-[20px] z-20 inline-flex max-w-[102px] -rotate-[16deg] items-center justify-center whitespace-nowrap rounded-full border px-2.5 py-[5px] text-center text-[7.5px] font-semibold uppercase tracking-[0.07em] shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[11px] sm:top-[21px]"
+            style={isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
+          >
+            {stockRibbonLabel}
+          </div>
+        ) : null}
+        <div ref={imageFrameRef} className="aspect-[1.25/1] w-full overflow-hidden rounded-[20px] border border-white/80 shadow-[0_13px_30px_rgba(15,23,42,0.10)]" style={{ backgroundColor: favouritePriceBackground }}>
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-3" loading="lazy" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 via-white to-slate-100 text-3xl">📦</div>
+          )}
+        </div>
       </div>
 
       <div className="relative z-10 mt-3 flex flex-1 flex-col text-center">
-        <h3 className="mx-auto line-clamp-2 text-[0.94rem] font-black leading-tight tracking-tight" style={{ color: favouriteCardTitle }}>{product.name}</h3>
+        <h3 className="mx-auto line-clamp-2 text-[0.94rem] font-semibold leading-tight tracking-tight" style={{ color: favouriteCardTitle }}>{product.name}</h3>
         <div className="mt-3 flex items-center justify-center gap-2">
-          <span className="rounded-xl border px-2.5 py-1.5 text-xs font-black shadow-sm" style={{ backgroundColor: favouritePriceBackground, borderColor: favouritePriceBorder, color: favouritePriceText }}>{formatMoney(Number(product.price), money)}</span>
+          <span className="rounded-xl border px-2.5 py-1.5 text-xs font-semibold shadow-sm" style={{ backgroundColor: favouritePriceBackground, borderColor: favouritePriceBorder, color: favouritePriceText }}>{formatMoney(Number(product.price), money)}</span>
           <button
             type="button"
             onClick={() => onAddToCart(product.id, { sourceRect: imageFrameRef.current?.getBoundingClientRect() || null, imageUrl: product.image_url, name: product.name })}
@@ -104,11 +115,6 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
             {isOutOfStock ? "Sold out" : "Add"}
           </button>
         </div>
-        {trackedStock && (isOutOfStock || isLowStock) ? (
-          <p className={`mt-2 text-[10px] font-black uppercase tracking-[0.12em] ${isOutOfStock ? "text-red-600" : "text-orange-600"}`}>
-            {isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
-          </p>
-        ) : null}
         <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: favouriteSwipeText }}>Swipe to view all favourites</p>
       </div>
     </article>
