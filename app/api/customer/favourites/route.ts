@@ -59,19 +59,36 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Product not found for this store." }, { status: 404 });
   }
 
+  const { data: existing, error: lookupError } = await db
+    .from("customer_favourites")
+    .select("id")
+    .eq("tenant_id", session.tenant.id)
+    .eq("customer_account_id", session.user.id)
+    .eq("product_id", productId)
+    .maybeSingle();
+
+  if (lookupError) {
+    return NextResponse.json({ error: lookupError.message || "Could not check favourite.", details: lookupError.details || null, code: lookupError.code || null }, { status: 500 });
+  }
+
+  if (existing) {
+    return NextResponse.json({ ok: true, productId, alreadySaved: true });
+  }
+
   const { error } = await db
     .from("customer_favourites")
-    .upsert(
-      {
-        tenant_id: session.tenant.id,
-        customer_account_id: session.user.id,
-        product_id: productId,
-      },
-      { onConflict: "tenant_id,customer_account_id,product_id" },
-    );
+    .insert({
+      tenant_id: session.tenant.id,
+      customer_account_id: session.user.id,
+      product_id: productId,
+    });
 
   if (error) {
-    return NextResponse.json({ error: error.message || "Could not save favourite." }, { status: 500 });
+    const duplicate = error.code === "23505";
+    if (duplicate) {
+      return NextResponse.json({ ok: true, productId, alreadySaved: true });
+    }
+    return NextResponse.json({ error: error.message || "Could not save favourite.", details: error.details || null, code: error.code || null }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, productId });

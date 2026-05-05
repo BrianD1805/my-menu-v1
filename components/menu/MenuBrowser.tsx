@@ -419,6 +419,8 @@ export default function MenuBrowser({
     return favouriteIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
   }, [favouriteIds, products]);
 
+  const shouldRenderFavouritesArea = !favouritesReady || Boolean(favouriteProducts.length || favouritesMessage);
+
   const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
 
   function scrollFavourites(direction: "left" | "right") {
@@ -454,8 +456,9 @@ export default function MenuBrowser({
       if (!res.ok) {
         setFavouriteIds(previousIds);
         if (res.status === 401) setFavouritesSignedIn(false);
-        setFavouritesMessage(String(data?.error || "Favourite could not be updated."));
-        window.setTimeout(() => setFavouritesMessage(null), 3000);
+        const detail = [data?.error, data?.details, data?.code ? `Code: ${data.code}` : null].filter(Boolean).join(" · ");
+        setFavouritesMessage(String(detail || "Favourite could not be updated."));
+        window.setTimeout(() => setFavouritesMessage(null), 4500);
       }
     } catch {
       setFavouriteIds(previousIds);
@@ -681,23 +684,37 @@ export default function MenuBrowser({
         </p>
       </section>
 
-      {(favouriteProducts.length || favouritesMessage) ? (
-        <section className="relative overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:px-4 sm:py-5 lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Favourite products">
+      {shouldRenderFavouritesArea ? (
+        <section className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Favourite products">
           <div className="pointer-events-none absolute -right-12 -top-16 h-[10.5rem] w-[10.5rem] rounded-full bg-amber-200/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-orange-300/18 blur-3xl" />
           <div className="relative z-10 mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: favouritesLabelText }}>Your favourites</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl" style={{ color: favouritesText }}>Saved favourites</h2>
+              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl" style={{ color: favouritesText }}>{favouritesReady ? "Saved favourites" : "Loading favourites"}</h2>
             </div>
             {favouriteProducts.length > 1 ? <p className="text-[10px] font-bold uppercase tracking-[0.15em] lg:hidden" style={{ color: favouritesText }}>Swipe sideways</p> : null}
           </div>
 
-          {favouritesMessage ? (
+          {!favouritesReady ? (
+            <div className="relative z-10 mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-hidden px-[19vw] pb-1 pt-1 sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]" aria-label="Loading favourite products">
+              <div className="flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-white/35 bg-white/18 p-3 ring-1 ring-white/20 sm:w-[248px]">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="h-6 w-24 rounded-full bg-white/24" />
+                  <span className="h-8 w-8 rounded-xl bg-white/22" />
+                </div>
+                <div className="mt-4 aspect-[1.25/1] rounded-[20px] border border-white/20 bg-white/16" />
+                <div className="mx-auto mt-4 h-4 w-32 rounded-full bg-white/24" />
+                <div className="mx-auto mt-3 h-8 w-40 rounded-xl bg-white/18" />
+              </div>
+            </div>
+          ) : null}
+
+          {favouritesReady && favouritesMessage ? (
             <div className="relative z-10 rounded-2xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-semibold text-white/90">{favouritesMessage}</div>
           ) : null}
 
-          {favouriteProducts.length ? (
+          {favouritesReady && favouriteProducts.length ? (
             <div className="relative z-10">
               {favouriteProducts.length > 1 ? (
                 <>
