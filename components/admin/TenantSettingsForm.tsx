@@ -174,6 +174,27 @@ function colourSaturation(hex: string) {
   return max === 0 ? 0 : (max - min) / max;
 }
 
+function rgbToHsl(r: number, g: number, b: number) {
+  const red = r / 255;
+  const green = g / 255;
+  const blue = b / 255;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  const lightness = (max + min) / 2;
+
+  if (max === min) return { h: 0, s: 0, l: lightness };
+
+  const delta = max - min;
+  const saturation = lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+  let hue = 0;
+
+  if (max === red) hue = (green - blue) / delta + (green < blue ? 6 : 0);
+  else if (max === green) hue = (blue - red) / delta + 2;
+  else hue = (red - green) / delta + 4;
+
+  return { h: hue * 60, s: saturation, l: lightness };
+}
+
 function blendHex(hex: string, target: string, amount: number) {
   const sourceRgb = hexToRgb(hex);
   const targetRgb = hexToRgb(target);
@@ -236,7 +257,7 @@ async function extractLogoColours(logoUrl: string): Promise<string[]> {
     });
 
     const canvas = document.createElement("canvas");
-    const maxSize = 96;
+    const maxSize = 140;
     const ratio = Math.min(maxSize / Math.max(image.naturalWidth || 1, image.naturalHeight || 1), 1);
     canvas.width = Math.max(1, Math.round((image.naturalWidth || maxSize) * ratio));
     canvas.height = Math.max(1, Math.round((image.naturalHeight || maxSize) * ratio));
@@ -245,38 +266,82 @@ async function extractLogoColours(logoUrl: string): Promise<string[]> {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    const buckets = new Map<string, number>();
+    const buckets = new Map<string, { count: number; score: number; hue: number; saturation: number; luminance: number }>();
 
-    for (let i = 0; i < pixels.length; i += 16) {
+    for (let i = 0; i < pixels.length; i += 8) {
       const alpha = pixels[i + 3];
-      if (alpha < 120) continue;
+      if (alpha < 140) continue;
+
       const r = pixels[i];
       const g = pixels[i + 1];
       const b = pixels[i + 2];
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
       const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-      const sat = Math.max(r, g, b) === 0 ? 0 : (Math.max(r, g, b) - Math.min(r, g, b)) / Math.max(r, g, b);
-      if (lum > 0.96 || lum < 0.04 || sat < 0.04) continue;
-      const key = rgbToHex(Math.round(r / 24) * 24, Math.round(g / 24) * 24, Math.round(b / 24) * 24);
-      buckets.set(key, (buckets.get(key) || 0) + 1);
+      const sat = max === 0 ? 0 : (max - min) / max;
+      const hsl = rgbToHsl(r, g, b);
+
+      const isNearWhite = lum > 0.94 && sat < 0.28;
+      const isWashedCream = lum > 0.82 && sat < 0.18;
+      const isNearBlack = lum < 0.035;
+      const isTooNeutral = sat < 0.055;
+      if (isNearWhite || isWashedCream || isNearBlack || isTooNeutral) continue;
+
+      const quantiseBy = sat > 0.35 ? 18 : 28;
+      const key = rgbToHex(Math.round(r / quantiseBy) * quantiseBy, Math.round(g / quantiseBy) * quantiseBy, Math.round(b / quantiseBy) * quantiseBy);
+      const existing = buckets.get(key);
+      const midToneBoost = 1 - Math.min(Math.abs(lum - 0.52) * 1.35, 0.58);
+      const saturationBoost = 0.45 + sat * 1.8;
+      const vividBoost = hsl.s > 0.38 ? 1.22 : 1;
+      const pixelScore = saturationBoost * (0.62 + midToneBoost) * vividBoost;
+
+      buckets.set(key, {
+        count: (existing?.count || 0) + 1,
+        score: (existing?.score || 0) + pixelScore,
+        hue: hsl.h,
+        saturation: Math.max(existing?.saturation || 0, sat),
+        luminance: lum,
+      });
     }
 
     const ranked = Array.from(buckets.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([colour]) => colour);
+      .map(([colour, data]) => ({ colour, ...data, hueFamily: Math.floor(data.hue / 30) }))
+      .sort((a, b) => b.score - a.score || b.saturation - a.saturation || b.count - a.count);
 
     const selected: string[] = [];
-    for (const colour of ranked) {
-      if (selected.length >= 8) break;
-      const current = hexToRgb(colour);
-      const tooClose = selected.some((existing) => {
-        const other = hexToRgb(existing);
-        const distance = Math.sqrt((current.r - other.r) ** 2 + (current.g - other.g) ** 2 + (current.b - other.b) ** 2);
-        return distance < 56;
-      });
-      if (!tooClose) selected.push(colour);
+    const usedHueFamilies = new Set<number>();
+
+    function colourDistance(a: string, b: string) {
+      const first = hexToRgb(a);
+      const second = hexToRgb(b);
+      return Math.sqrt((first.r - second.r) ** 2 + (first.g - second.g) ** 2 + (first.b - second.b) ** 2);
     }
 
-    return selected.length >= 2 ? selected : ranked.slice(0, 6);
+    function addDistinctColour(colour: string, distanceThreshold: number) {
+      if (selected.length >= 8) return false;
+      if (selected.some((existing) => colourDistance(existing, colour) < distanceThreshold)) return false;
+      selected.push(colour);
+      return true;
+    }
+
+    for (const candidate of ranked) {
+      if (selected.length >= 8) break;
+      if (usedHueFamilies.has(candidate.hueFamily)) continue;
+      if (addDistinctColour(candidate.colour, 48)) usedHueFamilies.add(candidate.hueFamily);
+    }
+
+    for (const candidate of ranked) {
+      if (selected.length >= 8) break;
+      addDistinctColour(candidate.colour, 64);
+    }
+
+    for (const candidate of ranked) {
+      if (selected.length >= 8) break;
+      addDistinctColour(candidate.colour, 38);
+    }
+
+    const fallback = ranked.slice(0, 6).map((candidate) => candidate.colour);
+    return selected.length >= 2 ? selected : fallback;
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
