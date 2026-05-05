@@ -38,11 +38,11 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   const money = buildMoneySettings(moneySettings);
 
   return (
-    <article className="relative flex w-[78vw] max-w-[310px] shrink-0 snap-start flex-col overflow-hidden rounded-[30px] border border-amber-200/80 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_48%,#FEF3C7_100%)] p-4 shadow-[0_22px_55px_rgba(120,53,15,0.15)] ring-1 ring-white/80 sm:w-[310px]">
-      <div className="pointer-events-none absolute -right-14 -top-14 h-36 w-36 rounded-full bg-amber-300/30 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-rose-300/18 blur-3xl" />
+    <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-amber-200/80 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_48%,#FEF3C7_100%)] p-3 shadow-[0_18px_44px_rgba(120,53,15,0.15)] ring-1 ring-white/80 sm:w-[248px]">
+      <div className="pointer-events-none absolute -right-11 -top-11 h-28 w-28 rounded-full bg-amber-300/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-rose-300/18 blur-3xl" />
       <div className="relative z-10 flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/85 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-amber-700 shadow-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-white/85 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-amber-700 shadow-sm">
           <span aria-hidden="true">♥</span>
           Favourite
         </span>
@@ -50,36 +50,36 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
           type="button"
           onClick={() => onRemoveFavourite(product.id)}
           disabled={isBusy}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/80 bg-white/90 text-amber-600 shadow-[0_10px_22px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] hover:text-rose-600 disabled:cursor-wait disabled:opacity-70"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/80 bg-white/90 text-amber-600 shadow-[0_8px_18px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] hover:text-rose-600 disabled:cursor-wait disabled:opacity-70"
           aria-label={`Remove ${product.name} from favourites`}
           title="Remove favourite"
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
         </button>
       </div>
 
-      <div ref={imageFrameRef} className="relative z-10 mt-4 aspect-[1.25/1] overflow-hidden rounded-[24px] border border-white/80 bg-white/92 shadow-[0_16px_38px_rgba(15,23,42,0.10)]">
+      <div ref={imageFrameRef} className="relative z-10 mx-auto mt-3 aspect-[1.25/1] w-full overflow-hidden rounded-[20px] border border-white/80 bg-white/92 shadow-[0_13px_30px_rgba(15,23,42,0.10)]">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-4" loading="lazy" />
+          <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-3" loading="lazy" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 via-white to-slate-100 text-4xl">📦</div>
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 via-white to-slate-100 text-3xl">📦</div>
         )}
       </div>
 
-      <div className="relative z-10 mt-4 flex flex-1 flex-col">
-        <h3 className="line-clamp-2 text-[1.08rem] font-black leading-tight tracking-tight text-slate-950">{product.name}</h3>
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="rounded-2xl border border-amber-200 bg-white/88 px-3 py-2 text-sm font-black text-slate-950 shadow-sm">{formatMoney(Number(product.price), money)}</span>
+      <div className="relative z-10 mt-3 flex flex-1 flex-col text-center">
+        <h3 className="mx-auto line-clamp-2 text-[0.94rem] font-black leading-tight tracking-tight text-slate-950">{product.name}</h3>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <span className="rounded-xl border border-amber-200 bg-white/88 px-2.5 py-1.5 text-xs font-black text-slate-950 shadow-sm">{formatMoney(Number(product.price), money)}</span>
           <button
             type="button"
             onClick={() => onAddToCart(product.id)}
-            className="inline-flex min-h-[40px] items-center justify-center rounded-2xl border px-4 py-2 text-sm font-black text-white shadow-[0_14px_28px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
+            className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black text-white shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
             style={{ backgroundColor: primaryColor, borderColor: accentColor }}
           >
             Add
           </button>
         </div>
-        <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.16em] text-amber-700/80">Swipe to view all favourites</p>
+        <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em] text-amber-700/80">Swipe to view all favourites</p>
       </div>
     </article>
   );
@@ -252,6 +252,7 @@ export default function MenuBrowser({
   const [searchOpen, setSearchOpen] = useState(false);
   const cartButtonRef = useRef<HTMLAnchorElement | null>(null);
   const searchCartIndicatorRef = useRef<HTMLDivElement | null>(null);
+  const favouritesStripRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     try {
@@ -379,6 +380,14 @@ export default function MenuBrowser({
   }, [favouriteIds, products]);
 
   const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
+
+  function scrollFavourites(direction: "left" | "right") {
+    const strip = favouritesStripRef.current;
+    if (!strip) return;
+    const firstCard = strip.querySelector("article");
+    const cardWidth = firstCard instanceof HTMLElement ? firstCard.offsetWidth : 248;
+    strip.scrollBy({ left: direction === "left" ? -(cardWidth + 16) : cardWidth + 16, behavior: "smooth" });
+  }
 
   async function toggleFavourite(productId: string) {
     if (favouriteBusyById[productId]) return;
@@ -622,15 +631,15 @@ export default function MenuBrowser({
       </section>
 
       {(favouriteProducts.length || favouritesMessage) ? (
-        <section className="relative overflow-hidden rounded-[32px] border border-amber-200/80 bg-[linear-gradient(135deg,#451A03_0%,#78350F_45%,#B45309_100%)] px-4 py-5 text-white shadow-[0_24px_70px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:px-5 sm:py-6 lg:px-6" aria-label="Favourite products">
-          <div className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-amber-200/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-orange-300/18 blur-3xl" />
-          <div className="relative z-10 mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <section className="relative overflow-hidden rounded-[26px] border border-amber-200/80 bg-[linear-gradient(135deg,#451A03_0%,#78350F_45%,#B45309_100%)] px-3 py-4 text-white shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:px-4 sm:py-5 lg:px-5" aria-label="Favourite products">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-[10.5rem] w-[10.5rem] rounded-full bg-amber-200/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-orange-300/18 blur-3xl" />
+          <div className="relative z-10 mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-200">Your favourites</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Saved favourites</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200">Your favourites</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">Saved favourites</h2>
             </div>
-            {favouriteProducts.length > 1 ? <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/72">Swipe sideways</p> : null}
+            {favouriteProducts.length > 1 ? <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/72 lg:hidden">Swipe sideways</p> : null}
           </div>
 
           {favouritesMessage ? (
@@ -638,19 +647,41 @@ export default function MenuBrowser({
           ) : null}
 
           {favouriteProducts.length ? (
-            <div className="relative z-10 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 pt-1 [scrollbar-width:thin] sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6">
-              {favouriteProducts.map((product) => (
-                <FavouriteProductStripCard
-                  key={product.id}
-                  product={product}
-                  moneySettings={moneySettings}
-                  accentColor={brandAccent}
-                  primaryColor={brandPrimary}
-                  isBusy={Boolean(favouriteBusyById[product.id])}
-                  onAddToCart={(productId) => void addToCart(productId)}
-                  onRemoveFavourite={(productId) => void toggleFavourite(productId)}
-                />
-              ))}
+            <div className="relative z-10">
+              {favouriteProducts.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => scrollFavourites("left")}
+                    className="absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
+                    aria-label="Previous favourite"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollFavourites("right")}
+                    className="absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
+                    aria-label="Next favourite"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                  </button>
+                </>
+              ) : null}
+              <div ref={favouritesStripRef} className="mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[19vw] pb-1 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]">
+                {favouriteProducts.map((product) => (
+                  <FavouriteProductStripCard
+                    key={product.id}
+                    product={product}
+                    moneySettings={moneySettings}
+                    accentColor={brandAccent}
+                    primaryColor={brandPrimary}
+                    isBusy={Boolean(favouriteBusyById[product.id])}
+                    onAddToCart={(productId) => void addToCart(productId)}
+                    onRemoveFavourite={(productId) => void toggleFavourite(productId)}
+                  />
+                ))}
+              </div>
             </div>
           ) : null}
         </section>
