@@ -310,6 +310,7 @@ export default function MenuBrowser({
   const [customerAuthStatus, setCustomerAuthStatus] = useState<"checking" | "signedIn" | "signedOut">("checking");
   const [favouriteBusyById, setFavouriteBusyById] = useState<Record<string, boolean>>({});
   const [favouritesMessage, setFavouritesMessage] = useState<string | null>(null);
+  const [favouriteLoginPromptOpen, setFavouriteLoginPromptOpen] = useState(false);
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
@@ -465,9 +466,9 @@ export default function MenuBrowser({
 
   async function toggleFavourite(productId: string) {
     if (favouriteBusyById[productId]) return;
-    if (!favouritesSignedIn) {
-      setFavouritesMessage("Please sign in to save favourites.");
-      window.setTimeout(() => setFavouritesMessage(null), 2500);
+    if (customerAuthStatus !== "signedIn" || !favouritesSignedIn) {
+      setFavouritesMessage(null);
+      setFavouriteLoginPromptOpen(true);
       return;
     }
 
@@ -853,6 +854,74 @@ export default function MenuBrowser({
           </a>
         </div>
       </footer>
+
+
+      {favouriteLoginPromptOpen ? (
+        <div
+          className="fixed inset-0 z-[95] bg-slate-950/62 px-4 py-6 backdrop-blur-[3px]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="favourite-login-title"
+          onClick={() => setFavouriteLoginPromptOpen(false)}
+        >
+          <div className="flex min-h-dvh items-center justify-center">
+            <div
+              className="relative w-full max-w-[430px] overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.30)] ring-1 ring-slate-900/5"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-20 blur-3xl" style={{ backgroundColor: brandAccent }} />
+              <div className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full opacity-15 blur-3xl" style={{ backgroundColor: brandPrimary }} />
+              <div className="relative px-5 pb-5 pt-5 sm:px-6 sm:pb-6 sm:pt-6">
+                <button
+                  type="button"
+                  onClick={() => setFavouriteLoginPromptOpen(false)}
+                  className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                  aria-label="Close favourites login prompt"
+                >
+                  ×
+                </button>
+
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[24px] border border-white bg-white text-3xl shadow-[0_18px_45px_rgba(15,23,42,0.14)]" style={{ color: brandAccent }} aria-hidden="true">
+                  ♥
+                </div>
+
+                <div className="mt-5 text-center">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: brandAccent }}>Save your favourites</p>
+                  <h2 id="favourite-login-title" className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-[1.65rem]">Login or create an account first</h2>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
+                    Favourites are saved to your customer account so they are ready the next time you open this store. Login, or set up an account, then tap the heart again.
+                  </p>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <a
+                    href="/account/login"
+                    className="inline-flex min-h-[48px] items-center justify-center rounded-[17px] border px-4 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(15,23,42,0.18)] transition hover:-translate-y-[1px]"
+                    style={{ backgroundColor: brandPrimary, borderColor: brandPrimary }}
+                  >
+                    Login
+                  </a>
+                  <a
+                    href="/account/signup"
+                    className="inline-flex min-h-[48px] items-center justify-center rounded-[17px] border bg-white px-4 py-3 text-sm font-black shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px]"
+                    style={{ borderColor: brandAccent, color: brandPrimary }}
+                  >
+                    Create account
+                  </a>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFavouriteLoginPromptOpen(false)}
+                  className="mt-3 inline-flex min-h-[42px] w-full items-center justify-center rounded-[15px] border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {searchOpen ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px] overscroll-none" onClick={() => setSearchOpen(false)}>
