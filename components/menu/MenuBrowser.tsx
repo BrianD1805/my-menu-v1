@@ -866,7 +866,7 @@ export default function MenuBrowser({
         >
           <div className="w-full">
             <div
-              className="relative w-full max-w-[430px] overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.30)] ring-1 ring-slate-900/5"
+              className="relative mx-auto w-full max-w-[430px] overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.30)] ring-1 ring-slate-900/5"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-20 blur-3xl" style={{ backgroundColor: brandAccent }} />
