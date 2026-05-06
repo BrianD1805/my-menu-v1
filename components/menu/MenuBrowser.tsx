@@ -307,6 +307,7 @@ export default function MenuBrowser({
   const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
   const [favouritesReady, setFavouritesReady] = useState(false);
   const [favouritesSignedIn, setFavouritesSignedIn] = useState(false);
+  const [customerAuthStatus, setCustomerAuthStatus] = useState<"checking" | "signedIn" | "signedOut">("checking");
   const [favouriteBusyById, setFavouriteBusyById] = useState<Record<string, boolean>>({});
   const [favouritesMessage, setFavouritesMessage] = useState<string | null>(null);
 
@@ -361,11 +362,23 @@ export default function MenuBrowser({
           const email = String(data.customer.email || "").trim();
           const firstName = fullName.split(/\s+/).filter(Boolean)[0] || email.split("@")[0] || null;
           setWelcomeCustomerName(firstName);
+          setCustomerAuthStatus("signedIn");
+          setFavouritesSignedIn(true);
         } else if (!cancelled) {
           setWelcomeCustomerName(null);
+          setCustomerAuthStatus("signedOut");
+          setFavouritesSignedIn(false);
+          setFavouriteIds([]);
+          setFavouritesMessage(null);
         }
       } catch {
-        if (!cancelled) setWelcomeCustomerName(null);
+        if (!cancelled) {
+          setWelcomeCustomerName(null);
+          setCustomerAuthStatus("signedOut");
+          setFavouritesSignedIn(false);
+          setFavouriteIds([]);
+          setFavouritesMessage(null);
+        }
       } finally {
         window.clearTimeout(timeout);
       }
@@ -383,8 +396,26 @@ export default function MenuBrowser({
   useEffect(() => {
     let cancelled = false;
 
+    if (customerAuthStatus === "checking") {
+      setFavouritesReady(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (customerAuthStatus === "signedOut") {
+      setFavouriteIds([]);
+      setFavouritesSignedIn(false);
+      setFavouritesMessage(null);
+      setFavouritesReady(true);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     async function loadFavourites() {
       setFavouritesReady(false);
+      setFavouritesSignedIn(true);
       try {
         const res = await fetch("/api/customer/favourites", { cache: "no-store" });
         const data = await res.json().catch(() => ({}));
@@ -396,6 +427,7 @@ export default function MenuBrowser({
         } else if (res.status === 401) {
           setFavouriteIds([]);
           setFavouritesSignedIn(false);
+          setCustomerAuthStatus("signedOut");
           setFavouritesMessage(null);
         } else {
           setFavouritesMessage(String(data?.error || "Favourites could not be loaded."));
@@ -412,14 +444,14 @@ export default function MenuBrowser({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [customerAuthStatus]);
 
   const favouriteProducts = useMemo(() => {
     const byId = new Map(products.map((product) => [product.id, product]));
     return favouriteIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
   }, [favouriteIds, products]);
 
-  const shouldRenderFavouritesArea = !favouritesReady || Boolean(favouriteProducts.length || favouritesMessage);
+  const shouldRenderFavouritesArea = customerAuthStatus === "signedIn" && (!favouritesReady || Boolean(favouriteProducts.length || favouritesMessage));
 
   const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
 
