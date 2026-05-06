@@ -4,6 +4,15 @@ const NETLIFY_ROOT_HOSTS = new Set([
   "orduva.netlify.app",
 ]);
 
+function isNetlifyDeployPreviewHost(hostname: string) {
+  // Netlify deploy previews for this site look like:
+  // 69fb367230ed020008c830ff--orduva.netlify.app
+  // They are root preview hosts, not tenant subdomains. Treat them as the
+  // default storefront so logout/account redirects do not resolve the random
+  // deploy id as a tenant slug.
+  return hostname.endsWith("--orduva.netlify.app");
+}
+
 const RESERVED_SUBDOMAINS = new Set([
   "admin",
   "www",
@@ -53,7 +62,8 @@ export function isRootPlatformHost(host: string) {
   return (
     hostname === rootDomain ||
     hostname === `www.${rootDomain}` ||
-    NETLIFY_ROOT_HOSTS.has(hostname)
+    NETLIFY_ROOT_HOSTS.has(hostname) ||
+    isNetlifyDeployPreviewHost(hostname)
   );
 }
 
@@ -69,6 +79,7 @@ export function getTenantSubdomainFromHost(host: string) {
 
   if (isSharedAdminHost(hostname)) return "";
   if (isRootPlatformHost(hostname)) return "";
+  if (isNetlifyDeployPreviewHost(hostname)) return "";
 
   const rootDomain = getRootDomain();
   const rootSuffix = `.${rootDomain}`;
