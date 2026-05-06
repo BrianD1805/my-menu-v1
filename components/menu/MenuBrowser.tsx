@@ -858,13 +858,13 @@ export default function MenuBrowser({
 
       {favouriteLoginPromptOpen ? (
         <div
-          className="fixed inset-0 z-[95] bg-slate-950/62 px-4 py-6 backdrop-blur-[3px]"
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-950/62 px-4 py-6 backdrop-blur-[3px]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="favourite-login-title"
           onClick={() => setFavouriteLoginPromptOpen(false)}
         >
-          <div className="flex min-h-dvh items-center justify-center">
+          <div className="w-full">
             <div
               className="relative w-full max-w-[430px] overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.30)] ring-1 ring-slate-900/5"
               onClick={(event) => event.stopPropagation()}
