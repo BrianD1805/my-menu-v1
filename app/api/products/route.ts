@@ -74,7 +74,7 @@ export async function GET(req: Request) {
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
   totalTimer.end({ tenantSlug });
 
-  return NextResponse.json({
+  const payload = {
     tenant: {
       id: tenant.id,
       slug: tenant.slug,
@@ -116,6 +116,15 @@ export async function GET(req: Request) {
       borderColor: branding.borderColor,
       textColor: branding.textColor,
       storefrontTheme: branding.storefrontTheme,
+    },
+  };
+
+  return NextResponse.json(payload, {
+    headers: {
+      // Ver-0.172: this menu data is public tenant storefront data, so it can
+      // be cached briefly at the edge and reused by the storefront service
+      // worker/local cache while fresh data is refreshed in the background.
+      "Cache-Control": "public, s-maxage=90, stale-while-revalidate=600",
     },
   });
 }

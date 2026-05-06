@@ -311,6 +311,7 @@ export default function MenuBrowser({
   const [favouriteBusyById, setFavouriteBusyById] = useState<Record<string, boolean>>({});
   const [favouritesMessage, setFavouritesMessage] = useState<string | null>(null);
   const [favouriteLoginPromptOpen, setFavouriteLoginPromptOpen] = useState(false);
+  const [favouritesVisible, setFavouritesVisible] = useState(false);
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
@@ -408,6 +409,7 @@ export default function MenuBrowser({
       setFavouriteIds([]);
       setFavouritesSignedIn(false);
       setFavouritesMessage(null);
+      setFavouritesVisible(false);
       setFavouritesReady(true);
       return () => {
         cancelled = true;
@@ -452,7 +454,13 @@ export default function MenuBrowser({
     return favouriteIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
   }, [favouriteIds, products]);
 
-  const shouldRenderFavouritesArea = customerAuthStatus === "signedIn" && (!favouritesReady || Boolean(favouriteProducts.length || favouritesMessage));
+  // Ver-0.172B: keep favourites hidden by default, but let signed-in customers
+  // reveal/hide them from the welcome panel. Favourite IDs still load quietly so
+  // product hearts can show saved state without auto-opening the strip.
+  const showFavouriteLoadingNote = customerAuthStatus === "signedIn" && !favouritesReady;
+  const canToggleFavourites = customerAuthStatus === "signedIn" && favouritesReady && favouriteProducts.length > 0;
+  const showNoFavouritesNote = customerAuthStatus === "signedIn" && favouritesReady && !favouritesMessage && favouriteProducts.length === 0;
+  const shouldRenderFavouritesArea = customerAuthStatus === "signedIn" && favouritesVisible;
 
   const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
 
@@ -715,10 +723,42 @@ export default function MenuBrowser({
         <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7 lg:mx-auto" style={{ color: welcomeBody }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
+        <div className="mt-3 flex flex-col items-start gap-2 lg:items-center">
+          {showFavouriteLoadingNote ? (
+            <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
+              </svg>
+              Loading your saved hearts quietly in the background
+            </p>
+          ) : null}
+
+          {canToggleFavourites ? (
+            <button
+              type="button"
+              onClick={() => setFavouritesVisible((visible) => !visible)}
+              className="inline-flex items-center justify-center gap-2 rounded-full border bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+              style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
+              aria-expanded={favouritesVisible}
+              aria-controls="customer-favourites-section"
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
+              </svg>
+              {favouritesVisible ? "Hide favourites" : "View favourites"}
+            </button>
+          ) : null}
+
+          {showNoFavouritesNote ? (
+            <p className="text-[11px] font-semibold" style={{ color: welcomeBody }}>
+              Tap the heart on any product to save it here.
+            </p>
+          ) : null}
+        </div>
       </section>
 
       {shouldRenderFavouritesArea ? (
-        <section className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Favourite products">
+        <section id="customer-favourites-section" className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Favourite products">
           <div className="pointer-events-none absolute -right-12 -top-16 h-[10.5rem] w-[10.5rem] rounded-full bg-amber-200/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-orange-300/18 blur-3xl" />
           <div className="relative z-10 mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

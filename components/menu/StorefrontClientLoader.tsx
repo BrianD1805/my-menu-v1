@@ -52,11 +52,62 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-function QuietStorefrontLoadingShell({ backgroundColor }: { backgroundColor: string }) {
-  // Ver-0.170: keep first-load client fetching invisible.
-  // The phone/PWA splash should clear quickly without replacing it with a large
-  // in-page loading card.
-  return <main aria-busy="true" className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6" style={{ backgroundColor }} />;
+const STOREFRONT_CACHE_VERSION = "ver-0-172A";
+const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
+
+function cacheKeyForTenant(tenantSlug: string) {
+  return `orduva_storefront_payload_${STOREFRONT_CACHE_VERSION}_${tenantSlug}`;
+}
+
+function readCachedPayload(tenantSlug: string): StorefrontPayload | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(cacheKeyForTenant(tenantSlug));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { savedAt?: number; payload?: StorefrontPayload };
+    if (!parsed?.payload || !parsed.savedAt) return null;
+    if (Date.now() - parsed.savedAt > STOREFRONT_CACHE_MAX_AGE_MS) return null;
+    if (!Array.isArray(parsed.payload.products) || !Array.isArray(parsed.payload.categories)) return null;
+    return parsed.payload;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedPayload(tenantSlug: string, payload: StorefrontPayload) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(cacheKeyForTenant(tenantSlug), JSON.stringify({ savedAt: Date.now(), payload }));
+  } catch {
+    // Storage can be unavailable in private mode. Storefront still works normally.
+  }
+}
+
+function StorefrontPreparingShell({ backgroundColor }: { backgroundColor: string }) {
+  return (
+    <main
+      aria-busy="true"
+      className="mx-auto flex min-h-screen max-w-7xl items-center justify-center overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6"
+      style={{ backgroundColor }}
+    >
+      <section className="flex max-w-[320px] flex-col items-center justify-center text-center">
+        <div className="relative flex h-20 w-20 items-center justify-center" aria-hidden="true">
+          <span className="absolute h-20 w-20 rounded-full border border-orange-200/70 bg-white/70 shadow-[0_18px_50px_rgba(15,23,42,0.10)]" />
+          <span className="absolute h-14 w-14 animate-ping rounded-full bg-orange-400/20" />
+          <span className="absolute h-12 w-12 rounded-full border-4 border-orange-100" />
+          <span className="absolute h-12 w-12 animate-spin rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-300" />
+          <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_8px_rgba(249,115,22,0.10)]" />
+        </div>
+        <p className="mt-5 text-[11px] font-black uppercase tracking-[0.24em] text-orange-700">Orduva</p>
+        <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950">We&apos;re getting things ready.</h1>
+        <div className="mt-4 flex items-center justify-center gap-1.5" aria-label="Loading">
+          <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.24s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.12s]" />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500" />
+        </div>
+      </section>
+    </main>
+  );
 }
 
 function ErrorStorefrontShell({ message, onRetry }: { message: string; onRetry: () => void }) {
@@ -75,34 +126,44 @@ function ErrorStorefrontShell({ message, onRetry }: { message: string; onRetry: 
 }
 
 export default function StorefrontClientLoader({ tenantSlug, version }: { tenantSlug: string; version: string }) {
-  const [payload, setPayload] = useState<StorefrontPayload | null>(null);
+  const [payload, setPayload] = useState<StorefrontPayload | null>(() => readCachedPayload(tenantSlug));
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
+    const cached = readCachedPayload(tenantSlug);
+    if (cached) {
+      setPayload(cached);
+      setError(null);
+    }
+  }, [tenantSlug]);
+
+  useEffect(() => {
     let cancelled = false;
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 12000);
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
 
     async function loadStorefront() {
       setError(null);
       try {
         const res = await fetch(`/api/products?tenantSlug=${encodeURIComponent(tenantSlug)}`, {
-          cache: "no-store",
+          cache: "default",
           signal: controller.signal,
         });
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (!res.ok) {
-          setPayload(null);
-          setError(String(data?.error || "The storefront data could not be loaded."));
+          if (!payload) setError(String(data?.error || "The storefront data could not be loaded."));
           return;
         }
-        setPayload(data as StorefrontPayload);
+        const nextPayload = data as StorefrontPayload;
+        setPayload(nextPayload);
+        writeCachedPayload(tenantSlug, nextPayload);
       } catch (err) {
         if (cancelled) return;
-        setPayload(null);
-        setError(err instanceof DOMException && err.name === "AbortError" ? "The menu request took too long. Please check the connection and try again." : "The storefront data could not be loaded.");
+        if (!payload) {
+          setError(err instanceof DOMException && err.name === "AbortError" ? "The menu request took too long. Please check the connection and try again." : "The storefront data could not be loaded.");
+        }
       } finally {
         window.clearTimeout(timeout);
       }
@@ -121,7 +182,7 @@ export default function StorefrontClientLoader({ tenantSlug, version }: { tenant
   const pageBackground = useMemo(() => settings?.storefrontTheme?.globalPageBackground || settings?.backgroundTint || "#F8F4F0", [settings]);
 
   if (error) return <ErrorStorefrontShell message={error} onRetry={() => setRetryKey((key) => key + 1)} />;
-  if (!payload || !settings) return <QuietStorefrontLoadingShell backgroundColor={pageBackground} />;
+  if (!payload || !settings) return <StorefrontPreparingShell backgroundColor={pageBackground} />;
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6" style={{ backgroundColor: pageBackground }}>
