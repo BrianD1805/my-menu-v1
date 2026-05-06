@@ -33,11 +33,12 @@ type FavouriteProductStripCardProps = {
   primaryColor: string;
   isBusy: boolean;
   themeColors?: StorefrontTheme | null;
+  stripKind?: "favourite" | "buyAgain";
   onAddToCart: (productId: string, options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string }) => void;
-  onRemoveFavourite: (productId: string) => void;
+  onRemoveFavourite?: (productId: string) => void;
 };
 
-function FavouriteProductStripCard({ product, moneySettings, accentColor, primaryColor, isBusy, themeColors, onAddToCart, onRemoveFavourite }: FavouriteProductStripCardProps) {
+function FavouriteProductStripCard({ product, moneySettings, accentColor, primaryColor, isBusy, themeColors, stripKind = "favourite", onAddToCart, onRemoveFavourite }: FavouriteProductStripCardProps) {
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
   const money = buildMoneySettings(moneySettings);
   const favouriteCardBackground = normalizeThemeColor(themeColors?.favouritesCardBackground, "#FFFFFF");
@@ -54,6 +55,10 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   const favouriteRemoveBackground = normalizeThemeColor(themeColors?.favouritesRemoveBackground, "#FFFFFF");
   const favouriteRemoveText = normalizeThemeColor(themeColors?.favouritesRemoveText, accentColor);
   const favouriteSwipeText = normalizeThemeColor(themeColors?.favouritesSwipeText, accentColor);
+  const stripIsBuyAgain = stripKind === "buyAgain";
+  const stripPillIcon = stripIsBuyAgain ? "↻" : "♥";
+  const stripPillLabel = stripIsBuyAgain ? "Buy again" : "Favourite";
+  const stripSwipeLabel = stripIsBuyAgain ? "Swipe to view previous buys" : "Swipe to view all favourites";
   const trackedStock = !!product.stock_enabled;
   const availableStock = Math.max(0, Number(product.stock_quantity || 0));
   const lowStockThreshold = Math.max(0, Number(product.low_stock_threshold || 5));
@@ -67,20 +72,24 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
       <div className="pointer-events-none absolute -bottom-12 -left-10 h-28 w-28 rounded-full bg-rose-300/8 blur-3xl" />
       <div className="relative z-10 flex items-center justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/85 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] shadow-sm" style={{ borderColor: favouritePriceBorder, color: favouriteSwipeText }}>
-          <span aria-hidden="true">♥</span>
-          Favourite
+          <span aria-hidden="true">{stripPillIcon}</span>
+          {stripPillLabel}
         </span>
-        <button
-          type="button"
-          onClick={() => onRemoveFavourite(product.id)}
-          disabled={isBusy}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/80 shadow-[0_8px_18px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-70"
-          style={{ backgroundColor: favouriteRemoveBackground, color: favouriteRemoveText }}
-          aria-label={`Remove ${product.name} from favourites`}
-          title="Remove favourite"
-        >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
-        </button>
+        {onRemoveFavourite ? (
+          <button
+            type="button"
+            onClick={() => onRemoveFavourite(product.id)}
+            disabled={isBusy}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/80 shadow-[0_8px_18px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-70"
+            style={{ backgroundColor: favouriteRemoveBackground, color: favouriteRemoveText }}
+            aria-label={`Remove ${product.name} from favourites`}
+            title="Remove favourite"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
+          </button>
+        ) : (
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/70 bg-white/80 text-base font-black shadow-[0_8px_18px_rgba(120,53,15,0.10)]" style={{ color: favouriteSwipeText }} aria-hidden="true">↻</span>
+        )}
       </div>
 
       <div className="relative z-10 mx-auto mt-4 w-full overflow-visible pt-3">
@@ -115,7 +124,7 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
             {isOutOfStock ? "Sold out" : "Add"}
           </button>
         </div>
-        <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: favouriteSwipeText }}>Swipe to view all favourites</p>
+        <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: favouriteSwipeText }}>{stripSwipeLabel}</p>
       </div>
     </article>
   );
@@ -289,6 +298,7 @@ export default function MenuBrowser({
   const cartButtonRef = useRef<HTMLAnchorElement | null>(null);
   const searchCartIndicatorRef = useRef<HTMLDivElement | null>(null);
   const favouritesStripRef = useRef<HTMLDivElement | null>(null);
+  const buyAgainStripRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     try {
@@ -312,6 +322,10 @@ export default function MenuBrowser({
   const [favouritesMessage, setFavouritesMessage] = useState<string | null>(null);
   const [favouriteLoginPromptOpen, setFavouriteLoginPromptOpen] = useState(false);
   const [favouritesVisible, setFavouritesVisible] = useState(false);
+  const [buyAgainIds, setBuyAgainIds] = useState<string[]>([]);
+  const [buyAgainReady, setBuyAgainReady] = useState(false);
+  const [buyAgainVisible, setBuyAgainVisible] = useState(false);
+  const [buyAgainMessage, setBuyAgainMessage] = useState<string | null>(null);
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
@@ -372,6 +386,8 @@ export default function MenuBrowser({
           setFavouritesSignedIn(false);
           setFavouriteIds([]);
           setFavouritesMessage(null);
+          setBuyAgainIds([]);
+          setBuyAgainMessage(null);
         }
       } catch {
         if (!cancelled) {
@@ -380,6 +396,8 @@ export default function MenuBrowser({
           setFavouritesSignedIn(false);
           setFavouriteIds([]);
           setFavouritesMessage(null);
+          setBuyAgainIds([]);
+          setBuyAgainMessage(null);
         }
       } finally {
         window.clearTimeout(timeout);
@@ -411,6 +429,10 @@ export default function MenuBrowser({
       setFavouritesMessage(null);
       setFavouritesVisible(false);
       setFavouritesReady(true);
+      setBuyAgainIds([]);
+      setBuyAgainMessage(null);
+      setBuyAgainVisible(false);
+      setBuyAgainReady(true);
       return () => {
         cancelled = true;
       };
@@ -449,27 +471,92 @@ export default function MenuBrowser({
     };
   }, [customerAuthStatus]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    if (customerAuthStatus === "checking") {
+      setBuyAgainReady(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (customerAuthStatus === "signedOut") {
+      setBuyAgainIds([]);
+      setBuyAgainMessage(null);
+      setBuyAgainVisible(false);
+      setBuyAgainReady(true);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    async function loadBuyAgain() {
+      setBuyAgainReady(false);
+      try {
+        const res = await fetch("/api/customer/buy-again", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok && Array.isArray(data?.productIds)) {
+          setBuyAgainIds(data.productIds.map((id: unknown) => String(id)).filter(Boolean));
+          setBuyAgainMessage(null);
+        } else if (res.status === 401) {
+          setBuyAgainIds([]);
+          setCustomerAuthStatus("signedOut");
+          setBuyAgainMessage(null);
+        } else {
+          setBuyAgainMessage(String(data?.error || "Previous purchases could not be loaded."));
+        }
+      } catch {
+        if (!cancelled) setBuyAgainMessage("Previous purchases could not be loaded.");
+      } finally {
+        if (!cancelled) setBuyAgainReady(true);
+      }
+    }
+
+    void loadBuyAgain();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [customerAuthStatus]);
+
   const favouriteProducts = useMemo(() => {
     const byId = new Map(products.map((product) => [product.id, product]));
     return favouriteIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
   }, [favouriteIds, products]);
+
+  const buyAgainProducts = useMemo(() => {
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return buyAgainIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
+  }, [buyAgainIds, products]);
 
   // Ver-0.172B: keep favourites hidden by default, but let signed-in customers
   // reveal/hide them from the welcome panel. Favourite IDs still load quietly so
   // product hearts can show saved state without auto-opening the strip.
   const showFavouriteLoadingNote = customerAuthStatus === "signedIn" && !favouritesReady;
   const canToggleFavourites = customerAuthStatus === "signedIn" && favouritesReady && favouriteProducts.length > 0;
+  const canToggleBuyAgain = customerAuthStatus === "signedIn" && buyAgainReady && buyAgainProducts.length > 0;
   const showNoFavouritesNote = customerAuthStatus === "signedIn" && favouritesReady && !favouritesMessage && favouriteProducts.length === 0;
   const shouldRenderFavouritesArea = customerAuthStatus === "signedIn" && favouritesVisible;
+  const shouldRenderBuyAgainArea = customerAuthStatus === "signedIn" && buyAgainVisible;
 
   const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
 
-  function scrollFavourites(direction: "left" | "right") {
-    const strip = favouritesStripRef.current;
+  function scrollProductStrip(stripRef: { current: HTMLDivElement | null }, direction: "left" | "right") {
+    const strip = stripRef.current;
     if (!strip) return;
     const firstCard = strip.querySelector("article");
     const cardWidth = firstCard instanceof HTMLElement ? firstCard.offsetWidth : 248;
     strip.scrollBy({ left: direction === "left" ? -(cardWidth + 16) : cardWidth + 16, behavior: "smooth" });
+  }
+
+  function scrollFavourites(direction: "left" | "right") {
+    scrollProductStrip(favouritesStripRef, direction);
+  }
+
+  function scrollBuyAgain(direction: "left" | "right") {
+    scrollProductStrip(buyAgainStripRef, direction);
   }
 
   async function toggleFavourite(productId: string) {
@@ -733,20 +820,38 @@ export default function MenuBrowser({
             </p>
           ) : null}
 
-          {canToggleFavourites ? (
-            <button
-              type="button"
-              onClick={() => setFavouritesVisible((visible) => !visible)}
-              className="inline-flex items-center justify-center gap-2 rounded-full border bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2"
-              style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
-              aria-expanded={favouritesVisible}
-              aria-controls="customer-favourites-section"
-            >
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
-              </svg>
-              {favouritesVisible ? "Hide favourites" : "View favourites"}
-            </button>
+          {(canToggleFavourites || canToggleBuyAgain) ? (
+            <div className="flex flex-wrap items-center gap-2 lg:justify-center">
+              {canToggleFavourites ? (
+                <button
+                  type="button"
+                  onClick={() => setFavouritesVisible((visible) => !visible)}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+                  style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
+                  aria-expanded={favouritesVisible}
+                  aria-controls="customer-favourites-section"
+                >
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
+                  </svg>
+                  {favouritesVisible ? "Hide favourites" : "View favourites"}
+                </button>
+              ) : null}
+
+              {canToggleBuyAgain ? (
+                <button
+                  type="button"
+                  onClick={() => setBuyAgainVisible((visible) => !visible)}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+                  style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
+                  aria-expanded={buyAgainVisible}
+                  aria-controls="customer-buy-again-section"
+                >
+                  <span className="text-sm leading-none" aria-hidden="true">↻</span>
+                  {buyAgainVisible ? "Hide buy again" : "Buy again"}
+                </button>
+              ) : null}
+            </div>
           ) : null}
 
           {showNoFavouritesNote ? (
@@ -821,6 +926,78 @@ export default function MenuBrowser({
                     isBusy={Boolean(favouriteBusyById[product.id])}
                     onAddToCart={(productId, options) => void addToCart(productId, options)}
                     onRemoveFavourite={(productId) => void toggleFavourite(productId)}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {shouldRenderBuyAgainArea ? (
+        <section id="customer-buy-again-section" className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Buy again products">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-[10.5rem] w-[10.5rem] rounded-full bg-amber-200/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-orange-300/18 blur-3xl" />
+          <div className="relative z-10 mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: favouritesLabelText }}>Buy again</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl" style={{ color: favouritesText }}>{buyAgainReady ? "Previously purchased" : "Loading previous buys"}</h2>
+            </div>
+            {buyAgainProducts.length > 1 ? <p className="text-[10px] font-bold uppercase tracking-[0.15em] lg:hidden" style={{ color: favouritesText }}>Swipe sideways</p> : null}
+          </div>
+
+          {!buyAgainReady ? (
+            <div className="relative z-10 mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-hidden px-[19vw] pb-1 pt-1 sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]" aria-label="Loading buy again products">
+              <div className="flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-white/35 bg-white/18 p-3 ring-1 ring-white/20 sm:w-[248px]">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="h-6 w-24 rounded-full bg-white/24" />
+                  <span className="h-8 w-8 rounded-xl bg-white/22" />
+                </div>
+                <div className="mt-4 aspect-[1.25/1] rounded-[20px] border border-white/20 bg-white/16" />
+                <div className="mx-auto mt-4 h-4 w-32 rounded-full bg-white/24" />
+                <div className="mx-auto mt-3 h-8 w-40 rounded-xl bg-white/18" />
+              </div>
+            </div>
+          ) : null}
+
+          {buyAgainReady && buyAgainMessage ? (
+            <div className="relative z-10 rounded-2xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-semibold text-white/90">{buyAgainMessage}</div>
+          ) : null}
+
+          {buyAgainReady && buyAgainProducts.length ? (
+            <div className="relative z-10">
+              {buyAgainProducts.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => scrollBuyAgain("left")}
+                    className="absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
+                    aria-label="Previous buy again product"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollBuyAgain("right")}
+                    className="absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
+                    aria-label="Next buy again product"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                  </button>
+                </>
+              ) : null}
+              <div ref={buyAgainStripRef} className="mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[19vw] pb-1 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]">
+                {buyAgainProducts.map((product) => (
+                  <FavouriteProductStripCard
+                    key={product.id}
+                    product={product}
+                    moneySettings={moneySettings}
+                    accentColor={brandAccent}
+                    primaryColor={brandPrimary}
+                    themeColors={storefrontTheme}
+                    stripKind="buyAgain"
+                    isBusy={false}
+                    onAddToCart={(productId, options) => void addToCart(productId, options)}
                   />
                 ))}
               </div>
