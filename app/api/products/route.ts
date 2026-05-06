@@ -16,7 +16,7 @@ async function getTenant(tenantSlug: string) {
     return { tenant };
   }
 
-  // Ver-0.169J keeps the same public demo fallback used by the server route.
+  // Ver-0.170 keeps the same public demo fallback used by the server route.
   if (tenantSlug === "zimzaexpress") {
     const legacyResult = await db
       .from("tenants")

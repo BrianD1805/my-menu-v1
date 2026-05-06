@@ -52,21 +52,11 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-function LoadingStorefrontShell({ tenantSlug }: { tenantSlug: string }) {
-  return (
-    <main className="mx-auto min-h-screen max-w-7xl overflow-x-clip bg-[#F8F4F0] px-4 pb-10 pt-4 sm:px-5 lg:px-6">
-      <section className="rounded-[32px] border border-[#E7D8C4] bg-white px-5 py-6 shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
-        <p className="text-xs font-black uppercase tracking-[0.24em] text-[#C7922F]">Orduva</p>
-        <h1 className="mt-2 text-2xl font-black tracking-tight text-[#2B2B2B]">Opening your store…</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Loading the menu for {tenantSlug.replace(/-/g, " ")}.</p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <div className="h-24 animate-pulse rounded-3xl bg-slate-100" />
-          <div className="h-24 animate-pulse rounded-3xl bg-slate-100" />
-          <div className="h-24 animate-pulse rounded-3xl bg-slate-100" />
-        </div>
-      </section>
-    </main>
-  );
+function QuietStorefrontLoadingShell({ backgroundColor }: { backgroundColor: string }) {
+  // Ver-0.170: keep first-load client fetching invisible.
+  // The phone/PWA splash should clear quickly without replacing it with a large
+  // in-page loading card.
+  return <main aria-busy="true" className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6" style={{ backgroundColor }} />;
 }
 
 function ErrorStorefrontShell({ message, onRetry }: { message: string; onRetry: () => void }) {
@@ -131,7 +121,7 @@ export default function StorefrontClientLoader({ tenantSlug, version }: { tenant
   const pageBackground = useMemo(() => settings?.storefrontTheme?.globalPageBackground || settings?.backgroundTint || "#F8F4F0", [settings]);
 
   if (error) return <ErrorStorefrontShell message={error} onRetry={() => setRetryKey((key) => key + 1)} />;
-  if (!payload || !settings) return <LoadingStorefrontShell tenantSlug={tenantSlug} />;
+  if (!payload || !settings) return <QuietStorefrontLoadingShell backgroundColor={pageBackground} />;
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl overflow-x-clip px-4 pb-10 pt-0 sm:px-5 lg:px-6" style={{ backgroundColor: pageBackground }}>
