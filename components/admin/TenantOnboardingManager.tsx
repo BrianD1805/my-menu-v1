@@ -122,8 +122,6 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
     return { totalStores, setupStores, activeStores, latestStore, createdThisWeek };
   }, [tenants]);
-  const invalidContactEmail = !looksLikeEmail(contactEmail);
-  const invalidOwnerEmail = !looksLikeEmail(ownerEmail);
   const incompleteOwnerLogin = clientMode
     ? (!ownerName.trim() || !ownerEmail.trim() || ownerPassword.length < 8)
     : Boolean(ownerEmail.trim() || ownerPassword.trim() || ownerName.trim()) && (!ownerEmail.trim() || ownerPassword.length < 8);
@@ -136,8 +134,6 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     !effectiveSlug || effectiveSlug.length < 3 ? "Store address name must be at least 3 characters." : null,
     reservedSlug ? "That store address is reserved for Orduva platform routing. Please choose another." : null,
     duplicateSlug ? "That store address is already listed in recent stores. Choose another before creating." : null,
-    invalidContactEmail ? "Contact email does not look valid." : null,
-    invalidOwnerEmail ? "Owner email does not look valid." : null,
     incompleteOwnerLogin ? (clientMode ? "Your owner login needs your name, email and a password of at least 8 characters." : "Owner login needs an owner email and a temporary password of at least 8 characters.") : null,
     clientMode && !humanConfirmed ? "Please confirm you are creating a genuine business store." : null,
     clientMode && !acceptedTerms ? "Please accept the Orduva terms before creating your store." : null,
@@ -213,6 +209,14 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     if (busy) return;
     if (formWarnings.length) {
       setMessage(formWarnings[0]);
+      return;
+    }
+    if (contactEmail.trim() && !looksLikeEmail(contactEmail)) {
+      setMessage("Please enter the contact email as name@example.com, or leave it blank.");
+      return;
+    }
+    if (ownerEmail.trim() && !looksLikeEmail(ownerEmail)) {
+      setMessage("Please enter the owner email as name@example.com.");
       return;
     }
     setBusy(true);
@@ -455,7 +459,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             </label>
             <label className="block sm:col-span-2">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Contact email</span>
-              <input value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${invalidContactEmail ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder="client@example.com" />
+              <input value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="client@example.com" inputMode="email" autoComplete="email" />
             </label>
           </div>
 
@@ -464,7 +468,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             <p className="mt-2 text-sm leading-6 text-slate-600">{clientMode ? "Create your store owner login now. You will use this to manage your products, orders, branding and launch setup." : "Add these now if you want a first owner login created for the new store. Leave all three blank to skip."}</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your name" : "Owner name"} />
-              <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${invalidOwnerEmail ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder={clientMode ? "Your email" : "Owner email"} />
+              <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your email" : "Owner email"} inputMode="email" autoComplete="email" />
               <input value={ownerPassword} onChange={(event) => setOwnerPassword(event.target.value)} type="password" className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 sm:col-span-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder={clientMode ? "Create password, minimum 8 characters" : "Temporary password, minimum 8 characters"} />
             </div>
           </div>
@@ -507,7 +511,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           ) : null}
 
           {message ? (
-            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${message.includes("Failed") || message.includes("required") || message.includes("reserved") || message.includes("already") || message.includes("valid") || message.includes("password") ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${message.includes("Failed") || message.includes("required") || message.includes("reserved") || message.includes("already") || message.includes("name@example.com") || message.includes("password") ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
               {message}
             </div>
           ) : null}

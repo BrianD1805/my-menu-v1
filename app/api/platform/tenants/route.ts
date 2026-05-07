@@ -149,10 +149,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "That store address is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
     }
     if (!looksLikeEmail(contactEmail)) {
-      return NextResponse.json({ error: "Contact email does not look valid" }, { status: 400 });
+      return NextResponse.json({ error: "Please enter the contact email as name@example.com, or leave it blank." }, { status: 400 });
     }
     if (!looksLikeEmail(ownerEmail)) {
-      return NextResponse.json({ error: "Owner email does not look valid" }, { status: 400 });
+      return NextResponse.json({ error: "Please enter the owner email as name@example.com." }, { status: 400 });
     }
     if ((ownerEmail || ownerPassword) && (!ownerEmail || ownerPassword.length < 8)) {
       return NextResponse.json({ error: "Owner login needs an owner email and a temporary password of at least 8 characters" }, { status: 400 });
