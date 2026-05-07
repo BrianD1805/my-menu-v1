@@ -149,7 +149,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
   function platformHeaders() {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (platformMode && !clientMode) headers["x-orduva-platform-key"] = effectivePlatformKey.trim();
+    if (platformMode && !clientMode) {
+      headers["x-orduva-platform-key"] = effectivePlatformKey.trim();
+      if (ownerAccess.platformSessionToken) headers["x-orduva-platform-2fa-session"] = ownerAccess.platformSessionToken;
+    }
     return headers;
   }
 

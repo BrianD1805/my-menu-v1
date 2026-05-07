@@ -1,27 +1,27 @@
 import { NextResponse } from "next/server";
-
-function getPlatformKey() {
-  return (
-    process.env.ORDUVA_PLATFORM_ACCESS_KEY ||
-    process.env.ADMIN_ACCESS_KEY ||
-    ""
-  ).trim();
-}
-
-function getSuppliedKey(req: Request) {
-  return (req.headers.get("x-orduva-platform-key") || "").trim();
-}
+import {
+  getPlatformSecuritySettings,
+  getSuppliedPlatformSession,
+  isValidPlatformTwoFactorSession,
+  requirePlatformKey,
+} from "@/lib/platform-security";
 
 export async function POST(req: Request) {
-  const expected = getPlatformKey();
-  const supplied = getSuppliedKey(req);
+  const keyError = requirePlatformKey(req);
+  if (keyError) return keyError;
 
-  if (!expected || supplied !== expected) {
-    return NextResponse.json(
-      { ok: false, error: "Owner platform access key required" },
-      { status: 401 },
-    );
+  const settings = await getPlatformSecuritySettings().catch(() => null);
+  const twoFactorEnabled = Boolean(settings?.totp_enabled && settings?.totp_secret);
+
+  if (!twoFactorEnabled) {
+    return NextResponse.json({ ok: true, requiresTwoFactor: false, twoFactorEnabled: false });
   }
 
-  return NextResponse.json({ ok: true });
+  const sessionToken = getSuppliedPlatformSession(req);
+  const validSession = await isValidPlatformTwoFactorSession(sessionToken);
+  if (validSession) {
+    return NextResponse.json({ ok: true, requiresTwoFactor: false, twoFactorEnabled: true });
+  }
+
+  return NextResponse.json({ ok: true, requiresTwoFactor: true, twoFactorEnabled: true });
 }

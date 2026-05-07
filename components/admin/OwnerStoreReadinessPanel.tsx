@@ -129,7 +129,7 @@ export default function OwnerStoreReadinessPanel() {
     setLoading(true);
     setMessage("Loading store dashboard...");
     try {
-      const response = await fetch("/api/platform/store-readiness", { cache: "no-store", headers: { "x-orduva-platform-key": ownerAccess.platformKey } });
+      const response = await fetch("/api/platform/store-readiness", { cache: "no-store", headers: ownerAccess.platformHeaders });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Could not load store dashboard.");
       setPayload(data as Payload);
@@ -139,7 +139,7 @@ export default function OwnerStoreReadinessPanel() {
     } finally {
       setLoading(false);
     }
-  }, [canLoad, ownerAccess.platformKey]);
+  }, [canLoad, ownerAccess.platformHeaders]);
 
   useEffect(() => { loadReadiness(); }, [loadReadiness]);
 
@@ -150,7 +150,7 @@ export default function OwnerStoreReadinessPanel() {
     try {
       const response = await fetch("/api/platform/trials/extend", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-orduva-platform-key": ownerAccess.platformKey },
+        headers: { "Content-Type": "application/json", ...ownerAccess.platformHeaders },
         body: JSON.stringify({ tenantId, additionalDays }),
       });
       const data = await response.json().catch(() => ({}));

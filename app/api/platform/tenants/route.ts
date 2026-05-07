@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requirePlatformAccess } from "@/lib/platform-security";
 import { db } from "@/lib/db";
 import { createTrialInsertFields } from "@/lib/trial";
 import { hashOwnerPassword, normalizeOwnerEmail } from "@/lib/admin-auth";
@@ -69,18 +70,6 @@ const COUNTRY_DEFAULTS: Record<string, CurrencyDefaults> = {
 };
 
 
-function getPlatformKey() {
-  return (process.env.ORDUVA_PLATFORM_ACCESS_KEY || process.env.ADMIN_ACCESS_KEY || "").trim();
-}
-
-function requirePlatformKey(req: Request) {
-  const expected = getPlatformKey();
-  const supplied = (req.headers.get("x-orduva-platform-key") || "").trim();
-  if (!expected || supplied !== expected) {
-    return NextResponse.json({ error: "Platform access key required" }, { status: 401 });
-  }
-  return null;
-}
 
 function normalizeSlug(value: unknown) {
   return String(value || "")
@@ -118,7 +107,7 @@ function defaultThemeForCountry(countryCode: string) {
 }
 
 export async function GET(req: Request) {
-  const accessError = requirePlatformKey(req);
+  const accessError = await requirePlatformAccess(req);
   if (accessError) return accessError;
 
   const { data, error } = await db
@@ -135,7 +124,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const accessError = requirePlatformKey(req);
+  const accessError = await requirePlatformAccess(req);
   if (accessError) return accessError;
 
   try {

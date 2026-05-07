@@ -63,7 +63,10 @@ export default function OwnerEmailSettingsPanel({
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (platformMode) headers["x-orduva-platform-key"] = effectivePlatformKey.trim();
+    if (platformMode) {
+      headers["x-orduva-platform-key"] = effectivePlatformKey.trim();
+      if (ownerAccess.platformSessionToken) headers["x-orduva-platform-2fa-session"] = ownerAccess.platformSessionToken;
+    }
     return headers;
   }
 

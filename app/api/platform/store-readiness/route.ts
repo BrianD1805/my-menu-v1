@@ -1,17 +1,8 @@
 import { NextResponse } from "next/server";
+import { requirePlatformAccess } from "@/lib/platform-security";
 import { db } from "@/lib/db";
 import { calculateTenantTrialState } from "@/lib/trial";
 
-function getPlatformKey() {
-  return (process.env.ORDUVA_PLATFORM_ACCESS_KEY || process.env.ADMIN_ACCESS_KEY || "").trim();
-}
-
-function requirePlatformKey(req: Request) {
-  const expected = getPlatformKey();
-  const supplied = (req.headers.get("x-orduva-platform-key") || "").trim();
-  if (!expected || supplied !== expected) return NextResponse.json({ error: "Platform access key required" }, { status: 401 });
-  return null;
-}
 
 type TenantRow = { id: string; name: string; slug: string; status: string | null; created_at: string | null; trial_status?: string | null; trial_started_at?: string | null; trial_ends_at?: string | null; subscription_status?: string | null; plan_name?: string | null };
 type SettingsRow = { tenant_id: string; logo_url: string | null; favicon_url?: string | null; currency_code: string | null; currency_symbol: string | null; primary_color: string | null; accent_color: string | null; contact_phone: string | null; contact_email: string | null; contact_whatsapp: string | null };
@@ -31,7 +22,7 @@ function readinessTone(label: string) { if (label === "Ready") return "ready"; i
 function isOnboardingEmail(event: EventRow) { const type = String(event.event_type || ""); return type.startsWith("client_onboarding_email_") || type.startsWith("owner_new_store_email_"); }
 
 export async function GET(req: Request) {
-  const accessError = requirePlatformKey(req);
+  const accessError = await requirePlatformAccess(req);
   if (accessError) return accessError;
 
   try {

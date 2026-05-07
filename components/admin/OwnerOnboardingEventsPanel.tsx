@@ -36,7 +36,7 @@ export default function OwnerOnboardingEventsPanel() {
     setLoading(true);
     setMessage("Loading recent onboarding activity...");
     try {
-      const response = await fetch("/api/platform/onboarding-events", { cache: "no-store", headers: { "x-orduva-platform-key": ownerAccess.platformKey } });
+      const response = await fetch("/api/platform/onboarding-events", { cache: "no-store", headers: ownerAccess.platformHeaders });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Could not load recent signups.");
       setPayload(data as Payload);
@@ -46,7 +46,7 @@ export default function OwnerOnboardingEventsPanel() {
     } finally {
       setLoading(false);
     }
-  }, [canLoad, ownerAccess.platformKey]);
+  }, [canLoad, ownerAccess.platformHeaders]);
 
   useEffect(() => { loadEvents(); }, [loadEvents]);
 

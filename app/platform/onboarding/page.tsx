@@ -34,6 +34,12 @@ export default function PlatformOnboardingPage() {
                   Owner dashboard
                 </a>
                 <a
+                  href="/platform/security"
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]"
+                >
+                  Security
+                </a>
+                <a
                   href="/"
                   className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]"
                 >
