@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { LIVE_VERSION } from "@/lib/version";
 
@@ -33,11 +34,12 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
   const [unlockedKey, setUnlockedKey] = useState("");
   const [sessionToken, setSessionToken] = useState("");
   const [checking, setChecking] = useState(false);
+  const [restoringSession, setRestoringSession] = useState(true);
   const [message, setMessage] = useState("");
   const [booted, setBooted] = useState(false);
   const [needsTwoFactor, setNeedsTwoFactor] = useState(false);
 
-  async function verifyKey(keyToCheck: string, savedTwoFactorToken = "") {
+  async function verifyKey(keyToCheck: string, savedTwoFactorToken = "", silentRestore = false) {
     const cleanKey = keyToCheck.trim();
     if (!cleanKey) {
       setMessage("Enter the Orduva owner access key.");
@@ -45,7 +47,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
     }
 
     setChecking(true);
-    setMessage("Checking owner access...");
+    if (!silentRestore) setMessage("Checking owner access...");
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -93,6 +95,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
       return false;
     } finally {
       setChecking(false);
+      setRestoringSession(false);
       setBooted(true);
     }
   }
@@ -140,8 +143,11 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
   useEffect(() => {
     const savedKey = sessionStorage.getItem(SESSION_KEY) || "";
     const savedTwoFactorToken = sessionStorage.getItem(SESSION_2FA_KEY) || "";
-    if (savedKey) verifyKey(savedKey, savedTwoFactorToken);
-    else setBooted(true);
+    if (savedKey) verifyKey(savedKey, savedTwoFactorToken, true);
+    else {
+      setRestoringSession(false);
+      setBooted(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -169,7 +175,22 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
     [unlockedKey, sessionToken, platformHeaders],
   );
 
-  if (!booted || checking || !unlockedKey) {
+  if ((!booted || checking || restoringSession) && !needsTwoFactor && !unlockedKey) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#FFF7F0] px-4 py-8 text-[#0E0E10]">
+        <section className="w-full max-w-md rounded-[30px] border border-[#0E0E10]/10 bg-white p-6 text-center shadow-[0_24px_70px_rgba(14,14,16,0.14)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0E0E10] shadow-[0_16px_34px_rgba(14,14,16,0.22)]">
+            <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-10 w-10 rounded-xl" />
+          </div>
+          <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-[#FF6A3D]">Owner platform</p>
+          <h1 className="mt-2 text-xl font-black tracking-tight">Checking secure access…</h1>
+          <p className="mt-2 text-sm leading-6 text-[#5C5F66]">One moment while Orduva confirms your saved owner session.</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!unlockedKey) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0E0E10] px-4 py-8 text-white">
         <section className="w-full max-w-xl overflow-hidden rounded-[34px] border border-white/10 bg-white shadow-[0_30px_100px_rgba(0,0,0,0.38)]">
@@ -228,9 +249,9 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
         <div className="mx-auto flex max-w-6xl flex-col gap-3 text-xs md:flex-row md:items-center md:justify-between">
           <span className="font-black uppercase tracking-[0.18em] text-[#FFB168]">Owner platform unlocked</span>
           <div className="flex flex-wrap items-center gap-2">
-            <a href="/platform" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Dashboard</a>
-            <a href="/platform/onboarding" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Onboarding</a>
-            <a href="/platform/security" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-[#FFB168]/35 bg-[#FFB168]/15 px-3 py-2 text-xs font-black text-white transition hover:bg-[#FFB168]/25">Security</a>
+            <Link href="/platform" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Dashboard</Link>
+            <Link href="/platform/onboarding" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Onboarding</Link>
+            <Link href="/platform/security" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-[#FFB168]/35 bg-[#FFB168]/15 px-3 py-2 text-xs font-black text-white transition hover:bg-[#FFB168]/25">Security</Link>
             <button type="button" onClick={lock} className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Lock owner area</button>
           </div>
         </div>

@@ -1,10 +1,9 @@
-import OwnerPlatformAccessGate from "@/components/admin/OwnerPlatformAccessGate";
+import Link from "next/link";
 import OwnerPlatformSecurityPanel from "@/components/admin/OwnerPlatformSecurityPanel";
 import { LIVE_VERSION } from "@/lib/version";
 
 export default function PlatformSecurityPage() {
   return (
-    <OwnerPlatformAccessGate>
       <main className="min-h-screen bg-[#FFF7F0] px-4 py-5 text-[#1F2328] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <header className="rounded-[34px] border border-[#0E0E10]/10 bg-white/90 p-5 shadow-[0_28px_80px_rgba(14,14,16,0.12)] backdrop-blur sm:p-7">
@@ -17,8 +16,8 @@ export default function PlatformSecurityPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2.5">
-                <a href="/platform" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]">Owner dashboard</a>
-                <a href="/platform/onboarding" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]">Onboarding</a>
+                <Link href="/platform" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]">Owner dashboard</Link>
+                <Link href="/platform/onboarding" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]">Onboarding</Link>
               </div>
             </div>
             <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">Set up an authenticator app as a second layer of security for all Orduva owner platform pages.</p>
@@ -27,6 +26,5 @@ export default function PlatformSecurityPage() {
           <div className="mt-6"><OwnerPlatformSecurityPanel /></div>
         </div>
       </main>
-    </OwnerPlatformAccessGate>
   );
 }
