@@ -2,12 +2,14 @@ import AdminShell from "@/components/admin/AdminShell";
 import TenantSettingsForm from "@/components/admin/TenantSettingsForm";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { calculateTenantTrialState } from "@/lib/trial";
 import { DEFAULT_MONEY_SETTINGS } from "@/lib/money";
 
 export default async function AdminSettingsPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+  const trialState = calculateTenantTrialState(tenant);
 
   return (
     <AdminShell
@@ -20,6 +22,7 @@ export default async function AdminSettingsPage() {
       logoUrl={branding.logoUrl}
       faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
+      trialState={trialState}
     >
       <div className="mb-6 rounded-[24px] border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900">
         This store-scoped settings layer covers branding, contact details,

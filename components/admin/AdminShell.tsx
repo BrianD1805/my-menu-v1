@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import LogoutButton from "@/components/admin/LogoutButton";
 import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 import { LIVE_VERSION } from "@/lib/version";
+import type { TenantTrialState } from "@/lib/trial";
 
 type NavItem = {
   href: string;
@@ -16,6 +17,54 @@ function navClassName(current?: boolean) {
       ? "border border-[#FF6A3D] bg-[#FF6A3D] text-white shadow-[0_16px_34px_rgba(255,106,61,0.22)]"
       : "border border-[#0E0E10]/10 bg-white text-[#0E0E10] shadow-sm hover:-translate-y-[1px] hover:border-[#FF6A3D]/35 hover:bg-[#FFF7F0]",
   ].join(" ");
+}
+
+
+function formatTrialDate(value?: string | null) {
+  if (!value) return "date unavailable";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "date unavailable";
+  return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function trialBannerClasses(trial?: TenantTrialState | null) {
+  if (!trial) return "border-[#0E0E10]/10 bg-white text-[#1F2328]";
+  if (trial.isTrialExpired) return "border-red-200 bg-red-50 text-red-900";
+  if ((trial.trialDaysRemaining ?? 99) <= 2) return "border-[#FF6A3D]/30 bg-[#FFF7F0] text-[#9A3412]";
+  return "border-emerald-200 bg-emerald-50 text-emerald-900";
+}
+
+function trialStatusText(trial?: TenantTrialState | null) {
+  if (!trial) return "Trial details unavailable";
+  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active";
+  if (trial.isTrialExpired) return "Trial expired";
+  if (trial.trialDaysRemaining === null) return "Trial active";
+  if (trial.trialDaysRemaining === 1) return "1 day left in trial";
+  return `${trial.trialDaysRemaining} days left in trial`;
+}
+
+function AdminTrialBanner({ trial }: { trial?: TenantTrialState | null }) {
+  if (!trial) return null;
+  const percentRemaining = trial.trialDaysRemaining === null
+    ? 100
+    : Math.max(0, Math.min(100, Math.round((trial.trialDaysRemaining / Math.max(1, trial.trialDaysTotal)) * 100)));
+  return (
+    <div className={["mt-4 rounded-[24px] border px-4 py-3 shadow-[0_12px_30px_rgba(14,14,16,0.05)]", trialBannerClasses(trial)].join(" ")}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-70">Orduva trial</p>
+          <p className="mt-1 text-sm font-black sm:text-base">{trialStatusText(trial)}</p>
+          <p className="mt-1 text-xs font-semibold opacity-75">Trial ends {formatTrialDate(trial.trialEndsAt)} · Plan {trial.planName || "orduva_trial"}</p>
+        </div>
+        <div className="min-w-[170px]">
+          <div className="h-2.5 overflow-hidden rounded-full bg-black/10">
+            <div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${percentRemaining}%` }} />
+          </div>
+          <p className="mt-1 text-right text-[11px] font-black uppercase tracking-[0.14em] opacity-70">No storefront blocking yet</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function buildStorefrontUrl(tenantSlug?: string | null) {
@@ -35,6 +84,7 @@ export default function AdminShell({
   logoUrl,
   faviconUrl,
   accentColor,
+  trialState,
 }: {
   tenantName: string;
   tenantSlug?: string | null;
@@ -46,6 +96,7 @@ export default function AdminShell({
   logoUrl?: string | null;
   faviconUrl?: string | null;
   accentColor?: string | null;
+  trialState?: TenantTrialState | null;
 }) {
   const nav: NavItem[] = [
     { href: "/admin", label: "Home", current: current === "home" },
@@ -141,6 +192,8 @@ export default function AdminShell({
             </div>
           </div>
         </header>
+
+        <AdminTrialBanner trial={trialState} />
 
         <div className="mt-4 sm:mt-5">
           <AdminLaunchChecklist tenantSlug={tenantSlug || undefined} showSetupTools />

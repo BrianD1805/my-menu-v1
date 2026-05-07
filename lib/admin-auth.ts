@@ -155,7 +155,7 @@ export async function validateAdminRequestSession(req: Request) {
 
   const { data: tenant, error: tenantError } = await db
     .from("tenants")
-    .select("id, slug, name, whatsapp_number")
+    .select("id, slug, name, whatsapp_number, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name")
     .eq("slug", tenantSlug)
     .single();
 
@@ -190,7 +190,7 @@ export async function requireAdminPageUser() {
   const tenantSlug = await resolveAdminTenantSlugForPage();
   const { data: tenant, error: tenantError } = await db
     .from("tenants")
-    .select("id, slug, name, whatsapp_number")
+    .select("id, slug, name, whatsapp_number, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name")
     .eq("slug", tenantSlug)
     .single();
 

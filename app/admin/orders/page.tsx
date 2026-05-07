@@ -4,6 +4,7 @@ import OrderQueuePopup from "@/components/admin/OrderQueuePopup";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import { getTenantSettings, buildTenantBranding } from "@/lib/tenant-settings";
 import { db } from "@/lib/db";
+import { calculateTenantTrialState } from "@/lib/trial";
 
 type OrderRow = {
   id: string;
@@ -58,6 +59,7 @@ export default async function AdminOrdersPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+  const trialState = calculateTenantTrialState(tenant);
 
   const { data: orders } = await db
     .from("orders")
@@ -114,6 +116,7 @@ export default async function AdminOrdersPage() {
       logoUrl={branding.logoUrl}
       faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
+      trialState={trialState}
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">

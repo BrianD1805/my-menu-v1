@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { calculateTenantTrialState } from "@/lib/trial";
 
 function getPlatformKey() {
   return (process.env.ORDUVA_PLATFORM_ACCESS_KEY || process.env.ADMIN_ACCESS_KEY || "").trim();
@@ -12,7 +13,7 @@ function requirePlatformKey(req: Request) {
   return null;
 }
 
-type TenantRow = { id: string; name: string; slug: string; status: string | null; created_at: string | null };
+type TenantRow = { id: string; name: string; slug: string; status: string | null; created_at: string | null; trial_status?: string | null; trial_started_at?: string | null; trial_ends_at?: string | null; subscription_status?: string | null; plan_name?: string | null };
 type SettingsRow = { tenant_id: string; logo_url: string | null; favicon_url?: string | null; currency_code: string | null; currency_symbol: string | null; primary_color: string | null; accent_color: string | null; contact_phone: string | null; contact_email: string | null; contact_whatsapp: string | null };
 type TenantUserRow = { tenant_id: string; email: string | null; role: string | null };
 type CategoryRow = { tenant_id: string };
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
   if (accessError) return accessError;
 
   try {
-    const { data: tenants, error: tenantsError } = await db.from("tenants").select("id, name, slug, status, created_at").order("created_at", { ascending: false }).limit(60);
+    const { data: tenants, error: tenantsError } = await db.from("tenants").select("id, name, slug, status, created_at, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name").order("created_at", { ascending: false }).limit(60);
     if (tenantsError) return NextResponse.json({ error: "Failed to load stores" }, { status: 500 });
 
     const tenantRows = (tenants || []) as TenantRow[];
@@ -121,6 +122,7 @@ export async function GET(req: Request) {
       const hasAdminPush = adminPushDevices > 0;
       const hasTestOrder = orderCount > 0;
       const hasLaunchEmail = emailSentCount > 0 && emailFailedCount === 0;
+      const trial = calculateTenantTrialState(tenant);
       const checks = [
         { key: "foundation", label: "Store foundation", ready: hasSettings && hasCategories, important: true, detail: hasSettings ? `${categoryCount} categories` : "Settings row missing" },
         { key: "owner-login", label: "Owner login", ready: hasOwnerLogin, important: true, detail: hasOwnerLogin ? owner?.email || "Owner email saved" : "No owner login found" },
@@ -137,7 +139,7 @@ export async function GET(req: Request) {
       const blockingIssues = checks.filter((check) => check.important && !check.ready).length;
       const score = Math.round((readyCount / checks.length) * 100);
       const label = readinessLabel(score, blockingIssues);
-      return { id: tenant.id, name: tenant.name, slug: tenant.slug, status: tenant.status || "setup", createdAt: tenant.created_at, storeAddress: storeAddress(tenant.slug), storefrontUrl: storeUrl(tenant.slug), adminLoginUrl: adminLoginUrl(tenant.slug), readiness: { score, label, tone: readinessTone(label), readyCount, totalChecks: checks.length, blockingIssues }, counts: { categories: categoryCount, products: productCount, activeProducts: activeProductCount, productPhotos: imageProductCount, adminPushDevices, orders: orderCount, emailSent: emailSentCount, emailFailed: emailFailedCount }, checks };
+      return { id: tenant.id, name: tenant.name, slug: tenant.slug, status: tenant.status || "setup", createdAt: tenant.created_at, trial, storeAddress: storeAddress(tenant.slug), storefrontUrl: storeUrl(tenant.slug), adminLoginUrl: adminLoginUrl(tenant.slug), readiness: { score, label, tone: readinessTone(label), readyCount, totalChecks: checks.length, blockingIssues }, counts: { categories: categoryCount, products: productCount, activeProducts: activeProductCount, productPhotos: imageProductCount, adminPushDevices, orders: orderCount, emailSent: emailSentCount, emailFailed: emailFailedCount }, checks };
     });
 
     return NextResponse.json({
@@ -149,6 +151,9 @@ export async function GET(req: Request) {
         needsSetupStores: stores.filter((store) => store.readiness.label === "Needs setup").length,
         missingProducts: stores.filter((store) => store.counts.activeProducts === 0).length,
         missingAdminPush: stores.filter((store) => store.counts.adminPushDevices === 0).length,
+        trialActiveStores: stores.filter((store) => store.trial?.isTrialActive).length,
+        trialExpiringStores: stores.filter((store) => store.trial?.isTrialActive && (store.trial.trialDaysRemaining ?? 99) <= 2).length,
+        trialExpiredStores: stores.filter((store) => store.trial?.isTrialExpired).length,
       },
     });
   } catch (error) {

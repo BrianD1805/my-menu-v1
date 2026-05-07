@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { calculateTenantTrialState } from "@/lib/trial";
 
 function StatCard({ label, value, hint, urgent }: { label: string; value: string; hint: string; urgent?: boolean }) {
   return (
@@ -48,6 +49,7 @@ export default async function AdminHomePage() {
 
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+  const trialState = calculateTenantTrialState(tenant);
 
   const [{ count: orderCount }, { count: productCount }, { count: categoryCount }, { count: newOrderCount }] = await Promise.all([
     db.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
@@ -67,6 +69,7 @@ export default async function AdminHomePage() {
       logoUrl={branding.logoUrl}
       faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
+      trialState={trialState}
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Orders" value={String(orderCount || 0)} hint="All orders shown here belong to this tenant only." />

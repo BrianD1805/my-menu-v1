@@ -3,11 +3,13 @@ import { db } from "@/lib/db";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { calculateTenantTrialState } from "@/lib/trial";
 
 export default async function AdminCategoriesPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+  const trialState = calculateTenantTrialState(tenant);
 
   const { data: categories } = await db
     .from("categories")
@@ -41,6 +43,7 @@ export default async function AdminCategoriesPage() {
       logoUrl={branding.logoUrl}
       faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
+      trialState={trialState}
       description="Add, rename, reorder, and safely remove categories for this tenant only."
     >
       <div className="mb-6 rounded-[24px] border border-sky-100 bg-sky-50 p-4 text-sm text-sky-900">
