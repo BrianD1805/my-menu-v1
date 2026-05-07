@@ -1,3 +1,4 @@
+import EarlyStorefrontPreloader from "@/components/menu/EarlyStorefrontPreloader";
 import StorefrontClientLoader from "@/components/menu/StorefrontClientLoader";
 import StorefrontPwaRegistrar from "@/components/menu/StorefrontPwaRegistrar";
 import { isRootPlatformRequest, resolveTenantSlug } from "@/lib/tenant-server";
@@ -153,6 +154,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <EarlyStorefrontPreloader />
       <StorefrontPwaRegistrar />
       <StorefrontClientLoader tenantSlug={slug} version={LIVE_VERSION} />
     </>

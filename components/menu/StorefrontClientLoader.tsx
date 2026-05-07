@@ -52,7 +52,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-172C";
+const STOREFRONT_CACHE_VERSION = "ver-0-174";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -129,6 +129,19 @@ export default function StorefrontClientLoader({ tenantSlug, version }: { tenant
   const [payload, setPayload] = useState<StorefrontPayload | null>(() => readCachedPayload(tenantSlug));
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!payload && !error) return;
+
+    const hideEarlyPreloader = (window as Window & { __ORDUVA_HIDE_EARLY_PRELOADER__?: () => void }).__ORDUVA_HIDE_EARLY_PRELOADER__;
+    if (typeof hideEarlyPreloader === "function") {
+      hideEarlyPreloader();
+      return;
+    }
+
+    document.documentElement.classList.add("orduva-early-preloader-done");
+  }, [payload, error]);
 
   useEffect(() => {
     const cached = readCachedPayload(tenantSlug);

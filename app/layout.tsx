@@ -2,8 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
-import { getTenantBySlug, isRootPlatformRequest, resolveTenantSlug } from "@/lib/tenant-server";
-import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { isRootPlatformHost } from "@/lib/tenant";
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 
 function buildRootPlatformMetadata(): Metadata {
@@ -81,37 +80,31 @@ export async function generateMetadata(): Promise<Metadata> {
     return buildAdminMetadata();
   }
 
-  if (await isRootPlatformRequest()) {
+  if (isRootPlatformHost(host)) {
     return buildRootPlatformMetadata();
   }
 
-  try {
-    const slug = await resolveTenantSlug();
-    const tenant = await getTenantBySlug(slug);
-    const settings = await getTenantSettings(tenant.id);
-    const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
-    const faviconUrl = branding.faviconUrl || "/favicon.ico";
-    const title = `${branding.displayName} | Orduva Online`;
-
-    return {
-      title,
-      description: branding.storefrontSubheading || "Online ordering",
-      icons: {
-        icon: faviconUrl,
-        shortcut: faviconUrl,
-        apple: faviconUrl,
-      },
-      manifest: "/manifest.webmanifest",
-      themeColor: branding.primaryColor || "#0f172a",
-      applicationName: branding.displayName,
-    };
-  } catch {
-    return {
-      title: "Orduva Online",
-      description: "Online ordering",
-      manifest: "/manifest.webmanifest",
-    };
-  }
+  // Ver-0.174: keep storefront metadata deliberately lightweight.
+  // The previous version resolved the tenant and settings from Supabase here,
+  // which delayed the first HTML response and kept the native mobile PWA splash
+  // on screen before our own Orduva preloader could paint. Tenant-specific
+  // branding still loads inside the storefront payload.
+  return {
+    title: "Orduva Online",
+    description: "Online ordering",
+    manifest: "/manifest.webmanifest",
+    themeColor: "#0E0E10",
+    applicationName: "Orduva",
+    icons: {
+      icon: [
+        { url: "/favicon.ico" },
+        { url: "/orduva-storefront-icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/orduva-storefront-icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/orduva-apple-touch-icon.png",
+    },
+  };
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
