@@ -6,6 +6,7 @@ import { buildWhatsAppAppUrl, buildWhatsAppOrderMessage, buildWhatsAppUrl } from
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { enqueueNotificationEvent } from "@/lib/notifications";
 import { sendAdminPushForTenant } from "@/lib/web-push";
+import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/trial";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -61,6 +62,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Tenant WhatsApp number not configured" },
         { status: 400 }
+      );
+    }
+
+
+    const trialState = calculateTenantTrialState(tenant);
+    if (trialState.checkoutBlocked) {
+      return NextResponse.json(
+        { error: TRIAL_EXPIRY_CUSTOMER_MESSAGE, trialExpired: true },
+        { status: 402 }
       );
     }
 

@@ -46,6 +46,7 @@ export default function OwnerStoreReadinessPanel() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [extendBusyId, setExtendBusyId] = useState<string | null>(null);
   const canLoad = ownerAccess.unlocked && Boolean(ownerAccess.platformKey);
 
   const loadReadiness = useCallback(async () => {
@@ -66,6 +67,27 @@ export default function OwnerStoreReadinessPanel() {
   }, [canLoad, ownerAccess.platformKey]);
 
   useEffect(() => { loadReadiness(); }, [loadReadiness]);
+
+  async function extendTrial(tenantId: string, additionalDays = 7) {
+    if (!ownerAccess.platformKey) return;
+    setExtendBusyId(tenantId);
+    setMessage(`Adding ${additionalDays} trial day${additionalDays === 1 ? "" : "s"}...`);
+    try {
+      const response = await fetch("/api/platform/trials/extend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-orduva-platform-key": ownerAccess.platformKey },
+        body: JSON.stringify({ tenantId, additionalDays }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || "Could not extend trial.");
+      setMessage(`Trial extended by ${additionalDays} day${additionalDays === 1 ? "" : "s"}.`);
+      await loadReadiness();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not extend trial.");
+    } finally {
+      setExtendBusyId(null);
+    }
+  }
 
   const stores = payload?.stores || [];
   const summary = payload?.summary || { totalStores: 0, readyStores: 0, nearlyReadyStores: 0, needsSetupStores: 0, missingProducts: 0, missingAdminPush: 0, trialActiveStores: 0, trialExpiringStores: 0, trialExpiredStores: 0 };
@@ -108,7 +130,7 @@ export default function OwnerStoreReadinessPanel() {
                   <div className="min-w-[160px]"><div className="h-3 overflow-hidden rounded-full bg-[#0E0E10]/10"><div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${Math.max(4, Math.min(100, store.readiness.score))}%` }} /></div><p className="mt-2 text-right text-xs font-black text-[#0E0E10]">{store.readiness.score}% ready</p></div>
                 </div>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{store.checks.slice(0, 5).map((check) => <div key={check.key} className={["rounded-2xl border px-3 py-2 text-xs font-bold", checkClasses(check.ready, check.important)].join(" ")}>{check.ready ? "✓" : check.important ? "!" : "•"} {check.label}</div>)}</div>
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a href={store.storefrontUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0]">Open storefront</a><a href={store.adminLoginUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#252528]">Open admin login</a><button type="button" onClick={() => setExpandedId(expanded ? null : store.id)} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0]">{expanded ? "Hide full checklist" : "Full checklist"}</button></div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a href={store.storefrontUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0]">Open storefront</a><a href={store.adminLoginUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#252528]">Open admin login</a><button type="button" onClick={() => void extendTrial(store.id, 7)} disabled={extendBusyId === store.id} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-4 py-2 text-xs font-black text-[#9A3412] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60">{extendBusyId === store.id ? "Adding days..." : "+7 trial days"}</button><button type="button" onClick={() => void extendTrial(store.id, 1)} disabled={extendBusyId === store.id} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60">+1 day</button><button type="button" onClick={() => setExpandedId(expanded ? null : store.id)} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0]">{expanded ? "Hide full checklist" : "Full checklist"}</button></div>
                 {expanded ? <div className="mt-4 grid gap-3 md:grid-cols-2">{store.checks.map((check) => <div key={check.key} className={["rounded-2xl border p-4 text-sm", checkClasses(check.ready, check.important)].join(" ")}><div className="flex items-start justify-between gap-3"><div><p className="font-black">{check.label}</p><p className="mt-1 text-xs font-semibold opacity-80">{check.detail || "No detail recorded"}</p></div><span className="text-lg font-black">{check.ready ? "✓" : check.important ? "!" : "•"}</span></div></div>)}</div> : null}
               </article>
             );

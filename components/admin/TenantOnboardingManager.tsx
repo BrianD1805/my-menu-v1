@@ -432,7 +432,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           {clientMode ? (
             <div className="mt-6 rounded-[24px] border border-[#FFB168]/40 bg-[#FFF7F0] p-4">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Trust, terms and launch protection</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">Orduva will create a real store address and admin login from these details. Payment and free-trial options will be added later; this setup step does not take payment.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">Orduva will create a real store address and admin login from these details. This setup step does not take payment; the store starts with a 7-day Orduva trial.</p>
               <div className="mt-4 space-y-3 text-sm text-slate-700">
                 <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
                   <input type="checkbox" checked={humanConfirmed} onChange={(event) => setHumanConfirmed(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />

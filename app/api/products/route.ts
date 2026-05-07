@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { startLoadTimer } from "@/lib/load-diagnostics";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { calculateTenantTrialState } from "@/lib/trial";
 
 async function getTenant(tenantSlug: string) {
   const tenantTimer = startLoadTimer("api/products tenant lookup");
   const { data: tenant, error: tenantError } = await db
     .from("tenants")
-    .select("id, slug, name")
+    .select("id, slug, name, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name")
     .eq("slug", tenantSlug)
     .single();
   tenantTimer.end({ tenantSlug, found: Boolean(tenant) });
@@ -20,7 +21,7 @@ async function getTenant(tenantSlug: string) {
   if (tenantSlug === "zimzaexpress") {
     const legacyResult = await db
       .from("tenants")
-      .select("id, slug, name")
+      .select("id, slug, name, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name")
       .eq("slug", "orduva")
       .single();
 
@@ -72,6 +73,7 @@ export async function GET(req: Request) {
   }
 
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+  const trialState = calculateTenantTrialState(tenant);
   totalTimer.end({ tenantSlug });
 
   const payload = {
@@ -116,6 +118,7 @@ export async function GET(req: Request) {
       borderColor: branding.borderColor,
       textColor: branding.textColor,
       storefrontTheme: branding.storefrontTheme,
+      trialState,
     },
   };
 

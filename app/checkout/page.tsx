@@ -19,6 +19,14 @@ type Product = {
   stock_quantity?: number | null;
 };
 
+type TenantTrialState = {
+  checkoutBlocked?: boolean;
+  isTrialExpired?: boolean;
+  customerMessage?: string | null;
+  trialEndsAt?: string | null;
+  trialDaysRemaining?: number | null;
+};
+
 type TenantViewSettings = MoneyFormatSettings & {
   currencyCode?: string;
   currencySymbol?: string;
@@ -35,6 +43,7 @@ type TenantViewSettings = MoneyFormatSettings & {
   backgroundTint?: string;
   borderColor?: string;
   textColor?: string;
+  trialState?: TenantTrialState | null;
 };
 
 type SuccessState = {
@@ -204,6 +213,9 @@ useEffect(() => {
   const checkoutBackground = tenantSettings.backgroundTint || "#F8F4F0";
   const checkoutBorder = tenantSettings.borderColor || "#D9C7A3";
   const checkoutText = tenantSettings.textColor || "#2B2B2B";
+  const trialState = tenantSettings.trialState || null;
+  const checkoutBlockedByTrial = Boolean(trialState?.checkoutBlocked || trialState?.isTrialExpired);
+  const checkoutBlockedMessage = trialState?.customerMessage || "This store is temporarily unable to accept checkout orders while the owner renews their Orduva plan. You can still browse the menu.";
 
   function attemptWhatsAppHandoff(webUrl: string | null, appUrl: string | null) {
     const fallbackUrl = webUrl?.trim() || null;
@@ -299,6 +311,11 @@ useEffect(() => {
 
   async function placeOrder() {
     setErrorMessage("");
+
+    if (checkoutBlockedByTrial) {
+      setErrorMessage(checkoutBlockedMessage);
+      return;
+    }
 
     if (!customerName.trim()) {
       setErrorMessage("Please enter customer name.");
@@ -537,6 +554,15 @@ useEffect(() => {
 
       <div className="grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4 rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: checkoutBorder }}>
+          {checkoutBlockedByTrial ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-semibold">Checkout is temporarily paused</p>
+              <p className="mt-1 leading-6">{checkoutBlockedMessage}</p>
+              <a href="/" className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-amber-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-amber-950">
+                Back to menu
+              </a>
+            </div>
+          ) : null}
           {customerAccountLoading ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
               <div className="flex items-center gap-3">
@@ -624,10 +650,10 @@ useEffect(() => {
 
           <button
             onClick={() => void placeOrder()}
-            disabled={loading || !cartRows.length}
+            disabled={loading || !cartRows.length || checkoutBlockedByTrial}
             className="rounded-xl px-5 py-3 text-white disabled:opacity-50" style={{ backgroundColor: checkoutPrimary }}
           >
-            {loading ? "Placing order..." : "Confirm order"}
+            {checkoutBlockedByTrial ? "Checkout paused" : loading ? "Placing order..." : "Confirm order"}
           </button>
 
           <p className="text-xs leading-5 text-gray-500">

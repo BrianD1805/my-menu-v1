@@ -39,6 +39,7 @@ type StorefrontSettings = {
   currencyThousandsSeparator: string;
   currencySuffix: string;
   storefrontTheme: StorefrontTheme | null;
+  trialState?: { checkoutBlocked?: boolean; isTrialExpired?: boolean; customerMessage?: string | null; trialEndsAt?: string | null } | null;
 };
 
 type StorefrontPayload = {
@@ -52,7 +53,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-176";
+const STOREFRONT_CACHE_VERSION = "ver-0-177";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -237,6 +238,7 @@ export default function StorefrontClientLoader({ tenantSlug, version }: { tenant
         currencyThousandsSeparator={settings.currencyThousandsSeparator}
         currencySuffix={settings.currencySuffix}
         storefrontTheme={settings.storefrontTheme}
+        trialState={settings.trialState}
       />
     </main>
   );

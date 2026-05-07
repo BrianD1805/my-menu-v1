@@ -1,5 +1,6 @@
 export const DEFAULT_TRIAL_DAYS = 7;
 export const DEFAULT_TRIAL_PLAN = "orduva_trial";
+export const TRIAL_EXPIRY_CUSTOMER_MESSAGE = "This store is temporarily unable to accept checkout orders while the owner renews their Orduva plan. You can still browse the menu.";
 
 export type TenantTrialInsertFields = {
   trial_status: "active";
@@ -19,6 +20,9 @@ export type TenantTrialState = {
   trialDaysRemaining: number | null;
   isTrialActive: boolean;
   isTrialExpired: boolean;
+  isSubscriptionActive: boolean;
+  checkoutBlocked: boolean;
+  customerMessage: string | null;
 };
 
 export function createTrialInsertFields(now = new Date(), trialDays = DEFAULT_TRIAL_DAYS): TenantTrialInsertFields {
@@ -51,10 +55,16 @@ export function calculateTenantTrialState(
   const trialStartedAt = tenant.trial_started_at || null;
   const trialEndsAt = tenant.trial_ends_at || null;
   const endTime = trialEndsAt ? new Date(trialEndsAt).getTime() : NaN;
+  const startTime = trialStartedAt ? new Date(trialStartedAt).getTime() : NaN;
   const msRemaining = Number.isFinite(endTime) ? endTime - now.getTime() : NaN;
+  const totalMs = Number.isFinite(endTime) && Number.isFinite(startTime) ? Math.max(86400000, endTime - startTime) : DEFAULT_TRIAL_DAYS * 86400000;
+  const trialDaysTotal = Math.max(1, Math.ceil(totalMs / 86400000));
   const trialDaysRemaining = Number.isFinite(msRemaining) ? Math.max(0, Math.ceil(msRemaining / 86400000)) : null;
-  const isTrialExpired = trialStatus === "active" && Number.isFinite(msRemaining) && msRemaining <= 0;
-  const isTrialActive = trialStatus === "active" && !isTrialExpired;
+  const isSubscriptionActive = subscriptionStatus === "active" || trialStatus === "converted";
+  const elapsed = Number.isFinite(msRemaining) && msRemaining <= 0;
+  const isTrialExpired = !isSubscriptionActive && (trialStatus === "expired" || (trialStatus === "active" && elapsed) || subscriptionStatus === "expired");
+  const isTrialActive = !isSubscriptionActive && subscriptionStatus === "trial" && trialStatus === "active" && !isTrialExpired;
+  const checkoutBlocked = isTrialExpired;
 
   return {
     trialStatus,
@@ -62,9 +72,25 @@ export function calculateTenantTrialState(
     planName,
     trialStartedAt,
     trialEndsAt,
-    trialDaysTotal: DEFAULT_TRIAL_DAYS,
+    trialDaysTotal,
     trialDaysRemaining,
     isTrialActive,
     isTrialExpired,
+    isSubscriptionActive,
+    checkoutBlocked,
+    customerMessage: checkoutBlocked ? TRIAL_EXPIRY_CUSTOMER_MESSAGE : null,
   };
+}
+
+export function calculateExtendedTrialEnd(
+  currentTrialEndsAt: string | null | undefined,
+  additionalDays: number,
+  now = new Date(),
+) {
+  const safeDays = Math.max(1, Math.min(365, Math.floor(Number(additionalDays) || 0)));
+  const currentEnd = currentTrialEndsAt ? new Date(currentTrialEndsAt) : null;
+  const base = currentEnd && Number.isFinite(currentEnd.getTime()) && currentEnd.getTime() > now.getTime() ? currentEnd : new Date(now);
+  const nextEnd = new Date(base);
+  nextEnd.setUTCDate(nextEnd.getUTCDate() + safeDays);
+  return nextEnd.toISOString();
 }

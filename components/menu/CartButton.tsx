@@ -17,6 +17,8 @@ type Props = {
   accentColor?: string | null;
   primaryColor?: string | null;
   pulseKey?: number;
+  checkoutBlocked?: boolean;
+  checkoutBlockedMessage?: string | null;
 };
 
 type CustomerSession = {
@@ -37,13 +39,14 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
-  { tenantSlug, tenantId, href = "/checkout", accentColor, primaryColor, pulseKey = 0 },
+  { tenantSlug, tenantId, href = "/checkout", accentColor, primaryColor, pulseKey = 0, checkoutBlocked = false, checkoutBlockedMessage = null },
   ref,
 ) {
   const router = useRouter();
   const [count, setCount] = useState(0);
   const [isPulsing, setIsPulsing] = useState(false);
   const [reminderOpen, setReminderOpen] = useState(false);
+  const [trialBlockedOpen, setTrialBlockedOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -134,6 +137,11 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
 
     event.preventDefault();
     setMessage("");
+
+    if (checkoutBlocked) {
+      setTrialBlockedOpen(true);
+      return;
+    }
 
     try {
       if (await canSkipReminder()) {
@@ -233,6 +241,35 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
           </span>
         </span>
       </a>
+
+
+      {trialBlockedOpen && typeof document !== "undefined" ? createPortal(
+        <div
+          className="fixed inset-0 z-[9999] bg-slate-950/60 px-4 py-6 backdrop-blur-[2px]"
+          style={{ position: "fixed", inset: 0, width: "100vw", minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem 1rem" }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="checkout-paused-title"
+        >
+          <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.26)]" style={{ width: "min(92vw, 28rem)", maxWidth: "28rem", margin: "0 auto" }}>
+            <div className="relative px-5 pb-5 pt-6 sm:px-6 sm:pb-6">
+              <button type="button" onClick={() => setTrialBlockedOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-900" aria-label="Close checkout paused message">×</button>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)]" style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandAccent})` }}>
+                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 7V5a4 4 0 0 1 8 0v2" /><rect x="5" y="7" width="14" height="14" rx="2" /><path d="M12 12v4" /></svg>
+              </div>
+              <div className="mt-5 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: brandAccent }}>Checkout paused</p>
+                <h2 id="checkout-paused-title" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Ordering is temporarily unavailable</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{checkoutBlockedMessage || "This store is temporarily unable to accept checkout orders while the owner renews their Orduva plan. You can still browse the menu."}</p>
+              </div>
+              <div className="mt-5 grid w-full gap-3">
+                <button type="button" onClick={() => setTrialBlockedOpen(false)} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]" style={{ backgroundColor: brandPrimary }}>Continue browsing</button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      ) : null}
 
       {reminderOpen && typeof document !== "undefined" ? createPortal(
         <div

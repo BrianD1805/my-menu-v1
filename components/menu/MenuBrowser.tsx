@@ -243,6 +243,7 @@ export default function MenuBrowser({
   currencyThousandsSeparator,
   currencySuffix,
   storefrontTheme,
+  trialState,
 }: {
   tenantSlug: string;
   tenantId: string;
@@ -281,6 +282,7 @@ export default function MenuBrowser({
   currencyThousandsSeparator?: string | null;
   currencySuffix?: string | null;
   storefrontTheme?: StorefrontTheme | null;
+  trialState?: { checkoutBlocked?: boolean; isTrialExpired?: boolean; customerMessage?: string | null } | null;
 }) {
   const moneySettings = buildMoneySettings({
     currencyName,
@@ -797,7 +799,7 @@ export default function MenuBrowser({
                     <path d="m20 20-3.5-3.5" />
                   </svg>
                 </button>
-                <CartButton ref={cartButtonRef} tenantSlug={tenantSlug} tenantId={tenantId} accentColor={brandAccent} primaryColor={brandPrimary} pulseKey={cartPulseKey} />
+                <CartButton ref={cartButtonRef} tenantSlug={tenantSlug} tenantId={tenantId} accentColor={brandAccent} primaryColor={brandPrimary} pulseKey={cartPulseKey} checkoutBlocked={Boolean(trialState?.checkoutBlocked || trialState?.isTrialExpired)} checkoutBlockedMessage={trialState?.customerMessage || null} />
               </div>
             </div>
           </div>

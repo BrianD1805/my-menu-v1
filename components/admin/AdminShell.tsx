@@ -37,7 +37,7 @@ function trialBannerClasses(trial?: TenantTrialState | null) {
 function trialStatusText(trial?: TenantTrialState | null) {
   if (!trial) return "Trial details unavailable";
   if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active";
-  if (trial.isTrialExpired) return "Trial expired";
+  if (trial.isTrialExpired) return "Trial expired — checkout paused";
   if (trial.trialDaysRemaining === null) return "Trial active";
   if (trial.trialDaysRemaining === 1) return "1 day left in trial";
   return `${trial.trialDaysRemaining} days left in trial`;
@@ -55,12 +55,13 @@ function AdminTrialBanner({ trial }: { trial?: TenantTrialState | null }) {
           <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-70">Orduva trial</p>
           <p className="mt-1 text-sm font-black sm:text-base">{trialStatusText(trial)}</p>
           <p className="mt-1 text-xs font-semibold opacity-75">Trial ends {formatTrialDate(trial.trialEndsAt)} · Plan {trial.planName || "orduva_trial"}</p>
+          {trial.isTrialExpired ? <p className="mt-2 text-xs font-black">Upgrade or ask the platform owner to add more trial days to re-enable checkout.</p> : null}
         </div>
         <div className="min-w-[170px]">
           <div className="h-2.5 overflow-hidden rounded-full bg-black/10">
             <div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${percentRemaining}%` }} />
           </div>
-          <p className="mt-1 text-right text-[11px] font-black uppercase tracking-[0.14em] opacity-70">No storefront blocking yet</p>
+          <p className="mt-1 text-right text-[11px] font-black uppercase tracking-[0.14em] opacity-70">{trial.isTrialExpired ? "Checkout disabled" : "Storefront active"}</p>
         </div>
       </div>
     </div>
