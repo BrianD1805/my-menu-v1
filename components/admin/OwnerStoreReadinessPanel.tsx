@@ -4,9 +4,62 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
 
 type ReadinessCheck = { key: string; label: string; ready: boolean; important: boolean; detail: string | null };
-type TrialState = { trialStatus: string; subscriptionStatus: string; planName: string; trialStartedAt: string | null; trialEndsAt: string | null; trialDaysTotal: number; trialDaysRemaining: number | null; isTrialActive: boolean; isTrialExpired: boolean };
-type StoreReadiness = { id: string; name: string; slug: string; status: string; createdAt: string | null; trial: TrialState; storeAddress: string; storefrontUrl: string; adminLoginUrl: string; readiness: { score: number; label: string; tone: string; readyCount: number; totalChecks: number; blockingIssues: number }; counts: { categories: number; products: number; activeProducts: number; productPhotos: number; adminPushDevices: number; orders: number; emailSent: number; emailFailed: number }; checks: ReadinessCheck[] };
-type Payload = { stores: StoreReadiness[]; summary: { totalStores: number; readyStores: number; nearlyReadyStores: number; needsSetupStores: number; missingProducts: number; missingAdminPush: number; trialActiveStores: number; trialExpiringStores: number; trialExpiredStores: number } };
+type TrialState = {
+  trialStatus: string;
+  subscriptionStatus: string;
+  planName: string;
+  trialStartedAt: string | null;
+  trialEndsAt: string | null;
+  trialDaysTotal: number;
+  trialDaysRemaining: number | null;
+  isTrialActive: boolean;
+  isTrialExpired: boolean;
+  isSubscriptionActive?: boolean;
+  checkoutBlocked?: boolean;
+};
+type StoreReadiness = {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  createdAt: string | null;
+  trial: TrialState;
+  storeAddress: string;
+  storefrontUrl: string;
+  adminLoginUrl: string;
+  readiness: { score: number; label: string; tone: string; readyCount: number; totalChecks: number; blockingIssues: number };
+  counts: { categories: number; products: number; activeProducts: number; productPhotos: number; adminPushDevices: number; orders: number; emailSent: number; emailFailed: number };
+  checks: ReadinessCheck[];
+};
+type Summary = {
+  totalStores: number;
+  readyStores: number;
+  nearlyReadyStores: number;
+  needsSetupStores: number;
+  missingProducts: number;
+  missingAdminPush: number;
+  payingClients: number;
+  trialActiveStores: number;
+  trialExpiringStores: number;
+  trialExpiredStores: number;
+  checkoutPausedStores: number;
+};
+type Payload = { stores: StoreReadiness[]; summary: Summary };
+type DashboardFilter = "all" | "paying" | "trials" | "expiring" | "expired" | "paused" | "needsSetup";
+
+const EMPTY_SUMMARY: Summary = {
+  totalStores: 0,
+  readyStores: 0,
+  nearlyReadyStores: 0,
+  needsSetupStores: 0,
+  missingProducts: 0,
+  missingAdminPush: 0,
+  payingClients: 0,
+  trialActiveStores: 0,
+  trialExpiringStores: 0,
+  trialExpiredStores: 0,
+  checkoutPausedStores: 0,
+};
 
 function toneClasses(tone: string) {
   if (tone === "ready") return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
@@ -15,14 +68,14 @@ function toneClasses(tone: string) {
 }
 
 function trialPillClasses(trial: TrialState) {
-  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
-  if (trial.isTrialExpired) return "bg-red-50 text-red-800 ring-1 ring-red-200";
+  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted" || trial.isSubscriptionActive) return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
+  if (trial.isTrialExpired || trial.checkoutBlocked) return "bg-red-50 text-red-800 ring-1 ring-red-200";
   if ((trial.trialDaysRemaining ?? 99) <= 2) return "bg-[#FFF7F0] text-[#9A3412] ring-1 ring-[#FF6A3D]/25";
   return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
 }
 function trialLabel(trial: TrialState) {
-  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active";
-  if (trial.isTrialExpired) return "Trial expired";
+  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted" || trial.isSubscriptionActive) return "Paying client";
+  if (trial.isTrialExpired || trial.checkoutBlocked) return "Trial expired";
   if (trial.trialDaysRemaining === null) return "Trial active";
   if (trial.trialDaysRemaining === 1) return "1 trial day left";
   return `${trial.trialDaysRemaining} trial days left`;
@@ -40,6 +93,27 @@ function formatDate(value: string | null) {
   return date.toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+function storeMatchesFilter(store: StoreReadiness, filter: DashboardFilter) {
+  if (filter === "all") return true;
+  if (filter === "paying") return store.trial.isSubscriptionActive || store.trial.subscriptionStatus === "active" || store.trial.trialStatus === "converted";
+  if (filter === "trials") return store.trial.isTrialActive;
+  if (filter === "expiring") return store.trial.isTrialActive && (store.trial.trialDaysRemaining ?? 99) <= 2;
+  if (filter === "expired") return store.trial.isTrialExpired;
+  if (filter === "paused") return Boolean(store.trial.checkoutBlocked || store.trial.isTrialExpired);
+  if (filter === "needsSetup") return store.readiness.label === "Needs setup";
+  return true;
+}
+
+function filterTitle(filter: DashboardFilter) {
+  if (filter === "paying") return "Paying clients";
+  if (filter === "trials") return "Active trials";
+  if (filter === "expiring") return "Trials expiring soon";
+  if (filter === "expired") return "Expired trials";
+  if (filter === "paused") return "Checkout paused stores";
+  if (filter === "needsSetup") return "Stores needing setup";
+  return "All stores";
+}
+
 export default function OwnerStoreReadinessPanel() {
   const ownerAccess = useOwnerPlatformAccess();
   const [payload, setPayload] = useState<Payload | null>(null);
@@ -47,20 +121,21 @@ export default function OwnerStoreReadinessPanel() {
   const [message, setMessage] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [extendBusyId, setExtendBusyId] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<DashboardFilter>("all");
   const canLoad = ownerAccess.unlocked && Boolean(ownerAccess.platformKey);
 
   const loadReadiness = useCallback(async () => {
     if (!canLoad) return;
     setLoading(true);
-    setMessage("Loading store readiness checks...");
+    setMessage("Loading store dashboard...");
     try {
       const response = await fetch("/api/platform/store-readiness", { cache: "no-store", headers: { "x-orduva-platform-key": ownerAccess.platformKey } });
       const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || "Could not load store readiness.");
+      if (!response.ok) throw new Error(data?.error || "Could not load store dashboard.");
       setPayload(data as Payload);
       setMessage("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not load store readiness.");
+      setMessage(error instanceof Error ? error.message : "Could not load store dashboard.");
     } finally {
       setLoading(false);
     }
@@ -90,43 +165,85 @@ export default function OwnerStoreReadinessPanel() {
   }
 
   const stores = payload?.stores || [];
-  const summary = payload?.summary || { totalStores: 0, readyStores: 0, nearlyReadyStores: 0, needsSetupStores: 0, missingProducts: 0, missingAdminPush: 0, trialActiveStores: 0, trialExpiringStores: 0, trialExpiredStores: 0 };
-  const priorityStore = useMemo(() => stores.find((store) => store.readiness.label !== "Ready") || stores[0] || null, [stores]);
+  const summary = payload?.summary || EMPTY_SUMMARY;
+  const filteredStores = useMemo(() => stores.filter((store) => storeMatchesFilter(store, activeFilter)), [stores, activeFilter]);
+  const selectedCount = filteredStores.length;
+  const summaryCards = [
+    { key: "all" as const, label: "Stores", value: summary.totalStores, hint: "All onboarded stores", className: "border-white/10 bg-white/10 text-white" },
+    { key: "paying" as const, label: "Paying clients", value: summary.payingClients, hint: "Active subscriptions", className: "border-emerald-300/30 bg-emerald-400/10 text-emerald-50" },
+    { key: "trials" as const, label: "Trials", value: summary.trialActiveStores, hint: "Currently active", className: "border-[#FFB168]/35 bg-[#FFB168]/10 text-[#FFE1C7]" },
+    { key: "expiring" as const, label: "Expiring soon", value: summary.trialExpiringStores, hint: "2 days or less", className: "border-orange-300/35 bg-orange-400/10 text-orange-50" },
+    { key: "expired" as const, label: "Expired trials", value: summary.trialExpiredStores, hint: "Needs attention", className: "border-red-300/30 bg-red-400/10 text-red-50" },
+    { key: "paused" as const, label: "Checkout paused", value: summary.checkoutPausedStores, hint: "Customer checkout blocked", className: "border-red-300/30 bg-red-500/10 text-red-50" },
+    { key: "needsSetup" as const, label: "Needs setup", value: summary.needsSetupStores, hint: "Missing key setup", className: "border-slate-300/20 bg-slate-400/10 text-slate-50" },
+  ];
 
   return (
     <section className="overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-white shadow-[0_18px_50px_rgba(14,14,16,0.08)]">
       <div className="bg-gradient-to-br from-[#0E0E10] via-[#1B1B1F] to-[#332019] p-5 text-white sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner readiness dashboard</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Store readiness checklist</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">Visual owner-only launch checks for each onboarded store, so you can quickly see which stores are ready and which still need setup before sharing.</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner dashboard</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Store overview</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">A simpler top-level view for all stores. Click a card to show only the matching stores below.</p>
           </div>
-          <button type="button" onClick={loadReadiness} disabled={loading || !canLoad} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60">{loading ? "Refreshing..." : "Refresh readiness"}</button>
+          <button type="button" onClick={loadReadiness} disabled={loading || !canLoad} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60">{loading ? "Refreshing..." : "Refresh dashboard"}</button>
         </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-[22px] border border-white/10 bg-white/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-white/62">Stores checked</p><p className="mt-2 text-3xl font-black">{summary.totalStores}</p></div>
-          <div className="rounded-[22px] border border-emerald-300/30 bg-emerald-400/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-100">Ready</p><p className="mt-2 text-3xl font-black">{summary.readyStores}</p></div>
-          <div className="rounded-[22px] border border-[#FFB168]/30 bg-[#FFB168]/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFE1C7]">Nearly ready</p><p className="mt-2 text-3xl font-black">{summary.nearlyReadyStores}</p></div>
-          <div className="rounded-[22px] border border-red-300/30 bg-red-400/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-red-100">Needs setup</p><p className="mt-2 text-3xl font-black">{summary.needsSetupStores}</p></div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
+          {summaryCards.map((card) => {
+            const selected = activeFilter === card.key;
+            return (
+              <button
+                key={card.key}
+                type="button"
+                onClick={() => { setActiveFilter(card.key); setExpandedId(null); }}
+                className={[
+                  "group rounded-[22px] border p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB168]",
+                  card.className,
+                  selected ? "ring-2 ring-[#FFB168] ring-offset-2 ring-offset-[#0E0E10]" : "",
+                ].join(" ")}
+                aria-pressed={selected}
+              >
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] opacity-75">{card.label}</p>
+                <p className="mt-2 text-3xl font-black leading-none">{card.value}</p>
+                <p className="mt-2 text-xs font-bold opacity-70">{card.hint}</p>
+              </button>
+            );
+          })}
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[22px] border border-emerald-300/25 bg-emerald-400/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-100">Active trials</p><p className="mt-2 text-2xl font-black">{summary.trialActiveStores}</p></div>
-          <div className="rounded-[22px] border border-[#FFB168]/35 bg-[#FFB168]/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFE1C7]">Expiring soon</p><p className="mt-2 text-2xl font-black">{summary.trialExpiringStores}</p></div>
-          <div className="rounded-[22px] border border-red-300/30 bg-red-400/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-red-100">Expired trials</p><p className="mt-2 text-2xl font-black">{summary.trialExpiredStores}</p></div>
-        </div>
-        {priorityStore ? <div className="mt-5 rounded-[24px] border border-white/10 bg-white/10 p-4"><p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFB168]">Priority check</p><div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"><div><h3 className="text-xl font-black">{priorityStore.name}</h3><p className="mt-1 break-all text-sm font-bold text-white/74">{priorityStore.storeAddress}</p><p className="mt-1 text-xs font-semibold text-white/58">{priorityStore.readiness.readyCount} of {priorityStore.readiness.totalChecks} checks complete · {trialLabel(priorityStore.trial)} · Created {formatDate(priorityStore.createdAt)}</p></div><span className={["inline-flex min-h-10 items-center justify-center rounded-2xl px-4 py-2 text-xs font-black", toneClasses(priorityStore.readiness.tone)].join(" ")}>{priorityStore.readiness.label} · {priorityStore.readiness.score}%</span></div></div> : null}
       </div>
+
       <div className="border-t border-[#0E0E10]/10 p-5 sm:p-6">
         {message ? <p className="mb-4 rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm font-bold text-[#C84F2A]">{message}</p> : null}
+        <div className="mb-4 flex flex-col gap-3 rounded-[24px] border border-[#0E0E10]/8 bg-[#FFF7F0] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Selected view</p>
+            <h3 className="mt-1 text-xl font-black text-[#0E0E10]">{filterTitle(activeFilter)}</h3>
+            <p className="mt-1 text-sm font-semibold text-[#68707A]">Showing {selectedCount} of {summary.totalStores} stores. Detailed readiness checks are still available, but tucked away until you open a store.</p>
+          </div>
+          {activeFilter !== "all" ? <button type="button" onClick={() => setActiveFilter("all")} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0]">Show all stores</button> : null}
+        </div>
+
         {!loading && stores.length === 0 ? <div className="rounded-[24px] border border-dashed border-[#0E0E10]/18 bg-[#FFF7F0] p-5 text-sm leading-6 text-[#5C5F66]">No stores are loaded yet. Create a store from public onboarding, then refresh this panel.</div> : null}
+        {!loading && stores.length > 0 && filteredStores.length === 0 ? <div className="rounded-[24px] border border-dashed border-[#0E0E10]/18 bg-white p-5 text-sm leading-6 text-[#5C5F66]">No stores match this card yet.</div> : null}
+
         <div className="space-y-4">
-          {stores.map((store) => {
+          {filteredStores.map((store) => {
             const expanded = expandedId === store.id;
             return (
               <article key={store.id} className="rounded-[26px] border border-[#0E0E10]/10 bg-[#FDFBF8] p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="text-lg font-black text-[#0E0E10]">{store.name}</h3><span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]", toneClasses(store.readiness.tone)].join(" ")}>{store.readiness.label}</span><span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]", trialPillClasses(store.trial)].join(" ")}>{trialLabel(store.trial)}</span></div><a href={store.storefrontUrl} target="_blank" rel="noreferrer" className="mt-1 block break-all text-sm font-bold text-[#C84F2A] hover:text-[#0E0E10]">{store.storeAddress}</a><p className="mt-1 text-xs font-semibold text-[#68707A]">{store.readiness.readyCount} of {store.readiness.totalChecks} checks complete · {store.readiness.blockingIssues} key issue(s) · Ends {formatDate(store.trial.trialEndsAt)}</p></div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-lg font-black text-[#0E0E10]">{store.name}</h3>
+                      <span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]", toneClasses(store.readiness.tone)].join(" ")}>{store.readiness.label}</span>
+                      <span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]", trialPillClasses(store.trial)].join(" ")}>{trialLabel(store.trial)}</span>
+                      {store.trial.checkoutBlocked || store.trial.isTrialExpired ? <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-red-800 ring-1 ring-red-200">Checkout paused</span> : null}
+                    </div>
+                    <a href={store.storefrontUrl} target="_blank" rel="noreferrer" className="mt-1 block break-all text-sm font-bold text-[#C84F2A] hover:text-[#0E0E10]">{store.storeAddress}</a>
+                    <p className="mt-1 text-xs font-semibold text-[#68707A]">{store.readiness.readyCount} of {store.readiness.totalChecks} checks complete · {store.readiness.blockingIssues} key issue(s) · Ends {formatDate(store.trial.trialEndsAt)}</p>
+                  </div>
                   <div className="min-w-[160px]"><div className="h-3 overflow-hidden rounded-full bg-[#0E0E10]/10"><div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${Math.max(4, Math.min(100, store.readiness.score))}%` }} /></div><p className="mt-2 text-right text-xs font-black text-[#0E0E10]">{store.readiness.score}% ready</p></div>
                 </div>
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{store.checks.slice(0, 5).map((check) => <div key={check.key} className={["rounded-2xl border px-3 py-2 text-xs font-bold", checkClasses(check.ready, check.important)].join(" ")}>{check.ready ? "✓" : check.important ? "!" : "•"} {check.label}</div>)}</div>

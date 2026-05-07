@@ -154,6 +154,8 @@ export async function GET(req: Request) {
         trialActiveStores: stores.filter((store) => store.trial?.isTrialActive).length,
         trialExpiringStores: stores.filter((store) => store.trial?.isTrialActive && (store.trial.trialDaysRemaining ?? 99) <= 2).length,
         trialExpiredStores: stores.filter((store) => store.trial?.isTrialExpired).length,
+        payingClients: stores.filter((store) => store.trial?.isSubscriptionActive || store.trial?.subscriptionStatus === "active" || store.trial?.trialStatus === "converted").length,
+        checkoutPausedStores: stores.filter((store) => store.trial?.checkoutBlocked || store.trial?.isTrialExpired).length,
       },
     });
   } catch (error) {
