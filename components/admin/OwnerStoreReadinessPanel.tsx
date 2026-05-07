@@ -29,6 +29,10 @@ type StoreReadiness = {
   adminLoginUrl: string;
   readiness: { score: number; label: string; tone: string; readyCount: number; totalChecks: number; blockingIssues: number };
   counts: { categories: number; products: number; activeProducts: number; productPhotos: number; adminPushDevices: number; orders: number; emailSent: number; emailFailed: number };
+  referral?: {
+    referredBy?: { referrerName: string; referrerType: string; referralCode: string; refSource: string | null; status: string; rewardRatePercent: number | null } | null;
+    stats?: { referredCount: number; trialCount: number; rewardRatePercent: number | null; referralCode: string | null };
+  };
   checks: ReadinessCheck[];
 };
 type Summary = {
@@ -43,9 +47,12 @@ type Summary = {
   trialExpiringStores: number;
   trialExpiredStores: number;
   checkoutPausedStores: number;
+  referralSignups: number;
+  storesWithReferrals: number;
+  referredStores: number;
 };
 type Payload = { stores: StoreReadiness[]; summary: Summary };
-type DashboardFilter = "all" | "paying" | "trials" | "expiring" | "expired" | "paused" | "needsSetup";
+type DashboardFilter = "all" | "paying" | "trials" | "expiring" | "expired" | "paused" | "needsSetup" | "referrals";
 
 const EMPTY_SUMMARY: Summary = {
   totalStores: 0,
@@ -59,6 +66,9 @@ const EMPTY_SUMMARY: Summary = {
   trialExpiringStores: 0,
   trialExpiredStores: 0,
   checkoutPausedStores: 0,
+  referralSignups: 0,
+  storesWithReferrals: 0,
+  referredStores: 0,
 };
 
 function toneClasses(tone: string) {
@@ -101,6 +111,7 @@ function storeMatchesFilter(store: StoreReadiness, filter: DashboardFilter) {
   if (filter === "expired") return store.trial.isTrialExpired;
   if (filter === "paused") return Boolean(store.trial.checkoutBlocked || store.trial.isTrialExpired);
   if (filter === "needsSetup") return store.readiness.label === "Needs setup";
+  if (filter === "referrals") return Boolean(store.referral?.referredBy) || (store.referral?.stats?.referredCount || 0) > 0;
   return true;
 }
 
@@ -111,6 +122,7 @@ function filterTitle(filter: DashboardFilter) {
   if (filter === "expired") return "Expired trials";
   if (filter === "paused") return "Checkout paused stores";
   if (filter === "needsSetup") return "Stores needing setup";
+  if (filter === "referrals") return "Referral activity";
   return "All stores";
 }
 
@@ -176,6 +188,7 @@ export default function OwnerStoreReadinessPanel() {
     { key: "expired" as const, label: "Expired trials", value: summary.trialExpiredStores, hint: "Needs attention", className: "border-red-300/30 bg-red-400/10 text-red-50" },
     { key: "paused" as const, label: "Checkout paused", value: summary.checkoutPausedStores, hint: "Customer checkout blocked", className: "border-red-300/30 bg-red-500/10 text-red-50" },
     { key: "needsSetup" as const, label: "Needs setup", value: summary.needsSetupStores, hint: "Missing key setup", className: "border-slate-300/20 bg-slate-400/10 text-slate-50" },
+    { key: "referrals" as const, label: "Referrals", value: summary.referralSignups, hint: "Tenant-sourced signups", className: "border-[#FFB168]/35 bg-white/10 text-[#FFE1C7]" },
   ];
 
   return (
@@ -190,7 +203,7 @@ export default function OwnerStoreReadinessPanel() {
           <button type="button" onClick={loadReadiness} disabled={loading || !canLoad} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60">{loading ? "Refreshing..." : "Refresh dashboard"}</button>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {summaryCards.map((card) => {
             const selected = activeFilter === card.key;
             return (
@@ -240,12 +253,20 @@ export default function OwnerStoreReadinessPanel() {
                       <span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]", toneClasses(store.readiness.tone)].join(" ")}>{store.readiness.label}</span>
                       <span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em]", trialPillClasses(store.trial)].join(" ")}>{trialLabel(store.trial)}</span>
                       {store.trial.checkoutBlocked || store.trial.isTrialExpired ? <span className="rounded-full bg-red-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-red-800 ring-1 ring-red-200">Checkout paused</span> : null}
+                      {(store.referral?.stats?.referredCount || 0) > 0 ? <span className="rounded-full bg-[#FFF7F0] px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[#9A3412] ring-1 ring-[#FF6A3D]/25">{store.referral?.stats?.referredCount} referral{store.referral?.stats?.referredCount === 1 ? "" : "s"}</span> : null}
+                      {store.referral?.referredBy ? <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-blue-800 ring-1 ring-blue-200">Referred</span> : null}
                     </div>
                     <a href={store.storefrontUrl} target="_blank" rel="noreferrer" className="mt-1 block break-all text-sm font-bold text-[#C84F2A] hover:text-[#0E0E10]">{store.storeAddress}</a>
                     <p className="mt-1 text-xs font-semibold text-[#68707A]">{store.readiness.readyCount} of {store.readiness.totalChecks} checks complete · {store.readiness.blockingIssues} key issue(s) · Ends {formatDate(store.trial.trialEndsAt)}</p>
                   </div>
                   <div className="min-w-[160px]"><div className="h-3 overflow-hidden rounded-full bg-[#0E0E10]/10"><div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${Math.max(4, Math.min(100, store.readiness.score))}%` }} /></div><p className="mt-2 text-right text-xs font-black text-[#0E0E10]">{store.readiness.score}% ready</p></div>
                 </div>
+                {(store.referral?.referredBy || (store.referral?.stats?.referredCount || 0) > 0) ? (
+                  <div className="mt-4 grid gap-2 rounded-2xl border border-[#FF6A3D]/15 bg-white px-3 py-3 text-xs leading-5 text-[#5C5F66] sm:grid-cols-2">
+                    {store.referral?.referredBy ? <p><span className="font-black text-[#0E0E10]">Referred by:</span> {store.referral.referredBy.referrerName} · {store.referral.referredBy.rewardRatePercent || 15}% reward-ready</p> : <p><span className="font-black text-[#0E0E10]">Referral code:</span> {store.referral?.stats?.referralCode || `tenant_${store.slug}`}</p>}
+                    {(store.referral?.stats?.referredCount || 0) > 0 ? <p><span className="font-black text-[#0E0E10]">Referrals made:</span> {store.referral?.stats?.referredCount} signup{store.referral?.stats?.referredCount === 1 ? "" : "s"} captured · {store.referral?.stats?.rewardRatePercent || 15}% future reward rate</p> : <p><span className="font-black text-[#0E0E10]">Referral source:</span> {store.referral?.referredBy?.refSource || "storefront/footer link"}</p>}
+                  </div>
+                ) : null}
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">{store.checks.slice(0, 5).map((check) => <div key={check.key} className={["rounded-2xl border px-3 py-2 text-xs font-bold", checkClasses(check.ready, check.important)].join(" ")}>{check.ready ? "✓" : check.important ? "!" : "•"} {check.label}</div>)}</div>
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap"><a href={store.storefrontUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0]">Open storefront</a><a href={store.adminLoginUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#252528]">Open admin login</a><button type="button" onClick={() => void extendTrial(store.id, 7)} disabled={extendBusyId === store.id} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-4 py-2 text-xs font-black text-[#9A3412] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60">{extendBusyId === store.id ? "Adding days..." : "+7 trial days"}</button><button type="button" onClick={() => void extendTrial(store.id, 1)} disabled={extendBusyId === store.id} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60">+1 day</button><button type="button" onClick={() => setExpandedId(expanded ? null : store.id)} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#0E0E10] transition hover:bg-[#FFF7F0]">{expanded ? "Hide full checklist" : "Full checklist"}</button></div>
                 {expanded ? <div className="mt-4 grid gap-3 md:grid-cols-2">{store.checks.map((check) => <div key={check.key} className={["rounded-2xl border p-4 text-sm", checkClasses(check.ready, check.important)].join(" ")}><div className="flex items-start justify-between gap-3"><div><p className="font-black">{check.label}</p><p className="mt-1 text-xs font-semibold opacity-80">{check.detail || "No detail recorded"}</p></div><span className="text-lg font-black">{check.ready ? "✓" : check.important ? "!" : "•"}</span></div></div>)}</div> : null}

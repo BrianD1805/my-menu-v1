@@ -12,6 +12,8 @@ type ProductRow = { tenant_id: string; is_active: boolean | null; image_url: str
 type PushRow = { tenant_id: string; enabled: boolean | null };
 type OrderRow = { tenant_id: string; status: string | null };
 type EventRow = { tenant_id: string | null; event_type: string | null; status: string | null; channel: string | null };
+type ReferralSignupRow = { id: string; referred_tenant_id: string | null; referral_source_id: string | null; referral_code: string | null; ref_tenant_slug: string | null; ref_source: string | null; status: string | null; reward_rate_percent: number | null; created_at: string | null };
+type ReferralSourceRow = { id: string; referrer_type: string | null; referrer_tenant_id: string | null; display_name: string | null; referral_code: string | null; reward_rate_percent: number | null; status: string | null };
 
 function storeAddress(slug: string) { return `${slug}.orduva.com`; }
 function storeUrl(slug: string) { return `https://${storeAddress(slug)}`; }
@@ -39,9 +41,11 @@ export async function GET(req: Request) {
     let pushRows: PushRow[] = [];
     let orderRows: OrderRow[] = [];
     let emailRows: EventRow[] = [];
+    let referralSignupRows: ReferralSignupRow[] = [];
+    let referralSourceRows: ReferralSourceRow[] = [];
 
     if (tenantIds.length) {
-      const [settingsResult, usersResult, categoriesResult, productsResult, pushResult, ordersResult, emailResult] = await Promise.all([
+      const [settingsResult, usersResult, categoriesResult, productsResult, pushResult, ordersResult, emailResult, referralSignupsResult, referralSourcesResult] = await Promise.all([
         db.from("tenant_settings").select("tenant_id, logo_url, favicon_url, currency_code, currency_symbol, primary_color, accent_color, contact_phone, contact_email, contact_whatsapp").in("tenant_id", tenantIds),
         db.from("tenant_users").select("tenant_id, email, role").in("tenant_id", tenantIds).eq("role", "owner"),
         db.from("categories").select("tenant_id").in("tenant_id", tenantIds),
@@ -49,6 +53,8 @@ export async function GET(req: Request) {
         db.from("admin_push_subscriptions").select("tenant_id, enabled").in("tenant_id", tenantIds),
         db.from("orders").select("tenant_id, status").in("tenant_id", tenantIds),
         db.from("notification_events").select("tenant_id, event_type, status, channel").in("tenant_id", tenantIds).eq("channel", "email"),
+        db.from("referral_signups").select("id, referred_tenant_id, referral_source_id, referral_code, ref_tenant_slug, ref_source, status, reward_rate_percent, created_at").limit(300),
+        db.from("referral_sources").select("id, referrer_type, referrer_tenant_id, display_name, referral_code, reward_rate_percent, status").in("referrer_tenant_id", tenantIds),
       ]);
       settingsRows = (settingsResult.data || []) as SettingsRow[];
       ownerUsers = (usersResult.data || []) as TenantUserRow[];
@@ -57,6 +63,8 @@ export async function GET(req: Request) {
       pushRows = (pushResult.data || []) as PushRow[];
       orderRows = (ordersResult.data || []) as OrderRow[];
       emailRows = ((emailResult.data || []) as EventRow[]).filter(isOnboardingEmail);
+      referralSignupRows = (referralSignupsResult.data || []) as ReferralSignupRow[];
+      referralSourceRows = (referralSourcesResult.data || []) as ReferralSourceRow[];
     }
 
     const settingsByTenant = new Map(settingsRows.map((settings) => [settings.tenant_id, settings]));
@@ -89,6 +97,35 @@ export async function GET(req: Request) {
       if (event.status === "failed") increment(emailFailedByTenant, event.tenant_id);
     }
 
+    const referralSourceById = new Map(referralSourceRows.map((source) => [source.id, source]));
+    const referralSourceByReferrerTenant = new Map<string, ReferralSourceRow>();
+    for (const source of referralSourceRows) {
+      if (source.referrer_tenant_id && !referralSourceByReferrerTenant.has(source.referrer_tenant_id)) {
+        referralSourceByReferrerTenant.set(source.referrer_tenant_id, source);
+      }
+    }
+
+    const referredByTenant = new Map<string, { referrerName: string; referrerType: string; referralCode: string; refSource: string | null; status: string; rewardRatePercent: number | null }>();
+    const referralCountsByReferrerTenant = new Map<string, number>();
+    const referralTrialCountsByReferrerTenant = new Map<string, number>();
+    for (const signup of referralSignupRows) {
+      const source = signup.referral_source_id ? referralSourceById.get(signup.referral_source_id) : null;
+      if (signup.referred_tenant_id) {
+        referredByTenant.set(signup.referred_tenant_id, {
+          referrerName: source?.display_name || signup.ref_tenant_slug || signup.referral_code || "Referral source",
+          referrerType: source?.referrer_type || "tenant",
+          referralCode: signup.referral_code || source?.referral_code || "",
+          refSource: signup.ref_source || null,
+          status: signup.status || "trial",
+          rewardRatePercent: signup.reward_rate_percent ?? source?.reward_rate_percent ?? null,
+        });
+      }
+      if (source?.referrer_tenant_id) {
+        increment(referralCountsByReferrerTenant, source.referrer_tenant_id);
+        if ((signup.status || "trial") === "trial") increment(referralTrialCountsByReferrerTenant, source.referrer_tenant_id);
+      }
+    }
+
     const stores = tenantRows.map((tenant) => {
       const settings = settingsByTenant.get(tenant.id) || null;
       const owner = ownerByTenant.get(tenant.id) || null;
@@ -114,6 +151,14 @@ export async function GET(req: Request) {
       const hasTestOrder = orderCount > 0;
       const hasLaunchEmail = emailSentCount > 0 && emailFailedCount === 0;
       const trial = calculateTenantTrialState(tenant);
+      const referralSource = referralSourceByReferrerTenant.get(tenant.id) || null;
+      const referredBy = referredByTenant.get(tenant.id) || null;
+      const referralStats = {
+        referredCount: referralCountsByReferrerTenant.get(tenant.id) || 0,
+        trialCount: referralTrialCountsByReferrerTenant.get(tenant.id) || 0,
+        rewardRatePercent: referralSource?.reward_rate_percent ?? null,
+        referralCode: referralSource?.referral_code || (tenant.slug ? `tenant_${tenant.slug}` : null),
+      };
       const checks = [
         { key: "foundation", label: "Store foundation", ready: hasSettings && hasCategories, important: true, detail: hasSettings ? `${categoryCount} categories` : "Settings row missing" },
         { key: "owner-login", label: "Owner login", ready: hasOwnerLogin, important: true, detail: hasOwnerLogin ? owner?.email || "Owner email saved" : "No owner login found" },
@@ -130,7 +175,7 @@ export async function GET(req: Request) {
       const blockingIssues = checks.filter((check) => check.important && !check.ready).length;
       const score = Math.round((readyCount / checks.length) * 100);
       const label = readinessLabel(score, blockingIssues);
-      return { id: tenant.id, name: tenant.name, slug: tenant.slug, status: tenant.status || "setup", createdAt: tenant.created_at, trial, storeAddress: storeAddress(tenant.slug), storefrontUrl: storeUrl(tenant.slug), adminLoginUrl: adminLoginUrl(tenant.slug), readiness: { score, label, tone: readinessTone(label), readyCount, totalChecks: checks.length, blockingIssues }, counts: { categories: categoryCount, products: productCount, activeProducts: activeProductCount, productPhotos: imageProductCount, adminPushDevices, orders: orderCount, emailSent: emailSentCount, emailFailed: emailFailedCount }, checks };
+      return { id: tenant.id, name: tenant.name, slug: tenant.slug, status: tenant.status || "setup", createdAt: tenant.created_at, trial, storeAddress: storeAddress(tenant.slug), storefrontUrl: storeUrl(tenant.slug), adminLoginUrl: adminLoginUrl(tenant.slug), readiness: { score, label, tone: readinessTone(label), readyCount, totalChecks: checks.length, blockingIssues }, counts: { categories: categoryCount, products: productCount, activeProducts: activeProductCount, productPhotos: imageProductCount, adminPushDevices, orders: orderCount, emailSent: emailSentCount, emailFailed: emailFailedCount }, referral: { referredBy, stats: referralStats }, checks };
     });
 
     return NextResponse.json({
@@ -147,6 +192,9 @@ export async function GET(req: Request) {
         trialExpiredStores: stores.filter((store) => store.trial?.isTrialExpired).length,
         payingClients: stores.filter((store) => store.trial?.isSubscriptionActive || store.trial?.subscriptionStatus === "active" || store.trial?.trialStatus === "converted").length,
         checkoutPausedStores: stores.filter((store) => store.trial?.checkoutBlocked || store.trial?.isTrialExpired).length,
+        referralSignups: referralSignupRows.length,
+        storesWithReferrals: stores.filter((store) => (store.referral?.stats?.referredCount || 0) > 0).length,
+        referredStores: stores.filter((store) => Boolean(store.referral?.referredBy)).length,
       },
     });
   } catch (error) {

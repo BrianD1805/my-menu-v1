@@ -95,6 +95,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [humanConfirmed, setHumanConfirmed] = useState(false);
   const [formStartedAt, setFormStartedAt] = useState(() => Date.now());
+  const [refTenant, setRefTenant] = useState("");
+  const [refSource, setRefSource] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [refLandingUrl, setRefLandingUrl] = useState("");
   const ownerAccess = useOwnerPlatformAccess();
   const autoLoadedOwnerTenants = useRef(false);
 
@@ -179,6 +183,25 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     }
   }
 
+
+  useEffect(() => {
+    if (!clientMode || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const incomingRefTenant = (params.get("ref_tenant") || params.get("refTenant") || "").trim().toLowerCase();
+    const incomingRefSource = (params.get("ref_source") || params.get("refSource") || "").trim();
+    const incomingReferralCode = (params.get("ref") || params.get("referralCode") || "").trim().toLowerCase();
+
+    if (incomingRefTenant) window.sessionStorage.setItem("orduva_ref_tenant", incomingRefTenant);
+    if (incomingRefSource) window.sessionStorage.setItem("orduva_ref_source", incomingRefSource);
+    if (incomingReferralCode) window.sessionStorage.setItem("orduva_ref_code", incomingReferralCode);
+    if (incomingRefTenant || incomingReferralCode) window.sessionStorage.setItem("orduva_ref_landing_url", window.location.href);
+
+    setRefTenant(incomingRefTenant || window.sessionStorage.getItem("orduva_ref_tenant") || "");
+    setRefSource(incomingRefSource || window.sessionStorage.getItem("orduva_ref_source") || "");
+    setReferralCode(incomingReferralCode || window.sessionStorage.getItem("orduva_ref_code") || "");
+    setRefLandingUrl(window.sessionStorage.getItem("orduva_ref_landing_url") || window.location.href);
+  }, [clientMode]);
+
   useEffect(() => {
     if (!ownerGateUnlocked || autoLoadedOwnerTenants.current) return;
     autoLoadedOwnerTenants.current = true;
@@ -219,6 +242,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           privacyAccepted,
           humanConfirmed,
           formStartedAt,
+          refTenant,
+          refSource,
+          referralCode,
+          refLandingUrl,
         }),
       });
       const data = await response.json();
@@ -229,6 +256,12 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setTenants((current) => [createdTenant.tenant, ...current.filter((tenant) => tenant.id !== createdTenant.tenant.id)]);
 
       if (clientMode && typeof window !== "undefined") {
+        if (refTenant || referralCode) {
+          window.sessionStorage.removeItem("orduva_ref_tenant");
+          window.sessionStorage.removeItem("orduva_ref_source");
+          window.sessionStorage.removeItem("orduva_ref_code");
+          window.sessionStorage.removeItem("orduva_ref_landing_url");
+        }
         const params = new URLSearchParams({
           name: createdTenant.tenant.name,
           slug: createdTenant.tenant.slug,
@@ -252,6 +285,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setPrivacyAccepted(false);
       setHumanConfirmed(false);
       setFormStartedAt(Date.now());
+      setRefTenant("");
+      setRefSource("");
+      setReferralCode("");
+      setRefLandingUrl("");
       setMessage(clientMode ? "Your Orduva store has been created. Follow the next steps below to finish your setup." : "Client store foundation created. Use the launch links and checklist on the right.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to create store");
@@ -451,6 +488,14 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 </label>
               </div>
               <p className="mt-3 text-xs leading-5 text-slate-500">Spam protection is active. Submissions that look automated, too fast, or repeated too often may be blocked.</p>
+            </div>
+          ) : null}
+
+
+          {clientMode && refTenant ? (
+            <div className="mt-5 rounded-[22px] border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm leading-6 text-[#5C5F66]">
+              <p className="font-black text-[#0E0E10]">Referral applied</p>
+              <p className="mt-1">You arrived from an Orduva store link. If your store becomes a paying subscription, the referring store can be credited under the Orduva referral programme.</p>
             </div>
           ) : null}
 

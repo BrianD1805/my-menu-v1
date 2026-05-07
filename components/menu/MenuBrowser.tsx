@@ -367,7 +367,7 @@ export default function MenuBrowser({
     { label: "X", href: normaliseExternalUrl(socialXUrl), icon: <XIcon /> },
     { label: "Website", href: normaliseExternalUrl(socialWebsiteUrl), icon: <WebsiteIcon /> },
   ].filter((item) => Boolean(item.href)).slice(0, 8);
-  const referralSignupHref = `https://www.orduva.com/start-your-store?ref_tenant=${encodeURIComponent(tenantSlug)}&ref_source=storefront_footer`;
+  const referralSignupHref = `https://www.orduva.com/start-your-store?ref_tenant=${encodeURIComponent(tenantSlug)}&ref=${encodeURIComponent(`tenant_${tenantSlug}`)}&ref_source=storefront_footer`;
 
   useEffect(() => {
     let cancelled = false;

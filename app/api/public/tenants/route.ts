@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { createTrialInsertFields } from "@/lib/trial";
+import { captureTenantReferral, normalizeReferralPayload } from "@/lib/referrals";
 import { hashOwnerPassword, normalizeOwnerEmail } from "@/lib/admin-auth";
 import { sendOnboardingLaunchNotifications } from "@/lib/onboarding-email";
 
@@ -160,6 +161,7 @@ export async function POST(req: Request) {
     const ownerName = normalizeOptionalText(body?.ownerName, 120);
     const ownerEmail = normalizeOwnerEmail(body?.ownerEmail);
     const ownerPassword = String(body?.ownerPassword || "");
+    const referral = normalizeReferralPayload(body);
 
     if (!businessName) {
       return NextResponse.json({ error: "Business name is required" }, { status: 400 });
@@ -268,6 +270,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: ownerError.message || "Store created, but owner login could not be created" }, { status: 500 });
     }
 
+    let referralCapture: Awaited<ReturnType<typeof captureTenantReferral>> | null = null;
+    if (referral.refTenantSlug || referral.referralCode) {
+      try {
+        referralCapture = await captureTenantReferral({
+          referredTenantId: tenant.id,
+          referredTenantSlug: tenant.slug,
+          refTenantSlug: referral.refTenantSlug,
+          referralCode: referral.referralCode,
+          refSource: referral.refSource || "public_onboarding",
+          landingUrl: referral.landingUrl,
+          clientIp,
+          userAgent: req.headers.get("user-agent"),
+        });
+      } catch {
+        referralCapture = { captured: false, reason: "capture_failed" };
+      }
+    }
+
     const emailNotifications = await sendOnboardingLaunchNotifications({
       tenantId: tenant.id,
       storeName: tenant.name,
@@ -283,6 +303,7 @@ export async function POST(req: Request) {
       starterCategory: category || null,
       ownerCreated: true,
       emailNotifications,
+      referralCapture,
       storefrontUrl: `https://${slug}.orduva.com`,
       adminUrl: `https://admin.orduva.com`,
       checklist: [
