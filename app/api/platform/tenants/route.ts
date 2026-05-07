@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { createTrialInsertFields } from "@/lib/trial";
 import { hashOwnerPassword, normalizeOwnerEmail } from "@/lib/admin-auth";
 
 type CurrencyDefaults = {
@@ -122,7 +123,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await db
     .from("tenants")
-    .select("id, name, slug, status, created_at")
+    .select("id, name, slug, status, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name, created_at")
     .order("created_at", { ascending: false })
     .limit(25);
 
@@ -180,8 +181,9 @@ export async function POST(req: Request) {
         slug,
         status: "setup",
         whatsapp_number: contactWhatsApp || contactPhone,
+        ...createTrialInsertFields(),
       })
-      .select("id, name, slug, status, created_at")
+      .select("id, name, slug, status, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name, created_at")
       .single();
 
     if (tenantError || !tenant) {

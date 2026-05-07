@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { createTrialInsertFields } from "@/lib/trial";
 import { hashOwnerPassword, normalizeOwnerEmail } from "@/lib/admin-auth";
 import { sendOnboardingLaunchNotifications } from "@/lib/onboarding-email";
 
@@ -204,8 +205,9 @@ export async function POST(req: Request) {
         slug,
         status: "setup",
         whatsapp_number: contactWhatsApp || contactPhone,
+        ...createTrialInsertFields(),
       })
-      .select("id, name, slug, status, created_at")
+      .select("id, name, slug, status, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name, created_at")
       .single();
 
     if (tenantError || !tenant) {
