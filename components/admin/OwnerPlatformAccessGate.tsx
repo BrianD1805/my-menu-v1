@@ -180,17 +180,31 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
   return (
     <OwnerPlatformAccessContext.Provider value={contextValue}>
       <div className="border-b border-[#0E0E10]/10 bg-[#0E0E10] px-4 py-2 text-white sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 text-xs md:flex-row md:items-center md:justify-between">
           <span className="font-black uppercase tracking-[0.18em] text-[#FFB168]">
             Owner platform unlocked
           </span>
-          <button
-            type="button"
-            onClick={lock}
-            className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20"
-          >
-            Lock owner area
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href="/platform"
+              className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20"
+            >
+              Dashboard
+            </a>
+            <a
+              href="/platform/onboarding"
+              className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20"
+            >
+              Onboarding
+            </a>
+            <button
+              type="button"
+              onClick={lock}
+              className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20"
+            >
+              Lock owner area
+            </button>
+          </div>
         </div>
       </div>
       {children}

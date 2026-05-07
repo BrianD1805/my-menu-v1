@@ -1,10 +1,8 @@
-import TenantOnboardingManager from "@/components/admin/TenantOnboardingManager";
-import OwnerEmailSettingsPanel from "@/components/admin/OwnerEmailSettingsPanel";
-import OwnerOnboardingEventsPanel from "@/components/admin/OwnerOnboardingEventsPanel";
+import OwnerStoreReadinessPanel from "@/components/admin/OwnerStoreReadinessPanel";
 import OwnerPlatformAccessGate from "@/components/admin/OwnerPlatformAccessGate";
 import { LIVE_VERSION } from "@/lib/version";
 
-export default function PlatformOnboardingPage() {
+export default function PlatformDashboardPage() {
   return (
     <OwnerPlatformAccessGate>
       <main className="min-h-screen bg-[#FFF7F0] px-4 py-5 text-[#1F2328] sm:px-6 lg:px-8">
@@ -22,49 +20,40 @@ export default function PlatformOnboardingPage() {
                     Orduva platform
                   </p>
                   <h1 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10] sm:text-4xl">
-                    Onboarding tools
+                    Owner dashboard
                   </h1>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2.5">
                 <a
-                  href="/platform"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]"
+                  href="/platform/onboarding"
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:bg-[#e65f36]"
                 >
-                  Owner dashboard
+                  Onboarding tools
                 </a>
                 <a
-                  href="/"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]"
+                  href="https://admin.orduva.com/admin"
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]"
                 >
-                  Public home
+                  Store admin login
                 </a>
               </div>
             </div>
             <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-              Dedicated owner tools for store creation, onboarding checks, owner email testing and onboarding events. The main store overview now lives on the platform dashboard.
+              The main owner view for Orduva. Use the cards below to jump straight to stores, paying clients, trials, expired trials, checkout paused stores, and stores that still need setup.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <div className="inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">
                 {LIVE_VERSION}
               </div>
               <div className="inline-flex rounded-full border border-[#FF6A3D]/20 bg-[#FF6A3D]/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#C84F2A]">
-                Owner onboarding
+                Owner dashboard
               </div>
             </div>
           </header>
 
-          <div className="mt-6 space-y-6">
-            <OwnerEmailSettingsPanel
-              apiPath="/api/platform/email-settings/test"
-              platformMode
-            />
-            <TenantOnboardingManager
-              initialTenants={[]}
-              apiPath="/api/platform/tenants"
-              platformMode
-            />
-            <OwnerOnboardingEventsPanel />
+          <div className="mt-6">
+            <OwnerStoreReadinessPanel />
           </div>
         </div>
       </main>
