@@ -123,9 +123,28 @@ export default function EarlyStorefrontPreloader() {
       <script
         dangerouslySetInnerHTML={{
           __html: `
-            window.__ORDUVA_HIDE_EARLY_PRELOADER__ = function(){
-              try { document.documentElement.classList.add('orduva-early-preloader-done'); } catch(e) {}
-            };
+            (function(){
+              var startedAt = Date.now();
+              var minimumMs = 2000;
+              var hideTimer = null;
+              var hidden = false;
+              window.__ORDUVA_HIDE_EARLY_PRELOADER__ = function(){
+                if (hidden) return;
+                var finish = function(){
+                  if (hidden) return;
+                  hidden = true;
+                  try { document.documentElement.classList.add('orduva-early-preloader-done'); } catch(e) {}
+                };
+                var elapsed = Date.now() - startedAt;
+                var remaining = Math.max(0, minimumMs - elapsed);
+                if (hideTimer) return;
+                if (remaining <= 0) {
+                  finish();
+                } else {
+                  hideTimer = window.setTimeout(finish, remaining);
+                }
+              };
+            })();
           `,
         }}
       />
