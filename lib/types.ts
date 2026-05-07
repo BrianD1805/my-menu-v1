@@ -64,6 +64,7 @@ export type TenantSettings = {
   contact_address: string | null;
   footer_blurb: string | null;
   footer_notice: string | null;
+  show_orduva_referral_ad?: boolean | null;
   currency_name: string | null;
   currency_code: string | null;
   currency_symbol: string | null;

@@ -107,6 +107,7 @@ export async function GET(req: Request) {
       contactAddress: branding.contactAddress,
       footerBlurb: branding.footerBlurb,
       footerNotice: branding.footerNotice,
+      showOrduvaReferralAd: branding.showOrduvaReferralAd,
       socialFacebookUrl: branding.socialFacebookUrl,
       socialInstagramUrl: branding.socialInstagramUrl,
       socialTikTokUrl: branding.socialTikTokUrl,

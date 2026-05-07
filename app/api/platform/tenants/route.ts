@@ -199,6 +199,7 @@ export async function POST(req: Request) {
         contact_whatsapp: contactWhatsApp,
         footer_blurb: `Thank you for ordering with ${businessName}.`,
         footer_notice: "Prices and availability may change without notice.",
+        show_orduva_referral_ad: true,
         currency_name: currency.currencyName,
         currency_code: currency.currencyCode,
         currency_symbol: currency.currencySymbol,

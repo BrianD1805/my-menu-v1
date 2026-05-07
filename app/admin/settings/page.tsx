@@ -52,6 +52,7 @@ export default async function AdminSettingsPage() {
           contactAddress: settings?.contact_address || "",
           footerBlurb: settings?.footer_blurb || "",
           footerNotice: settings?.footer_notice || "",
+          showOrduvaReferralAd: settings?.show_orduva_referral_ad !== false,
           socialFacebookUrl: settings?.social_facebook_url || "",
           socialInstagramUrl: settings?.social_instagram_url || "",
           socialTikTokUrl: settings?.social_tiktok_url || "",

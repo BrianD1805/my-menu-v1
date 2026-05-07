@@ -18,6 +18,7 @@ type StorefrontSettings = {
   contactAddress: string | null;
   footerBlurb: string | null;
   footerNotice: string | null;
+  showOrduvaReferralAd?: boolean | null;
   socialFacebookUrl: string | null;
   socialInstagramUrl: string | null;
   socialTikTokUrl: string | null;
@@ -53,7 +54,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-180";
+const STOREFRONT_CACHE_VERSION = "ver-0-181";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -222,6 +223,7 @@ export default function StorefrontClientLoader({ tenantSlug, version }: { tenant
         contactAddress={settings.contactAddress}
         footerBlurb={settings.footerBlurb}
         footerNotice={settings.footerNotice}
+        showOrduvaReferralAd={settings.showOrduvaReferralAd !== false}
         socialFacebookUrl={settings.socialFacebookUrl}
         socialInstagramUrl={settings.socialInstagramUrl}
         socialTikTokUrl={settings.socialTikTokUrl}

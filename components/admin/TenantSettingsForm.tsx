@@ -24,6 +24,7 @@ type FormState = {
   contactAddress: string;
   footerBlurb: string;
   footerNotice: string;
+  showOrduvaReferralAd: boolean;
   socialFacebookUrl: string;
   socialInstagramUrl: string;
   socialTikTokUrl: string;
@@ -457,7 +458,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const formValueChanged = (keys: Array<keyof FormState>) => keys.some((key) => JSON.stringify(form[key]) !== JSON.stringify(savedForm[key]));
   const brandingDirty = formValueChanged(["businessDisplayName", "adminHeadingLabel", "storefrontHeading", "storefrontSubheading"]);
   const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
-  const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
+  const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
@@ -952,6 +953,20 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <Field label="Business address"><input value={form.contactAddress} onChange={(e) => update("contactAddress", e.target.value)} className="input" placeholder="Street, area, city" /></Field>
             <div className="md:col-span-2"><Field label="Footer blurb"><input value={form.footerBlurb} onChange={(e) => update("footerBlurb", e.target.value)} className="input" placeholder="Thank you for ordering with us." /></Field></div>
             <div className="md:col-span-2"><Field label="Footer notice"><input value={form.footerNotice} onChange={(e) => update("footerNotice", e.target.value)} className="input" placeholder="Prices and availability may change without notice." /></Field></div>
+            <div className="md:col-span-2 rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
+              <label className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <span>
+                  <span className="block text-sm font-black text-slate-900">Show Orduva referral advert</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">Adds a tasteful “Do you need a store like this?” advert at the bottom of the storefront. Later, signups from this link can be tied to tenant referral rewards.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={form.showOrduvaReferralAd}
+                  onChange={(e) => update("showOrduvaReferralAd", e.target.checked)}
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-orange-600 focus:ring-orange-200"
+                />
+              </label>
+            </div>
           </div>
           <div className="mt-5 rounded-[22px] border border-slate-100 bg-slate-50 p-4">
             <p className="text-sm font-bold text-slate-900">Optional social links</p>

@@ -227,6 +227,7 @@ export default function MenuBrowser({
   contactAddress,
   footerBlurb,
   footerNotice,
+  showOrduvaReferralAd,
   socialFacebookUrl,
   socialInstagramUrl,
   socialTikTokUrl,
@@ -266,6 +267,7 @@ export default function MenuBrowser({
   contactAddress?: string | null;
   footerBlurb?: string | null;
   footerNotice?: string | null;
+  showOrduvaReferralAd?: boolean | null;
   socialFacebookUrl?: string | null;
   socialInstagramUrl?: string | null;
   socialTikTokUrl?: string | null;
@@ -365,6 +367,7 @@ export default function MenuBrowser({
     { label: "X", href: normaliseExternalUrl(socialXUrl), icon: <XIcon /> },
     { label: "Website", href: normaliseExternalUrl(socialWebsiteUrl), icon: <WebsiteIcon /> },
   ].filter((item) => Boolean(item.href)).slice(0, 8);
+  const referralSignupHref = `https://www.orduva.com/start-your-store?ref_tenant=${encodeURIComponent(tenantSlug)}&ref_source=storefront_footer`;
 
   useEffect(() => {
     let cancelled = false;
@@ -1060,6 +1063,23 @@ export default function MenuBrowser({
 
       <footer className="rounded-[24px] border px-5 py-5 text-center text-sm shadow-sm sm:px-6" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
         <div className="flex flex-col items-center justify-center gap-3 text-center">
+          {showOrduvaReferralAd !== false ? (
+            <div className="w-full overflow-hidden rounded-[24px] border border-[#FF6A3D]/20 bg-[linear-gradient(135deg,#FFF7F0_0%,#FFFFFF_52%,#FFE7D9_100%)] p-4 text-left shadow-[0_18px_45px_rgba(14,14,16,0.08)] sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Powered by Orduva</p>
+                  <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10]">Do you need a store like this?</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C5F66]">Launch your own branded ordering storefront with products, customer accounts and simple order management.</p>
+                </div>
+                <a
+                  href={referralSignupHref}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95B30]"
+                >
+                  Start free trial
+                </a>
+              </div>
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center justify-center gap-2">
             <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={{ backgroundColor: footerBadgeBackground }}>Orduva Online</span>
             <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
