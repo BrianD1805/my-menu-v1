@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-181';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-181';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-181';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-181a';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-181a';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-181a';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -59,16 +59,77 @@ async function staleWhileRevalidate(request) {
   return cached || network;
 }
 
-async function navigationNetworkFirst(request) {
+function normalizedNavigationRequest(request) {
+  const url = new URL(request.url);
+  // Cache navigations without tracking/query params so PWA start_url
+  // /?source=pwa&app=storefront can reuse the cached / shell.
+  return new Request(url.origin + url.pathname, {
+    method: 'GET',
+    headers: request.headers,
+    mode: 'same-origin',
+    credentials: 'same-origin',
+    redirect: 'follow',
+  });
+}
+
+function timeoutPromise(ms) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Navigation network timeout')), ms);
+  });
+}
+
+function openingFallbackResponse() {
+  return new Response(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Opening Orduva</title>
+  <style>
+    html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#fff7f0,#f5f2ee,#fffaf4);color:#111827;}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;text-align:center;}
+    .card{max-width:330px}.mark{width:76px;height:76px;margin:0 auto;border-radius:999px;background:rgba(255,255,255,.84);border:1px solid rgba(255,106,61,.24);box-shadow:0 22px 58px rgba(15,23,42,.14);position:relative}.mark:before{content:"";position:absolute;inset:15px;border:4px solid rgba(255,106,61,.13);border-radius:999px}.mark:after{content:"";position:absolute;inset:15px;border:4px solid transparent;border-top-color:#ff6a3d;border-right-color:rgba(255,106,61,.48);border-radius:999px;animation:spin .86s linear infinite}.dot{position:absolute;left:50%;top:50%;width:10px;height:10px;transform:translate(-50%,-50%);border-radius:999px;background:#ff6a3d;box-shadow:0 0 0 8px rgba(255,106,61,.10)}p{margin:22px 0 0;font-size:11px;font-weight:900;letter-spacing:.26em;text-transform:uppercase;color:#b74a16}h1{margin:8px 0 0;font-size:25px;line-height:1.12;font-weight:900;letter-spacing:-.03em}.small{margin-top:12px;font-size:13px;line-height:1.6;color:#64748b;letter-spacing:0;text-transform:none;font-weight:700}@keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <main class="card" role="status" aria-live="polite">
+    <div class="mark" aria-hidden="true"><span class="dot"></span></div>
+    <p>Orduva</p>
+    <h1>We're getting things ready.</h1>
+    <div class="small">Connection is taking longer than usual. Trying again…</div>
+  </main>
+  <script>setTimeout(function(){ location.reload(); }, 1800);</script>
+</body>
+</html>`, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
+}
+
+async function navigationFastFallback(request) {
   const cache = await caches.open(PAGE_CACHE);
-  try {
-    const response = await fetch(request);
-    if (response && response.ok) cache.put(request, response.clone()).catch(() => undefined);
+  const normalizedRequest = normalizedNavigationRequest(request);
+  const cached = await cache.match(normalizedRequest) || await cache.match(request);
+
+  const network = fetch(request).then((response) => {
+    if (response && response.ok) {
+      cache.put(normalizedRequest, response.clone()).catch(() => undefined);
+      cache.put(request, response.clone()).catch(() => undefined);
+    }
     return response;
+  });
+
+  // For installed PWAs, return the cached shell immediately so Android does not
+  // sit on the native splash while Netlify/Next warms up. Refresh in background.
+  if (cached) {
+    network.catch(() => undefined);
+    return cached;
+  }
+
+  try {
+    return await Promise.race([network, timeoutPromise(3500)]);
   } catch {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    throw new Error('Navigation unavailable');
+    return openingFallbackResponse();
   }
 }
 
@@ -90,7 +151,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(navigationNetworkFirst(request));
+    event.respondWith(navigationFastFallback(request));
   }
 });
 
