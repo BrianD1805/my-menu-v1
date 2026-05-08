@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { calculateReferralRewardAmount } from "@/lib/referral-rewards";
+import { calculateReferralRewardAmount, normaliseCurrency } from "@/lib/referral-rewards";
 
 export const DEFAULT_TENANT_REFERRAL_REWARD_RATE_PERCENT = 15;
 
@@ -36,6 +36,17 @@ function normalizeCode(value: unknown) {
 function normalizeOptionalText(value: unknown, maxLength: number) {
   const text = String(value || "").trim();
   return text ? text.slice(0, maxLength) : null;
+}
+
+async function getTenantCurrencyCode(tenantId: string) {
+  if (!tenantId) return "GBP";
+  const { data } = await db
+    .from("tenant_settings")
+    .select("currency_code")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+
+  return normaliseCurrency((data as { currency_code?: string | null } | null)?.currency_code, "GBP");
 }
 
 export function normalizeReferralPayload(body: Record<string, unknown> | null | undefined) {
@@ -129,6 +140,8 @@ export async function captureTenantReferral(input: CaptureReferralInput) {
     .maybeSingle();
 
   if (signup?.id) {
+    const referredTenantCurrencyCode = await getTenantCurrencyCode(input.referredTenantId);
+
     await db.from("referral_rewards").upsert(
       {
         referral_signup_id: signup.id,
@@ -138,7 +151,7 @@ export async function captureTenantReferral(input: CaptureReferralInput) {
         reward_rate_percent: DEFAULT_TENANT_REFERRAL_REWARD_RATE_PERCENT,
         monthly_subscription_amount: 0,
         estimated_monthly_reward: calculateReferralRewardAmount(0, DEFAULT_TENANT_REFERRAL_REWARD_RATE_PERCENT),
-        currency_code: "GBP",
+        currency_code: referredTenantCurrencyCode,
         reward_status: "trial",
         updated_at: new Date().toISOString(),
       },
