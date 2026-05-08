@@ -183,8 +183,8 @@ function OrduvaPlatformLanding({ searchParams }: { searchParams: SearchParamsRec
     </main>
   );
 }
-export default async function HomePage({ searchParams }: { searchParams?: Promise<SearchParamsRecord> | SearchParamsRecord }) {
-  const resolvedSearchParams = await Promise.resolve(searchParams || {});
+export default async function HomePage({ searchParams }: { searchParams?: Promise<SearchParamsRecord> }) {
+  const resolvedSearchParams = (await searchParams) || {};
   const isPlatformRoot = await isRootPlatformRequest();
 
   if (isPlatformRoot) {
