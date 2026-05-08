@@ -1,1 +1,1 @@
-export const LIVE_VERSION = "Ver: 0.186"
+export const LIVE_VERSION = "Ver: 0.187"

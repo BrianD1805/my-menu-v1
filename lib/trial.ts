@@ -25,7 +25,7 @@ export type TenantTrialState = {
   customerMessage: string | null;
 };
 
-export function createTrialInsertFields(now = new Date(), trialDays = DEFAULT_TRIAL_DAYS): TenantTrialInsertFields {
+export function createTrialInsertFields(now = new Date(), trialDays = DEFAULT_TRIAL_DAYS, planName = DEFAULT_TRIAL_PLAN): TenantTrialInsertFields {
   const trialStartedAt = new Date(now);
   const trialEndsAt = new Date(trialStartedAt);
   trialEndsAt.setUTCDate(trialEndsAt.getUTCDate() + trialDays);
@@ -35,7 +35,7 @@ export function createTrialInsertFields(now = new Date(), trialDays = DEFAULT_TR
     trial_started_at: trialStartedAt.toISOString(),
     trial_ends_at: trialEndsAt.toISOString(),
     subscription_status: "trial",
-    plan_name: DEFAULT_TRIAL_PLAN,
+    plan_name: planName || DEFAULT_TRIAL_PLAN,
   };
 }
 

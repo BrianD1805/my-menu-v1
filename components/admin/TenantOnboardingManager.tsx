@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
+import { PRICING_CURRENCIES, PRICING_PLANS, PricingCurrencyCode, PricingPlanCode, DEFAULT_PRICING_CURRENCY, DEFAULT_PRICING_PLAN, suggestedCurrencyFromBrowser, getPricingCurrency, getPricingPlan, formatPlanPrice, monthlyPriceForPlan } from "@/lib/pricing";
 
 type TenantSummary = {
   id: string;
@@ -29,11 +30,12 @@ type Props = {
 
 const RESERVED_SLUGS = new Set(["admin", "api", "app", "assets", "static", "www", "orduva", "zimzaexpress", "zimza-express", "localhost", "support", "help", "login", "platform"]);
 
-const COUNTRY_OPTIONS = [
-  { code: "GB", label: "United Kingdom", hint: "GBP / Stripe-friendly" },
-  { code: "ZA", label: "South Africa", hint: "ZAR / Yoco-friendly" },
-  { code: "KE", label: "Kenya", hint: "KES / Pesapal & M-Pesa-friendly" },
-];
+const STORE_CURRENCY_OPTIONS = PRICING_CURRENCIES.map((currency) => ({
+  code: currency.code,
+  countryCode: currency.countryCode,
+  label: currency.shortLabel,
+  hint: `${currency.code} / Stripe-ready`,
+}));
 
 const PRE_LAUNCH_STEPS = [
   "Create store foundation and starter Menu category",
@@ -77,7 +79,8 @@ function buildPublicAdminLoginUrl(slug: string) {
 export default function TenantOnboardingManager({ initialTenants, apiPath = "/api/admin/tenants", platformMode = false, clientMode = false }: Props) {
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
-  const [countryCode, setCountryCode] = useState("GB");
+  const [storeCurrencyCode, setStoreCurrencyCode] = useState<PricingCurrencyCode>(DEFAULT_PRICING_CURRENCY);
+  const [selectedPlanCode, setSelectedPlanCode] = useState<PricingPlanCode>(DEFAULT_PRICING_PLAN);
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactWhatsApp, setContactWhatsApp] = useState("");
@@ -106,6 +109,8 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const effectiveSlug = slugify(slug || suggestedSlug);
   const storefrontPreview = effectiveSlug ? `https://${effectiveSlug}.orduva.com` : "https://clientname.orduva.com";
   const adminPreview = "https://admin.orduva.com/admin";
+  const selectedStoreCurrency = getPricingCurrency(storeCurrencyCode);
+  const selectedPlan = getPricingPlan(selectedPlanCode);
   const duplicateSlug = tenants.some((tenant) => tenant.slug === effectiveSlug);
   const reservedSlug = RESERVED_SLUGS.has(effectiveSlug);
   const ownerDashboard = useMemo(() => {
@@ -194,6 +199,13 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       window.sessionStorage.setItem("orduva_ref_landing_url", window.location.href);
     }
 
+    const incomingCurrency = params.get("currency")?.toUpperCase();
+    const incomingPlan = params.get("plan")?.toLowerCase();
+    const browserCurrency = suggestedCurrencyFromBrowser(window.navigator.language, Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if (PRICING_CURRENCIES.some((currency) => currency.code === incomingCurrency)) setStoreCurrencyCode(incomingCurrency as PricingCurrencyCode);
+    else setStoreCurrencyCode(browserCurrency);
+    if (PRICING_PLANS.some((plan) => plan.code === incomingPlan)) setSelectedPlanCode(incomingPlan as PricingPlanCode);
+
     setRefTenant(incomingRefTenant || window.sessionStorage.getItem("orduva_ref_tenant") || "");
     setRefSource(incomingRefSource || window.sessionStorage.getItem("orduva_ref_source") || "");
     setReferralCode(incomingReferralCode || window.sessionStorage.getItem("orduva_ref_code") || "");
@@ -236,7 +248,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
         body: JSON.stringify({
           businessName,
           slug: effectiveSlug,
-          countryCode,
+          countryCode: selectedStoreCurrency.countryCode,
+          storeCurrencyCode,
+          planCode: selectedPlanCode,
           contactPhone,
           contactEmail,
           contactWhatsApp,
@@ -295,6 +309,8 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setRefSource("");
       setReferralCode("");
       setRefLandingUrl("");
+      setStoreCurrencyCode(DEFAULT_PRICING_CURRENCY);
+      setSelectedPlanCode(DEFAULT_PRICING_PLAN);
       setMessage(clientMode ? "Your Orduva store has been created. Follow the next steps below to finish your setup." : "Client store foundation created. Use the launch links and checklist on the right.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Failed to create store");
@@ -439,16 +455,35 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             </label>
 
             <label className="block sm:col-span-2">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">Country / currency base</span>
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Store currency</span>
               <select
-                value={countryCode}
-                onChange={(event) => setCountryCode(event.target.value)}
+                value={storeCurrencyCode}
+                onChange={(event) => setStoreCurrencyCode(event.target.value as PricingCurrencyCode)}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
               >
-                {COUNTRY_OPTIONS.map((country) => (
-                  <option key={country.code} value={country.code}>{country.label} — {country.hint}</option>
+                {STORE_CURRENCY_OPTIONS.map((currency) => (
+                  <option key={currency.code} value={currency.code}>{currency.code} — {currency.label} — {currency.hint}</option>
                 ))}
               </select>
+              <p className="mt-2 rounded-2xl border border-[#F97316]/15 bg-[#FFF1E6] px-4 py-3 text-xs leading-5 text-[#7A5843]">
+                This currency controls your storefront product prices, future Stripe subscription currency and referral commission currency.
+              </p>
+            </label>
+
+            <label className="block sm:col-span-2">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Preferred plan after trial</span>
+              <select
+                value={selectedPlanCode}
+                onChange={(event) => setSelectedPlanCode(event.target.value as PricingPlanCode)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              >
+                {PRICING_PLANS.map((plan) => (
+                  <option key={plan.code} value={plan.code}>{plan.name} — {plan.productLimitLabel} — {formatPlanPrice(monthlyPriceForPlan(plan.code, storeCurrencyCode), storeCurrencyCode, { forceDecimals: true })} / month</option>
+                ))}
+              </select>
+              <p className="mt-2 rounded-2xl border border-[#F97316]/15 bg-[#FFF1E6] px-4 py-3 text-xs leading-5 text-[#7A5843]">
+                You start with a 7-day trial. Stripe checkout is being wired next, so no payment is taken here. Current selection: {selectedPlan.name} in {selectedStoreCurrency.code}.
+              </p>
             </label>
 
             <label className="block">

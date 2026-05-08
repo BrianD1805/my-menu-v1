@@ -1,4 +1,5 @@
 import TenantOnboardingManager from "@/components/admin/TenantOnboardingManager";
+import PricingPlans from "@/components/marketing/PricingPlans";
 import { LIVE_VERSION } from "@/lib/version";
 
 export default function StartYourStorePage() {
@@ -61,6 +62,8 @@ export default function StartYourStorePage() {
               </div>
             </div>
           </section>
+
+          <PricingPlans onboardingHref="/start-your-store" compact />
 
           <section className="border-t border-[#51372D]/12 bg-[#EFE6D9]/72 px-5 py-8 sm:px-7 lg:px-9 lg:py-10">
             <div className="mx-auto max-w-4xl">

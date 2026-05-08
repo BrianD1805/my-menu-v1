@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { createTrialInsertFields } from "@/lib/trial";
+import { normalisePricingCurrencyCode, normalisePricingPlanCode, pricingCountryCodeForCurrency } from "@/lib/pricing";
 import { captureTenantReferral, normalizeReferralPayload } from "@/lib/referrals";
 import { hashOwnerPassword, normalizeOwnerEmail } from "@/lib/admin-auth";
 import { sendOnboardingLaunchNotifications } from "@/lib/onboarding-email";
@@ -75,6 +76,28 @@ const COUNTRY_DEFAULTS: Record<string, CurrencyDefaults> = {
     currencyThousandsSeparator: ",",
     currencySuffix: "/-",
   },
+  US: {
+    currencyName: "US Dollar",
+    currencyCode: "USD",
+    currencySymbol: "$",
+    currencyDisplayMode: "symbol",
+    currencySymbolPosition: "before",
+    currencyDecimalPlaces: 2,
+    currencyUseThousandsSeparator: true,
+    currencyDecimalSeparator: ".",
+    currencyThousandsSeparator: ",",
+  },
+  EU: {
+    currencyName: "Euro",
+    currencyCode: "EUR",
+    currencySymbol: "€",
+    currencyDisplayMode: "symbol",
+    currencySymbolPosition: "before",
+    currencyDecimalPlaces: 2,
+    currencyUseThousandsSeparator: true,
+    currencyDecimalSeparator: ".",
+    currencyThousandsSeparator: ",",
+  },
 };
 
 function normalizeSlug(value: unknown) {
@@ -99,7 +122,7 @@ function looksLikeEmail(value: string | null) {
 
 function getCountryCode(value: unknown) {
   const code = String(value || "").trim().toUpperCase();
-  return code === "GB" || code === "ZA" || code === "KE" ? code : "GB";
+  return code === "GB" || code === "ZA" || code === "KE" || code === "US" || code === "EU" ? code : "ZA";
 }
 
 function getClientIp(req: Request) {
@@ -154,7 +177,9 @@ export async function POST(req: Request) {
 
     const businessName = normalizeOptionalText(body?.businessName, 120);
     const slug = normalizeSlug(body?.slug || businessName);
-    const countryCode = getCountryCode(body?.countryCode);
+    const storeCurrencyCode = normalisePricingCurrencyCode(body?.storeCurrencyCode || body?.currencyCode);
+    const selectedPlanCode = normalisePricingPlanCode(body?.planCode);
+    const countryCode = getCountryCode(body?.countryCode || pricingCountryCodeForCurrency(storeCurrencyCode));
     const contactPhone = normalizeOptionalText(body?.contactPhone, 80);
     const contactEmail = normalizeOptionalText(body?.contactEmail, 160);
     const contactWhatsApp = normalizeOptionalText(body?.contactWhatsApp, 80);
@@ -207,7 +232,7 @@ export async function POST(req: Request) {
         slug,
         status: "setup",
         whatsapp_number: contactWhatsApp || contactPhone,
-        ...createTrialInsertFields(),
+        ...createTrialInsertFields(undefined, undefined, `${selectedPlanCode}_trial`),
       })
       .select("id, name, slug, status, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name, created_at")
       .single();
