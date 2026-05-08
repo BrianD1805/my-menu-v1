@@ -97,7 +97,7 @@ export default function PricingPlans({ onboardingHref = "/start-your-store", com
   }
 
   return (
-    <section id="pricing" className={`${compact ? "" : "border-t border-[#51372D]/12"} bg-white px-5 py-8 sm:px-7 lg:px-9 lg:py-10`}>
+    <section id="pricing" className={`${compact ? "" : "border-t border-[#51372D]/12"} bg-white px-4 py-7 sm:px-7 lg:px-9 lg:py-10`}>
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -144,23 +144,23 @@ export default function PricingPlans({ onboardingHref = "/start-your-store", com
         <p className="mt-6 text-center text-xs font-black uppercase tracking-[0.18em] text-[#B74A16] lg:hidden">Swipe for plan options</p>
 
         <div
-          className="mt-3 flex snap-x snap-mandatory gap-5 overflow-x-auto rounded-[34px] bg-[#FFF8EF]/70 px-5 py-5 sm:px-7 lg:mt-7 lg:grid lg:grid-cols-3 lg:overflow-visible lg:bg-transparent lg:px-0 lg:py-0"
-          style={{ scrollPaddingInline: "1.25rem" }}
+          className="mx-auto mt-3 flex max-w-[360px] snap-x snap-mandatory gap-4 overflow-x-auto rounded-[30px] bg-[#FFF8EF]/70 px-3 py-4 sm:max-w-[390px] sm:px-4 lg:mt-7 lg:max-w-none lg:grid lg:grid-cols-3 lg:overflow-visible lg:bg-transparent lg:px-0 lg:py-0"
+          style={{ scrollPaddingInline: "0.75rem" }}
         >
           {PRICING_PLANS.map((plan) => {
             const amount = priceForPlan(plan.code, currencyCode, billingInterval);
             const selected = selectedPlanCode === plan.code;
             const selecting = selectingPlanCode === plan.code;
             return (
-              <article key={plan.code} className={`relative w-[min(86vw,390px)] flex-none snap-center overflow-hidden rounded-[32px] border p-5 shadow-[0_22px_58px_rgba(81,55,45,0.10)] transition hover:-translate-y-[3px] sm:w-[390px] lg:w-auto lg:max-w-none ${plan.highlight ? "border-[#F97316]/35 bg-[linear-gradient(180deg,#FFF7ED_0%,#FFFFFF_62%,#FFF8EF_100%)]" : "border-[#E8D8C8]/90 bg-white"} ${selected ? "ring-2 ring-[#F97316]/25" : ""}`}>
+              <article key={plan.code} className={`relative w-full flex-none snap-center overflow-hidden rounded-[28px] border p-4 shadow-[0_18px_46px_rgba(81,55,45,0.10)] transition hover:-translate-y-[3px] sm:p-5 lg:w-auto lg:max-w-none lg:rounded-[32px] ${plan.highlight ? "border-[#F97316]/35 bg-[linear-gradient(180deg,#FFF7ED_0%,#FFFFFF_62%,#FFF8EF_100%)]" : "border-[#E8D8C8]/90 bg-white"} ${selected ? "ring-2 ring-[#F97316]/25" : ""}`}>
                 {plan.highlight ? (
                   <p className="absolute right-5 top-5 rounded-full bg-[#F97316] px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-sm">{plan.highlight}</p>
                 ) : null}
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-[#B74A16]">{plan.productLimitLabel}</p>
-                <h3 className="mt-3 text-3xl font-black tracking-tight text-[#14110F]">{plan.name}</h3>
-                <p className="mt-3 min-h-[72px] text-sm leading-6 text-[#667069]">{plan.description}</p>
-                <div className="mt-5 rounded-[24px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-4">
-                  <p className="text-4xl font-black tracking-tight text-[#14110F]">{formatPlanPrice(amount, currencyCode, { forceDecimals: billingInterval === "monthly" })}</p>
+                <h3 className="mt-3 text-2xl font-black tracking-tight text-[#14110F] sm:text-3xl">{plan.name}</h3>
+                <p className="mt-2 min-h-[58px] text-sm leading-6 text-[#667069] sm:mt-3 sm:min-h-[72px]">{plan.description}</p>
+                <div className="mt-4 rounded-[22px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-3 sm:mt-5 sm:p-4">
+                  <p className="text-3xl font-black tracking-tight text-[#14110F] sm:text-4xl">{formatPlanPrice(amount, currencyCode, { forceDecimals: billingInterval === "monthly" })}</p>
                   <p className="mt-1 text-sm font-bold text-[#667069]">per {billingInterval === "yearly" ? "year" : "month"}</p>
                   {billingInterval === "yearly" ? (
                     <p className="mt-2 text-xs font-bold text-[#B74A16]">Equivalent to about {formatPlanPrice(Math.round((amount / 12) * 100) / 100, currencyCode)} / month after discount.</p>
@@ -168,7 +168,7 @@ export default function PricingPlans({ onboardingHref = "/start-your-store", com
                     <p className="mt-2 text-xs font-bold text-[#B74A16]">Yearly price: {formatPlanPrice(priceForPlan(plan.code, currencyCode, "yearly"), currencyCode)} / year.</p>
                   )}
                 </div>
-                <ul className="mt-5 space-y-3 text-sm leading-6 text-[#4B514C]">
+                <ul className="mt-4 space-y-2.5 text-sm leading-6 text-[#4B514C] sm:mt-5 sm:space-y-3">
                   <li className="flex gap-2"><span className="font-black text-[#F97316]">✓</span><span>{plan.productLimitLabel}</span></li>
                   <li className="flex gap-2"><span className="font-black text-[#F97316]">✓</span><span>FREE 7-day trial before paid subscription</span></li>
                   <li className="flex gap-2"><span className="font-black text-[#F97316]">✓</span><span>Customer accounts, favourites, Buy Again and admin order flow</span></li>
@@ -177,14 +177,14 @@ export default function PricingPlans({ onboardingHref = "/start-your-store", com
                   <button
                     type="button"
                     onClick={() => handlePlanSelect(plan.code)}
-                    className={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black shadow-sm transition hover:-translate-y-[1px] ${selected ? "bg-[#F97316] text-white hover:bg-[#EA580C]" : "bg-[#14110F] text-white hover:bg-[#2A211D]"}`}
+                    className={`mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black shadow-sm transition hover:-translate-y-[1px] sm:mt-6 sm:px-5 ${selected ? "bg-[#F97316] text-white hover:bg-[#EA580C]" : "bg-[#14110F] text-white hover:bg-[#2A211D]"}`}
                   >
                     {selecting ? `${plan.name} Plan selected` : selected ? `${plan.name} Plan selected` : `Select ${plan.name} Plan`}
                   </button>
                 ) : (
                   <a
                     href={buildPlanHref(onboardingHref, plan.code, currencyCode, billingInterval)}
-                    className={`mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black shadow-sm transition hover:-translate-y-[1px] ${plan.highlight ? "bg-[#F97316] text-white hover:bg-[#EA580C]" : "bg-[#14110F] text-white hover:bg-[#2A211D]"}`}
+                    className={`mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-black shadow-sm transition hover:-translate-y-[1px] sm:mt-6 sm:px-5 ${plan.highlight ? "bg-[#F97316] text-white hover:bg-[#EA580C]" : "bg-[#14110F] text-white hover:bg-[#2A211D]"}`}
                   >
                     Select {plan.name} Plan
                   </a>
