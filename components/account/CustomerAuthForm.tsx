@@ -30,6 +30,8 @@ export default function CustomerAuthForm({
     const url = mode === "signup" ? "/api/customer/auth/signup" : "/api/customer/auth/login";
     const response = await fetch(url, {
       method: "POST",
+      credentials: "same-origin",
+      cache: "no-store",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });

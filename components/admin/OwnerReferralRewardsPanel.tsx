@@ -320,16 +320,19 @@ export default function OwnerReferralRewardsPanel() {
             const rewardId = row.reward?.id || "";
             const draft = rewardId ? drafts[rewardId] : null;
             const currency = draft?.currencyCode || row.reward?.currency_code || "GBP";
+            const referrerName = row.referrerTenant?.name || row.source?.display_name || row.signup.referral_code || "Referral source";
+            const referredName = row.referredTenant?.name || row.referredTenant?.slug || "Referred store";
             return (
               <article key={row.signup.id} className="rounded-[26px] border border-[#0E0E10]/10 bg-[#FDFBF8] p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-black text-[#0E0E10]">{row.referredTenant?.name || "Referred store"}</h3>
+                      <h3 className="text-xl font-black text-[#0E0E10]">{referrerName}</h3>
                       <span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] ring-1", statusClasses(row.reward?.reward_status)].join(" ")}>{row.reward?.reward_status || "trial"}</span>
                       <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[#5C5F66] ring-1 ring-[#0E0E10]/10">{row.reward?.reward_rate_percent ?? row.source?.reward_rate_percent ?? 15}% monthly</span>
                     </div>
-                    <p className="mt-1 text-sm font-bold text-[#C84F2A]">Referred by {row.referrerTenant?.name || row.source?.display_name || row.signup.referral_code || "Referral source"}</p>
+                    <p className="mt-1 text-sm font-black uppercase tracking-[0.14em] text-[#C84F2A]">Referring tenant</p>
+                    <p className="mt-2 text-sm font-bold text-[#0E0E10]">Referred store: <span className="text-[#C84F2A]">{referredName}</span></p>
                     <p className="mt-1 text-xs font-semibold text-[#68707A]">
                       Code {row.signup.referral_code || row.source?.referral_code || "not recorded"} · Source {row.signup.ref_source || "storefront footer"} · Captured {dateLabel(row.signup.created_at)}
                     </p>

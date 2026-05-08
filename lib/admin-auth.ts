@@ -93,12 +93,14 @@ function readAdminSessionToken(token: string | null | undefined): SessionPayload
 
 function sessionCookieOptions() {
   const secure = process.env.NODE_ENV === "production";
+  const expires = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
   return {
     httpOnly: true,
     sameSite: "lax" as const,
     secure,
     path: "/",
     maxAge: SESSION_TTL_SECONDS,
+    expires,
   };
 }
 

@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-185';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-185';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-185';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-185b';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-185b';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-185b';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -26,6 +26,23 @@ self.addEventListener('activate', (event) => {
     )).then(() => self.clients.claim())
   );
 });
+
+
+function isSessionSensitivePath(url) {
+  return (
+    url.pathname === '/account' ||
+    url.pathname.startsWith('/account/') ||
+    url.pathname === '/admin' ||
+    url.pathname.startsWith('/admin/') ||
+    url.pathname === '/platform' ||
+    url.pathname.startsWith('/platform/') ||
+    url.pathname === '/checkout' ||
+    url.pathname.startsWith('/checkout/') ||
+    url.pathname.startsWith('/api/customer/') ||
+    url.pathname.startsWith('/api/admin/') ||
+    url.pathname.startsWith('/api/platform/')
+  );
+}
 
 function isCacheableStatic(request, url) {
   return (
@@ -139,6 +156,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Ver-0.185B: do not let the storefront PWA cache/session shell touch
+  // customer account, tenant admin, platform, checkout, or auth/API areas.
+  // These pages must always see fresh cookies/sessions.
+  if (isSessionSensitivePath(url)) {
+    return;
+  }
 
   if (url.pathname === '/api/products') {
     event.respondWith(staleWhileRevalidate(request));
