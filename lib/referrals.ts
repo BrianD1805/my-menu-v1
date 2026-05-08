@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { calculateReferralRewardAmount } from "@/lib/referral-rewards";
 
 export const DEFAULT_TENANT_REFERRAL_REWARD_RATE_PERCENT = 15;
 
@@ -106,7 +107,7 @@ export async function captureTenantReferral(input: CaptureReferralInput) {
     return { captured: false, reason: "source_not_saved" };
   }
 
-  await db.from("referral_signups").upsert(
+  const { data: signup } = await db.from("referral_signups").upsert(
     {
       referral_source_id: source.id,
       referred_tenant_id: input.referredTenantId,
@@ -123,7 +124,27 @@ export async function captureTenantReferral(input: CaptureReferralInput) {
       updated_at: new Date().toISOString(),
     },
     { onConflict: "referred_tenant_id" },
-  );
+  )
+    .select("id")
+    .maybeSingle();
 
-  return { captured: true, referrerTenantId: referrerTenant.id, referralSourceId: source.id };
+  if (signup?.id) {
+    await db.from("referral_rewards").upsert(
+      {
+        referral_signup_id: signup.id,
+        referral_source_id: source.id,
+        referrer_tenant_id: referrerTenant.id,
+        referred_tenant_id: input.referredTenantId,
+        reward_rate_percent: DEFAULT_TENANT_REFERRAL_REWARD_RATE_PERCENT,
+        monthly_subscription_amount: 0,
+        estimated_monthly_reward: calculateReferralRewardAmount(0, DEFAULT_TENANT_REFERRAL_REWARD_RATE_PERCENT),
+        currency_code: "GBP",
+        reward_status: "trial",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "referral_signup_id" },
+    );
+  }
+
+  return { captured: true, referrerTenantId: referrerTenant.id, referralSourceId: source.id, referralSignupId: signup?.id || null };
 }

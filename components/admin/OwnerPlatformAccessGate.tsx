@@ -251,6 +251,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
           <div className="flex flex-wrap items-center gap-2">
             <Link href="/platform" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Dashboard</Link>
             <Link href="/platform/onboarding" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Onboarding</Link>
+            <Link href="/platform/referrals" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Referrals</Link>
             <Link href="/platform/security" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-[#FFB168]/35 bg-[#FFB168]/15 px-3 py-2 text-xs font-black text-white transition hover:bg-[#FFB168]/25">Security</Link>
             <button type="button" onClick={lock} className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Lock owner area</button>
           </div>
