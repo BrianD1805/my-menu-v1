@@ -70,37 +70,37 @@ export default function AdminShell({
     <main className={`relative min-h-screen overflow-x-clip ${adminBackgroundClass} px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7`}>
       <div className={`pointer-events-none absolute inset-0 -z-10 ${adminBackdropClass}`} />
       <div className="mx-auto max-w-6xl">
-        <div className="sticky top-0 z-50 mb-3 rounded-[24px] border border-[#0E0E10]/10 bg-[#0E0E10]/96 p-2.5 text-white shadow-[0_18px_50px_rgba(14,14,16,0.16)] backdrop-blur-xl sm:mb-4 sm:p-4">
+        <div className="sticky top-2 z-50 mb-3 rounded-[24px] border border-[#0E0E10]/10 bg-white/96 p-2.5 text-[#0E0E10] shadow-[0_18px_50px_rgba(14,14,16,0.13)] backdrop-blur-xl sm:mb-4 sm:p-4">
           <div className="flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-white/15 bg-white/10 text-base font-black shadow-[0_12px_26px_rgba(0,0,0,0.16)]"
+                className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-[#0E0E10]/10 bg-[#FFF7F0] text-base font-black text-[#0E0E10] shadow-[0_12px_26px_rgba(14,14,16,0.10)]"
                 style={{ boxShadow: `0 12px 26px ${identityAccent}24` }}
               >
                 {identityIconUrl ? <img src={identityIconUrl} alt={`${tenantName} favicon`} className="h-full w-full object-contain p-1" /> : tenantInitial}
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFB168]">Active store</p>
-                <p className="truncate text-lg font-black leading-tight text-white sm:text-xl">{tenantName}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C84F2A]">Active store</p>
+                <p className="truncate text-lg font-black leading-tight text-[#0E0E10] sm:text-xl">{tenantName}</p>
                 {tenantSlug ? (
                   <a
                     href={storefrontUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-0.5 block truncate text-xs font-semibold text-white/68 underline-offset-4 transition hover:text-[#FFB168] hover:underline"
+                    className="mt-0.5 block truncate text-xs font-semibold text-[#5C5F66] underline-offset-4 transition hover:text-[#C84F2A] hover:underline"
                     title="Open storefront"
                   >
                     {tenantSlug}.orduva.com
                   </a>
                 ) : (
-                  <p className="mt-0.5 truncate text-xs font-semibold text-white/68">Store address unavailable</p>
+                  <p className="mt-0.5 truncate text-xs font-semibold text-[#5C5F66]">Store address unavailable</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-center justify-between gap-2 sm:justify-end">
               <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
-              <span className="hidden min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/40 bg-[#FF6A3D] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_28px_rgba(255,106,61,0.18)] sm:inline-flex">
+              <span className="hidden min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#C84F2A] shadow-sm sm:inline-flex">
                 {LIVE_VERSION.replace("Ver: ", "V ")}
               </span>
             </div>
