@@ -121,39 +121,38 @@ export default function PricingPlans({ onboardingHref = "/start-your-store", com
                 ))}
               </select>
             </div>
-            <div className="mt-3 rounded-2xl border border-[#E8D8C8] bg-white p-1 shadow-inner">
-              <div className="relative grid grid-cols-2">
+            <div className="mt-3">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={billingInterval === "yearly"}
+                onClick={() => setBillingInterval((current) => (current === "monthly" ? "yearly" : "monthly"))}
+                className="group relative flex min-h-12 w-full items-center justify-between overflow-hidden rounded-full border border-[#E8D8C8] bg-white p-1.5 text-sm font-black shadow-inner transition focus:outline-none focus:ring-2 focus:ring-[#F97316]/20"
+              >
                 <span
-                  className={`absolute bottom-0 top-0 w-1/2 rounded-xl bg-[#14110F] shadow-[0_10px_24px_rgba(20,17,15,0.16)] transition-transform duration-300 ${billingInterval === "yearly" ? "translate-x-full" : "translate-x-0"}`}
+                  className={`absolute bottom-1.5 top-1.5 w-[calc(50%-6px)] rounded-full bg-[#14110F] shadow-[0_10px_24px_rgba(20,17,15,0.16)] transition-transform duration-300 ease-out ${billingInterval === "yearly" ? "translate-x-[calc(100%+6px)]" : "translate-x-0"}`}
                   aria-hidden="true"
                 />
-                <button
-                  type="button"
-                  onClick={() => setBillingInterval("monthly")}
-                  className={`relative z-10 min-h-10 rounded-xl px-4 py-2 text-sm font-black transition ${billingInterval === "monthly" ? "text-white" : "text-[#5F625F] hover:text-[#14110F]"}`}
-                >
-                  Monthly
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBillingInterval("yearly")}
-                  className={`relative z-10 min-h-10 rounded-xl px-4 py-2 text-sm font-black transition ${billingInterval === "yearly" ? "text-white" : "text-[#5F625F] hover:text-[#14110F]"}`}
-                >
-                  Yearly -{YEARLY_DISCOUNT_PERCENT}%
-                </button>
-              </div>
+                <span className={`relative z-10 flex w-1/2 items-center justify-center rounded-full px-3 py-2 transition ${billingInterval === "monthly" ? "text-white" : "text-[#5F625F]"}`}>Monthly</span>
+                <span className={`relative z-10 flex w-1/2 items-center justify-center rounded-full px-3 py-2 transition ${billingInterval === "yearly" ? "text-white" : "text-[#5F625F]"}`}>Yearly -{YEARLY_DISCOUNT_PERCENT}%</span>
+              </button>
             </div>
             <p className="mt-2 text-xs leading-5 text-[#667069]">Showing {selectedCurrency.label}. You can change this manually.</p>
           </div>
         </div>
 
-        <div className="-mx-5 mt-7 flex snap-x snap-mandatory gap-5 overflow-x-auto px-5 pb-4 sm:-mx-7 sm:px-7 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0">
+        <p className="mt-6 text-center text-xs font-black uppercase tracking-[0.18em] text-[#B74A16] lg:hidden">Swipe for plan options</p>
+
+        <div
+          className="mt-3 flex snap-x snap-mandatory gap-5 overflow-x-auto rounded-[34px] bg-[#FFF8EF]/70 px-5 py-5 sm:px-7 lg:mt-7 lg:grid lg:grid-cols-3 lg:overflow-visible lg:bg-transparent lg:px-0 lg:py-0"
+          style={{ scrollPaddingInline: "1.25rem" }}
+        >
           {PRICING_PLANS.map((plan) => {
             const amount = priceForPlan(plan.code, currencyCode, billingInterval);
             const selected = selectedPlanCode === plan.code;
             const selecting = selectingPlanCode === plan.code;
             return (
-              <article key={plan.code} className={`relative w-[calc(100vw-2.5rem)] max-w-[390px] flex-none snap-center overflow-hidden rounded-[32px] border p-5 shadow-[0_22px_58px_rgba(81,55,45,0.10)] transition hover:-translate-y-[3px] sm:w-[380px] lg:w-auto lg:max-w-none ${plan.highlight ? "border-[#F97316]/35 bg-[linear-gradient(180deg,#FFF7ED_0%,#FFFFFF_62%,#FFF8EF_100%)]" : "border-[#E8D8C8]/90 bg-white"} ${selected ? "ring-2 ring-[#F97316]/25" : ""}`}>
+              <article key={plan.code} className={`relative w-[min(86vw,390px)] flex-none snap-center overflow-hidden rounded-[32px] border p-5 shadow-[0_22px_58px_rgba(81,55,45,0.10)] transition hover:-translate-y-[3px] sm:w-[390px] lg:w-auto lg:max-w-none ${plan.highlight ? "border-[#F97316]/35 bg-[linear-gradient(180deg,#FFF7ED_0%,#FFFFFF_62%,#FFF8EF_100%)]" : "border-[#E8D8C8]/90 bg-white"} ${selected ? "ring-2 ring-[#F97316]/25" : ""}`}>
                 {plan.highlight ? (
                   <p className="absolute right-5 top-5 rounded-full bg-[#F97316] px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-sm">{plan.highlight}</p>
                 ) : null}

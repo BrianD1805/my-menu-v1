@@ -54,7 +54,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-187";
+const STOREFRONT_CACHE_VERSION = "ver-0-187b";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
