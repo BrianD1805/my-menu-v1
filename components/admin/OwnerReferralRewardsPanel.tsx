@@ -58,11 +58,14 @@ type ReferralPayload = {
     totalPendingCredits: number;
     totalPaidCredits: number;
     totalSubscriptionPayments?: number;
+    uniqueReferrers?: number;
+    uniqueReferredStores?: number;
+    totalsByCurrency?: Record<string, { estimatedMonthlyLiability: number; pendingCredits: number; paidCredits: number; subscriptionPayments: number }>;
   };
 };
 type DraftState = Record<string, { rewardRatePercent: string; monthlySubscriptionAmount: string; currencyCode: string; rewardStatus: string; notes: string; creditMonth: string; paymentReference: string }>;
 
-type FilterKey = "all" | "trial" | "active" | "paused" | "cancelled" | "pending";
+type FilterKey = "all" | "trial" | "active" | "paused" | "cancelled" | "pending" | "paid";
 
 const EMPTY_SUMMARY = {
   totalReferrals: 0,
@@ -74,6 +77,9 @@ const EMPTY_SUMMARY = {
   totalPendingCredits: 0,
   totalPaidCredits: 0,
   totalSubscriptionPayments: 0,
+  uniqueReferrers: 0,
+  uniqueReferredStores: 0,
+  totalsByCurrency: {},
 };
 
 function monthInputValue(date = new Date()) {
@@ -88,6 +94,23 @@ function money(value: unknown, currency = "GBP") {
   } catch {
     return `${cleanCurrency} ${amount.toFixed(2)}`;
   }
+}
+
+function moneyByCurrency(
+  totalsByCurrency: ReferralPayload["summary"]["totalsByCurrency"] | undefined,
+  field: "estimatedMonthlyLiability" | "pendingCredits" | "paidCredits" | "subscriptionPayments",
+  fallbackValue = 0,
+) {
+  const entries = Object.entries(totalsByCurrency || {})
+    .map(([currency, totals]) => ({ currency, amount: Number(totals?.[field] || 0) }))
+    .filter((entry) => entry.amount > 0);
+
+  if (!entries.length) return money(fallbackValue);
+
+  return entries
+    .sort((a, b) => a.currency.localeCompare(b.currency))
+    .map((entry) => money(entry.amount, entry.currency))
+    .join(" · ");
 }
 
 function dateLabel(value: string | null) {
@@ -126,6 +149,7 @@ function filterTitle(filter: FilterKey) {
   if (filter === "paused") return "Paused rewards";
   if (filter === "cancelled") return "Cancelled rewards";
   if (filter === "pending") return "Pending credits";
+  if (filter === "paid") return "Paid credits";
   return "All referrals";
 }
 
@@ -133,6 +157,7 @@ function rowMatches(row: ReferralRow, filter: FilterKey) {
   const status = String(row.reward?.reward_status || "trial").toLowerCase();
   if (filter === "all") return true;
   if (filter === "pending") return row.totals.pendingCredits > 0 || row.totals.pendingAmount > 0;
+  if (filter === "paid") return row.totals.paidCredits > 0 || row.totals.paidAmount > 0;
   return status === filter;
 }
 
@@ -183,11 +208,28 @@ export default function OwnerReferralRewardsPanel() {
   const rows = payload?.rows || [];
   const summary = payload?.summary || EMPTY_SUMMARY;
   const filteredRows = useMemo(() => rows.filter((row) => rowMatches(row, filter)), [rows, filter]);
+  const referralGroups = useMemo(() => {
+    const groups = new Map<string, { key: string; name: string; rows: ReferralRow[]; activeRewards: number; pendingAmount: number; paidAmount: number }>();
+    for (const row of filteredRows) {
+      const key = row.referrerTenant?.id || row.source?.id || row.signup.referral_code || row.signup.id;
+      const name = row.referrerTenant?.name || row.source?.display_name || row.signup.referral_code || "Referral source";
+      const current = groups.get(key) || { key, name, rows: [], activeRewards: 0, pendingAmount: 0, paidAmount: 0 };
+      current.rows.push(row);
+      if (row.reward?.reward_status === "active") current.activeRewards += 1;
+      current.pendingAmount += Number(row.totals.pendingAmount || 0);
+      current.paidAmount += Number(row.totals.paidAmount || 0);
+      groups.set(key, current);
+    }
+    return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [filteredRows]);
   const cards = [
-    { key: "all" as const, label: "Referrals", value: summary.totalReferrals, hint: "All captured referrals", className: "border-white/10 bg-white/10 text-white" },
+    { key: "all" as const, label: "Referring tenants", value: summary.uniqueReferrers || 0, hint: `${summary.totalReferrals || 0} total referral records`, className: "border-white/10 bg-white/10 text-white" },
+    { key: "all" as const, label: "Referred stores", value: summary.uniqueReferredStores || 0, hint: "Stores captured from referral links", className: "border-white/10 bg-white/10 text-white" },
+    { key: "active" as const, label: "Active rewards", value: summary.activeRewards, hint: "Monthly credits switched on", className: "border-emerald-300/30 bg-emerald-400/10 text-emerald-50" },
+    { key: "active" as const, label: "Monthly liability", value: moneyByCurrency(summary.totalsByCurrency, "estimatedMonthlyLiability", summary.estimatedMonthlyLiability), hint: "Estimated active rewards", className: "border-[#FFB168]/35 bg-[#FFB168]/10 text-[#FFE1C7]" },
+    { key: "pending" as const, label: "Pending credits", value: moneyByCurrency(summary.totalsByCurrency, "pendingCredits", summary.totalPendingCredits), hint: "Credited but unpaid", className: "border-orange-300/35 bg-orange-400/10 text-orange-50" },
+    { key: "paid" as const, label: "Paid credits", value: moneyByCurrency(summary.totalsByCurrency, "paidCredits", summary.totalPaidCredits), hint: "Credits already marked paid", className: "border-blue-300/30 bg-blue-400/10 text-blue-50" },
     { key: "trial" as const, label: "Trial", value: summary.trialRewards, hint: "Not paying yet", className: "border-[#FFB168]/35 bg-[#FFB168]/10 text-[#FFE1C7]" },
-    { key: "active" as const, label: "Active rewards", value: summary.activeRewards, hint: "Monthly credit active", className: "border-emerald-300/30 bg-emerald-400/10 text-emerald-50" },
-    { key: "pending" as const, label: "Pending credits", value: money(summary.totalPendingCredits), hint: "Credited but unpaid", className: "border-orange-300/35 bg-orange-400/10 text-orange-50" },
     { key: "paused" as const, label: "Paused", value: summary.pausedRewards, hint: "Not crediting now", className: "border-slate-300/20 bg-slate-400/10 text-slate-50" },
     { key: "cancelled" as const, label: "Cancelled", value: summary.cancelledRewards, hint: "Stopped rewards", className: "border-red-300/30 bg-red-500/10 text-red-50" },
   ];
@@ -287,11 +329,11 @@ export default function OwnerReferralRewardsPanel() {
           </button>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => {
             const selected = filter === card.key;
             return (
-              <button key={card.key} type="button" onClick={() => setFilter(card.key)} className={["rounded-[22px] border p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB168]", card.className, selected ? "ring-2 ring-[#FFB168] ring-offset-2 ring-offset-[#0E0E10]" : ""].join(" ")}>
+              <button key={`${card.label}-${card.key}`} type="button" onClick={() => setFilter(card.key)} className={["rounded-[22px] border p-4 text-left transition hover:-translate-y-0.5 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB168]", card.className, selected ? "ring-2 ring-[#FFB168] ring-offset-2 ring-offset-[#0E0E10]" : ""].join(" ")}>
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] opacity-75">{card.label}</p>
                 <p className="mt-2 text-2xl font-black leading-none">{card.value}</p>
                 <p className="mt-2 text-xs font-bold opacity-70">{card.hint}</p>
@@ -308,7 +350,10 @@ export default function OwnerReferralRewardsPanel() {
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Selected view</p>
           <h3 className="mt-1 text-xl font-black text-[#0E0E10]">{filterTitle(filter)}</h3>
           <p className="mt-1 text-sm font-semibold text-[#68707A]">
-            Estimated active monthly reward liability: <span className="font-black text-[#0E0E10]">{money(summary.estimatedMonthlyLiability)}</span> · Recorded subscription payments: <span className="font-black text-[#0E0E10]">{money(summary.totalSubscriptionPayments || 0)}</span> · Pending credits: <span className="font-black text-[#0E0E10]">{money(summary.totalPendingCredits)}</span> · Paid credits: <span className="font-black text-[#0E0E10]">{money(summary.totalPaidCredits)}</span>
+            Showing <span className="font-black text-[#0E0E10]">{filteredRows.length}</span> referral records across <span className="font-black text-[#0E0E10]">{referralGroups.length}</span> referring tenants.
+          </p>
+          <p className="mt-1 text-sm font-semibold text-[#68707A]">
+            Estimated active monthly reward liability: <span className="font-black text-[#0E0E10]">{moneyByCurrency(summary.totalsByCurrency, "estimatedMonthlyLiability", summary.estimatedMonthlyLiability)}</span> · Recorded subscription payments: <span className="font-black text-[#0E0E10]">{moneyByCurrency(summary.totalsByCurrency, "subscriptionPayments", summary.totalSubscriptionPayments || 0)}</span> · Pending credits: <span className="font-black text-[#0E0E10]">{moneyByCurrency(summary.totalsByCurrency, "pendingCredits", summary.totalPendingCredits)}</span> · Paid credits: <span className="font-black text-[#0E0E10]">{moneyByCurrency(summary.totalsByCurrency, "paidCredits", summary.totalPaidCredits)}</span>
           </p>
         </div>
 

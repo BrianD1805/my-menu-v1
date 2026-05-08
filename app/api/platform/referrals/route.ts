@@ -174,11 +174,34 @@ export async function GET(req: Request) {
     const totalPendingCredits = rows.reduce((sum, row) => sum + row.totals.pendingAmount, 0);
     const totalPaidCredits = rows.reduce((sum, row) => sum + row.totals.paidAmount, 0);
     const totalSubscriptionPayments = rows.reduce((sum, row) => sum + row.totals.subscriptionPaymentsAmount, 0);
+    const uniqueReferrerTenantIds = new Set(rows.map((row) => row.referrerTenant?.id).filter(Boolean));
+    const uniqueReferredTenantIds = new Set(rows.map((row) => row.referredTenant?.id).filter(Boolean));
+    const totalsByCurrency: Record<string, { estimatedMonthlyLiability: number; pendingCredits: number; paidCredits: number; subscriptionPayments: number }> = {};
+    for (const row of rows) {
+      const currencyCode = normaliseCurrency(row.reward?.currency_code || row.referredTenantCurrencyCode || "GBP", "GBP");
+      if (!totalsByCurrency[currencyCode]) {
+        totalsByCurrency[currencyCode] = { estimatedMonthlyLiability: 0, pendingCredits: 0, paidCredits: 0, subscriptionPayments: 0 };
+      }
+      if (row.reward?.reward_status === "active") {
+        totalsByCurrency[currencyCode].estimatedMonthlyLiability += Number(row.reward?.estimated_monthly_reward || 0);
+      }
+      totalsByCurrency[currencyCode].pendingCredits += Number(row.totals.pendingAmount || 0);
+      totalsByCurrency[currencyCode].paidCredits += Number(row.totals.paidAmount || 0);
+      totalsByCurrency[currencyCode].subscriptionPayments += Number(row.totals.subscriptionPaymentsAmount || 0);
+    }
+    for (const currencyCode of Object.keys(totalsByCurrency)) {
+      totalsByCurrency[currencyCode].estimatedMonthlyLiability = Math.round(totalsByCurrency[currencyCode].estimatedMonthlyLiability * 100) / 100;
+      totalsByCurrency[currencyCode].pendingCredits = Math.round(totalsByCurrency[currencyCode].pendingCredits * 100) / 100;
+      totalsByCurrency[currencyCode].paidCredits = Math.round(totalsByCurrency[currencyCode].paidCredits * 100) / 100;
+      totalsByCurrency[currencyCode].subscriptionPayments = Math.round(totalsByCurrency[currencyCode].subscriptionPayments * 100) / 100;
+    }
 
     return NextResponse.json({
       rows,
       summary: {
         totalReferrals: rows.length,
+        uniqueReferrers: uniqueReferrerTenantIds.size,
+        uniqueReferredStores: uniqueReferredTenantIds.size,
         trialRewards: rows.filter((row) => row.reward?.reward_status === "trial").length,
         activeRewards: activeRows.length,
         pausedRewards: rows.filter((row) => row.reward?.reward_status === "paused").length,
@@ -187,6 +210,7 @@ export async function GET(req: Request) {
         totalPendingCredits: Math.round(totalPendingCredits * 100) / 100,
         totalPaidCredits: Math.round(totalPaidCredits * 100) / 100,
         totalSubscriptionPayments: Math.round(totalSubscriptionPayments * 100) / 100,
+        totalsByCurrency,
       },
     });
   } catch (error) {
