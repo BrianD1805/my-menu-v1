@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import LogoutButton from "@/components/admin/LogoutButton";
-import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
+import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
 import type { TenantTrialState } from "@/lib/trial";
 
@@ -19,54 +19,6 @@ function navClassName(current?: boolean) {
   ].join(" ");
 }
 
-
-function formatTrialDate(value?: string | null) {
-  if (!value) return "date unavailable";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "date unavailable";
-  return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
-}
-
-function trialBannerClasses(trial?: TenantTrialState | null) {
-  if (!trial) return "border-[#0E0E10]/10 bg-white text-[#1F2328]";
-  if (trial.isTrialExpired) return "border-red-200 bg-red-50 text-red-900";
-  if ((trial.trialDaysRemaining ?? 99) <= 2) return "border-[#FF6A3D]/30 bg-[#FFF7F0] text-[#9A3412]";
-  return "border-emerald-200 bg-emerald-50 text-emerald-900";
-}
-
-function trialStatusText(trial?: TenantTrialState | null) {
-  if (!trial) return "Trial details unavailable";
-  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active";
-  if (trial.isTrialExpired) return "Trial expired — checkout paused";
-  if (trial.trialDaysRemaining === null) return "Trial active";
-  if (trial.trialDaysRemaining === 1) return "1 day left in trial";
-  return `${trial.trialDaysRemaining} days left in trial`;
-}
-
-function AdminTrialBanner({ trial }: { trial?: TenantTrialState | null }) {
-  if (!trial) return null;
-  const percentRemaining = trial.trialDaysRemaining === null
-    ? 100
-    : Math.max(0, Math.min(100, Math.round((trial.trialDaysRemaining / Math.max(1, trial.trialDaysTotal)) * 100)));
-  return (
-    <div className={["mt-4 rounded-[24px] border px-4 py-3 shadow-[0_12px_30px_rgba(14,14,16,0.05)]", trialBannerClasses(trial)].join(" ")}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] opacity-70">Orduva trial</p>
-          <p className="mt-1 text-sm font-black sm:text-base">{trialStatusText(trial)}</p>
-          <p className="mt-1 text-xs font-semibold opacity-75">Trial ends {formatTrialDate(trial.trialEndsAt)} · Plan {trial.planName || "orduva_trial"}</p>
-          {trial.isTrialExpired ? <p className="mt-2 text-xs font-black">Upgrade or ask the platform owner to add more trial days to re-enable checkout.</p> : null}
-        </div>
-        <div className="min-w-[170px]">
-          <div className="h-2.5 overflow-hidden rounded-full bg-black/10">
-            <div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${percentRemaining}%` }} />
-          </div>
-          <p className="mt-1 text-right text-[11px] font-black uppercase tracking-[0.14em] opacity-70">{trial.isTrialExpired ? "Checkout disabled" : "Storefront active"}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function buildStorefrontUrl(tenantSlug?: string | null) {
   const slug = String(tenantSlug || "").trim().toLowerCase();
@@ -118,8 +70,8 @@ export default function AdminShell({
     <main className={`relative min-h-screen overflow-x-clip ${adminBackgroundClass} px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7`}>
       <div className={`pointer-events-none absolute inset-0 -z-10 ${adminBackdropClass}`} />
       <div className="mx-auto max-w-6xl">
-        <div className="mb-3 rounded-[24px] border border-[#0E0E10]/10 bg-[#0E0E10] p-3 text-white shadow-[0_18px_50px_rgba(14,14,16,0.16)] sm:mb-4 sm:p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky top-0 z-50 mb-3 rounded-[24px] border border-[#0E0E10]/10 bg-[#0E0E10]/96 p-2.5 text-white shadow-[0_18px_50px_rgba(14,14,16,0.16)] backdrop-blur-xl sm:mb-4 sm:p-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-white/15 bg-white/10 text-base font-black shadow-[0_12px_26px_rgba(0,0,0,0.16)]"
@@ -130,22 +82,25 @@ export default function AdminShell({
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFB168]">Active store</p>
                 <p className="truncate text-lg font-black leading-tight text-white sm:text-xl">{tenantName}</p>
-                <p className="mt-0.5 truncate text-xs font-semibold text-white/68">
-                  {tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}
-                </p>
+                {tenantSlug ? (
+                  <a
+                    href={storefrontUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-0.5 block truncate text-xs font-semibold text-white/68 underline-offset-4 transition hover:text-[#FFB168] hover:underline"
+                    title="Open storefront"
+                  >
+                    {tenantSlug}.orduva.com
+                  </a>
+                ) : (
+                  <p className="mt-0.5 truncate text-xs font-semibold text-white/68">Store address unavailable</p>
+                )}
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 sm:justify-end">
-              <a
-                href={storefrontUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="admin-pressable inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white transition hover:-translate-y-[1px] hover:bg-white/18"
-              >
-                Open storefront
-              </a>
-              <span className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/40 bg-[#FF6A3D] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_28px_rgba(255,106,61,0.18)]">
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
+              <span className="hidden min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/40 bg-[#FF6A3D] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_14px_28px_rgba(255,106,61,0.18)] sm:inline-flex">
                 {LIVE_VERSION.replace("Ver: ", "V ")}
               </span>
             </div>
@@ -194,23 +149,9 @@ export default function AdminShell({
           </div>
         </header>
 
-        <AdminTrialBanner trial={trialState} />
-
-        <div className="mt-4 sm:mt-5">
-          <AdminLaunchChecklist tenantSlug={tenantSlug || undefined} showSetupTools />
-        </div>
-
         <div className="mt-4 sm:mt-5">{children}</div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <a
-            href={storefrontUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] shadow-sm transition hover:-translate-y-[1px] hover:bg-[#F5F2EE]"
-          >
-            View active storefront
-          </a>
           <LogoutButton className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(14,14,16,0.18)] transition hover:-translate-y-[1px] hover:bg-[#252528] disabled:cursor-not-allowed disabled:opacity-60" />
         </div>
       </div>
