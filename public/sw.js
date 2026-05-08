@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-187d';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-187d';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-187d';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-188a';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-188a';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-188a';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -157,7 +157,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Ver-0.187D: do not let the storefront PWA cache/session shell touch
+  // Ver-0.188A: do not let the storefront PWA cache/session shell touch
   // customer account, tenant admin, platform, checkout, or auth/API areas.
   // These pages must always see fresh cookies/sessions.
   if (isSessionSensitivePath(url)) {
