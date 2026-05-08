@@ -190,7 +190,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     if (incomingRefTenant) window.sessionStorage.setItem("orduva_ref_tenant", incomingRefTenant);
     if (incomingRefSource) window.sessionStorage.setItem("orduva_ref_source", incomingRefSource);
     if (incomingReferralCode) window.sessionStorage.setItem("orduva_ref_code", incomingReferralCode);
-    if (incomingRefTenant || incomingReferralCode) window.sessionStorage.setItem("orduva_ref_landing_url", window.location.href);
+    if ((incomingRefTenant || incomingReferralCode) && !window.sessionStorage.getItem("orduva_ref_landing_url")) {
+      window.sessionStorage.setItem("orduva_ref_landing_url", window.location.href);
+    }
 
     setRefTenant(incomingRefTenant || window.sessionStorage.getItem("orduva_ref_tenant") || "");
     setRefSource(incomingRefSource || window.sessionStorage.getItem("orduva_ref_source") || "");

@@ -1,11 +1,45 @@
 import EarlyStorefrontPreloader from "@/components/menu/EarlyStorefrontPreloader";
 import StorefrontClientLoader from "@/components/menu/StorefrontClientLoader";
 import StorefrontPwaRegistrar from "@/components/menu/StorefrontPwaRegistrar";
+import ReferralLandingTracker from "@/components/menu/ReferralLandingTracker";
 import { isRootPlatformRequest, resolveTenantSlug } from "@/lib/tenant-server";
 import { LIVE_VERSION } from "@/lib/version";
 
-function OrduvaPlatformLanding() {
-  const onboardingHref = "/start-your-store";
+type SearchParamsRecord = Record<string, string | string[] | undefined>;
+
+function firstSearchValue(searchParams: SearchParamsRecord, key: string) {
+  const value = searchParams[key];
+  if (Array.isArray(value)) return value[0] || "";
+  return value || "";
+}
+
+function buildOnboardingHref(searchParams: SearchParamsRecord) {
+  const params = new URLSearchParams();
+  const refTenant = firstSearchValue(searchParams, "ref_tenant") || firstSearchValue(searchParams, "refTenant");
+  const refCode = firstSearchValue(searchParams, "ref") || firstSearchValue(searchParams, "referralCode") || firstSearchValue(searchParams, "referral_code");
+  const refSource = firstSearchValue(searchParams, "ref_source") || firstSearchValue(searchParams, "refSource");
+
+  if (refTenant) params.set("ref_tenant", refTenant);
+  if (refCode) params.set("ref", refCode);
+  if (refSource) params.set("ref_source", refSource);
+
+  const query = params.toString();
+  return query ? `/start-your-store?${query}` : "/start-your-store";
+}
+
+function hasReferralParams(searchParams: SearchParamsRecord) {
+  return Boolean(
+    firstSearchValue(searchParams, "ref_tenant") ||
+    firstSearchValue(searchParams, "refTenant") ||
+    firstSearchValue(searchParams, "ref") ||
+    firstSearchValue(searchParams, "referralCode") ||
+    firstSearchValue(searchParams, "referral_code")
+  );
+}
+
+function OrduvaPlatformLanding({ searchParams }: { searchParams: SearchParamsRecord }) {
+  const onboardingHref = buildOnboardingHref(searchParams);
+  const referralActive = hasReferralParams(searchParams);
 
   const sellingPoints = [
     {
@@ -36,6 +70,7 @@ function OrduvaPlatformLanding() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#F7F2EA] text-[#1F2328]">
+      <ReferralLandingTracker />
       <section className="relative isolate overflow-hidden px-4 py-5 sm:px-6 lg:px-8">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_8%,rgba(255,111,28,0.20),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(81,55,45,0.14),transparent_30%),radial-gradient(circle_at_55%_88%,rgba(255,181,112,0.20),transparent_34%),linear-gradient(135deg,#FFF8EF_0%,#EEE4D7_48%,#F8FAF7_100%)]" />
         <div className="absolute -right-28 top-24 -z-10 h-72 w-72 rounded-full bg-[#FF7A1A]/18 blur-3xl" />
@@ -70,6 +105,11 @@ function OrduvaPlatformLanding() {
               <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5F625F] sm:text-lg">
                 Orduva creates branded storefronts, guided admin setup, customer accounts, order notifications and practical launch tools for restaurants, cafés, takeaways and local sellers.
               </p>
+              {referralActive ? (
+                <p className="mx-auto mt-4 inline-flex w-fit rounded-full border border-[#FF6A3D]/20 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#B74A16]">
+                  Referral saved for your store setup
+                </p>
+              ) : null}
             </div>
           </section>
 
@@ -143,11 +183,12 @@ function OrduvaPlatformLanding() {
     </main>
   );
 }
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams?: Promise<SearchParamsRecord> | SearchParamsRecord }) {
+  const resolvedSearchParams = await Promise.resolve(searchParams || {});
   const isPlatformRoot = await isRootPlatformRequest();
 
   if (isPlatformRoot) {
-    return <OrduvaPlatformLanding />;
+    return <OrduvaPlatformLanding searchParams={resolvedSearchParams} />;
   }
 
   const slug = await resolveTenantSlug();

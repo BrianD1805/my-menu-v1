@@ -367,7 +367,7 @@ export default function MenuBrowser({
     { label: "X", href: normaliseExternalUrl(socialXUrl), icon: <XIcon /> },
     { label: "Website", href: normaliseExternalUrl(socialWebsiteUrl), icon: <WebsiteIcon /> },
   ].filter((item) => Boolean(item.href)).slice(0, 8);
-  const referralSignupHref = `https://www.orduva.com/start-your-store?ref_tenant=${encodeURIComponent(tenantSlug)}&ref=${encodeURIComponent(`tenant_${tenantSlug}`)}&ref_source=storefront_footer`;
+  const referralSignupHref = `https://www.orduva.com/?ref_tenant=${encodeURIComponent(tenantSlug)}&ref=${encodeURIComponent(`tenant_${tenantSlug}`)}&ref_source=storefront_footer`;
 
   useEffect(() => {
     let cancelled = false;
@@ -1075,7 +1075,7 @@ export default function MenuBrowser({
                   href={referralSignupHref}
                   className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95B30]"
                 >
-                  Start free trial
+                  See how Orduva works
                 </a>
               </div>
             </div>
