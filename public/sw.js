@@ -157,7 +157,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Ver-0.187: do not let the storefront PWA cache/session shell touch
+  // Ver-0.187A: do not let the storefront PWA cache/session shell touch
   // customer account, tenant admin, platform, checkout, or auth/API areas.
   // These pages must always see fresh cookies/sessions.
   if (isSessionSensitivePath(url)) {

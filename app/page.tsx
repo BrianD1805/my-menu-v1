@@ -2,7 +2,6 @@ import EarlyStorefrontPreloader from "@/components/menu/EarlyStorefrontPreloader
 import StorefrontClientLoader from "@/components/menu/StorefrontClientLoader";
 import StorefrontPwaRegistrar from "@/components/menu/StorefrontPwaRegistrar";
 import ReferralLandingTracker from "@/components/menu/ReferralLandingTracker";
-import PricingPlans from "@/components/marketing/PricingPlans";
 import { isRootPlatformRequest, resolveTenantSlug } from "@/lib/tenant-server";
 import { LIVE_VERSION } from "@/lib/version";
 
@@ -62,10 +61,10 @@ function OrduvaPlatformLanding({ searchParams }: { searchParams: SearchParamsRec
       body: "New store owners are guided through categories, products, branding, test orders and launch steps without being overwhelmed.",
     },
     {
-      eyebrow: "Pricing",
+      eyebrow: "Subscriptions",
       icon: "💰",
-      title: "Starter, Growth and Pro",
-      body: "Premium plans in ZAR, KES, GBP, USD and EUR, with Africa-first pricing and a 20% yearly discount option.",
+      title: "Simple plans after the trial",
+      body: "Clients can review the landing page first, then choose Starter, Growth or Pro when they start their own store.",
     },
   ];
 
@@ -146,8 +145,6 @@ function OrduvaPlatformLanding({ searchParams }: { searchParams: SearchParamsRec
               ))}
             </div>
           </section>
-
-          <PricingPlans onboardingHref={onboardingHref} />
 
           <section className="border-t border-[#51372D]/12 bg-white px-5 py-8 sm:px-7 lg:px-9">
             <div className="grid gap-5 rounded-[32px] border border-[#51372D]/12 bg-[#14110F] p-5 text-white shadow-[0_24px_70px_rgba(14,14,16,0.18)] sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">

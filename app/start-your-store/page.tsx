@@ -63,9 +63,9 @@ export default function StartYourStorePage() {
             </div>
           </section>
 
-          <PricingPlans onboardingHref="/start-your-store" compact />
+          <PricingPlans onboardingHref="/start-your-store" compact selectMode formTargetId="store-details" />
 
-          <section className="border-t border-[#51372D]/12 bg-[#EFE6D9]/72 px-5 py-8 sm:px-7 lg:px-9 lg:py-10">
+          <section id="store-details" className="scroll-mt-6 border-t border-[#51372D]/12 bg-[#EFE6D9]/72 px-5 py-8 sm:px-7 lg:px-9 lg:py-10">
             <div className="mx-auto max-w-4xl">
               <TenantOnboardingManager initialTenants={[]} apiPath="/api/public/tenants" clientMode />
             </div>

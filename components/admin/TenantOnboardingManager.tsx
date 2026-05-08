@@ -187,6 +187,19 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
   useEffect(() => {
     if (!clientMode || typeof window === "undefined") return;
+    function handlePlanSelected(event: Event) {
+      const detail = (event as CustomEvent<{ planCode?: string; currencyCode?: string; billingInterval?: string }>).detail || {};
+      const incomingCurrency = String(detail.currencyCode || "").toUpperCase();
+      const incomingPlan = String(detail.planCode || "").toLowerCase();
+      if (PRICING_CURRENCIES.some((currency) => currency.code === incomingCurrency)) setStoreCurrencyCode(incomingCurrency as PricingCurrencyCode);
+      if (PRICING_PLANS.some((plan) => plan.code === incomingPlan)) setSelectedPlanCode(incomingPlan as PricingPlanCode);
+    }
+    window.addEventListener("orduva-plan-selected", handlePlanSelected);
+    return () => window.removeEventListener("orduva-plan-selected", handlePlanSelected);
+  }, [clientMode]);
+
+  useEffect(() => {
+    if (!clientMode || typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const incomingRefTenant = (params.get("ref_tenant") || params.get("refTenant") || "").trim().toLowerCase();
     const incomingRefSource = (params.get("ref_source") || params.get("refSource") || "").trim();
