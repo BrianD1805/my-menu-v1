@@ -400,12 +400,12 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
         </section>
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">{clientMode ? "Client store setup" : "Create client foundation"}</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{clientMode ? "Tell us about your store" : "New client store"}</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            {clientMode ? "Complete the details below. Your store address and owner login will be created automatically, then you can start setting up your menu and branding." : "This creates the store record, default settings, starter category, generated store address, and optional owner login foundation."}
+      <div className={clientMode ? "grid gap-5" : "grid gap-5 lg:grid-cols-[1.1fr_0.9fr]"}>
+        <section className={clientMode ? "rounded-[32px] border border-[#E8D8C8]/90 bg-[#FFFDF8] p-5 shadow-[0_24px_70px_rgba(81,55,45,0.10)] sm:p-7" : "rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6"}>
+          <p className={clientMode ? "text-xs font-black uppercase tracking-[0.22em] text-[#B74A16]" : "text-xs font-semibold uppercase tracking-[0.22em] text-slate-500"}>{clientMode ? "Your store details" : "Create client foundation"}</p>
+          <h2 className={clientMode ? "mt-2 text-2xl font-black tracking-tight text-[#14110F] sm:text-3xl" : "mt-2 text-2xl font-bold tracking-tight text-slate-900"}>{clientMode ? "A few details to create your store" : "New client store"}</h2>
+          <p className={clientMode ? "mt-3 text-sm leading-7 text-[#667069]" : "mt-3 text-sm leading-6 text-slate-600"}>
+            {clientMode ? "Add your business details, choose your store address, and create your owner login. You will use this login to manage your products, orders and branding." : "This creates the store record, default settings, starter category, generated store address, and optional owner login foundation."}
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -427,9 +427,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${reservedSlug || duplicateSlug ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`}
                 placeholder="stamps-delivered"
               />
-              <div className="mt-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-950">
+              <div className={clientMode ? "mt-2 rounded-2xl border border-[#F97316]/15 bg-[#FFF1E6] px-4 py-3 text-sm text-[#4A3428]" : "mt-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-950"}>
                 <p className="font-semibold">Storefront preview: {storefrontPreview}</p>
-                <p className="mt-1 text-xs leading-5 text-blue-900/75">Reserved store addresses blocked: admin, www, api, assets, static, platform, support, help and login.</p>
+                <p className={clientMode ? "mt-1 text-xs leading-5 text-[#7A5843]" : "mt-1 text-xs leading-5 text-blue-900/75"}>Reserved store addresses blocked: admin, www, api, assets, static, platform, support, help and login.</p>
               </div>
               {reservedSlug || duplicateSlug ? (
                 <p className="mt-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
@@ -465,9 +465,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             </label>
           </div>
 
-          <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{clientMode ? "Store owner login" : "Optional owner login"}</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{clientMode ? "Create your store owner login now. You will use this to manage your products, orders, branding and launch setup." : "Add these now if you want a first owner login created for the new store. Leave all three blank to skip."}</p>
+          <div className={clientMode ? "mt-6 rounded-[26px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-4" : "mt-6 rounded-[24px] border border-slate-200 bg-slate-50/70 p-4"}>
+            <p className={clientMode ? "text-xs font-black uppercase tracking-[0.18em] text-[#B74A16]" : "text-xs font-bold uppercase tracking-[0.18em] text-slate-500"}>{clientMode ? "Your owner login" : "Optional owner login"}</p>
+            <p className={clientMode ? "mt-2 text-sm leading-6 text-[#667069]" : "mt-2 text-sm leading-6 text-slate-600"}>{clientMode ? "Create the login you will use to manage your products, orders, branding and launch setup." : "Add these now if you want a first owner login created for the new store. Leave all three blank to skip."}</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your name" : "Owner name"} />
               <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your email" : "Owner email"} inputMode="email" autoComplete="email" />
@@ -476,34 +476,27 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           </div>
 
           {clientMode ? (
-            <div className="mt-6 rounded-[24px] border border-[#FFB168]/40 bg-[#FFF7F0] p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Trust, terms and launch protection</p>
+            <div className="mt-6 rounded-[26px] border border-[#FFB168]/40 bg-[#FFF7F0] p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Final checks</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">Orduva will create a real store address and admin login from these details. This setup step does not take payment; the store starts with a 7-day Orduva trial.</p>
               <div className="mt-4 space-y-3 text-sm text-slate-700">
                 <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
                   <input type="checkbox" checked={humanConfirmed} onChange={(event) => setHumanConfirmed(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
-                  <span>I am creating a genuine business store and not submitting spam or test data.</span>
+                  <span>I am creating a genuine business store.</span>
                 </label>
                 <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
                   <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
-                  <span>I accept Orduva&apos;s basic service terms: I will use the store responsibly, add accurate business/product details, and understand Orduva may suspend abusive or misleading stores.</span>
+                  <span>I accept Orduva&apos;s basic service terms and will use the store responsibly.</span>
                 </label>
                 <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
                   <input type="checkbox" checked={privacyAccepted} onChange={(event) => setPrivacyAccepted(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
                   <span>I agree that Orduva can use the details I submit to create my store, owner login, storefront, and setup records.</span>
                 </label>
               </div>
-              <p className="mt-3 text-xs leading-5 text-slate-500">Spam protection is active. Submissions that look automated, too fast, or repeated too often may be blocked.</p>
+              <p className="mt-3 text-xs leading-5 text-slate-500">These checks help us protect the Orduva platform and keep store setup clean.</p>
             </div>
           ) : null}
 
-
-          {clientMode && refTenant ? (
-            <div className="mt-5 rounded-[22px] border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm leading-6 text-[#5C5F66]">
-              <p className="font-black text-[#0E0E10]">Referral applied</p>
-              <p className="mt-1">You arrived from an Orduva store link. If your store becomes a paying subscription, the referring store can be credited under the Orduva referral programme.</p>
-            </div>
-          ) : null}
 
           {formWarnings.length ? (
             <div className="mt-5 space-y-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -529,12 +522,13 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             type="button"
             onClick={createTenant}
             disabled={busy || formWarnings.length > 0 || (platformMode && !clientMode && !effectivePlatformKey.trim())}
-            className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+            className={clientMode ? "mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#F97316] px-5 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(249,115,22,0.24)] transition hover:-translate-y-[1px] hover:bg-[#EA580C] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" : "mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"}
           >
             {busy ? "Creating store..." : clientMode ? "Create my Orduva store" : "Create client foundation"}
           </button>
         </section>
 
+        {!clientMode ? (
         <aside className="space-y-5">
           {created ? (
             <section className="rounded-[30px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-950 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
@@ -587,6 +581,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             </div>
           </section>
         </aside>
+        ) : null}
       </div>
 
       {ownerFacing ? (
