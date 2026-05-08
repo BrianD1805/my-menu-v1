@@ -76,6 +76,31 @@ function buildPublicAdminLoginUrl(slug: string) {
   return `https://admin.orduva.com/admin/login?tenant=${encodeURIComponent(slug)}`;
 }
 
+function EyeIcon({ open = false }: { open?: boolean }) {
+  return open ? (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+      <path d="M3 3l18 18" />
+      <path d="M10.6 10.6A2 2 0 0013.4 13.4" />
+      <path d="M9.5 4.5A10.7 10.7 0 0112 4c6.4 0 10 8 10 8a17.6 17.6 0 01-2.2 3.2" />
+      <path d="M6.7 6.7C4.7 8.1 3.2 9.9 2 12c0 0 3.6 8 10 8 1.9 0 3.6-.5 5.1-1.4" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  );
+}
+
 export default function TenantOnboardingManager({ initialTenants, apiPath = "/api/admin/tenants", platformMode = false, clientMode = false }: Props) {
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
@@ -148,7 +173,13 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     clientMode && !privacyAccepted ? "Please confirm Orduva can use these details to create and manage your store." : null,
   ].filter(Boolean) as string[];
 
+  function clearTransientFeedback() {
+    setMessage(null);
+    setCreated(null);
+  }
+
   function updateBusinessName(value: string) {
+    clearTransientFeedback();
     setBusinessName(value);
     if (!slug || slug === suggestedSlug) {
       setSlug(slugify(value));
@@ -173,7 +204,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     setBusy(true);
     setMessage(null);
     try {
-      const response = await fetch(apiPath, { headers: platformHeaders() });
+      const response = await fetch(apiPath, { headers: platformHeaders(), cache: "no-store", credentials: "same-origin" });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Failed to unlock platform onboarding");
       setTenants(data.tenants || []);
@@ -272,7 +303,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
       const response = await fetch(apiPath, {
         method: "POST",
-        headers: platformHeaders(),
+        headers: { ...platformHeaders(), "x-orduva-onboarding-request": `${Date.now()}-${Math.random().toString(36).slice(2)}` },
+        cache: "no-store",
+        credentials: "same-origin",
         body: JSON.stringify({
           businessName,
           slug: effectiveSlug,
@@ -470,7 +503,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <span className="mb-2 block text-sm font-semibold text-slate-700">Store address</span>
               <input
                 value={slug}
-                onChange={(event) => setSlug(slugify(event.target.value))}
+                onChange={(event) => { clearTransientFeedback(); setSlug(slugify(event.target.value)); }}
                 className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${reservedSlug || duplicateSlug ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`}
                 placeholder="stamps-delivered"
               />
@@ -488,7 +521,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <span className="mb-2 block text-sm font-semibold text-slate-700">Store currency</span>
               <select
                 value={storeCurrencyCode}
-                onChange={(event) => setStoreCurrencyCode(event.target.value as PricingCurrencyCode)}
+                onChange={(event) => { clearTransientFeedback(); setStoreCurrencyCode(event.target.value as PricingCurrencyCode); }}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
               >
                 {STORE_CURRENCY_OPTIONS.map((currency) => (
@@ -504,7 +537,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <span className="mb-2 block text-sm font-semibold text-slate-700">Preferred plan after trial</span>
               <select
                 value={selectedPlanCode}
-                onChange={(event) => setSelectedPlanCode(event.target.value as PricingPlanCode)}
+                onChange={(event) => { clearTransientFeedback(); setSelectedPlanCode(event.target.value as PricingPlanCode); }}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
               >
                 {PRICING_PLANS.map((plan) => (
@@ -518,13 +551,14 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Phone</span>
-              <input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Phone number" />
+              <input value={contactPhone} onChange={(event) => { clearTransientFeedback(); setContactPhone(event.target.value); }} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Phone number" />
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">WhatsApp</span>
               <input
                 value={whatsappSameAsPhone ? contactPhone : contactWhatsApp}
                 onChange={(event) => {
+                  clearTransientFeedback();
                   setWhatsappSameAsPhone(false);
                   setContactWhatsApp(event.target.value);
                 }}
@@ -536,6 +570,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                   type="checkbox"
                   checked={whatsappSameAsPhone}
                   onChange={(event) => {
+                    clearTransientFeedback();
                     const checked = event.target.checked;
                     setWhatsappSameAsPhone(checked);
                     if (checked) setContactWhatsApp(contactPhone);
@@ -547,7 +582,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             </label>
             <label className="block sm:col-span-2">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Contact email</span>
-              <input value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="client@example.com" inputMode="email" autoComplete="email" />
+              <input value={contactEmail} onChange={(event) => { clearTransientFeedback(); setContactEmail(event.target.value); }} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="client@example.com" inputMode="email" autoComplete="email" />
             </label>
           </div>
 
@@ -555,33 +590,42 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             <p className={clientMode ? "text-xs font-black uppercase tracking-[0.18em] text-[#B74A16]" : "text-xs font-bold uppercase tracking-[0.18em] text-slate-500"}>{clientMode ? "Your owner login" : "Optional owner login"}</p>
             <p className={clientMode ? "mt-2 text-sm leading-6 text-[#667069]" : "mt-2 text-sm leading-6 text-slate-600"}>{clientMode ? "Create the login you will use to manage your products, orders, branding and launch setup." : "Add these now if you want a first owner login created for the new store. Leave all three blank to skip."}</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your name" : "Owner name"} />
-              <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your email" : "Owner email"} inputMode="email" autoComplete="email" />
+              <input value={ownerName} onChange={(event) => { clearTransientFeedback(); setOwnerName(event.target.value); }} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your name" : "Owner name"} />
+              <input value={ownerEmail} onChange={(event) => { clearTransientFeedback(); setOwnerEmail(event.target.value); }} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your email" : "Owner email"} inputMode="email" autoComplete="email" />
               <div className="sm:col-span-2">
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="relative">
                   <input
                     value={ownerPassword}
-                    onChange={(event) => setOwnerPassword(event.target.value)}
+                    onChange={(event) => { clearTransientFeedback(); setOwnerPassword(event.target.value); }}
                     type={showOwnerPassword ? "text" : "password"}
-                    className={`min-h-12 flex-1 rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`}
+                    className={`min-h-12 w-full rounded-2xl border px-4 py-3 pr-24 text-sm outline-none transition focus:ring-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 bg-[#F3F1FA] focus:border-slate-400 focus:ring-slate-100"}`}
                     placeholder={clientMode ? "Create password, minimum 8 characters" : "Temporary password, minimum 8 characters"}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowOwnerPassword((current) => !current)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
-                  >
-                    {showOwnerPassword ? "Hide" : "Show"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={copyOwnerPassword}
-                    disabled={!ownerPassword}
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {passwordCopied ? "Copied" : "Copy"}
-                  </button>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-transparent text-slate-600">
+                      <button
+                        type="button"
+                        onClick={() => setShowOwnerPassword((current) => !current)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/70"
+                        aria-label={showOwnerPassword ? "Hide password" : "Show password"}
+                        title={showOwnerPassword ? "Hide password" : "Show password"}
+                      >
+                        <EyeIcon open={showOwnerPassword} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={copyOwnerPassword}
+                        disabled={!ownerPassword}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-white/70 disabled:cursor-not-allowed disabled:opacity-45"
+                        aria-label={passwordCopied ? "Password copied" : "Copy password"}
+                        title={passwordCopied ? "Password copied" : "Copy password"}
+                      >
+                        <CopyIcon />
+                      </button>
+                    </div>
+                  </div>
                 </div>
+                {passwordCopied ? <p className="mt-2 text-xs font-semibold text-emerald-700">Password copied.</p> : null}
               </div>
             </div>
           </div>
@@ -605,7 +649,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
 
           {message ? (
-            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${message.includes("Failed") || message.includes("required") || message.includes("reserved") || message.includes("already") || message.includes("name@example.com") || message.includes("password") ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
+            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${message.includes("Failed") || message.includes("required") || message.includes("reserved") || message.includes("already") || message.includes("name@example.com") || message.includes("password") || message.includes("linked") || message.includes("different") || message.includes("use") ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
               {message}
             </div>
           ) : null}

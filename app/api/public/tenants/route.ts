@@ -153,26 +153,33 @@ function defaultThemeForCountry(countryCode: string) {
   return { primaryColor: "#2F5D8C", accentColor: "#F2A93B", backgroundTint: "#F6F9FC", borderColor: "#D9E3EC", textColor: "#1F2A37" };
 }
 
+
+function jsonNoStore(body: unknown, init?: ResponseInit) {
+  const response = NextResponse.json(body, init);
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  return response;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const clientIp = getClientIp(req);
     const botTrap = String(body?.website || "").trim();
     if (botTrap) {
-      return NextResponse.json({ error: "Unable to create store" }, { status: 400 });
+      return jsonNoStore({ error: "Unable to create store" }, { status: 400 });
     }
 
     if (!checkRateLimit(clientIp)) {
-      return NextResponse.json({ error: "Too many store setup attempts from this connection. Please try again later." }, { status: 429 });
+      return jsonNoStore({ error: "Too many store setup attempts from this connection. Please try again later." }, { status: 429 });
     }
 
     const formStartedAt = Number(body?.formStartedAt || 0);
     if (!formStartedAt || Date.now() - formStartedAt < PUBLIC_ONBOARDING_MIN_FORM_MS) {
-      return NextResponse.json({ error: "Please take a moment to complete the form before submitting." }, { status: 400 });
+      return jsonNoStore({ error: "Please take a moment to complete the form before submitting." }, { status: 400 });
     }
 
     if (body?.acceptedTerms !== true || body?.privacyAccepted !== true || body?.humanConfirmed !== true) {
-      return NextResponse.json({ error: "Please accept the setup terms and confirm this is a genuine business store." }, { status: 400 });
+      return jsonNoStore({ error: "Please accept the setup terms and confirm this is a genuine business store." }, { status: 400 });
     }
 
     const businessName = normalizeOptionalText(body?.businessName, 120);
@@ -189,22 +196,22 @@ export async function POST(req: Request) {
     const referral = normalizeReferralPayload(body);
 
     if (!businessName) {
-      return NextResponse.json({ error: "Business name is required" }, { status: 400 });
+      return jsonNoStore({ error: "Business name is required" }, { status: 400 });
     }
     if (!slug || slug.length < 3) {
-      return NextResponse.json({ error: "Store address name must be at least 3 characters" }, { status: 400 });
+      return jsonNoStore({ error: "Store address name must be at least 3 characters" }, { status: 400 });
     }
     if (RESERVED_SLUGS.has(slug)) {
-      return NextResponse.json({ error: "That store address is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
+      return jsonNoStore({ error: "That store address is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
     }
     if (!looksLikeEmail(contactEmail)) {
-      return NextResponse.json({ error: "Please enter the contact email as name@example.com, or leave it blank." }, { status: 400 });
+      return jsonNoStore({ error: "Please enter the contact email as name@example.com, or leave it blank." }, { status: 400 });
     }
     if (!looksLikeEmail(ownerEmail)) {
-      return NextResponse.json({ error: "Please enter the owner email as name@example.com." }, { status: 400 });
+      return jsonNoStore({ error: "Please enter the owner email as name@example.com." }, { status: 400 });
     }
     if (!ownerName || !ownerEmail || ownerPassword.length < 8) {
-      return NextResponse.json({ error: "Your owner login needs your name, email and a password of at least 8 characters" }, { status: 400 });
+      return jsonNoStore({ error: "Your owner login needs your name, email and a password of at least 8 characters" }, { status: 400 });
     }
 
 
@@ -215,7 +222,7 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (existingNameMatches?.length) {
-      return NextResponse.json({ error: "That store name is already in use. Please choose a slightly different store name." }, { status: 409 });
+      return jsonNoStore({ error: "That store name is already in use. Please choose a slightly different store name." }, { status: 409 });
     }
 
     if (contactEmail) {
@@ -226,13 +233,13 @@ export async function POST(req: Request) {
         .limit(1);
 
       if (existingStoreEmailMatches?.length) {
-        return NextResponse.json({ error: "That store contact email is already linked to another Orduva store. Please use a different store email." }, { status: 409 });
+        return jsonNoStore({ error: "That store contact email is already linked to another Orduva store. Please use a different store email." }, { status: 409 });
       }
     }
 
     const { data: existing } = await db.from("tenants").select("id").eq("slug", slug).maybeSingle();
     if (existing) {
-      return NextResponse.json({ error: "That store address is already in use" }, { status: 409 });
+      return jsonNoStore({ error: "That store address is already in use" }, { status: 409 });
     }
 
     const { data: existingOwnerLogin } = await db
@@ -242,7 +249,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (existingOwnerLogin) {
-      return NextResponse.json(
+      return jsonNoStore(
         { error: "This email already has an Orduva store account. Please sign in to admin using that email, or use a different owner email for this new store." },
         { status: 409 },
       );
@@ -261,7 +268,7 @@ export async function POST(req: Request) {
       .single();
 
     if (tenantError || !tenant) {
-      return NextResponse.json({ error: tenantError?.message || "Failed to create store" }, { status: 500 });
+      return jsonNoStore({ error: tenantError?.message || "Failed to create store" }, { status: 500 });
     }
 
     const currency = COUNTRY_DEFAULTS[countryCode] || COUNTRY_DEFAULTS.GB;
@@ -315,7 +322,7 @@ export async function POST(req: Request) {
     });
 
     if (ownerError) {
-      return NextResponse.json({ error: ownerError.message || "Store created, but owner login could not be created" }, { status: 500 });
+      return jsonNoStore({ error: ownerError.message || "Store created, but owner login could not be created" }, { status: 500 });
     }
 
     let referralCapture: Awaited<ReturnType<typeof captureTenantReferral>> | null = null;
@@ -346,7 +353,7 @@ export async function POST(req: Request) {
       countryCode,
     });
 
-    return NextResponse.json({
+    return jsonNoStore({
       tenant,
       starterCategory: category || null,
       ownerCreated: true,
@@ -368,6 +375,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create store";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonNoStore({ error: message }, { status: 500 });
   }
 }

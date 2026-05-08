@@ -129,6 +129,13 @@ function defaultThemeForCountry(countryCode: string) {
   return { primaryColor: "#2F5D8C", accentColor: "#F2A93B", backgroundTint: "#F6F9FC", borderColor: "#D9E3EC", textColor: "#1F2A37" };
 }
 
+
+function jsonNoStore(body: unknown, init?: ResponseInit) {
+  const response = NextResponse.json(body, init);
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  return response;
+}
+
 export async function GET(req: Request) {
   const accessError = await requirePlatformAccess(req);
   if (accessError) return accessError;
@@ -140,10 +147,10 @@ export async function GET(req: Request) {
     .limit(25);
 
   if (error) {
-    return NextResponse.json({ error: "Failed to load tenants" }, { status: 500 });
+    return jsonNoStore({ error: "Failed to load tenants" }, { status: 500 });
   }
 
-  return NextResponse.json({ tenants: data || [] });
+  return jsonNoStore({ tenants: data || [] });
 }
 
 export async function POST(req: Request) {
@@ -165,22 +172,22 @@ export async function POST(req: Request) {
     const ownerPassword = String(body?.ownerPassword || "");
 
     if (!businessName) {
-      return NextResponse.json({ error: "Business name is required" }, { status: 400 });
+      return jsonNoStore({ error: "Business name is required" }, { status: 400 });
     }
     if (!slug || slug.length < 3) {
-      return NextResponse.json({ error: "Store address name must be at least 3 characters" }, { status: 400 });
+      return jsonNoStore({ error: "Store address name must be at least 3 characters" }, { status: 400 });
     }
     if (RESERVED_SLUGS.has(slug)) {
-      return NextResponse.json({ error: "That store address is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
+      return jsonNoStore({ error: "That store address is reserved for Orduva platform routing. Please choose another." }, { status: 400 });
     }
     if (!looksLikeEmail(contactEmail)) {
-      return NextResponse.json({ error: "Please enter the contact email as name@example.com, or leave it blank." }, { status: 400 });
+      return jsonNoStore({ error: "Please enter the contact email as name@example.com, or leave it blank." }, { status: 400 });
     }
     if (!looksLikeEmail(ownerEmail)) {
-      return NextResponse.json({ error: "Please enter the owner email as name@example.com." }, { status: 400 });
+      return jsonNoStore({ error: "Please enter the owner email as name@example.com." }, { status: 400 });
     }
     if ((ownerEmail || ownerPassword) && (!ownerEmail || ownerPassword.length < 8)) {
-      return NextResponse.json({ error: "Owner login needs an owner email and a temporary password of at least 8 characters" }, { status: 400 });
+      return jsonNoStore({ error: "Owner login needs an owner email and a temporary password of at least 8 characters" }, { status: 400 });
     }
 
 
@@ -191,7 +198,7 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (existingNameMatches?.length) {
-      return NextResponse.json({ error: "That store name is already in use. Please choose a slightly different store name." }, { status: 409 });
+      return jsonNoStore({ error: "That store name is already in use. Please choose a slightly different store name." }, { status: 409 });
     }
 
     if (contactEmail) {
@@ -202,13 +209,28 @@ export async function POST(req: Request) {
         .limit(1);
 
       if (existingStoreEmailMatches?.length) {
-        return NextResponse.json({ error: "That store contact email is already linked to another Orduva store. Please use a different store email." }, { status: 409 });
+        return jsonNoStore({ error: "That store contact email is already linked to another Orduva store. Please use a different store email." }, { status: 409 });
+      }
+    }
+
+    if (ownerEmail) {
+      const { data: existingOwner } = await db
+        .from("tenant_users")
+        .select("id")
+        .eq("email", ownerEmail)
+        .maybeSingle();
+
+      if (existingOwner) {
+        return jsonNoStore(
+          { error: "This email already has an Orduva store account. Please sign in to admin using that email, or use a different owner email for this new store." },
+          { status: 409 },
+        );
       }
     }
 
     const { data: existing } = await db.from("tenants").select("id").eq("slug", slug).maybeSingle();
     if (existing) {
-      return NextResponse.json({ error: "That store address is already in use" }, { status: 409 });
+      return jsonNoStore({ error: "That store address is already in use" }, { status: 409 });
     }
 
     const { data: tenant, error: tenantError } = await db
@@ -224,7 +246,7 @@ export async function POST(req: Request) {
       .single();
 
     if (tenantError || !tenant) {
-      return NextResponse.json({ error: tenantError?.message || "Failed to create store" }, { status: 500 });
+      return jsonNoStore({ error: tenantError?.message || "Failed to create store" }, { status: 500 });
     }
 
     const currency = COUNTRY_DEFAULTS[countryCode] || COUNTRY_DEFAULTS.GB;
@@ -281,7 +303,7 @@ export async function POST(req: Request) {
       ownerCreated = !ownerError;
     }
 
-    return NextResponse.json({
+    return jsonNoStore({
       tenant,
       starterCategory: category || null,
       ownerCreated,
@@ -301,6 +323,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create store";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return jsonNoStore({ error: message }, { status: 500 });
   }
 }
