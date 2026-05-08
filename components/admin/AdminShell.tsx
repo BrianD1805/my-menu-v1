@@ -70,8 +70,8 @@ export default function AdminShell({
     <main className={`relative min-h-screen overflow-x-clip ${adminBackgroundClass} px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7`}>
       <div className={`pointer-events-none absolute inset-0 -z-10 ${adminBackdropClass}`} />
       <div className="mx-auto max-w-6xl">
-        <div className="sticky top-2 z-50 mb-3 rounded-[24px] border border-[#0E0E10]/10 bg-white/96 p-2.5 text-[#0E0E10] shadow-[0_18px_50px_rgba(14,14,16,0.13)] backdrop-blur-xl sm:mb-4 sm:p-4">
-          <div className="flex items-center justify-between gap-2 sm:gap-3">
+        <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#0E0E10]/10 bg-white text-[#0E0E10] shadow-[0_10px_24px_rgba(14,14,16,0.08)] sm:-mx-6 sm:mb-4">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-3">
             <div className="flex min-w-0 items-center gap-3">
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-[#0E0E10]/10 bg-[#FFF7F0] text-base font-black text-[#0E0E10] shadow-[0_12px_26px_rgba(14,14,16,0.10)]"
