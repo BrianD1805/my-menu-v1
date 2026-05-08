@@ -22,11 +22,11 @@ export default function PlatformReferralsPage() {
             </div>
           </div>
           <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-            Manage tenant referral rewards. The percentage is changeable per referral, and monthly credits are recorded every time the referred store pays its Orduva subscription.
+            Manage tenant referral rewards. The percentage is changeable per referral, and each recorded monthly subscription payment automatically creates the tenant credit.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <div className="inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</div>
-            <div className="inline-flex rounded-full border border-[#FF6A3D]/20 bg-[#FF6A3D]/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#C84F2A]">Monthly reward ledger</div>
+            <div className="inline-flex rounded-full border border-[#FF6A3D]/20 bg-[#FF6A3D]/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#C84F2A]">Payment event ledger</div>
           </div>
         </header>
         <div className="mt-6"><OwnerReferralRewardsPanel /></div>

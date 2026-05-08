@@ -25,6 +25,17 @@ type ReferralCredit = {
   notes: string | null;
   created_at: string | null;
 };
+type SubscriptionPayment = {
+  id: string;
+  billing_period_month: string | null;
+  subscription_amount: number | null;
+  currency_code: string | null;
+  payment_source: string | null;
+  payment_status: string | null;
+  payment_reference: string | null;
+  notes: string | null;
+  created_at: string | null;
+};
 type ReferralRow = {
   signup: { id: string; status: string | null; referral_code: string | null; ref_source: string | null; created_at: string | null };
   source: { id: string; referral_code: string | null; display_name: string | null; referrer_type: string | null; reward_rate_percent: number | null; status: string | null } | null;
@@ -32,7 +43,8 @@ type ReferralRow = {
   referrerTenant: TenantRef;
   referredTenant: TenantRef;
   credits: ReferralCredit[];
-  totals: { creditsCount: number; pendingCredits: number; paidCredits: number; pendingAmount: number; paidAmount: number };
+  payments?: SubscriptionPayment[];
+  totals: { creditsCount: number; paymentsCount?: number; pendingCredits: number; paidCredits: number; pendingAmount: number; paidAmount: number; subscriptionPaymentsAmount?: number };
 };
 type ReferralPayload = {
   rows: ReferralRow[];
@@ -45,6 +57,7 @@ type ReferralPayload = {
     estimatedMonthlyLiability: number;
     totalPendingCredits: number;
     totalPaidCredits: number;
+    totalSubscriptionPayments?: number;
   };
 };
 type DraftState = Record<string, { rewardRatePercent: string; monthlySubscriptionAmount: string; currencyCode: string; rewardStatus: string; notes: string; creditMonth: string; paymentReference: string }>;
@@ -60,6 +73,7 @@ const EMPTY_SUMMARY = {
   estimatedMonthlyLiability: 0,
   totalPendingCredits: 0,
   totalPaidCredits: 0,
+  totalSubscriptionPayments: 0,
 };
 
 function monthInputValue(date = new Date()) {
@@ -204,32 +218,34 @@ export default function OwnerReferralRewardsPanel() {
     }
   }
 
-  async function recordCredit(row: ReferralRow) {
+  async function recordSubscriptionPayment(row: ReferralRow) {
     if (!row.reward?.id) return;
     const draft = drafts[row.reward.id];
-    setBusyId(`${row.reward.id}:credit`);
-    setMessage("Recording monthly referral credit...");
+    setBusyId(`${row.reward.id}:payment`);
+    setMessage("Recording subscription payment and creating referral credit...");
     try {
       const response = await fetch("/api/platform/referrals", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...ownerAccess.platformHeaders },
         body: JSON.stringify({
-          action: "record_monthly_credit",
+          action: "record_subscription_payment",
           rewardId: row.reward.id,
           subscriptionAmount: draft.monthlySubscriptionAmount,
           rewardRatePercent: draft.rewardRatePercent,
           currencyCode: draft.currencyCode,
           paidMonth: `${draft.creditMonth || monthInputValue()}-01`,
           creditStatus: "pending",
+          paymentSource: "manual",
+          paymentStatus: "paid",
           paymentReference: draft.paymentReference,
         }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data?.error || "Could not record monthly credit.");
-      setMessage("Monthly referral credit recorded.");
+      if (!response.ok) throw new Error(data?.error || "Could not record subscription payment.");
+      setMessage("Subscription payment recorded and referral credit created.");
       await loadReferrals();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not record monthly credit.");
+      setMessage(error instanceof Error ? error.message : "Could not record subscription payment.");
     } finally {
       setBusyId(null);
     }
@@ -263,7 +279,7 @@ export default function OwnerReferralRewardsPanel() {
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Referral rewards</p>
             <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Monthly tenant credits</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-              Track who referred whom, set the reward percentage, and record the tenant credit every time the new store pays its monthly Orduva subscription.
+              Track who referred whom, set the reward percentage, record each monthly subscription payment, and automatically create the tenant credit from that payment.
             </p>
           </div>
           <button type="button" onClick={() => void loadReferrals()} disabled={loading || !canLoad} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60">
@@ -292,7 +308,7 @@ export default function OwnerReferralRewardsPanel() {
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Selected view</p>
           <h3 className="mt-1 text-xl font-black text-[#0E0E10]">{filterTitle(filter)}</h3>
           <p className="mt-1 text-sm font-semibold text-[#68707A]">
-            Estimated active monthly reward liability: <span className="font-black text-[#0E0E10]">{money(summary.estimatedMonthlyLiability)}</span> · Pending credits: <span className="font-black text-[#0E0E10]">{money(summary.totalPendingCredits)}</span> · Paid credits: <span className="font-black text-[#0E0E10]">{money(summary.totalPaidCredits)}</span>
+            Estimated active monthly reward liability: <span className="font-black text-[#0E0E10]">{money(summary.estimatedMonthlyLiability)}</span> · Recorded subscription payments: <span className="font-black text-[#0E0E10]">{money(summary.totalSubscriptionPayments || 0)}</span> · Pending credits: <span className="font-black text-[#0E0E10]">{money(summary.totalPendingCredits)}</span> · Paid credits: <span className="font-black text-[#0E0E10]">{money(summary.totalPaidCredits)}</span>
           </p>
         </div>
 
@@ -321,7 +337,7 @@ export default function OwnerReferralRewardsPanel() {
                   <div className="rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3 text-sm text-right">
                     <p className="text-xs font-black uppercase tracking-[0.16em] text-[#68707A]">Estimated monthly credit</p>
                     <p className="mt-1 text-2xl font-black text-[#0E0E10]">{money(row.reward?.estimated_monthly_reward, currency)}</p>
-                    <p className="mt-1 text-xs font-bold text-[#68707A]">Pending {money(row.totals.pendingAmount, currency)} · Paid {money(row.totals.paidAmount, currency)}</p>
+                    <p className="mt-1 text-xs font-bold text-[#68707A]">Payments {money(row.totals.subscriptionPaymentsAmount || 0, currency)} · Pending {money(row.totals.pendingAmount, currency)} · Paid {money(row.totals.paidAmount, currency)}</p>
                   </div>
                 </div>
 
@@ -334,12 +350,29 @@ export default function OwnerReferralRewardsPanel() {
                     <label className="block lg:col-span-2"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Notes</span><input value={draft.notes} onChange={(event) => updateDraft(row.reward!.id, "notes", event.target.value)} placeholder="Internal note" className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 px-3 py-2 text-sm font-bold outline-none focus:border-[#FF6A3D]" /></label>
                     <div className="flex flex-col gap-2 lg:col-span-6 sm:flex-row sm:flex-wrap">
                       <button type="button" onClick={() => void saveReward(row)} disabled={busyId === row.reward.id} className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#252528] disabled:cursor-not-allowed disabled:opacity-60">{busyId === row.reward.id ? "Saving..." : "Save reward settings"}</button>
-                      <label className="inline-flex min-h-10 items-center gap-2 rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-2 text-xs font-black text-[#0E0E10]">Credit month <input type="month" value={draft.creditMonth} onChange={(event) => updateDraft(row.reward!.id, "creditMonth", event.target.value)} className="bg-transparent font-black outline-none" /></label>
+                      <label className="inline-flex min-h-10 items-center gap-2 rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-2 text-xs font-black text-[#0E0E10]">Paid month <input type="month" value={draft.creditMonth} onChange={(event) => updateDraft(row.reward!.id, "creditMonth", event.target.value)} className="bg-transparent font-black outline-none" /></label>
                       <input value={draft.paymentReference} onChange={(event) => updateDraft(row.reward!.id, "paymentReference", event.target.value)} placeholder="Payment reference / note" className="min-h-10 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-xs font-bold outline-none focus:border-[#FF6A3D]" />
-                      <button type="button" onClick={() => void recordCredit(row)} disabled={busyId === `${row.reward.id}:credit`} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-4 py-2 text-xs font-black text-[#9A3412] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60">{busyId === `${row.reward.id}:credit` ? "Recording..." : "Record monthly credit"}</button>
+                      <button type="button" onClick={() => void recordSubscriptionPayment(row)} disabled={busyId === `${row.reward.id}:payment`} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-4 py-2 text-xs font-black text-[#9A3412] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60">{busyId === `${row.reward.id}:payment` ? "Recording..." : "Record subscription payment"}</button>
                     </div>
                   </div>
                 ) : <p className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-800">Reward row is being prepared. Refresh this page in a moment.</p>}
+
+                {row.payments && row.payments.length ? (
+                  <div className="mt-4 rounded-[22px] border border-[#0E0E10]/8 bg-white p-4">
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Subscription payment events</p>
+                    <div className="mt-3 space-y-2">
+                      {row.payments.slice(0, 6).map((payment) => (
+                        <div key={payment.id} className="flex flex-col gap-2 rounded-2xl border border-[#0E0E10]/8 bg-[#FDFBF8] px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-black text-[#0E0E10]">{monthLabel(payment.billing_period_month)} · {money(payment.subscription_amount, payment.currency_code || currency)}</p>
+                            <p className="text-xs font-semibold text-[#68707A]">{payment.payment_source || "manual"} · {payment.payment_reference || "No reference"}</p>
+                          </div>
+                          <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-emerald-800 ring-1 ring-emerald-200">{payment.payment_status || "paid"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 {row.credits.length ? (
                   <div className="mt-4 rounded-[22px] border border-[#0E0E10]/8 bg-white p-4">

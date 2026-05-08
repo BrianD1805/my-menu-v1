@@ -4,6 +4,8 @@ export const DEFAULT_REFERRAL_CURRENCY = "GBP";
 
 export type ReferralRewardStatus = "trial" | "active" | "paused" | "cancelled";
 export type ReferralCreditStatus = "pending" | "credited" | "paid" | "void";
+export type SubscriptionPaymentSource = "manual" | "stripe" | "yoco" | "pesapal" | "owner_adjustment";
+export type SubscriptionPaymentStatus = "paid" | "refunded" | "void";
 
 export function normaliseRewardRate(value: unknown, fallback = DEFAULT_REFERRAL_REWARD_RATE_PERCENT) {
   const parsed = Number(value);
@@ -33,6 +35,18 @@ export function normaliseCreditStatus(value: unknown): ReferralCreditStatus {
   const status = String(value || "").trim().toLowerCase();
   if (["pending", "credited", "paid", "void"].includes(status)) return status as ReferralCreditStatus;
   return "pending";
+}
+
+export function normaliseSubscriptionPaymentSource(value: unknown): SubscriptionPaymentSource {
+  const source = String(value || "manual").trim().toLowerCase();
+  if (["manual", "stripe", "yoco", "pesapal", "owner_adjustment"].includes(source)) return source as SubscriptionPaymentSource;
+  return "manual";
+}
+
+export function normaliseSubscriptionPaymentStatus(value: unknown): SubscriptionPaymentStatus {
+  const status = String(value || "paid").trim().toLowerCase();
+  if (["paid", "refunded", "void"].includes(status)) return status as SubscriptionPaymentStatus;
+  return "paid";
 }
 
 export function normaliseCurrency(value: unknown, fallback = DEFAULT_REFERRAL_CURRENCY) {
