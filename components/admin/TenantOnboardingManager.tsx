@@ -87,6 +87,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const [ownerName, setOwnerName] = useState("");
   const [ownerEmail, setOwnerEmail] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("");
+  const [showOwnerPassword, setShowOwnerPassword] = useState(false);
+  const [passwordCopied, setPasswordCopied] = useState(false);
+  const [whatsappSameAsPhone, setWhatsappSameAsPhone] = useState(false);
   const [tenants, setTenants] = useState(initialTenants);
   const [created, setCreated] = useState<CreatedTenant | null>(null);
   const [busy, setBusy] = useState(false);
@@ -226,6 +229,18 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   }, [clientMode]);
 
   useEffect(() => {
+    if (!whatsappSameAsPhone) return;
+    setContactWhatsApp(contactPhone);
+  }, [whatsappSameAsPhone, contactPhone]);
+
+  async function copyOwnerPassword() {
+    if (!ownerPassword || typeof navigator === "undefined" || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(ownerPassword);
+    setPasswordCopied(true);
+    window.setTimeout(() => setPasswordCopied(false), 1800);
+  }
+
+  useEffect(() => {
     if (!ownerGateUnlocked || autoLoadedOwnerTenants.current) return;
     autoLoadedOwnerTenants.current = true;
     loadPlatformTenants();
@@ -313,6 +328,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setOwnerName("");
       setOwnerEmail("");
       setOwnerPassword("");
+      setShowOwnerPassword(false);
+      setPasswordCopied(false);
+      setWhatsappSameAsPhone(false);
       setWebsite("");
       setAcceptedTerms(false);
       setPrivacyAccepted(false);
@@ -458,7 +476,6 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               />
               <div className={clientMode ? "mt-2 rounded-2xl border border-[#F97316]/15 bg-[#FFF1E6] px-4 py-3 text-sm text-[#4A3428]" : "mt-2 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-950"}>
                 <p className="font-semibold">Storefront preview: {storefrontPreview}</p>
-                <p className={clientMode ? "mt-1 text-xs leading-5 text-[#7A5843]" : "mt-1 text-xs leading-5 text-blue-900/75"}>Reserved store addresses blocked: admin, www, api, assets, static, platform, support, help and login.</p>
               </div>
               {reservedSlug || duplicateSlug ? (
                 <p className="mt-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
@@ -479,7 +496,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 ))}
               </select>
               <p className="mt-2 rounded-2xl border border-[#F97316]/15 bg-[#FFF1E6] px-4 py-3 text-xs leading-5 text-[#7A5843]">
-                This currency controls your storefront product prices, future Stripe subscription currency and referral commission currency.
+                This currency controls your storefront product prices.
               </p>
             </label>
 
@@ -495,17 +512,38 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                 ))}
               </select>
               <p className="mt-2 rounded-2xl border border-[#F97316]/15 bg-[#FFF1E6] px-4 py-3 text-xs leading-5 text-[#7A5843]">
-                You start with a 7-day trial. Stripe checkout is being wired next, so no payment is taken here. Current selection: {selectedPlan.name} in {selectedStoreCurrency.code}.
+                You start with a 7-day trial. No payment or credit card details are needed today. Current selection: {selectedPlan.name} in {selectedStoreCurrency.code}.
               </p>
             </label>
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Phone</span>
-              <input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Client phone" />
+              <input value={contactPhone} onChange={(event) => setContactPhone(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Phone number" />
             </label>
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">WhatsApp</span>
-              <input value={contactWhatsApp} onChange={(event) => setContactWhatsApp(event.target.value)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder="Order WhatsApp number" />
+              <input
+                value={whatsappSameAsPhone ? contactPhone : contactWhatsApp}
+                onChange={(event) => {
+                  setWhatsappSameAsPhone(false);
+                  setContactWhatsApp(event.target.value);
+                }}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                placeholder="Order WhatsApp number"
+              />
+              <label className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-600">
+                <input
+                  type="checkbox"
+                  checked={whatsappSameAsPhone}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setWhatsappSameAsPhone(checked);
+                    if (checked) setContactWhatsApp(contactPhone);
+                  }}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                <span>Same as phone number</span>
+              </label>
             </label>
             <label className="block sm:col-span-2">
               <span className="mb-2 block text-sm font-semibold text-slate-700">Contact email</span>
@@ -519,15 +557,37 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your name" : "Owner name"} />
               <input value={ownerEmail} onChange={(event) => setOwnerEmail(event.target.value)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100" placeholder={clientMode ? "Your email" : "Owner email"} inputMode="email" autoComplete="email" />
-              <input value={ownerPassword} onChange={(event) => setOwnerPassword(event.target.value)} type="password" className={`rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 sm:col-span-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`} placeholder={clientMode ? "Create password, minimum 8 characters" : "Temporary password, minimum 8 characters"} />
+              <div className="sm:col-span-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={ownerPassword}
+                    onChange={(event) => setOwnerPassword(event.target.value)}
+                    type={showOwnerPassword ? "text" : "password"}
+                    className={`min-h-12 flex-1 rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${incompleteOwnerLogin ? "border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-rose-100" : "border-slate-200 focus:border-slate-400 focus:ring-slate-100"}`}
+                    placeholder={clientMode ? "Create password, minimum 8 characters" : "Temporary password, minimum 8 characters"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOwnerPassword((current) => !current)}
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+                  >
+                    {showOwnerPassword ? "Hide" : "Show"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={copyOwnerPassword}
+                    disabled={!ownerPassword}
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {passwordCopied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
           {clientMode ? (
-            <div className="mt-6 rounded-[26px] border border-[#FFB168]/40 bg-[#FFF7F0] p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Final checks</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">Orduva will create a real store address and admin login from these details. This setup step does not take payment; the store starts with a 7-day Orduva trial.</p>
-              <div className="mt-4 space-y-3 text-sm text-slate-700">
+            <div className="mt-6 space-y-3 text-sm text-slate-700">
                 <label className="flex gap-3 rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
                   <input type="checkbox" checked={humanConfirmed} onChange={(event) => setHumanConfirmed(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
                   <span>I am creating a genuine business store.</span>
@@ -540,18 +600,9 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
                   <input type="checkbox" checked={privacyAccepted} onChange={(event) => setPrivacyAccepted(event.target.checked)} className="mt-1 h-4 w-4 rounded border-slate-300" />
                   <span>I agree that Orduva can use the details I submit to create my store, owner login, storefront, and setup records.</span>
                 </label>
-              </div>
-              <p className="mt-3 text-xs leading-5 text-slate-500">These checks help us protect the Orduva platform and keep store setup clean.</p>
             </div>
           ) : null}
 
-
-          {formWarnings.length ? (
-            <div className="mt-5 space-y-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <p className="font-bold">Before creating this store:</p>
-              {formWarnings.map((warning) => <p key={warning}>• {warning}</p>)}
-            </div>
-          ) : null}
 
           {message ? (
             <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm font-semibold ${message.includes("Failed") || message.includes("required") || message.includes("reserved") || message.includes("already") || message.includes("name@example.com") || message.includes("password") ? "border-rose-200 bg-rose-50 text-rose-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
@@ -569,7 +620,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           <button
             type="button"
             onClick={createTenant}
-            disabled={busy || formWarnings.length > 0 || (platformMode && !clientMode && !effectivePlatformKey.trim())}
+            disabled={busy || (platformMode && !clientMode && !effectivePlatformKey.trim())}
             className={clientMode ? "mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#F97316] px-5 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(249,115,22,0.24)] transition hover:-translate-y-[1px] hover:bg-[#EA580C] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" : "mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_34px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"}
           >
             {busy ? "Creating store..." : clientMode ? "Create my Orduva store" : "Create client foundation"}

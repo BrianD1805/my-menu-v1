@@ -105,11 +105,6 @@ function OrduvaPlatformLanding({ searchParams }: { searchParams: SearchParamsRec
               <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5F625F] sm:text-lg">
                 Orduva creates branded storefronts, guided admin setup, customer accounts, order notifications and practical launch tools for restaurants, cafés, takeaways and local sellers.
               </p>
-              {referralActive ? (
-                <p className="mx-auto mt-4 inline-flex w-fit rounded-full border border-[#FF6A3D]/20 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#B74A16]">
-                  Referral saved for your store setup
-                </p>
-              ) : null}
             </div>
           </section>
 
@@ -117,9 +112,8 @@ function OrduvaPlatformLanding({ searchParams }: { searchParams: SearchParamsRec
             <div className="pointer-events-none absolute -left-16 top-10 h-32 w-32 rounded-full bg-[#FF6A3D]/10 blur-3xl" />
             <div className="pointer-events-none absolute -right-16 bottom-4 h-36 w-36 rounded-full bg-[#14110F]/8 blur-3xl" />
             <div className="mx-auto max-w-5xl text-center">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B74A16]">Top selling points</p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-[#14110F] sm:text-4xl">Simple to sell. Easy to launch.</h2>
-              <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-[#667069] sm:text-base">A cleaner, more premium setup story for new clients — with practical tools that help them get live fast.</p>
+              <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-[#667069] sm:text-base">A cleaner, more premium storefront — with practical tools that help you get live fast.</p>
             </div>
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {sellingPoints.map((point, index) => (
@@ -152,30 +146,18 @@ function OrduvaPlatformLanding({ searchParams }: { searchParams: SearchParamsRec
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FFB36B]">New client setup</p>
                 <h2 className="mt-2 text-3xl font-black tracking-tight">Create a store, then launch it properly.</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70">
-                  New clients can create their own store foundation from a dedicated Orduva onboarding page. ZimZa Express remains the live working example and demo storefront.
+                  Start with a free 7-day trial, choose the plan that fits your store, and build a polished ordering storefront customers can use from any device.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
                 <a href={onboardingHref} className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#F97316] px-6 py-3 text-sm font-black text-white shadow-[0_18px_38px_rgba(249,115,22,0.24)] transition hover:-translate-y-[1px] hover:bg-[#EA580C]">
                   Start your own store
                 </a>
-                <a href="https://admin.orduva.com/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 px-6 py-3 text-sm font-black text-white transition hover:-translate-y-[1px] hover:bg-white/20">
-                  Store admin login
-                </a>
               </div>
             </div>
           </section>
 
           <footer className="border-t border-[#51372D]/12 px-5 py-6 text-center text-sm text-[#667069] sm:px-7 lg:px-9">
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-              <a href="https://zimzaexpress.orduva.com" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#51372D]/12 bg-white px-5 py-3 text-sm font-black text-[#14110F] shadow-sm transition hover:-translate-y-[1px] hover:bg-[#EFE6D9]">
-                View a live store demo
-              </a>
-              <a href="https://admin.orduva.com/admin" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#14110F] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(14,14,16,0.18)] transition hover:-translate-y-[1px] hover:bg-[#2A211D]">
-                Admin login
-              </a>
-            </div>
-            <p className="mx-auto mt-5 max-w-3xl leading-6">Orduva platform landing page. ZimZa Express is the working demo storefront; client stores live on their own subdomains.</p>
             <p className="mt-2 font-black text-[#14110F]">{LIVE_VERSION}</p>
           </footer>
         </div>

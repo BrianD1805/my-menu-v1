@@ -24,11 +24,7 @@ export default function StartYourStorePage() {
                   className="h-auto w-full max-w-[340px] object-contain sm:max-w-[450px] lg:max-w-[500px]"
                 />
               </div>
-              <div className="flex justify-center lg:justify-end">
-                <a href="/" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#51372D]/12 bg-white px-5 py-3 text-sm font-black text-[#14110F] shadow-sm transition hover:-translate-y-[1px] hover:bg-[#EFE6D9]">
-                  Back to Orduva home
-                </a>
-              </div>
+              <div className="hidden lg:block" aria-hidden="true" />
             </div>
           </header>
 
@@ -41,7 +37,7 @@ export default function StartYourStorePage() {
                 Tell us about your store.
               </h1>
               <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5F625F] sm:text-lg">
-                Create your Orduva storefront in a few minutes. No payment is taken today — your store starts with a 7-day trial so you can set up your menu, branding and order flow properly.
+                Create your Orduva storefront in a few minutes. No payment or credit card details are needed today — your store starts with a 7-day trial so you can set up your menu, branding and order flow properly.
               </p>
             </div>
           </section>
@@ -50,7 +46,7 @@ export default function StartYourStorePage() {
             <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
               <div className="rounded-[26px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-5 shadow-[0_14px_34px_rgba(81,55,45,0.07)]">
                 <p className="text-sm font-black text-[#14110F]">No payment today</p>
-                <p className="mt-2 text-sm leading-6 text-[#667069]">Start with a 7-day Orduva trial and decide once your store is set up.</p>
+                <p className="mt-2 text-sm leading-6 text-[#667069]">Start with a 7-day Orduva trial. No payment and no credit card details are needed today.</p>
               </div>
               <div className="rounded-[26px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-5 shadow-[0_14px_34px_rgba(81,55,45,0.07)]">
                 <p className="text-sm font-black text-[#14110F]">Your own store address</p>
@@ -72,16 +68,7 @@ export default function StartYourStorePage() {
           </section>
 
           <footer className="border-t border-[#51372D]/12 px-5 py-6 text-center text-sm text-[#667069] sm:px-7 lg:px-9">
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
-              <a href="/" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#51372D]/12 bg-white px-5 py-3 text-sm font-black text-[#14110F] shadow-sm transition hover:-translate-y-[1px] hover:bg-[#EFE6D9]">
-                Back to Orduva home
-              </a>
-              <a href="https://zimzaexpress.orduva.com" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#14110F] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(14,14,16,0.18)] transition hover:-translate-y-[1px] hover:bg-[#2A211D]">
-                View a live store demo
-              </a>
-            </div>
-            <p className="mx-auto mt-5 max-w-3xl leading-6">Orduva creates branded online ordering storefronts for restaurants, cafés, takeaways and local sellers.</p>
-            <p className="mt-2 font-black text-[#14110F]">{LIVE_VERSION}</p>
+            <p className="font-black text-[#14110F]">{LIVE_VERSION}</p>
           </footer>
         </div>
       </section>

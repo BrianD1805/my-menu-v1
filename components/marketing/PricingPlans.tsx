@@ -104,7 +104,7 @@ export default function PricingPlans({ onboardingHref = "/start-your-store", com
             <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B74A16]">Pricing plans</p>
             <h2 className="mt-2 text-3xl font-black tracking-tight text-[#14110F] sm:text-4xl">Select a FREE 7 day plan.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[#667069] sm:text-base">
-              Choose the store size you want to trial. No payment is taken today — Stripe subscription checkout is wired in the next step after your store is ready.
+              Choose the store size you want to trial. No payment or credit card details are needed today.
             </p>
           </div>
           <div className="rounded-[28px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-3 shadow-[0_14px_34px_rgba(81,55,45,0.07)]">
@@ -189,15 +189,10 @@ export default function PricingPlans({ onboardingHref = "/start-your-store", com
                     Select {plan.name} Plan
                   </a>
                 )}
-                <p className="mt-3 text-center text-xs text-[#667069]">No payment is taken today.</p>
+                <p className="mt-3 text-center text-xs text-[#667069]">No payment or credit card details today.</p>
               </article>
             );
           })}
-        </div>
-
-        <div className="mt-6 rounded-[28px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-5 text-sm leading-7 text-[#5F625F]">
-          <p className="font-black text-[#14110F]">Your store currency is confirmed during onboarding.</p>
-          <p className="mt-1">That store currency will drive storefront prices, future Stripe subscription currency, and referral commission currency. Yoco and Pesapal/M-Pesa can be added after Stripe.</p>
         </div>
       </div>
     </section>

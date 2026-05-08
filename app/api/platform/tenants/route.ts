@@ -183,6 +183,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Owner login needs an owner email and a temporary password of at least 8 characters" }, { status: 400 });
     }
 
+
+    const { data: existingNameMatches } = await db
+      .from("tenants")
+      .select("id")
+      .ilike("name", businessName)
+      .limit(1);
+
+    if (existingNameMatches?.length) {
+      return NextResponse.json({ error: "That store name is already in use. Please choose a slightly different store name." }, { status: 409 });
+    }
+
+    if (contactEmail) {
+      const { data: existingStoreEmailMatches } = await db
+        .from("tenant_settings")
+        .select("tenant_id")
+        .ilike("contact_email", contactEmail)
+        .limit(1);
+
+      if (existingStoreEmailMatches?.length) {
+        return NextResponse.json({ error: "That store contact email is already linked to another Orduva store. Please use a different store email." }, { status: 409 });
+      }
+    }
+
     const { data: existing } = await db.from("tenants").select("id").eq("slug", slug).maybeSingle();
     if (existing) {
       return NextResponse.json({ error: "That store address is already in use" }, { status: 409 });
