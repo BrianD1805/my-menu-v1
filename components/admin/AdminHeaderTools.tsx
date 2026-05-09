@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 import StripeUpgradeButton from "@/components/admin/StripeUpgradeButton";
+import BillingStatusCheck from "@/components/admin/BillingStatusCheck";
 import type { TenantTrialState } from "@/lib/trial";
 
 type ChecklistItem = { status?: "pending" | "complete" };
@@ -193,6 +194,7 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                           </div>
                         </div>
                       )}
+                      <BillingStatusCheck />
                     </div>
                   )}
                 </div>
