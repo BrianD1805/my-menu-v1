@@ -32,6 +32,13 @@ function formatDateTime(value?: string | null) {
   return date.toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+
+function formatPaymentAmount(amount?: number | null, currency?: string | null) {
+  const code = String(currency || "").trim().toUpperCase();
+  if (typeof amount !== "number" || Number.isNaN(amount)) return code || "Amount unavailable";
+  return `${code} ${amount}`.trim();
+}
+
 function maskId(value?: string | null) {
   const clean = String(value || "").trim();
   if (!clean) return "Not set";
@@ -137,7 +144,8 @@ export default function BillingStatusCheck() {
               <div className="mt-2 space-y-2">
                 {payments.map((payment) => (
                   <div key={payment.id} className="rounded-xl bg-[#F8FAFC] px-3 py-2 text-xs font-bold leading-5 text-[#5C5F66]">
-                    <span className="font-black text-[#0E0E10]">{payment.currency_code} {payment.subscription_amount}</span> · {payment.payment_status} · {payment.billing_period_month || "period unknown"}
+                    <span className="font-black text-[#0E0E10]">{formatPaymentAmount(payment.subscription_amount, payment.currency_code)}</span> · {payment.payment_status || "status unknown"} · Paid: {formatDateTime(payment.created_at)}
+                    {payment.billing_period_month ? <p className="mt-0.5 text-[11px] font-bold text-[#68707A]">Billing period: {payment.billing_period_month}</p> : null}
                   </div>
                 ))}
               </div>

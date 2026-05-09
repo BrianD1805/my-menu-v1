@@ -37,6 +37,17 @@ function trialStatusText(trial?: TenantTrialState | null) {
   return `${trial.trialDaysRemaining} days left in trial`;
 }
 
+
+function trialSecondaryLabel(trial?: TenantTrialState | null) {
+  if (trial?.subscriptionStatus === "active" || trial?.trialStatus === "converted") return "Billing";
+  return "Trial";
+}
+
+function trialModalLabel(trial?: TenantTrialState | null) {
+  if (trial?.subscriptionStatus === "active" || trial?.trialStatus === "converted") return "Billing details";
+  return "Trial details";
+}
+
 function trialTone(trial?: TenantTrialState | null) {
   if (!trial) return "border-[#0E0E10]/10 bg-[#F8FAFC] text-[#0E0E10]";
   if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "border-emerald-200 bg-emerald-50 text-emerald-900";
@@ -120,7 +131,7 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
           aria-label="Open trial details"
         >
           <span className="text-sm font-black leading-none sm:text-base">{trialShortLabel(trialState)}</span>
-          <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] opacity-75 sm:text-[11px]">Trial</span>
+          <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] opacity-75 sm:text-[11px]">{trialSecondaryLabel(trialState)}</span>
         </button>
       </div>
 
@@ -140,7 +151,7 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
               <section className="relative mx-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-[920px] flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] sm:max-h-[calc(100dvh-4rem)]">
                 <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#0E0E10]/10 px-5 py-4 sm:px-7 sm:py-5">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">{modal === "checklist" ? "Admin checklist" : "Trial details"}</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">{modal === "checklist" ? "Admin checklist" : trialModalLabel(trialState)}</p>
                     <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10] sm:text-2xl">
                       {modal === "checklist" ? "Launch checklist" : trialStatusText(trialState)}
                     </h2>

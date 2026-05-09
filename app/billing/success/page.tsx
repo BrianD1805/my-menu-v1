@@ -79,7 +79,6 @@ export default async function StripeBillingSuccessPage({ searchParams }: Props) 
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:bg-[#E85C32]">Return to admin</Link>
               <Link href={sessionId ? `/billing/success?session_id=${encodeURIComponent(sessionId)}&tenant=${encodeURIComponent(tenantSlug)}&plan=${encodeURIComponent(String(plan))}&currency=${encodeURIComponent(String(currency))}&billing=${encodeURIComponent(String(billing))}` : "/billing/success"} className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#F5F2EE]">Refresh status</Link>
-              <Link href="/platform" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#F5F2EE]">Owner platform</Link>
             </div>
             <p className="mt-6 text-xs font-bold text-[#68707A]">{LIVE_VERSION}</p>
           </div>

@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-194';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-194';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-194';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-194a';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-194a';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-194a';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -226,4 +226,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.194 Stripe checkout live test polish cache bump
+// Orduva Ver-0.194A billing return link and status polish cache bump
