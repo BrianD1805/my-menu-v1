@@ -1,4 +1,4 @@
-# Orduva Ver-0.190 — Stripe Price ID checklist
+# Orduva Ver-0.192 — Stripe Price ID checklist
 
 Create recurring Stripe Prices for every plan, currency and interval below, then add the IDs to Netlify environment variables.
 

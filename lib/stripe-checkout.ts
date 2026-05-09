@@ -43,7 +43,7 @@ export function billingIntervalFromTenantPlanName(planName: unknown): BillingInt
   return "monthly";
 }
 
-function stripePriceEnvKey(planCode: PricingPlanCode, currencyCode: PricingCurrencyCode, billingInterval: BillingInterval) {
+export function stripePriceEnvKey(planCode: PricingPlanCode, currencyCode: PricingCurrencyCode, billingInterval: BillingInterval) {
   return `STRIPE_PRICE_${planCode}_${currencyCode}_${billingInterval}`.toUpperCase();
 }
 
@@ -51,6 +51,52 @@ export function getStripePriceId(planCode: PricingPlanCode, currencyCode: Pricin
   const envKey = stripePriceEnvKey(planCode, currencyCode, billingInterval);
   const priceId = process.env[envKey]?.trim() || "";
   return { envKey, priceId };
+}
+
+
+export type StripePriceConfigStatus = {
+  planCode: PricingPlanCode;
+  planName: string;
+  currencyCode: PricingCurrencyCode;
+  billingInterval: BillingInterval;
+  envKey: string;
+  priceId: string;
+  configured: boolean;
+  expectedAmount: number;
+  formattedAmount: string;
+};
+
+export function maskStripePriceId(priceId: string) {
+  const clean = String(priceId || "").trim();
+  if (!clean) return "";
+  if (clean.length <= 12) return clean;
+  return `${clean.slice(0, 10)}…${clean.slice(-6)}`;
+}
+
+export function getAllStripePriceConfigStatuses(): StripePriceConfigStatus[] {
+  const intervals: BillingInterval[] = ["monthly", "yearly"];
+  const currencies: PricingCurrencyCode[] = ["ZAR", "KES", "GBP", "USD", "EUR"];
+  const plans: PricingPlanCode[] = ["starter", "growth", "pro"];
+
+  return currencies.flatMap((currencyCode) =>
+    plans.flatMap((planCode) =>
+      intervals.map((billingInterval) => {
+        const { envKey, priceId } = getStripePriceId(planCode, currencyCode, billingInterval);
+        const summary = getStripePlanSummary(planCode, currencyCode, billingInterval);
+        return {
+          planCode,
+          planName: summary.plan.name,
+          currencyCode,
+          billingInterval,
+          envKey,
+          priceId: maskStripePriceId(priceId),
+          configured: Boolean(priceId),
+          expectedAmount: summary.amount,
+          formattedAmount: summary.formattedAmount,
+        };
+      }),
+    ),
+  );
 }
 
 export function getStripePlanSummary(planCode: PricingPlanCode, currencyCode: PricingCurrencyCode, billingInterval: BillingInterval) {
