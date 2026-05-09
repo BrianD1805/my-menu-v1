@@ -76,7 +76,16 @@ export default function StripeUpgradeButton({
     setLoading(true);
     setError(null);
     setLastAttempt(null);
+    const checkoutWindow = window.open("about:blank", "_blank");
+    if (checkoutWindow) {
+      checkoutWindow.opener = null;
+      checkoutWindow.document.title = "Opening Stripe Checkout…";
+      checkoutWindow.document.body.innerHTML = '<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:32px;line-height:1.5;color:#1F2328"><strong>Opening secure Stripe Checkout…</strong><br />You can return to Orduva in the original tab.</div>';
+    }
     try {
+      if (!checkoutWindow) {
+        throw new Error("Your browser blocked the Stripe checkout pop-up. Please allow pop-ups for Orduva and try again.");
+      }
       const response = await fetch("/api/billing/stripe/checkout", {
         method: "POST",
         headers: {
@@ -92,8 +101,10 @@ export default function StripeUpgradeButton({
       if (!response.ok || !data.checkoutUrl) {
         throw new Error(data.error || "Stripe checkout could not be started.");
       }
-      window.location.assign(data.checkoutUrl);
+      checkoutWindow.location.href = data.checkoutUrl;
+      setLoading(false);
     } catch (err) {
+      if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
       setError(err instanceof Error ? err.message : "Stripe checkout could not be started.");
       setLoading(false);
     }
@@ -142,7 +153,7 @@ export default function StripeUpgradeButton({
             </label>
           </div>
           <p className="mt-3 rounded-2xl border border-[#FF6A3D]/15 bg-white px-4 py-3 text-sm font-bold leading-6 text-[#5C5F66]">
-            Test selection: <span className="font-black text-[#0E0E10]">{preview.formatted}</span> / {selectedInterval === "yearly" ? "year" : "month"}. Stripe will open in the same tab; cancel returns to Orduva without taking payment.
+            Test selection: <span className="font-black text-[#0E0E10]">{preview.formatted}</span> / {selectedInterval === "yearly" ? "year" : "month"}. Stripe will open in a new window; cancel returns to Orduva without taking payment.
           </p>
         </div>
       ) : null}

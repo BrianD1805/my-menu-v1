@@ -1,8 +1,8 @@
-# Orduva Ver-0.193 — Stripe checkout live test polish
+# Orduva Ver-0.193A — Stripe checkout live test polish
 
 ## What changed
 
-- Bumped Orduva to `Ver: 0.193`.
+- Bumped Orduva to `Ver: 0.193A`.
 - Added selectable Stripe checkout testing controls inside the tenant admin trial/upgrade popup.
 - The admin tester can now choose:
   - Starter, Growth or Pro
@@ -11,11 +11,11 @@
 - The Stripe checkout API now returns the selected plan, currency, billing interval, masked Price ID, expected amount and environment key after a successful session is created.
 - The Stripe upgrade button now shows clearer loading and error feedback.
 - Corrected the `/platform/billing` wording so Stripe Price IDs are described as normal Netlify environment variables, not secret values.
-- Bumped storefront/service-worker cache strings to `ver-0-193`.
+- Bumped storefront/service-worker cache strings to `ver-0-193a`.
 
 ## How to test
 
-1. Deploy Ver-0.193.
+1. Deploy Ver-0.193A.
 2. Confirm `/platform/billing` still shows all 30 Stripe Price IDs as SET.
 3. Open a tenant admin, for example `/admin` on the tenant/admin host.
 4. Click the Trial/Active/Expired pill in the admin header.
