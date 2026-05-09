@@ -186,10 +186,10 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                         <div className="mt-5 rounded-[24px] border border-[#FF6A3D]/20 bg-white p-4 shadow-sm">
                           <p className="text-sm font-black text-[#0E0E10]">Ready to activate this store?</p>
                           <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
-                            Stripe checkout uses this tenant’s saved plan and storefront currency. Webhook automation will complete the automatic subscription updates in the next phase.
+                            Stripe checkout now lets you test any configured plan, billing interval and launch currency before we lock the final live upgrade flow.
                           </p>
                           <div className="mt-4">
-                            <StripeUpgradeButton label="Upgrade with Stripe" />
+                            <StripeUpgradeButton label="Open Stripe Checkout" showControls />
                           </div>
                         </div>
                       )}

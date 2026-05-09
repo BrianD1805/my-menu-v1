@@ -82,7 +82,7 @@ export default function OwnerStripePriceConfigPanel() {
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FF6A3D]">Configuration status</p>
             <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10]">Stripe Price IDs</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5C5F66]">
-              Add these values in Netlify as secret environment variables. Stripe Price IDs usually start with <strong>price_</strong>.
+              Add these values in Netlify as normal environment variables. Stripe Price IDs usually start with <strong>price_</strong> and do not need to be marked secret.
             </p>
           </div>
           <button
@@ -148,7 +148,7 @@ export default function OwnerStripePriceConfigPanel() {
       <div className="rounded-[30px] border border-[#0E0E10]/10 bg-[#0E0E10] p-5 text-white shadow-[0_18px_54px_rgba(14,14,16,0.18)] sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Netlify setup note</p>
         <p className="mt-3 text-sm leading-7 text-white/75">
-          Add the missing variables in Netlify, mark each as a secret value, then trigger a fresh deploy. Checkout buttons will fail until the matching plan/currency/monthly-yearly Price ID exists.
+          Add any missing variables in Netlify without ticking “Contains secret value”, then trigger a fresh deploy. Checkout buttons will fail until the matching plan/currency/monthly-yearly Price ID exists.
         </p>
       </div>
     </section>
