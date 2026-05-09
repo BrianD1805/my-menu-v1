@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
-import { PRICING_CURRENCIES, PRICING_PLANS, PricingCurrencyCode, PricingPlanCode, DEFAULT_PRICING_CURRENCY, DEFAULT_PRICING_PLAN, suggestedCurrencyFromBrowser, getPricingCurrency, getPricingPlan, formatPlanPrice, monthlyPriceForPlan } from "@/lib/pricing";
+import { PRICING_CURRENCIES, PRICING_PLANS, PricingCurrencyCode, PricingPlanCode, BillingInterval, DEFAULT_PRICING_CURRENCY, DEFAULT_PRICING_PLAN, suggestedCurrencyFromBrowser, getPricingCurrency, getPricingPlan, formatPlanPrice, monthlyPriceForPlan, priceForPlan } from "@/lib/pricing";
 
 type TenantSummary = {
   id: string;
@@ -106,6 +106,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const [slug, setSlug] = useState("");
   const [storeCurrencyCode, setStoreCurrencyCode] = useState<PricingCurrencyCode>(DEFAULT_PRICING_CURRENCY);
   const [selectedPlanCode, setSelectedPlanCode] = useState<PricingPlanCode>(DEFAULT_PRICING_PLAN);
+  const [selectedBillingInterval, setSelectedBillingInterval] = useState<BillingInterval>("monthly");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactWhatsApp, setContactWhatsApp] = useState("");
@@ -226,7 +227,10 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       const incomingCurrency = String(detail.currencyCode || "").toUpperCase();
       const incomingPlan = String(detail.planCode || "").toLowerCase();
       if (PRICING_CURRENCIES.some((currency) => currency.code === incomingCurrency)) setStoreCurrencyCode(incomingCurrency as PricingCurrencyCode);
+      const incomingBilling = String(detail.billingInterval || "").toLowerCase();
       if (PRICING_PLANS.some((plan) => plan.code === incomingPlan)) setSelectedPlanCode(incomingPlan as PricingPlanCode);
+    if (incomingBilling === "monthly" || incomingBilling === "yearly") setSelectedBillingInterval(incomingBilling as BillingInterval);
+      if (incomingBilling === "monthly" || incomingBilling === "yearly") setSelectedBillingInterval(incomingBilling as BillingInterval);
     }
     window.addEventListener("orduva-plan-selected", handlePlanSelected);
     return () => window.removeEventListener("orduva-plan-selected", handlePlanSelected);
@@ -248,10 +252,12 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
     const incomingCurrency = params.get("currency")?.toUpperCase();
     const incomingPlan = params.get("plan")?.toLowerCase();
+    const incomingBilling = params.get("billing")?.toLowerCase();
     const browserCurrency = suggestedCurrencyFromBrowser(window.navigator.language, Intl.DateTimeFormat().resolvedOptions().timeZone);
     if (PRICING_CURRENCIES.some((currency) => currency.code === incomingCurrency)) setStoreCurrencyCode(incomingCurrency as PricingCurrencyCode);
     else setStoreCurrencyCode(browserCurrency);
     if (PRICING_PLANS.some((plan) => plan.code === incomingPlan)) setSelectedPlanCode(incomingPlan as PricingPlanCode);
+    if (incomingBilling === "monthly" || incomingBilling === "yearly") setSelectedBillingInterval(incomingBilling as BillingInterval);
 
     setRefTenant(incomingRefTenant || window.sessionStorage.getItem("orduva_ref_tenant") || "");
     setRefSource(incomingRefSource || window.sessionStorage.getItem("orduva_ref_source") || "");
@@ -312,6 +318,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           countryCode: selectedStoreCurrency.countryCode,
           storeCurrencyCode,
           planCode: selectedPlanCode,
+          billingInterval: selectedBillingInterval,
           contactPhone,
           contactEmail,
           contactWhatsApp,
@@ -547,6 +554,18 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
               <p className="mt-2 rounded-2xl border border-[#F97316]/15 bg-[#FFF1E6] px-4 py-3 text-xs leading-5 text-[#7A5843]">
                 You start with a 7-day trial. No payment or credit card details are needed today. Current selection: {selectedPlan.name} in {selectedStoreCurrency.code}.
               </p>
+            </label>
+
+            <label className="block sm:col-span-2">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">Billing after trial</span>
+              <select
+                value={selectedBillingInterval}
+                onChange={(event) => { clearTransientFeedback(); setSelectedBillingInterval(event.target.value as BillingInterval); }}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              >
+                <option value="monthly">Monthly — {formatPlanPrice(priceForPlan(selectedPlanCode, storeCurrencyCode, "monthly"), storeCurrencyCode, { forceDecimals: true })} / month</option>
+                <option value="yearly">Yearly — {formatPlanPrice(priceForPlan(selectedPlanCode, storeCurrencyCode, "yearly"), storeCurrencyCode)} / year, 20% saving</option>
+              </select>
             </label>
 
             <label className="block">

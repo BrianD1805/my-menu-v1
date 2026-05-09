@@ -119,6 +119,11 @@ function getCountryCode(value: unknown) {
   return code === "GB" || code === "ZA" || code === "KE" || code === "US" || code === "EU" ? code : "ZA";
 }
 
+function getBillingInterval(value: unknown) {
+  const interval = String(value || "").trim().toLowerCase();
+  return interval === "yearly" || interval === "annual" || interval === "annually" ? "yearly" : "monthly";
+}
+
 function defaultThemeForCountry(countryCode: string) {
   if (countryCode === "ZA") {
     return { primaryColor: "#1F4F3A", accentColor: "#D69E2E", backgroundTint: "#F7F4EA", borderColor: "#D9C7A3", textColor: "#1F2A24" };
@@ -163,6 +168,7 @@ export async function POST(req: Request) {
     const slug = normalizeSlug(body?.slug || businessName);
     const storeCurrencyCode = normalisePricingCurrencyCode(body?.storeCurrencyCode || body?.currencyCode);
     const selectedPlanCode = normalisePricingPlanCode(body?.planCode);
+    const selectedBillingInterval = getBillingInterval(body?.billingInterval || body?.billing);
     const countryCode = getCountryCode(body?.countryCode || pricingCountryCodeForCurrency(storeCurrencyCode));
     const contactPhone = normalizeOptionalText(body?.contactPhone, 80);
     const contactEmail = normalizeOptionalText(body?.contactEmail, 160);
@@ -240,7 +246,7 @@ export async function POST(req: Request) {
         slug,
         status: "setup",
         whatsapp_number: contactWhatsApp || contactPhone,
-        ...createTrialInsertFields(undefined, undefined, `${selectedPlanCode}_trial`),
+        ...createTrialInsertFields(undefined, undefined, `${selectedPlanCode}_${selectedBillingInterval}_trial`),
       })
       .select("id, name, slug, status, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name, created_at")
       .single();

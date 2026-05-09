@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
+import StripeUpgradeButton from "@/components/admin/StripeUpgradeButton";
 import type { TenantTrialState } from "@/lib/trial";
 
 type ChecklistItem = { status?: "pending" | "complete" };
@@ -174,12 +175,23 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                       </div>
                       {trialState?.isTrialExpired ? (
                         <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold leading-6 text-red-800">
-                          Checkout is currently paused because the trial has expired. Upgrade or ask the platform owner to add more trial days to re-enable checkout.
+                          Checkout is currently paused because the trial has expired. Upgrade with Stripe or ask the platform owner to add more trial days to re-enable checkout.
                         </p>
                       ) : (
                         <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold leading-6 text-emerald-900">
                           Storefront checkout remains available while the trial or subscription is active.
                         </p>
+                      )}
+                      {trialState?.subscriptionStatus === "active" || trialState?.trialStatus === "converted" ? null : (
+                        <div className="mt-5 rounded-[24px] border border-[#FF6A3D]/20 bg-white p-4 shadow-sm">
+                          <p className="text-sm font-black text-[#0E0E10]">Ready to activate this store?</p>
+                          <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
+                            Stripe checkout uses this tenant’s saved plan and storefront currency. Webhook automation will complete the automatic subscription updates in the next phase.
+                          </p>
+                          <div className="mt-4">
+                            <StripeUpgradeButton label="Upgrade with Stripe" />
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}

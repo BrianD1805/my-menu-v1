@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-189a';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-189a';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-189a';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-191';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-191';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-191';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -38,9 +38,12 @@ function isSessionSensitivePath(url) {
     url.pathname.startsWith('/platform/') ||
     url.pathname === '/checkout' ||
     url.pathname.startsWith('/checkout/') ||
+    url.pathname === '/billing' ||
+    url.pathname.startsWith('/billing/') ||
     url.pathname.startsWith('/api/customer/') ||
     url.pathname.startsWith('/api/admin/') ||
-    url.pathname.startsWith('/api/platform/')
+    url.pathname.startsWith('/api/platform/') ||
+    url.pathname.startsWith('/api/billing/')
   );
 }
 
@@ -223,4 +226,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.189B admin sticky header white bar cache bump
+// Orduva Ver-0.191 Stripe checkout foundation cache bump
