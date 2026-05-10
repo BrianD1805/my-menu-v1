@@ -1,4 +1,4 @@
-# Orduva Ver-0.200A — Trial ended activate billing page
+# Orduva Ver-0.200B — Trial ended activate billing page
 
 ## Purpose
 This patch replaces the expired-trial billing activation experience with a proper production-style billing activation journey.
@@ -25,8 +25,8 @@ This patch replaces the expired-trial billing activation experience with a prope
   - mobile: opens the billing activation journey in a popup
 - Mobile popup uses the same pricing carousel sizing as the start-your-store page.
 - Stripe Checkout still opens in a new window/tab.
-- Bumped visible version to `Ver: 0.200A`.
-- Bumped storefront/service worker cache strings to `ver-0-200a`.
+- Bumped visible version to `Ver: 0.200B`.
+- Bumped storefront/service worker cache strings to `ver-0-200b`.
 
 ## Testing checklist
 1. Open an expired unpaid tenant admin on desktop.

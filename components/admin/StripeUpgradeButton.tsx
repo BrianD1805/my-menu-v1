@@ -91,8 +91,16 @@ export default function StripeUpgradeButton({
     const checkoutWindow = window.open("about:blank", "_blank");
     if (checkoutWindow) {
       checkoutWindow.opener = null;
-      checkoutWindow.document.title = "Opening Stripe Checkout…";
-      checkoutWindow.document.body.innerHTML = '<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:32px;line-height:1.5;color:#1F2328"><strong>Opening secure Stripe Checkout…</strong><br />You can return to Orduva in the original tab.</div>';
+      checkoutWindow.document.title = "Connecting to Stripe…";
+      checkoutWindow.document.body.innerHTML = `
+        <main style="min-height:100vh;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:28px;background:linear-gradient(135deg,#FFF7F0 0%,#F5F2EE 55%,#FFFFFF 100%);font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;color:#1F2328;text-align:center;">
+          <section style="width:min(92vw,520px);border:1px solid rgba(14,14,16,0.10);border-radius:28px;background:rgba(255,255,255,0.94);padding:clamp(30px,8vw,54px) clamp(22px,6vw,44px);box-shadow:0 24px 70px rgba(14,14,16,0.16);">
+            <div style="margin:0 auto 18px;width:56px;height:56px;border-radius:999px;background:#FF6A3D;display:flex;align-items:center;justify-content:center;color:white;font-size:26px;font-weight:900;box-shadow:0 14px 30px rgba(255,106,61,0.28);">↗</div>
+            <h1 style="margin:0;font-size:clamp(26px,8vw,38px);line-height:1.08;font-weight:900;letter-spacing:-0.04em;color:#0E0E10;">Hang on while we connect to Stripe’s secure server</h1>
+            <p style="margin:16px 0 0;font-size:clamp(16px,4.5vw,19px);line-height:1.55;font-weight:750;color:#5C5F66;">Your Orduva admin page will stay open in the other window.</p>
+          </section>
+        </main>
+      `;
     }
     try {
       if (!checkoutWindow) {
@@ -113,6 +121,7 @@ export default function StripeUpgradeButton({
       if (!response.ok || !data.checkoutUrl) {
         throw new Error(data.error || "Stripe checkout could not be started.");
       }
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       checkoutWindow.location.href = data.checkoutUrl;
       setLoading(false);
     } catch (err) {
