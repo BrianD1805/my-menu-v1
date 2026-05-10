@@ -63,6 +63,7 @@ type BillingOverviewPayload = {
   };
   stores: BillingStore[];
   recentPayments: RecentPayment[];
+  paymentRecords?: RecentPayment[];
   error?: string;
 };
 
@@ -82,6 +83,7 @@ const EMPTY_PAYLOAD: BillingOverviewPayload = {
   },
   stores: [],
   recentPayments: [],
+  paymentRecords: [],
 };
 
 function money(amount: number | null | undefined, currencyCode: string | null | undefined) {
@@ -137,6 +139,74 @@ function revenueLine(totals: CurrencyTotal[]) {
   return totals.map((item) => `${money(item.amount, item.currencyCode)} (${item.payments})`).join(" · ");
 }
 
+
+function normaliseSearch(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function matchesSearch(store: BillingStore, searchTerm: string) {
+  const query = normaliseSearch(searchTerm);
+  if (!query) return true;
+  const haystack = [
+    store.name,
+    store.slug,
+    store.planLabel,
+    store.billingProvider,
+    store.billingState,
+    store.subscriptionStatus,
+    store.trialStatus,
+    store.stripeCustomerId,
+    store.stripeSubscriptionId,
+    store.lastPayment?.currencyCode,
+    store.lastPayment?.status,
+    store.lastPayment?.reference,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(query);
+}
+
+function matchesPaymentSearch(payment: RecentPayment, searchTerm: string) {
+  const query = normaliseSearch(searchTerm);
+  if (!query) return true;
+  const haystack = [
+    payment.storeName,
+    payment.storeSlug,
+    payment.currencyCode,
+    payment.status,
+    payment.reference,
+    payment.billingPeriodMonth,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(query);
+}
+
+function csvCell(value: unknown) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename: string, headers: string[], rows: Array<Array<unknown>>) {
+  if (typeof window === "undefined") return;
+  const csv = [headers.map(csvCell).join(","), ...rows.map((row) => row.map(csvCell).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportDateStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function filterTitle(filter: BillingFilter) {
   if (filter === "active") return "Active billing tenants";
   if (filter === "trial") return "Trial tenants";
@@ -162,6 +232,9 @@ export default function OwnerBillingOverviewPanel() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [activeFilter, setActiveFilter] = useState<BillingFilter>("all");
+  const [storeSearch, setStoreSearch] = useState("");
+  const [paymentSearch, setPaymentSearch] = useState("");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const canLoad = ownerAccess.unlocked && Boolean(ownerAccess.platformKey);
 
   const loadBillingOverview = useCallback(async () => {
@@ -190,9 +263,66 @@ export default function OwnerBillingOverviewPanel() {
 
   const data = payload || EMPTY_PAYLOAD;
   const filteredStores = useMemo(
-    () => data.stores.filter((store) => matchesFilter(store, activeFilter)),
-    [data.stores, activeFilter],
+    () => data.stores.filter((store) => matchesFilter(store, activeFilter) && matchesSearch(store, storeSearch)),
+    [data.stores, activeFilter, storeSearch],
   );
+
+  const paymentRecords = data.paymentRecords || data.recentPayments;
+  const filteredPayments = useMemo(() => {
+    return paymentRecords.filter((payment) => {
+      const status = String(payment.status || "").toLowerCase();
+      const statusMatch = paymentStatusFilter === "all" || status === paymentStatusFilter;
+      return statusMatch && matchesPaymentSearch(payment, paymentSearch);
+    });
+  }, [paymentRecords, paymentSearch, paymentStatusFilter]);
+
+  const paymentStatusOptions = useMemo(() => {
+    const statuses = Array.from(new Set(paymentRecords.map((payment) => String(payment.status || "unknown").toLowerCase()))).filter(Boolean).sort();
+    return ["all", ...statuses];
+  }, [paymentRecords]);
+
+  const exportBillingCsv = useCallback(() => {
+    downloadCsv(
+      `orduva-billing-tenants-${exportDateStamp()}.csv`,
+      ["Store", "Slug", "Billing state", "Plan", "Provider", "Subscription status", "Trial status", "Trial ends", "Stripe linked", "Stripe customer", "Stripe subscription", "Last payment amount", "Last payment currency", "Last payment status", "Last payment date", "Last payment reference"],
+      filteredStores.map((store) => [
+        store.name,
+        store.slug,
+        store.billingState,
+        store.planLabel,
+        store.billingProvider,
+        store.subscriptionStatus,
+        store.trialStatus,
+        store.trialEndsAt || "",
+        store.hasStripeLink ? "Yes" : "No",
+        store.stripeCustomerId,
+        store.stripeSubscriptionId,
+        store.lastPayment?.amount ?? "",
+        store.lastPayment?.currencyCode ?? "",
+        store.lastPayment?.status ?? "",
+        store.lastPayment?.paidAt ?? "",
+        store.lastPayment?.reference ?? "",
+      ]),
+    );
+  }, [filteredStores]);
+
+  const exportPaymentsCsv = useCallback(() => {
+    downloadCsv(
+      `orduva-stripe-payments-${exportDateStamp()}.csv`,
+      ["Store", "Slug", "Amount", "Currency", "Status", "Paid at", "Billing period", "Payment reference", "Tenant ID"],
+      filteredPayments.map((payment) => [
+        payment.storeName,
+        payment.storeSlug,
+        payment.amount,
+        payment.currencyCode,
+        payment.status,
+        payment.paidAt || "",
+        payment.billingPeriodMonth || "",
+        payment.reference || "",
+        payment.tenantId || "",
+      ]),
+    );
+  }, [filteredPayments]);
 
   const cards: Array<{ key: BillingFilter; label: string; value: number; hint: string; classes: string }> = [
     { key: "all", label: "Billing records", value: data.summary.totalStores, hint: "All tenants", classes: "border-[#0E0E10]/10 bg-white text-[#0E0E10]" },
@@ -211,17 +341,35 @@ export default function OwnerBillingOverviewPanel() {
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner billing</p>
             <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Billing overview</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-              A quick owner-level view of tenant billing states, recent Stripe payments, and any records that need attention.
+              A cleaner owner-level view of tenant billing states, searchable Stripe payments, and exportable billing records.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void loadBillingOverview()}
-            disabled={loading || !canLoad}
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Refreshing..." : "Refresh billing"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void loadBillingOverview()}
+              disabled={loading || !canLoad}
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Refreshing..." : "Refresh billing"}
+            </button>
+            <button
+              type="button"
+              onClick={exportBillingCsv}
+              disabled={!filteredStores.length}
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Export tenants CSV
+            </button>
+            <button
+              type="button"
+              onClick={exportPaymentsCsv}
+              disabled={!filteredPayments.length}
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Export payments CSV
+            </button>
+          </div>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -275,6 +423,21 @@ export default function OwnerBillingOverviewPanel() {
                 <h3 className="mt-1 text-xl font-black text-[#0E0E10]">{filterTitle(activeFilter)}</h3>
               </div>
               <p className="text-sm font-bold text-[#68707A]">Showing {filteredStores.length} of {data.summary.totalStores} tenants</p>
+            </div>
+
+            <div className="mt-4 rounded-[22px] border border-[#0E0E10]/10 bg-white p-3">
+              <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#8B929C]" htmlFor="owner-billing-search">Search tenant billing</label>
+              <input
+                id="owner-billing-search"
+                value={storeSearch}
+                onChange={(event) => setStoreSearch(event.target.value)}
+                placeholder="Search by store, slug, plan, status, provider or Stripe reference"
+                className="mt-2 min-h-11 w-full rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0E0E10] outline-none transition focus:border-[#FF6A3D] focus:bg-white"
+              />
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-[#68707A]">
+                <span className="rounded-full bg-[#FFF7F0] px-3 py-1">Export uses the current filter/search</span>
+                <span className="rounded-full bg-[#F8FAFC] px-3 py-1">{filteredStores.length} tenant rows ready</span>
+              </div>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -331,13 +494,35 @@ export default function OwnerBillingOverviewPanel() {
           <aside className="rounded-[26px] border border-[#0E0E10]/10 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Recent Stripe payments</p>
-                <h3 className="mt-1 text-xl font-black text-[#0E0E10]">Latest records</h3>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Stripe payments</p>
+                <h3 className="mt-1 text-xl font-black text-[#0E0E10]">Search & export</h3>
               </div>
             </div>
+            <div className="mt-4 rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] p-3">
+              <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#8B929C]" htmlFor="owner-payment-search">Search payments</label>
+              <input
+                id="owner-payment-search"
+                value={paymentSearch}
+                onChange={(event) => setPaymentSearch(event.target.value)}
+                placeholder="Store, currency, status or reference"
+                className="mt-2 min-h-11 w-full rounded-2xl border border-[#0E0E10]/10 bg-white px-4 text-sm font-bold text-[#0E0E10] outline-none transition focus:border-[#FF6A3D]"
+              />
+              <label className="mt-3 block text-[11px] font-black uppercase tracking-[0.16em] text-[#8B929C]" htmlFor="owner-payment-status">Payment status</label>
+              <select
+                id="owner-payment-status"
+                value={paymentStatusFilter}
+                onChange={(event) => setPaymentStatusFilter(event.target.value)}
+                className="mt-2 min-h-11 w-full rounded-2xl border border-[#0E0E10]/10 bg-white px-4 text-sm font-bold text-[#0E0E10] outline-none transition focus:border-[#FF6A3D]"
+              >
+                {paymentStatusOptions.map((status) => (
+                  <option key={status} value={status}>{status === "all" ? "All statuses" : status}</option>
+                ))}
+              </select>
+              <p className="mt-3 text-xs font-bold text-[#68707A]">Showing {filteredPayments.length} of {paymentRecords.length} Stripe payment records.</p>
+            </div>
             <div className="mt-4 space-y-3">
-              {data.recentPayments.length ? (
-                data.recentPayments.map((payment) => (
+              {filteredPayments.length ? (
+                filteredPayments.slice(0, 12).map((payment) => (
                   <div key={payment.id} className="rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3">
                     <p className="text-sm font-black text-[#0E0E10]">{money(payment.amount, payment.currencyCode)} · {payment.status}</p>
                     <p className="mt-1 text-xs font-bold text-[#68707A]">{payment.storeName}</p>
@@ -346,7 +531,7 @@ export default function OwnerBillingOverviewPanel() {
                   </div>
                 ))
               ) : (
-                <p className="rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#68707A]">No Stripe payment records yet.</p>
+                <p className="rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#68707A]">No Stripe payment records match this view.</p>
               )}
             </div>
           </aside>

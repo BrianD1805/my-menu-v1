@@ -206,6 +206,21 @@ export async function GET(req: Request) {
           reference: payment.payment_reference || null,
         };
       }),
+      paymentRecords: payments.map((payment) => {
+        const tenant = tenantRows.find((row) => row.id === payment.tenant_id);
+        return {
+          id: payment.id,
+          tenantId: payment.tenant_id,
+          storeName: tenant?.name || tenant?.slug || "Unknown store",
+          storeSlug: tenant?.slug || "",
+          amount: Number(payment.subscription_amount || 0),
+          currencyCode: clean(payment.currency_code).toUpperCase() || "UNKNOWN",
+          status: payment.payment_status || "unknown",
+          paidAt: payment.created_at,
+          billingPeriodMonth: payment.billing_period_month,
+          reference: payment.payment_reference || null,
+        };
+      }),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load billing overview.";
