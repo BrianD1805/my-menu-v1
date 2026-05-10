@@ -453,6 +453,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const themePresetsRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
+  const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
@@ -1052,6 +1053,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           <div className="mt-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-black text-slate-900">Online payment providers</p>
             <p className="mt-1 text-xs leading-5 text-slate-600">These settings belong to the store owner. They do not use the Orduva owner Stripe account that collects SaaS subscriptions.</p>
+            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950">
+              <strong>Important:</strong> each store must use its own payment provider account. For Stripe, use the tenant's own Stripe keys, not the Orduva subscription billing keys.
+            </div>
 
             <div className="mt-4 rounded-[22px] border border-indigo-100 bg-white p-4 text-sm shadow-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -1059,9 +1063,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   <p className="font-black text-slate-950">Stripe customer payments</p>
                   <p className="mt-1 text-xs leading-5 text-slate-600">Save this tenant's own Stripe keys now. Storefront Stripe checkout will stay hidden from customers until the Stripe order-payment build switches the provider live.</p>
                 </div>
-                <span className={`w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
-                  {stripeCredentialReady ? "credentials saved" : "not configured"}
-                </span>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStripeGuideOpen(true)}
+                    className="inline-flex min-h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-2 text-[11px] font-black text-indigo-800 transition hover:bg-indigo-100"
+                  >
+                    Help me find these keys
+                  </button>
+                  <span className={`w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                    {stripeCredentialReady ? "credentials saved" : "not configured"}
+                  </span>
+                </div>
               </div>
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -1228,6 +1241,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </div>
       ) : null}
+
+      {stripeGuideOpen ? (
+        <StripeKeyGuideModal onClose={() => setStripeGuideOpen(false)} />
+      ) : null}
     </div>
   );
 }
@@ -1366,6 +1383,89 @@ function UploadField({
       >
         {busy ? "Uploading..." : label}
       </label>
+    </div>
+  );
+}
+
+function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
+  const steps = [
+    {
+      title: "1. Open the tenant's Stripe account",
+      body: "Log in to Stripe as the store owner, or sit with them while they log in. Make sure you are in the correct account, not your Orduva owner billing account.",
+    },
+    {
+      title: "2. Choose Test mode or Live mode",
+      body: "Use test mode while setting up. Only switch to live keys when the store is ready to take real customer payments.",
+    },
+    {
+      title: "3. Find the publishable key",
+      body: "In Stripe, go to Developers, then API keys. Copy the key that starts with pk_test_ or pk_live_ and paste it into Tenant Stripe publishable key.",
+    },
+    {
+      title: "4. Create or reveal the secret key",
+      body: "Still under API keys, create or reveal the secret key. It starts with sk_test_ or sk_live_. Copy it once and paste it into Tenant Stripe secret key. Stripe may only show live secret keys once, so store it safely.",
+    },
+    {
+      title: "5. Get the webhook signing secret",
+      body: "Go to Developers, then Webhooks. Create or open the webhook endpoint for this store. Click Reveal signing secret and copy the value that starts with whsec_. Paste it into Tenant Stripe webhook secret.",
+    },
+    {
+      title: "6. Save, then enable Stripe",
+      body: "Save the settings first. Once the publishable key, secret key and webhook secret are all saved, you can enable Stripe for this tenant.",
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-end bg-slate-950/60 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6" onClick={onClose}>
+      <div className="max-h-[92dvh] w-full max-w-3xl overflow-y-auto rounded-[30px] bg-white p-4 shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:p-6" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">Stripe setup guide</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">Where do I find the tenant Stripe keys?</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Use this when helping a non-technical store owner connect their own Stripe account for storefront customer payments.</p>
+          </div>
+          <button type="button" onClick={onClose} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50" aria-label="Close Stripe setup guide">×</button>
+        </div>
+
+        <div className="mt-4 rounded-[22px] border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-950">
+          <strong>Keep this separate:</strong> these must be the tenant's own Stripe keys. Do not paste the Orduva owner Stripe keys here, because customer order money should go to the store owner, not the Orduva SaaS billing account.
+        </div>
+
+        <div className="mt-4 grid gap-3">
+          {steps.map((step) => (
+            <div key={step.title} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-black text-slate-950">{step.title}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">{step.body}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Publishable key</p>
+            <p className="mt-2 font-mono text-sm font-black text-slate-950">pk_test_...</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Safe for browser-side Stripe setup.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Secret key</p>
+            <p className="mt-2 font-mono text-sm font-black text-slate-950">sk_test_...</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Private. Store server-side only.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Webhook secret</p>
+            <p className="mt-2 font-mono text-sm font-black text-slate-950">whsec_...</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Used to verify Stripe payment messages.</p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
+          <strong>Webhook note:</strong> the final Stripe storefront checkout build will confirm the exact webhook endpoint URL for tenant order payments. If you are not sure which webhook endpoint to use yet, save the keys you have and leave Stripe disabled until the endpoint is confirmed.
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <button type="button" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto">Close guide</button>
+        </div>
+      </div>
     </div>
   );
 }
