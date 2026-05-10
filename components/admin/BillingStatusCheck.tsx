@@ -62,10 +62,44 @@ function statusClass(active?: boolean | null) {
   return "border-[#0E0E10]/10 bg-white text-[#5C5F66]";
 }
 
+function stripeStatusClass(subscription?: BillingStatusPayload["stripeSubscription"]) {
+  const status = String(subscription?.status || "").toLowerCase();
+  if (subscription?.cancelAtPeriodEnd) return "border-amber-200 bg-amber-50 text-amber-900";
+  if (status === "active" || status === "trialing") return "border-emerald-200 bg-emerald-50 text-emerald-900";
+  if (status === "past_due" || status === "unpaid" || status === "incomplete") return "border-red-200 bg-red-50 text-red-900";
+  if (status === "canceled" || status === "cancelled") return "border-slate-200 bg-slate-50 text-slate-800";
+  return "border-[#0E0E10]/10 bg-white text-[#5C5F66]";
+}
+
 function subscriptionStatusText(subscription?: BillingStatusPayload["stripeSubscription"]) {
-  if (!subscription?.status) return "Not linked yet";
-  if (subscription.cancelAtPeriodEnd) return "Active — cancellation scheduled";
-  return subscription.status;
+  const status = String(subscription?.status || "").toLowerCase();
+  if (!status) return "Not linked yet";
+  if (subscription?.cancelAtPeriodEnd) return "Active — cancellation scheduled";
+  if (status === "active") return "Active — renewing";
+  if (status === "trialing") return "Trialing in Stripe";
+  if (status === "past_due") return "Payment needs attention";
+  if (status === "unpaid") return "Unpaid";
+  if (status === "canceled" || status === "cancelled") return "Cancelled";
+  return status.replace(/_/g, " ");
+}
+
+function accessDateLabel(subscription?: BillingStatusPayload["stripeSubscription"]) {
+  const status = String(subscription?.status || "").toLowerCase();
+  if (subscription?.cancelAtPeriodEnd) return "Paid access ends";
+  if (status === "canceled" || status === "cancelled") return "Access ended";
+  if (status === "past_due" || status === "unpaid") return "Access review date";
+  return "Next renewal";
+}
+
+function customerFacingBillingSummary(subscription?: BillingStatusPayload["stripeSubscription"]) {
+  const status = String(subscription?.status || "").toLowerCase();
+  const accessDate = formatDate(subscription?.currentPeriodEnd);
+  if (!status) return "No Stripe subscription is linked yet. Use this panel after checkout has completed.";
+  if (subscription?.cancelAtPeriodEnd) return `The store remains active until ${accessDate}. It will not renew after that date unless you keep the subscription active again.`;
+  if (status === "active" || status === "trialing") return `The store is active and checkout remains open. The next renewal is ${accessDate}.`;
+  if (status === "past_due" || status === "unpaid") return "Stripe is reporting a payment problem. Check the customer payment method in Stripe before changing store access manually.";
+  if (status === "canceled" || status === "cancelled") return "The Stripe subscription has ended. Paid billing is no longer renewing for this tenant.";
+  return "Stripe returned this subscription status. Check Stripe if the state does not match what you expect.";
 }
 
 export default function BillingStatusCheck() {
@@ -125,8 +159,9 @@ export default function BillingStatusCheck() {
   const webhookEvents = payload?.recentWebhookEvents || [];
   const payments = payload?.recentStripePayments || [];
   const hasLinkedSubscription = Boolean(tenant?.billingSubscriptionId && stripeSubscription);
-  const canManageSubscription = Boolean(hasLinkedSubscription && stripeSubscription?.status && !["canceled", "cancelled"].includes(stripeSubscription.status));
-  const endLabel = stripeSubscription?.cancelAtPeriodEnd ? "Access ends" : "Next renewal";
+  const stripeStatus = String(stripeSubscription?.status || "").toLowerCase();
+  const canManageSubscription = Boolean(hasLinkedSubscription && stripeStatus && !["canceled", "cancelled"].includes(stripeStatus));
+  const endLabel = accessDateLabel(stripeSubscription);
 
   return (
     <div className="mt-5 rounded-[24px] border border-[#0E0E10]/10 bg-white p-4 shadow-sm">
@@ -134,7 +169,7 @@ export default function BillingStatusCheck() {
         <div>
           <p className="text-sm font-black text-[#0E0E10]">Subscription status check</p>
           <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
-            Checks whether Orduva has received the Stripe webhook, shows the renewal date, and gives safe subscription actions.
+            Checks the Stripe subscription, customer-facing renewal/access wording, webhook history, and safe billing actions.
           </p>
         </div>
         <button
@@ -153,15 +188,19 @@ export default function BillingStatusCheck() {
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className={`rounded-2xl border px-4 py-3 ${statusClass(payload.localActive)}`}>
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Orduva tenant</p>
-              <p className="mt-1 text-lg font-black">{payload.localActive ? "Active" : "Not active yet"}</p>
-              <p className="mt-1 text-xs font-bold">Subscription: {tenant?.subscriptionStatus || "unknown"} · Trial: {tenant?.trialStatus || "unknown"}</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Orduva access</p>
+              <p className="mt-1 text-lg font-black">{payload.localActive ? "Store active" : "Access not active"}</p>
+              <p className="mt-1 text-xs font-bold">Tenant: {tenant?.subscriptionStatus || "unknown"} · Trial: {tenant?.trialStatus || "unknown"}</p>
             </div>
-            <div className={`rounded-2xl border px-4 py-3 ${statusClass(payload.stripeActive)}`}>
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Stripe subscription</p>
+            <div className={`rounded-2xl border px-4 py-3 ${stripeStatusClass(stripeSubscription)}`}>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Stripe billing</p>
               <p className="mt-1 text-lg font-black">{subscriptionStatusText(stripeSubscription)}</p>
               <p className="mt-1 text-xs font-bold">{endLabel}: {formatDate(stripeSubscription?.currentPeriodEnd)}</p>
             </div>
+          </div>
+
+          <div className="mt-3 rounded-2xl border border-[#FFB168]/35 bg-[#FFF7F0] px-4 py-3 text-sm font-bold leading-6 text-[#7A3A1A]">
+            {customerFacingBillingSummary(stripeSubscription)}
           </div>
 
           <div className="mt-3 rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-xs font-bold leading-5 text-[#5C5F66]">
@@ -174,14 +213,14 @@ export default function BillingStatusCheck() {
 
           {canManageSubscription ? (
             <div className="mt-3 rounded-[22px] border border-[#0E0E10]/10 bg-white px-4 py-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Safe billing actions</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Subscription management</p>
               {stripeSubscription?.cancelAtPeriodEnd ? (
                 <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold leading-6 text-amber-900">
-                  Cancellation is scheduled. The tenant stays active until {formatDate(stripeSubscription.currentPeriodEnd)}.
+                  Cancellation is scheduled. The store stays active and paid access ends on {formatDate(stripeSubscription.currentPeriodEnd)}.
                 </div>
               ) : (
                 <p className="mt-2 text-sm font-bold leading-6 text-[#5C5F66]">
-                  Cancel schedules the subscription to stop at the end of the current billing period. It does not immediately remove paid access.
+                  Cancel at period end is the safe option. It stops the next renewal but keeps the store active until the paid period ends.
                 </p>
               )}
 
@@ -203,7 +242,7 @@ export default function BillingStatusCheck() {
                       onChange={(event) => setConfirmCancel(event.target.checked)}
                       className="mt-1 h-4 w-4 rounded border-[#0E0E10]/20"
                     />
-                    <span>I understand this schedules cancellation at the period end and the store remains active until the paid period ends.</span>
+                    <span>I understand this will stop the next renewal, while keeping the store active until the paid period ends.</span>
                   </label>
                   <button
                     type="button"
@@ -222,7 +261,7 @@ export default function BillingStatusCheck() {
 
           {webhookEvents.length ? (
             <div className="mt-3 rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent Stripe webhook events</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent Stripe events</p>
               <div className="mt-2 space-y-2">
                 {webhookEvents.slice(0, 4).map((event) => (
                   <div key={event.id} className="rounded-xl bg-[#F8FAFC] px-3 py-2 text-xs font-bold leading-5 text-[#5C5F66]">
@@ -236,7 +275,7 @@ export default function BillingStatusCheck() {
 
           {payments.length ? (
             <div className="mt-3 rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent Stripe payment records</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent Stripe payments</p>
               <div className="mt-2 space-y-2">
                 {payments.map((payment) => (
                   <div key={payment.id} className="rounded-xl bg-[#F8FAFC] px-3 py-2 text-xs font-bold leading-5 text-[#5C5F66]">

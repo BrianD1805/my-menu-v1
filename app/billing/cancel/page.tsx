@@ -31,7 +31,7 @@ export default async function StripeBillingCancelPage({ searchParams }: Props) {
             <p className="mx-auto inline-flex rounded-full border border-[#FFB168]/50 bg-[#FFF7F0] px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-[#B74A16]">Checkout cancelled</p>
             <h1 className="mt-5 text-3xl font-black tracking-tight text-[#0E0E10] sm:text-4xl">No payment was taken.</h1>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-              Stripe checkout was cancelled for <span className="font-black text-[#0E0E10]">{tenant}</span>. The Orduva plan was not changed, and you can safely return to admin and try again whenever you are ready.
+              Stripe checkout was cancelled for <span className="font-black text-[#0E0E10]">{tenant}</span>. The Orduva plan was not changed, and the store remains in its previous trial or subscription state.
             </p>
             <div className="mx-auto mt-6 grid max-w-xl gap-3 rounded-[26px] border border-[#E8D8C8] bg-[#FFF8EF] p-4 text-left text-sm sm:grid-cols-3">
               <div><p className="font-black text-[#B74A16]">Plan</p><p className="mt-1 capitalize text-[#0E0E10]">{labelText(plan)}</p></div>
@@ -39,11 +39,10 @@ export default async function StripeBillingCancelPage({ searchParams }: Props) {
               <div><p className="font-black text-[#B74A16]">Currency</p><p className="mt-1 text-[#0E0E10]">{currency.toUpperCase()}</p></div>
             </div>
             <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3 text-sm font-bold leading-6 text-[#5C5F66]">
-              For testing: this cancel page confirms the return route works and keeps the tenant in its previous trial/subscription state.
+              No subscription changes were made from this cancelled checkout. You can return to admin and start checkout again when ready.
             </p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:bg-[#E85C32]">Return to admin</Link>
-              <Link href="/start-your-store" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#F5F2EE]">View plans</Link>
             </div>
             <p className="mt-6 text-xs font-bold text-[#68707A]">{LIVE_VERSION}</p>
           </div>

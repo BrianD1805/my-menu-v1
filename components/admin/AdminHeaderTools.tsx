@@ -30,7 +30,7 @@ function trialShortLabel(trial?: TenantTrialState | null) {
 
 function trialStatusText(trial?: TenantTrialState | null) {
   if (!trial) return "Trial details are unavailable.";
-  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active";
+  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active — checkout open";
   if (trial.isTrialExpired) return "Trial expired — checkout paused";
   if (trial.trialDaysRemaining === null) return "Trial active";
   if (trial.trialDaysRemaining === 1) return "1 day left in trial";
@@ -178,7 +178,7 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                         </div>
                         <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
                           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">{trialState?.isSubscriptionActive ? "Billing" : "Trial ends"}</p>
-                          <p className="mt-2 text-lg font-black text-[#0E0E10]">{trialState?.isSubscriptionActive ? "See renewal below" : formatTrialDate(trialState?.trialEndsAt)}</p>
+                          <p className="mt-2 text-lg font-black text-[#0E0E10]">{trialState?.isSubscriptionActive ? "Open billing below" : formatTrialDate(trialState?.trialEndsAt)}</p>
                         </div>
                         <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
                           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Plan</p>
@@ -191,7 +191,7 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                         </p>
                       ) : (
                         <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold leading-6 text-emerald-900">
-                          Storefront checkout remains available while the trial or subscription is active.
+                          Storefront checkout remains available while the trial or paid subscription is active.
                         </p>
                       )}
                       {trialState?.subscriptionStatus === "active" || trialState?.trialStatus === "converted" ? null : (

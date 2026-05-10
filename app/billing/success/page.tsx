@@ -48,7 +48,7 @@ export default async function StripeBillingSuccessPage({ searchParams }: Props) 
               {orduvaActive ? "Your Orduva subscription is active." : "Thank you — your plan is being activated."}
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-              Stripe returned successfully for <span className="font-black text-[#0E0E10]">{tenantSlug}</span>. This page now checks the Stripe session and Orduva tenant record so you can confirm whether the webhook has completed the activation step.
+              Stripe returned successfully for <span className="font-black text-[#0E0E10]">{tenantSlug}</span>. Orduva is checking the payment session and tenant subscription record so the store can remain open on the paid plan.
             </p>
 
             <div className="mx-auto mt-6 grid max-w-xl gap-3 rounded-[26px] border border-[#E8D8C8] bg-[#FFF8EF] p-4 text-left text-sm sm:grid-cols-3">
@@ -59,20 +59,20 @@ export default async function StripeBillingSuccessPage({ searchParams }: Props) 
 
             <div className="mx-auto mt-4 grid max-w-xl gap-3 text-left text-sm sm:grid-cols-2">
               <div className={`rounded-[22px] border px-4 py-3 ${statusTone(stripeComplete)}`}>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Stripe session</p>
-                <p className="mt-1 text-lg font-black">{session?.status || "Not checked"}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Stripe payment</p>
+                <p className="mt-1 text-lg font-black">{stripeComplete ? "Complete" : session?.status || "Not checked"}</p>
                 <p className="mt-1 text-xs font-bold">Payment: {session?.paymentStatus || "not available"}</p>
               </div>
               <div className={`rounded-[22px] border px-4 py-3 ${statusTone(orduvaActive)}`}>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Orduva tenant</p>
-                <p className="mt-1 text-lg font-black">{orduvaActive ? "Active" : "Waiting for webhook"}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Orduva access</p>
+                <p className="mt-1 text-lg font-black">{orduvaActive ? "Store active" : "Activating"}</p>
                 <p className="mt-1 text-xs font-bold">Subscription: {tenant?.subscriptionStatus || "not available"}</p>
               </div>
             </div>
 
             {!orduvaActive ? (
               <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-[#FFB168]/45 bg-[#FFF7F0] px-4 py-3 text-sm font-bold leading-6 text-[#9A4219]">
-                This can take a short moment while Stripe sends the webhook. Refresh this page, or return to admin and use the subscription status check in the billing/trial popup.
+                This can take a short moment while Stripe sends the webhook. Refresh this page, or return to admin and use the billing status check in the billing popup.
               </p>
             ) : null}
 
