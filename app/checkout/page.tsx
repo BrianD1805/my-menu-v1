@@ -48,6 +48,7 @@ type TenantViewSettings = MoneyFormatSettings & {
   enableCashOnDelivery?: boolean;
   enableStripeCustomerPayments?: boolean;
   stripeConnectionStatus?: string;
+  stripeCustomerPaymentsLive?: boolean;
   enableYocoCustomerPayments?: boolean;
   yocoConnectionStatus?: string;
   enableMpesaCustomerPayments?: boolean;
@@ -92,15 +93,15 @@ type CustomerAccount = {
 };
 
 
-function providerConfigured(enabled: boolean | undefined, status: string | undefined) {
-  return enabled === true && ["configured", "connected", "active"].includes(String(status || ""));
+function providerConfigured(enabled: boolean | undefined, status: string | undefined, live = true) {
+  return enabled === true && live === true && ["configured", "connected", "active"].includes(String(status || ""));
 }
 
 function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery" | "collection"): PaymentOption[] {
   const currencyCode = String(settings.currencyCode || "GBP").toUpperCase();
   const options: PaymentOption[] = [];
 
-  if (providerConfigured(settings.enableStripeCustomerPayments, settings.stripeConnectionStatus)) {
+  if (providerConfigured(settings.enableStripeCustomerPayments, settings.stripeConnectionStatus, settings.stripeCustomerPaymentsLive === true)) {
     options.push({
       id: "stripe",
       label: "Pay securely by card",

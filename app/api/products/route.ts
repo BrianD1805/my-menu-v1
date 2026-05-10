@@ -124,6 +124,7 @@ export async function GET(req: Request) {
       enableCashOnDelivery: settings?.enable_cash_on_delivery !== false,
       enableStripeCustomerPayments: settings?.enable_stripe_customer_payments === true,
       stripeConnectionStatus: settings?.stripe_connection_status || "not_configured",
+      stripeCustomerPaymentsLive: settings?.stripe_customer_payments_live === true,
       enableYocoCustomerPayments: settings?.enable_yoco_customer_payments === true,
       yocoConnectionStatus: settings?.yoco_connection_status || "not_configured",
       enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,

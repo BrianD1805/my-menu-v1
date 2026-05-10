@@ -80,6 +80,12 @@ export type TenantSettings = {
   enable_cash_on_delivery?: boolean | null;
   enable_stripe_customer_payments?: boolean | null;
   stripe_connection_status?: string | null;
+  stripe_customer_payment_mode?: string | null;
+  stripe_customer_publishable_key?: string | null;
+  stripe_customer_account_label?: string | null;
+  stripe_customer_test_mode?: boolean | null;
+  stripe_customer_setup_notes?: string | null;
+  stripe_customer_payments_live?: boolean | null;
   enable_yoco_customer_payments?: boolean | null;
   yoco_connection_status?: string | null;
   enable_mpesa_customer_payments?: boolean | null;

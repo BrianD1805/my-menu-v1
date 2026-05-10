@@ -25,7 +25,7 @@ export function buildStorefrontPaymentOptions(settings: TenantSettings | null, o
   const currencyCode = String(settings?.currency_code || "GBP").toUpperCase();
   const cashCollectionEnabled = enabled(settings?.enable_cash_on_collection, true);
   const cashDeliveryEnabled = enabled(settings?.enable_cash_on_delivery, true);
-  const stripeConfigured = enabled(settings?.enable_stripe_customer_payments, false) && configured(settings?.stripe_connection_status);
+  const stripeConfigured = enabled(settings?.enable_stripe_customer_payments, false) && configured(settings?.stripe_connection_status) && enabled(settings?.stripe_customer_payments_live, false);
   const yocoConfigured = enabled(settings?.enable_yoco_customer_payments, false) && configured(settings?.yoco_connection_status);
   const mpesaConfigured = enabled(settings?.enable_mpesa_customer_payments, false) && configured(settings?.mpesa_connection_status);
 
@@ -36,7 +36,7 @@ export function buildStorefrontPaymentOptions(settings: TenantSettings | null, o
       id: "stripe",
       label: "Pay securely by card",
       shortLabel: "Card payment",
-      description: "Online card payment through this store owner’s connected Stripe account.",
+      description: "Online card payment through this store owner's connected Stripe account.",
       status: "available",
       online: true,
       allowedOrderTypes: ["delivery", "collection"],

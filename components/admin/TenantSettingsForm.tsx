@@ -44,6 +44,18 @@ type FormState = {
   enableCashOnDelivery: boolean;
   enableStripeCustomerPayments: boolean;
   stripeConnectionStatus: string;
+  stripeCustomerPaymentMode: "manual_keys" | "stripe_connect";
+  stripeCustomerPublishableKey: string;
+  stripeCustomerSecretKeyInput: string;
+  stripeCustomerSecretKeySet: boolean;
+  stripeCustomerSecretKeyHint: string;
+  stripeCustomerWebhookSecretInput: string;
+  stripeCustomerWebhookSecretSet: boolean;
+  stripeCustomerWebhookSecretHint: string;
+  stripeCustomerAccountLabel: string;
+  stripeCustomerTestMode: boolean;
+  stripeCustomerSetupNotes: string;
+  stripeCustomerPaymentsLive: boolean;
   enableYocoCustomerPayments: boolean;
   yocoConnectionStatus: string;
   enableMpesaCustomerPayments: boolean;
@@ -468,7 +480,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
-  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery"]);
+  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes"]);
+  const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
@@ -675,7 +688,19 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to save settings");
-      const savedPayload = { ...form, storefrontTheme: theme };
+      const nextStripeSecretSet = form.stripeCustomerSecretKeySet || Boolean(form.stripeCustomerSecretKeyInput.trim());
+      const nextStripeWebhookSet = form.stripeCustomerWebhookSecretSet || Boolean(form.stripeCustomerWebhookSecretInput.trim());
+      const savedPayload = {
+        ...form,
+        storefrontTheme: theme,
+        stripeConnectionStatus: stripeCredentialReady ? (form.stripeConnectionStatus === "not_configured" ? "configured" : form.stripeConnectionStatus || "configured") : "not_configured",
+        stripeCustomerSecretKeyInput: "",
+        stripeCustomerSecretKeySet: nextStripeSecretSet,
+        stripeCustomerSecretKeyHint: nextStripeSecretSet ? form.stripeCustomerSecretKeyHint || "saved" : "",
+        stripeCustomerWebhookSecretInput: "",
+        stripeCustomerWebhookSecretSet: nextStripeWebhookSet,
+        stripeCustomerWebhookSecretHint: nextStripeWebhookSet ? form.stripeCustomerWebhookSecretHint || "saved" : "",
+      };
       setForm(savedPayload);
       setSavedForm(savedPayload);
       setTone("success");
@@ -1026,10 +1051,72 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
           <div className="mt-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-black text-slate-900">Online payment providers</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">Stripe, Yoco and M-Pesa/Pesapal are prepared as tenant-owned payment providers. They are not switched on for customers until that store owner has connected their own payment account.</p>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <p className="mt-1 text-xs leading-5 text-slate-600">These settings belong to the store owner. They do not use the Orduva owner Stripe account that collects SaaS subscriptions.</p>
+
+            <div className="mt-4 rounded-[22px] border border-indigo-100 bg-white p-4 text-sm shadow-sm">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="font-black text-slate-950">Stripe customer payments</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Save this tenant's own Stripe keys now. Storefront Stripe checkout will stay hidden from customers until the Stripe order-payment build switches the provider live.</p>
+                </div>
+                <span className={`w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                  {stripeCredentialReady ? "credentials saved" : "not configured"}
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <Field label="Stripe setup mode">
+                  <select value={form.stripeCustomerPaymentMode} onChange={(e) => update("stripeCustomerPaymentMode", e.target.value as FormState["stripeCustomerPaymentMode"])} className="input">
+                    <option value="manual_keys">Tenant Stripe keys</option>
+                    <option value="stripe_connect">Stripe Connect - later</option>
+                  </select>
+                </Field>
+                <Field label="Account label / business name">
+                  <input value={form.stripeCustomerAccountLabel} onChange={(e) => update("stripeCustomerAccountLabel", e.target.value)} placeholder="Example: ZimZa Express Stripe" className="input" />
+                </Field>
+                <Field label="Tenant Stripe publishable key">
+                  <input value={form.stripeCustomerPublishableKey} onChange={(e) => update("stripeCustomerPublishableKey", e.target.value)} placeholder="pk_test_... or pk_live_..." className="input" autoComplete="off" />
+                </Field>
+                <Field label={form.stripeCustomerSecretKeySet ? `Tenant secret key saved (${form.stripeCustomerSecretKeyHint || "saved"})` : "Tenant Stripe secret key"}>
+                  <input value={form.stripeCustomerSecretKeyInput} onChange={(e) => update("stripeCustomerSecretKeyInput", e.target.value)} placeholder={form.stripeCustomerSecretKeySet ? "Leave blank to keep saved secret key" : "sk_test_... or sk_live_..."} className="input" autoComplete="off" />
+                </Field>
+                <Field label={form.stripeCustomerWebhookSecretSet ? `Tenant webhook secret saved (${form.stripeCustomerWebhookSecretHint || "saved"})` : "Tenant Stripe webhook secret"}>
+                  <input value={form.stripeCustomerWebhookSecretInput} onChange={(e) => update("stripeCustomerWebhookSecretInput", e.target.value)} placeholder={form.stripeCustomerWebhookSecretSet ? "Leave blank to keep saved webhook secret" : "whsec_..."} className="input" autoComplete="off" />
+                </Field>
+                <Field label="Setup notes">
+                  <input value={form.stripeCustomerSetupNotes} onChange={(e) => update("stripeCustomerSetupNotes", e.target.value)} placeholder="Example: Tenant live Stripe account added by owner" className="input" />
+                </Field>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={form.stripeCustomerTestMode}
+                    onChange={(e) => update("stripeCustomerTestMode", e.target.checked)}
+                    className="mt-1 h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-200"
+                  />
+                  <span><strong className="text-slate-900">Test mode credentials</strong><span className="mt-1 block text-xs leading-5 text-slate-600">Use test keys until the tenant is ready for real customer payments.</span></span>
+                </label>
+                <label className={`flex items-start gap-3 rounded-2xl border p-3 text-sm ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
+                  <input
+                    type="checkbox"
+                    checked={form.enableStripeCustomerPayments}
+                    onChange={(e) => update("enableStripeCustomerPayments", e.target.checked)}
+                    disabled={!stripeCredentialReady}
+                    className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                  />
+                  <span><strong>Enable Stripe for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires this tenant's publishable key, secret key and webhook secret. Stripe remains hidden from the customer checkout until the next Stripe order-payment build makes it live.</span></span>
+                </label>
+              </div>
+
+              {!stripeCredentialReady ? (
+                <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Add this tenant's Stripe publishable key, secret key and webhook secret before enabling Stripe.</p>
+              ) : null}
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
               {[
-                { name: "Stripe", enabled: form.enableStripeCustomerPayments, status: form.stripeConnectionStatus, note: "Card payments for UK, US and Europe." },
                 { name: "Yoco", enabled: form.enableYocoCustomerPayments, status: form.yocoConnectionStatus, note: "Card/local payments for South Africa." },
                 { name: "M-Pesa / Pesapal", enabled: form.enableMpesaCustomerPayments, status: form.mpesaConnectionStatus, note: "Mobile money-focused payments for Kenya." },
               ].map((provider) => (

@@ -111,3 +111,14 @@ alter table public.orders
   add column if not exists payment_status text not null default 'pay_on_fulfilment',
   add column if not exists payment_reference text,
   add column if not exists paid_at timestamptz;
+
+-- Ver-0.202 tenant Stripe customer payment setup foundation
+alter table public.tenant_settings
+  add column if not exists stripe_customer_payment_mode text not null default 'manual_keys',
+  add column if not exists stripe_customer_publishable_key text,
+  add column if not exists stripe_customer_secret_key text,
+  add column if not exists stripe_customer_webhook_secret text,
+  add column if not exists stripe_customer_account_label text,
+  add column if not exists stripe_customer_test_mode boolean not null default true,
+  add column if not exists stripe_customer_setup_notes text,
+  add column if not exists stripe_customer_payments_live boolean not null default false;
