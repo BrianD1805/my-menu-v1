@@ -454,7 +454,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
   const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
+  const settingsTopRef = useRef<HTMLDivElement | null>(null);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -641,6 +643,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     }, 50);
   }
 
+  function scrollToSettingsSection(id: string) {
+    setSettingsMenuOpen(false);
+    window.setTimeout(() => {
+      const target = document.getElementById(id);
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  }
+
+  function scrollSettingsToTop() {
+    settingsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function uploadAsset(file: File, kind: "logo" | "favicon") {
     const setUploading = kind === "logo" ? setUploadingLogo : setUploadingFavicon;
     const label = kind === "logo" ? "logo" : "favicon";
@@ -782,15 +796,26 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] xl:items-start">
       <form onSubmit={onSubmit} className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-        <div className="mb-6">
+        <div ref={settingsTopRef} className="mb-6 scroll-mt-28">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
-          <h2 className="mt-2 text-2xl font-bold text-slate-900">Storefront branding and theme editor</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            Choose a preset as a starting point, then fine-tune each visible storefront section. Draft colours update the preview automatically.
-          </p>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Storefront branding and theme editor</h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Choose a preset as a starting point, then fine-tune each visible storefront section. Draft colours update the preview automatically.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSettingsMenuOpen(true)}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-orange-900 shadow-sm transition hover:-translate-y-[1px] hover:bg-orange-100"
+            >
+              Settings menu
+            </button>
+          </div>
         </div>
 
-        <Section title="Logo and favicon" showSave={false}>
+        <Section id="logo-and-favicon" title="Logo and favicon" showSave={false}>
           <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
             Logo and favicon uploads save automatically. No Save button is needed for this section.
           </div>
@@ -857,7 +882,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Theme presets" dirty={themeDirty} saving={saving}>
+        <Section id="theme-presets" title="Theme presets" dirty={themeDirty} saving={saving}>
           <div className="mb-4 rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
             <p className="text-sm font-semibold text-slate-900">
               Active preset: {activePreset ? `${activePreset.name}${theme.customised ? " — customised" : ""}` : "Custom"}
@@ -893,7 +918,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Per-item storefront colours" showSave={false}>
+        <Section id="per-item-storefront-colours" title="Per-item storefront colours" showSave={false}>
           <div className="space-y-4">
             {THEME_GROUPS.map((group) => {
               const isOpen = openThemeGroup === group.id;
@@ -980,7 +1005,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Business contact details" dirty={contactDirty} saving={saving}>
+        <Section id="business-contact-details" title="Business contact details" dirty={contactDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Contact phone"><input value={form.contactPhone} onChange={(e) => update("contactPhone", e.target.value)} className="input" placeholder="+254..." /></Field>
             <Field label="WhatsApp"><input value={form.contactWhatsApp} onChange={(e) => update("contactWhatsApp", e.target.value)} className="input" placeholder="+254..." /></Field>
@@ -1018,7 +1043,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
 
 
-        <Section title="Storefront payment options" dirty={paymentDirty} saving={saving}>
+        <Section id="storefront-payment-options" title="Storefront payment options" dirty={paymentDirty} saving={saving}>
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
               <label className="flex items-start justify-between gap-4">
@@ -1050,14 +1075,15 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             </div>
           </div>
 
-          <div className="mt-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm font-black text-slate-900">Online payment providers</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">These settings belong to the store owner. They do not use the Orduva owner Stripe account that collects SaaS subscriptions.</p>
+          <div className="mt-6">
+            <p className="text-sm font-black uppercase tracking-[0.16em] text-slate-600">Online payment providers</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">These settings belong to the store owner. They do not use the Orduva owner Stripe account that collects SaaS subscriptions.</p>
             <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950">
               <strong>Important:</strong> each store must use its own payment provider account. For Stripe, use the tenant's own Stripe keys, not the Orduva subscription billing keys.
             </div>
+          </div>
 
-            <div className="mt-4 rounded-[22px] border border-indigo-100 bg-white p-4 text-sm shadow-sm">
+          <div className="mt-4 rounded-[22px] border border-indigo-100 bg-white p-4 text-sm shadow-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Stripe customer payments</p>
@@ -1145,10 +1171,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 </div>
               ))}
             </div>
-          </div>
         </Section>
 
-        <Section title="Advanced currency display" dirty={currencyDirty} saving={saving}>
+        <Section id="advanced-currency-display" title="Advanced currency display" dirty={currencyDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="input" /></Field>
             <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="input uppercase" maxLength={3} /></Field>
@@ -1213,6 +1238,21 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           {renderSuggestedColoursPanel()}
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={scrollSettingsToTop}
+        className="fixed bottom-4 right-4 z-[80] inline-flex min-h-11 items-center justify-center rounded-full border border-white/70 bg-slate-950 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-white shadow-[0_18px_45px_rgba(15,23,42,0.28)] transition hover:-translate-y-[1px] hover:bg-slate-800 sm:bottom-6 sm:right-6"
+      >
+        ↑ Top
+      </button>
+
+      {settingsMenuOpen ? (
+        <SettingsMenuModal
+          onClose={() => setSettingsMenuOpen(false)}
+          onSelect={scrollToSettingsSection}
+        />
+      ) : null}
 
       {mobileThemeModal ? (
         <div className="fixed inset-0 z-[90] flex items-end bg-slate-950/55 px-3 pb-3 pt-8 backdrop-blur-[2px] md:hidden" onClick={() => setMobileThemeModal(null)}>
@@ -1383,6 +1423,62 @@ function UploadField({
       >
         {busy ? "Uploading..." : label}
       </label>
+    </div>
+  );
+}
+
+const SETTINGS_MENU_ITEMS = [
+  { id: "logo-and-favicon", title: "Logo and favicon", help: "Upload or replace the store logo and browser icon." },
+  { id: "branding-and-wording", title: "Branding and wording", help: "Business name, storefront heading and admin labels." },
+  { id: "theme-presets", title: "Theme presets", help: "Choose a ready-made colour starting point." },
+  { id: "per-item-storefront-colours", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
+  { id: "business-contact-details", title: "Business contact details", help: "Phone, email, address, footer and social links." },
+  { id: "storefront-payment-options", title: "Storefront payment options", help: "Cash, COD and future online payment provider setup." },
+  { id: "advanced-currency-display", title: "Advanced currency display", help: "Currency name, symbol, separators and sample pricing." },
+];
+
+function SettingsMenuModal({ onClose, onSelect }: { onClose: () => void; onSelect: (id: string) => void }) {
+  return (
+    <div className="fixed inset-0 z-[110] flex items-end bg-slate-950/60 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6" onClick={onClose}>
+      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]" onClick={(event) => event.stopPropagation()}>
+        <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-700">Settings menu</p>
+              <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">What do you want to work on?</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Jump straight to the section you need, especially useful on mobile where the settings page is longer.</p>
+            </div>
+            <button type="button" onClick={onClose} className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50" aria-label="Close settings menu">×</button>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto px-4 pb-7 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
+          <div className="grid gap-3">
+            {SETTINGS_MENU_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelect(item.id)}
+                className="group rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:-translate-y-[1px] hover:border-orange-200 hover:bg-orange-50"
+              >
+                <span className="flex items-start justify-between gap-3">
+                  <span>
+                    <span className="block text-sm font-black text-slate-950">{item.title}</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">{item.help}</span>
+                  </span>
+                  <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-orange-700 shadow-sm transition group-hover:bg-orange-100">↓</span>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+            <button type="button" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto">Close menu</button>
+          </div>
+
+          <div className="h-5 sm:h-6" aria-hidden="true" />
+        </div>
+      </div>
     </div>
   );
 }
