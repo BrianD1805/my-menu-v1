@@ -67,7 +67,7 @@ type BillingOverviewPayload = {
   error?: string;
 };
 
-type BillingFilter = "all" | "active" | "trial" | "attention" | "ended" | "missingLink";
+type BillingFilter = "all" | "alerts" | "active" | "trial" | "attention" | "ended" | "missingLink";
 
 const EMPTY_PAYLOAD: BillingOverviewPayload = {
   summary: {
@@ -132,6 +132,79 @@ function billingStateClasses(state: string) {
   if (state === "payment_attention") return "border-red-200 bg-red-50 text-red-900";
   if (state === "cancelled" || state === "expired") return "border-slate-200 bg-slate-50 text-slate-800";
   return "border-amber-200 bg-amber-50 text-amber-900";
+}
+
+
+type BillingAlert = {
+  key: string;
+  label: string;
+  detail: string;
+  level: "critical" | "warning" | "info";
+};
+
+function daysUntil(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return Math.ceil((date.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+}
+
+function daysSince(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return Math.floor((Date.now() - date.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+function getBillingAlerts(store: BillingStore): BillingAlert[] {
+  const alerts: BillingAlert[] = [];
+  const subscriptionStatus = String(store.subscriptionStatus || "").toLowerCase();
+  const trialStatus = String(store.trialStatus || "").toLowerCase();
+  const paymentStatus = String(store.lastPayment?.status || "").toLowerCase();
+  const trialDays = daysUntil(store.trialEndsAt);
+  const paymentDays = daysSince(store.lastPayment?.paidAt || null);
+
+  if (store.billingState === "payment_attention" || ["past_due", "unpaid", "incomplete", "incomplete_expired"].includes(subscriptionStatus)) {
+    alerts.push({ key: "payment-attention", label: "Payment attention", detail: "Stripe/local status needs checking before access or renewal is trusted.", level: "critical" });
+  }
+
+  if (store.billingState === "active" && !store.hasStripeLink) {
+    alerts.push({ key: "missing-stripe-link", label: "Missing Stripe link", detail: "Tenant is active but customer/subscription IDs are not both linked.", level: "critical" });
+  }
+
+  if (store.billingState === "active" && !store.lastPayment) {
+    alerts.push({ key: "no-payment-record", label: "No Stripe payment record", detail: "Tenant is active but no Stripe payment record is visible in Orduva.", level: "warning" });
+  }
+
+  if (store.billingState === "active" && paymentDays !== null && paymentDays > 45) {
+    alerts.push({ key: "old-payment-record", label: "Old payment record", detail: `Last recorded Stripe payment is ${paymentDays} days old. Check if this is a yearly plan or a missed renewal.`, level: "warning" });
+  }
+
+  if (["failed", "unpaid", "past_due", "requires_payment_method", "payment_failed"].includes(paymentStatus)) {
+    alerts.push({ key: "failed-payment", label: "Failed payment", detail: "The latest payment record is not paid/succeeded.", level: "critical" });
+  }
+
+  if (store.billingState === "trial" && trialDays !== null && trialDays >= 0 && trialDays <= 3) {
+    alerts.push({ key: "trial-ending-soon", label: "Trial ending soon", detail: `Trial ends in ${trialDays} day${trialDays === 1 ? "" : "s"}. Follow up before checkout is blocked.`, level: "warning" });
+  } else if (store.billingState === "trial" && trialDays !== null && trialDays >= 4 && trialDays <= 7) {
+    alerts.push({ key: "trial-ending-this-week", label: "Trial ending this week", detail: `Trial ends in ${trialDays} days.`, level: "info" });
+  }
+
+  if ((store.billingState === "trial" || trialStatus === "active") && trialDays !== null && trialDays < 0) {
+    alerts.push({ key: "trial-overdue", label: "Trial date passed", detail: `Trial end date passed ${Math.abs(trialDays)} day${Math.abs(trialDays) === 1 ? "" : "s"} ago.`, level: "critical" });
+  }
+
+  if (["cancel_at_period_end", "cancellation_scheduled", "active_cancel_at_period_end"].includes(subscriptionStatus)) {
+    alerts.push({ key: "cancellation-scheduled", label: "Cancellation scheduled", detail: "Tenant remains active until paid access ends; follow up if this was accidental.", level: "warning" });
+  }
+
+  return alerts;
+}
+
+function alertClasses(level: BillingAlert["level"]) {
+  if (level === "critical") return "border-red-200 bg-red-50 text-red-900";
+  if (level === "warning") return "border-amber-200 bg-amber-50 text-amber-900";
+  return "border-sky-200 bg-sky-50 text-sky-900";
 }
 
 function revenueLine(totals: CurrencyTotal[]) {
@@ -208,6 +281,7 @@ function exportDateStamp() {
 }
 
 function filterTitle(filter: BillingFilter) {
+  if (filter === "alerts") return "Tenants with alert flags";
   if (filter === "active") return "Active billing tenants";
   if (filter === "trial") return "Trial tenants";
   if (filter === "attention") return "Payment attention";
@@ -218,6 +292,7 @@ function filterTitle(filter: BillingFilter) {
 
 function matchesFilter(store: BillingStore, filter: BillingFilter) {
   if (filter === "all") return true;
+  if (filter === "alerts") return getBillingAlerts(store).length > 0;
   if (filter === "active") return store.billingState === "active";
   if (filter === "trial") return store.billingState === "trial";
   if (filter === "attention") return store.billingState === "payment_attention";
@@ -267,6 +342,16 @@ export default function OwnerBillingOverviewPanel() {
     [data.stores, activeFilter, storeSearch],
   );
 
+  const alertStores = useMemo(() => data.stores.filter((store) => getBillingAlerts(store).length > 0), [data.stores]);
+  const criticalAlertCount = useMemo(
+    () => data.stores.reduce((count, store) => count + getBillingAlerts(store).filter((alert) => alert.level === "critical").length, 0),
+    [data.stores],
+  );
+  const warningAlertCount = useMemo(
+    () => data.stores.reduce((count, store) => count + getBillingAlerts(store).filter((alert) => alert.level === "warning").length, 0),
+    [data.stores],
+  );
+
   const paymentRecords = data.paymentRecords || data.recentPayments;
   const filteredPayments = useMemo(() => {
     return paymentRecords.filter((payment) => {
@@ -284,7 +369,7 @@ export default function OwnerBillingOverviewPanel() {
   const exportBillingCsv = useCallback(() => {
     downloadCsv(
       `orduva-billing-tenants-${exportDateStamp()}.csv`,
-      ["Store", "Slug", "Billing state", "Plan", "Provider", "Subscription status", "Trial status", "Trial ends", "Stripe linked", "Stripe customer", "Stripe subscription", "Last payment amount", "Last payment currency", "Last payment status", "Last payment date", "Last payment reference"],
+      ["Store", "Slug", "Billing state", "Plan", "Provider", "Subscription status", "Trial status", "Trial ends", "Stripe linked", "Stripe customer", "Stripe subscription", "Last payment amount", "Last payment currency", "Last payment status", "Last payment date", "Last payment reference", "Alert flags"],
       filteredStores.map((store) => [
         store.name,
         store.slug,
@@ -302,6 +387,7 @@ export default function OwnerBillingOverviewPanel() {
         store.lastPayment?.status ?? "",
         store.lastPayment?.paidAt ?? "",
         store.lastPayment?.reference ?? "",
+        getBillingAlerts(store).map((alert) => alert.label).join(" | "),
       ]),
     );
   }, [filteredStores]);
@@ -326,6 +412,7 @@ export default function OwnerBillingOverviewPanel() {
 
   const cards: Array<{ key: BillingFilter; label: string; value: number; hint: string; classes: string }> = [
     { key: "all", label: "Billing records", value: data.summary.totalStores, hint: "All tenants", classes: "border-[#0E0E10]/10 bg-white text-[#0E0E10]" },
+    { key: "alerts", label: "Alert flags", value: alertStores.length, hint: "Needs review", classes: "border-red-200 bg-red-50 text-red-900" },
     { key: "active", label: "Active billing", value: data.summary.activeBilling, hint: "Paying tenants", classes: "border-emerald-200 bg-emerald-50 text-emerald-900" },
     { key: "trial", label: "Trials", value: data.summary.trialStores, hint: "Not paid yet", classes: "border-[#FFB168]/45 bg-[#FFF7F0] text-[#8A3C18]" },
     { key: "attention", label: "Payment attention", value: data.summary.paymentAttention, hint: "Past due / unpaid", classes: "border-red-200 bg-red-50 text-red-900" },
@@ -341,7 +428,7 @@ export default function OwnerBillingOverviewPanel() {
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner billing</p>
             <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Billing overview</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-              A cleaner owner-level view of tenant billing states, searchable Stripe payments, and exportable billing records.
+              A cleaner owner-level view of tenant billing states, searchable Stripe payments, exportable billing records, and warning flags for tenants that need attention.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -372,7 +459,7 @@ export default function OwnerBillingOverviewPanel() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-[22px] border border-white/10 bg-white/10 p-4">
             <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/65">This month</p>
             <p className="mt-2 text-xl font-black leading-tight text-white">{revenueLine(data.summary.currentMonthRevenue)}</p>
@@ -388,6 +475,11 @@ export default function OwnerBillingOverviewPanel() {
             <p className="mt-2 text-3xl font-black leading-none text-white">{data.summary.paidPaymentCount}</p>
             <p className="mt-2 text-xs font-bold text-white/58">Recorded from Stripe webhook payment events.</p>
           </div>
+          <div className="rounded-[22px] border border-red-300/30 bg-red-500/10 p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-100">Alert flags</p>
+            <p className="mt-2 text-3xl font-black leading-none text-white">{alertStores.length}</p>
+            <p className="mt-2 text-xs font-bold text-white/58">{criticalAlertCount} critical · {warningAlertCount} warning</p>
+          </div>
         </div>
       </div>
 
@@ -396,7 +488,7 @@ export default function OwnerBillingOverviewPanel() {
           <p className="mb-4 rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm font-bold text-[#C84F2A]">{message}</p>
         ) : null}
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
           {cards.map((card) => {
             const selected = activeFilter === card.key;
             return (
@@ -437,6 +529,7 @@ export default function OwnerBillingOverviewPanel() {
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-[#68707A]">
                 <span className="rounded-full bg-[#FFF7F0] px-3 py-1">Export uses the current filter/search</span>
                 <span className="rounded-full bg-[#F8FAFC] px-3 py-1">{filteredStores.length} tenant rows ready</span>
+                <span className="rounded-full bg-red-50 px-3 py-1 text-red-800">Alert flags show on exported tenant CSV</span>
               </div>
             </div>
 
@@ -453,6 +546,17 @@ export default function OwnerBillingOverviewPanel() {
                           </span>
                         </div>
                         <p className="mt-1 text-sm font-bold text-[#68707A]">{store.slug ? `${store.slug}.orduva.com` : "No slug"}</p>
+                        {getBillingAlerts(store).length ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {getBillingAlerts(store).map((alert) => (
+                              <span key={alert.key} title={alert.detail} className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${alertClasses(alert.level)}`}>
+                                {alert.label}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-emerald-900">No alert flags</p>
+                        )}
                       </div>
                       <div className="text-left text-xs font-bold leading-5 text-[#68707A] lg:text-right">
                         <p>Plan: <span className="text-[#0E0E10]">{store.planLabel}</span></p>
