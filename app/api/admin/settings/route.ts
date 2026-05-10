@@ -13,7 +13,7 @@ import {
 } from "@/lib/tenant-settings";
 import { normalizeStorefrontTheme } from "@/lib/storefront-theme";
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, enable_yoco_customer_payments, yoco_connection_status, enable_mpesa_customer_payments, mpesa_connection_status";
 
 export async function GET(req: Request) {
   const tenantLookup = await resolveAdminTenant(req);
@@ -74,6 +74,8 @@ export async function PATCH(req: Request) {
       currency_decimal_separator: normalizeSeparator(body?.currencyDecimalSeparator),
       currency_thousands_separator: normalizeSeparator(body?.currencyThousandsSeparator),
       currency_suffix: normalizeOptionalText(body?.currencySuffix, 12),
+      enable_cash_on_collection: normalizeBoolean(body?.enableCashOnCollection) ?? true,
+      enable_cash_on_delivery: normalizeBoolean(body?.enableCashOnDelivery) ?? true,
     };
 
     const { data, error } = await db

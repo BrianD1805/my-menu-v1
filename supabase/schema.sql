@@ -93,3 +93,21 @@ create table if not exists notification_events (
 
 alter table public.admin_push_subscriptions enable row level security;
 alter table public.notification_events enable row level security;
+
+-- Ver-0.201A storefront payment options foundation
+alter table public.tenant_settings
+  add column if not exists enable_cash_on_collection boolean not null default true,
+  add column if not exists enable_cash_on_delivery boolean not null default true,
+  add column if not exists enable_stripe_customer_payments boolean not null default false,
+  add column if not exists stripe_connection_status text not null default 'not_configured',
+  add column if not exists enable_yoco_customer_payments boolean not null default false,
+  add column if not exists yoco_connection_status text not null default 'not_configured',
+  add column if not exists enable_mpesa_customer_payments boolean not null default false,
+  add column if not exists mpesa_connection_status text not null default 'not_configured';
+
+alter table public.orders
+  add column if not exists payment_provider text not null default 'cod',
+  add column if not exists payment_method_label text,
+  add column if not exists payment_status text not null default 'pay_on_fulfilment',
+  add column if not exists payment_reference text,
+  add column if not exists paid_at timestamptz;

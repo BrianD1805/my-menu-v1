@@ -41,6 +41,7 @@ export type CreateOrderInput = {
   customerAddress?: string | null;
   orderType: "delivery" | "collection";
   notes?: string | null;
+  paymentProvider?: string | null;
   items: Array<{
     productId: string;
     quantity: number;
@@ -75,4 +76,12 @@ export type TenantSettings = {
   currency_decimal_separator: string | null;
   currency_thousands_separator: string | null;
   currency_suffix: string | null;
+  enable_cash_on_collection?: boolean | null;
+  enable_cash_on_delivery?: boolean | null;
+  enable_stripe_customer_payments?: boolean | null;
+  stripe_connection_status?: string | null;
+  enable_yoco_customer_payments?: boolean | null;
+  yoco_connection_status?: string | null;
+  enable_mpesa_customer_payments?: boolean | null;
+  mpesa_connection_status?: string | null;
 };

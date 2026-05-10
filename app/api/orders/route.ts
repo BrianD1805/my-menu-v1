@@ -7,6 +7,7 @@ import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { enqueueNotificationEvent } from "@/lib/notifications";
 import { sendAdminPushForTenant } from "@/lib/web-push";
 import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/trial";
+import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -128,6 +129,23 @@ export async function POST(req: Request) {
       };
     });
 
+    const settings = await getTenantSettings(tenant.id);
+    const selectedPayment = getStorefrontPaymentOption(settings, body.orderType, body.paymentProvider);
+
+    if (!selectedPayment) {
+      return NextResponse.json(
+        { error: "No payment method is currently available for this order type" },
+        { status: 400 }
+      );
+    }
+
+    if (selectedPayment.online) {
+      return NextResponse.json(
+        { error: "Online payments are not enabled for this store yet. Please choose a cash payment option." },
+        { status: 400 }
+      );
+    }
+
     const { data: order, error: orderError } = await db
       .from("orders")
       .insert({
@@ -141,6 +159,9 @@ export async function POST(req: Request) {
         status: "new",
         total,
         notes: body.notes?.trim() || null,
+        payment_provider: selectedPayment.id,
+        payment_method_label: selectedPayment.label,
+        payment_status: "pay_on_fulfilment",
       })
       .select()
       .single();
@@ -176,7 +197,6 @@ export async function POST(req: Request) {
       }
     }
 
-    const settings = await getTenantSettings(tenant.id);
     const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
     const message = buildWhatsAppOrderMessage({
@@ -222,7 +242,7 @@ export async function POST(req: Request) {
       }),
     ]);
 
-    return NextResponse.json({ ok: true, orderId: order.id, customerAccountId: body.customerAccountId?.trim() || null });
+    return NextResponse.json({ ok: true, orderId: order.id, customerAccountId: body.customerAccountId?.trim() || null, paymentProvider: selectedPayment.id, paymentMethodLabel: selectedPayment.label, paymentStatus: "pay_on_fulfilment" });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

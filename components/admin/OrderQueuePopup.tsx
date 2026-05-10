@@ -13,6 +13,9 @@ type QueueItem = {
   notes: string | null;
   orderType: string | null;
   createdAt: string;
+  paymentProvider: string | null;
+  paymentMethodLabel: string | null;
+  paymentStatus: string | null;
   items: {
     quantity: number;
     lineTotal: number;
@@ -34,6 +37,22 @@ function labelForStatus(status: string) {
 function buildItemsSummary(items: QueueItem["items"]) {
   if (!items.length) return "Order contents not available yet.";
   return items.map((item) => `${item.quantity} × ${item.productName || "Item"}`).join(", ");
+}
+
+function paymentStatusLabel(status: string | null) {
+  if (status === "paid") return "Paid";
+  if (status === "pending_online_payment") return "Awaiting online payment";
+  if (status === "failed") return "Payment failed";
+  if (status === "cancelled") return "Payment cancelled";
+  if (status === "refunded") return "Refunded";
+  return "Pay on fulfilment";
+}
+
+function paymentBadgeTone(status: string | null) {
+  if (status === "paid") return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (status === "failed" || status === "cancelled") return "border-rose-200 bg-rose-50 text-rose-800";
+  if (status === "pending_online_payment") return "border-blue-200 bg-blue-50 text-blue-800";
+  return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
 function statusTone(status: string) {
@@ -158,6 +177,16 @@ export default function OrderQueuePopup({
                               maximumFractionDigits: decimals,
                             }).format(order.total)}
                           </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ${paymentBadgeTone(order.paymentStatus)}`}>
+                              {paymentStatusLabel(order.paymentStatus)}
+                            </span>
+                            {order.paymentMethodLabel ? (
+                              <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                                {order.paymentMethodLabel}
+                              </span>
+                            ) : null}
+                          </div>
                           <p className="text-xs font-medium uppercase tracking-[0.16em] text-slate-500">
                             {new Date(order.createdAt).toLocaleString()}
                           </p>
@@ -183,6 +212,8 @@ export default function OrderQueuePopup({
                               orderType: order.orderType,
                               createdAt: order.createdAt,
                               total: order.total,
+                              paymentMethodLabel: order.paymentMethodLabel,
+                              paymentStatus: order.paymentStatus,
                               items: order.items,
                             }}
                             currencyCode={currencyCode}

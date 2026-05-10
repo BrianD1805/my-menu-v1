@@ -44,6 +44,23 @@ type TenantViewSettings = MoneyFormatSettings & {
   borderColor?: string;
   textColor?: string;
   trialState?: TenantTrialState | null;
+  enableCashOnCollection?: boolean;
+  enableCashOnDelivery?: boolean;
+  enableStripeCustomerPayments?: boolean;
+  stripeConnectionStatus?: string;
+  enableYocoCustomerPayments?: boolean;
+  yocoConnectionStatus?: string;
+  enableMpesaCustomerPayments?: boolean;
+  mpesaConnectionStatus?: string;
+};
+
+type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "mpesa";
+
+type PaymentOption = {
+  id: PaymentProvider;
+  label: string;
+  description: string;
+  online: boolean;
 };
 
 type SuccessState = {
@@ -55,6 +72,8 @@ type SuccessState = {
   notes: string;
   total: number;
   itemCount: number;
+  paymentMethodLabel: string;
+  paymentStatus: string;
   tenantSlug: string;
   whatsappPaused: boolean;
   whatsappUrl: string | null;
@@ -71,6 +90,71 @@ type CustomerAccount = {
   city?: string | null;
   postcode?: string | null;
 };
+
+
+function providerConfigured(enabled: boolean | undefined, status: string | undefined) {
+  return enabled === true && ["configured", "connected", "active"].includes(String(status || ""));
+}
+
+function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery" | "collection"): PaymentOption[] {
+  const currencyCode = String(settings.currencyCode || "GBP").toUpperCase();
+  const options: PaymentOption[] = [];
+
+  if (providerConfigured(settings.enableStripeCustomerPayments, settings.stripeConnectionStatus)) {
+    options.push({
+      id: "stripe",
+      label: "Pay securely by card",
+      description: "Online card payment through this store owner’s connected Stripe account.",
+      online: true,
+    });
+  }
+
+  if (providerConfigured(settings.enableYocoCustomerPayments, settings.yocoConnectionStatus)) {
+    options.push({
+      id: "yoco",
+      label: "Pay with Yoco",
+      description: "Online payment through this store owner’s connected Yoco account.",
+      online: true,
+    });
+  }
+
+  if (providerConfigured(settings.enableMpesaCustomerPayments, settings.mpesaConnectionStatus)) {
+    options.push({
+      id: "mpesa",
+      label: "Pay with M-Pesa",
+      description: "Mobile money payment through this store owner’s connected M-Pesa/Pesapal account.",
+      online: true,
+    });
+  }
+
+  if (orderType === "delivery" && settings.enableCashOnDelivery !== false) {
+    options.push({
+      id: "cod",
+      label: "Cash on delivery",
+      description: "Pay the store directly when your order is delivered.",
+      online: false,
+    });
+  }
+
+  if (orderType === "collection" && settings.enableCashOnCollection !== false) {
+    options.push({
+      id: "cash",
+      label: "Cash on collection",
+      description: "Pay the store directly when you collect your order.",
+      online: false,
+    });
+  }
+
+  const priorityByCurrency: Record<string, PaymentProvider[]> = {
+    KES: ["mpesa", "cod", "cash", "stripe", "yoco"],
+    ZAR: ["yoco", "cod", "cash", "stripe", "mpesa"],
+    GBP: ["stripe", "cash", "cod", "yoco", "mpesa"],
+    USD: ["stripe", "cash", "cod", "yoco", "mpesa"],
+    EUR: ["stripe", "cash", "cod", "yoco", "mpesa"],
+  };
+  const priority = priorityByCurrency[currencyCode] || ["cash", "cod", "stripe", "yoco", "mpesa"];
+  return options.sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id));
+}
 
 function buildSavedAddress(customer: CustomerAccount | null) {
   if (!customer) return "";
@@ -93,6 +177,7 @@ export default function CheckoutPage() {
   const [customerAddress, setCustomerAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [orderType, setOrderType] = useState<"delivery" | "collection">("delivery");
+  const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("cod");
   const [saveDetailsToAccount, setSaveDetailsToAccount] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -216,6 +301,15 @@ useEffect(() => {
   const trialState = tenantSettings.trialState || null;
   const checkoutBlockedByTrial = Boolean(trialState?.checkoutBlocked || trialState?.isTrialExpired);
   const checkoutBlockedMessage = trialState?.customerMessage || "This store is temporarily unable to accept checkout orders while the owner renews their Orduva plan. You can still browse the menu.";
+  const paymentOptions = useMemo(() => buildPaymentOptions(tenantSettings, orderType), [tenantSettings, orderType]);
+  const selectedPaymentOption = paymentOptions.find((option) => option.id === paymentProvider) || paymentOptions[0] || null;
+
+  useEffect(() => {
+    if (!paymentOptions.length) return;
+    if (!paymentOptions.some((option) => option.id === paymentProvider)) {
+      setPaymentProvider(paymentOptions[0].id);
+    }
+  }, [paymentOptions, paymentProvider]);
 
   function attemptWhatsAppHandoff(webUrl: string | null, appUrl: string | null) {
     const fallbackUrl = webUrl?.trim() || null;
@@ -280,6 +374,7 @@ useEffect(() => {
     }
     setNotes("");
     setOrderType("delivery");
+    setPaymentProvider("cod");
     setErrorMessage("");
   }
 
@@ -332,6 +427,11 @@ useEffect(() => {
       return;
     }
 
+    if (!selectedPaymentOption) {
+      setErrorMessage("No payment method is currently available for this order type. Please contact the store.");
+      return;
+    }
+
     const overStock = cartRows.find((row) => row.stockEnabled && row.quantity > row.stockQuantity);
     if (overStock) {
       setErrorMessage(`${overStock.name} only has ${overStock.stockQuantity} in stock. Please adjust your cart.`);
@@ -355,6 +455,7 @@ useEffect(() => {
           customerAddress,
           orderType,
           notes,
+          paymentProvider: selectedPaymentOption.id,
           items
         })
       });
@@ -380,6 +481,8 @@ useEffect(() => {
         notes: notes.trim(),
         total,
         itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
+        paymentMethodLabel: data.paymentMethodLabel || selectedPaymentOption.label,
+        paymentStatus: data.paymentStatus || "pay_on_fulfilment",
         tenantSlug,
         whatsappPaused: PAUSE_WHATSAPP_FOR_TESTING,
         whatsappUrl: data.whatsappUrl || null,
@@ -414,7 +517,7 @@ useEffect(() => {
                   Thanks, {successState.customerName}. Your order is in.
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
-                  We’ve received your order and sent it through to the team.
+                  We’ve received your order and sent it through to the team. {successState.paymentStatus === "pay_on_fulfilment" ? "Payment will be handled directly by the store." : "Your payment status has been recorded with the order."}
                 </p>
               </div>
 
@@ -426,6 +529,10 @@ useEffect(() => {
                 <div className="mt-3 flex items-center justify-between gap-4 border-t border-white/15 pt-3">
                   <span className="text-white/75">Items</span>
                   <span className="font-semibold">{successState.itemCount}</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-4 border-t border-white/15 pt-3">
+                  <span className="text-white/75">Payment</span>
+                  <span className="text-right font-semibold">{successState.paymentMethodLabel}</span>
                 </div>
                 <div className="mt-3 border-t border-white/15 pt-3">
                   <p className="text-white/75">Reference</p>
@@ -487,6 +594,10 @@ useEffect(() => {
                   <div>
                     <p className="text-gray-500">Order type</p>
                     <p className="mt-1 font-semibold capitalize text-gray-950">{successState.orderType}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Payment method</p>
+                    <p className="mt-1 font-semibold text-gray-950">{successState.paymentMethodLabel}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Phone</p>
@@ -641,6 +752,40 @@ useEffect(() => {
             <option value="collection">Collection</option>
           </select>
 
+          <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: checkoutBorder }}>
+            <p className="text-sm font-semibold text-slate-950">Payment method</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">Choose how you would like to pay this store. Online providers only appear when the store owner has connected their own account.</p>
+            <div className="mt-3 grid gap-2">
+              {paymentOptions.length ? paymentOptions.map((option) => (
+                <label
+                  key={option.id}
+                  className={`flex cursor-pointer items-start gap-3 rounded-2xl border bg-white px-4 py-3 text-sm transition ${paymentProvider === option.id ? "shadow-sm" : "hover:bg-slate-50"}`}
+                  style={{ borderColor: paymentProvider === option.id ? checkoutPrimary : checkoutBorder }}
+                >
+                  <input
+                    type="radio"
+                    name="paymentProvider"
+                    value={option.id}
+                    checked={paymentProvider === option.id}
+                    onChange={() => setPaymentProvider(option.id)}
+                    className="mt-1 h-4 w-4"
+                  />
+                  <span>
+                    <span className="block font-semibold text-slate-950">{option.label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">{option.description}</span>
+                  </span>
+                </label>
+              )) : (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  No payment method is currently available for this order type. Please contact the store.
+                </div>
+              )}
+            </div>
+            <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-xs leading-5 text-slate-600">
+              Online payments are tenant-owned. Stripe, Yoco and M-Pesa/Pesapal will only be shown to customers after the store owner has connected the relevant provider.
+            </div>
+          </div>
+
           <textarea
             className="w-full rounded-xl border p-3" style={{ borderColor: checkoutBorder, color: checkoutText, backgroundColor: "white" }}
             placeholder="Notes"
@@ -650,10 +795,10 @@ useEffect(() => {
 
           <button
             onClick={() => void placeOrder()}
-            disabled={loading || !cartRows.length || checkoutBlockedByTrial}
+            disabled={loading || !cartRows.length || checkoutBlockedByTrial || !selectedPaymentOption}
             className="rounded-xl px-5 py-3 text-white disabled:opacity-50" style={{ backgroundColor: checkoutPrimary }}
           >
-            {checkoutBlockedByTrial ? "Checkout paused" : loading ? "Placing order..." : "Confirm order"}
+            {checkoutBlockedByTrial ? "Checkout paused" : loading ? "Placing order..." : selectedPaymentOption?.online ? "Continue to payment" : "Confirm order"}
           </button>
 
           <p className="text-xs leading-5 text-gray-500">

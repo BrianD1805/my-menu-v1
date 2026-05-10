@@ -40,6 +40,14 @@ type FormState = {
   currencyDecimalSeparator: string;
   currencyThousandsSeparator: string;
   currencySuffix: string;
+  enableCashOnCollection: boolean;
+  enableCashOnDelivery: boolean;
+  enableStripeCustomerPayments: boolean;
+  stripeConnectionStatus: string;
+  enableYocoCustomerPayments: boolean;
+  yocoConnectionStatus: string;
+  enableMpesaCustomerPayments: boolean;
+  mpesaConnectionStatus: string;
 };
 
 type PreviewTarget = "global" | "header" | "welcome" | "products" | "favourites" | "footer";
@@ -460,7 +468,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty;
+  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery"]);
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -977,6 +986,64 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <Field label="TikTok URL"><input value={form.socialTikTokUrl} onChange={(e) => update("socialTikTokUrl", e.target.value)} className="input" placeholder="https://tiktok.com/@..." /></Field>
               <Field label="X / Twitter URL"><input value={form.socialXUrl} onChange={(e) => update("socialXUrl", e.target.value)} className="input" placeholder="https://x.com/..." /></Field>
               <div className="md:col-span-2"><Field label="Website URL"><input value={form.socialWebsiteUrl} onChange={(e) => update("socialWebsiteUrl", e.target.value)} className="input" placeholder="https://example.com" /></Field></div>
+            </div>
+          </div>
+        </Section>
+
+
+
+        <Section title="Storefront payment options" dirty={paymentDirty} saving={saving}>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
+              <label className="flex items-start justify-between gap-4">
+                <span>
+                  <span className="block text-sm font-black text-slate-900">Cash on collection</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">Allow customers collecting their order to pay the store directly on collection.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={form.enableCashOnCollection}
+                  onChange={(e) => update("enableCashOnCollection", e.target.checked)}
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200"
+                />
+              </label>
+            </div>
+            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
+              <label className="flex items-start justify-between gap-4">
+                <span>
+                  <span className="block text-sm font-black text-slate-900">Cash on delivery</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">Allow delivery customers to pay the store directly when the order arrives.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={form.enableCashOnDelivery}
+                  onChange={(e) => update("enableCashOnDelivery", e.target.checked)}
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-black text-slate-900">Online payment providers</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">Stripe, Yoco and M-Pesa/Pesapal are prepared as tenant-owned payment providers. They are not switched on for customers until that store owner has connected their own payment account.</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {[
+                { name: "Stripe", enabled: form.enableStripeCustomerPayments, status: form.stripeConnectionStatus, note: "Card payments for UK, US and Europe." },
+                { name: "Yoco", enabled: form.enableYocoCustomerPayments, status: form.yocoConnectionStatus, note: "Card/local payments for South Africa." },
+                { name: "M-Pesa / Pesapal", enabled: form.enableMpesaCustomerPayments, status: form.mpesaConnectionStatus, note: "Mobile money-focused payments for Kenya." },
+              ].map((provider) => (
+                <div key={provider.name} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-bold text-slate-950">{provider.name}</p>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600">
+                      {provider.enabled ? provider.status : "not configured"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{provider.note}</p>
+                  <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700">Coming in a later provider setup build</p>
+                </div>
+              ))}
             </div>
           </div>
         </Section>

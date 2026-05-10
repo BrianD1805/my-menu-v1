@@ -85,6 +85,14 @@ export default async function AdminSettingsPage() {
             DEFAULT_MONEY_SETTINGS.currencyThousandsSeparator,
           currencySuffix:
             settings?.currency_suffix ?? DEFAULT_MONEY_SETTINGS.currencySuffix,
+          enableCashOnCollection: settings?.enable_cash_on_collection !== false,
+          enableCashOnDelivery: settings?.enable_cash_on_delivery !== false,
+          enableStripeCustomerPayments: settings?.enable_stripe_customer_payments === true,
+          stripeConnectionStatus: settings?.stripe_connection_status || "not_configured",
+          enableYocoCustomerPayments: settings?.enable_yoco_customer_payments === true,
+          yocoConnectionStatus: settings?.yoco_connection_status || "not_configured",
+          enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,
+          mpesaConnectionStatus: settings?.mpesa_connection_status || "not_configured",
         }}
       />
     </AdminShell>
