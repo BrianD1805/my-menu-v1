@@ -40,6 +40,33 @@ function stripeMajorAmountFromMinor(amountMinor: unknown) {
   return Math.round((parsed / 100) * 100) / 100;
 }
 
+function stripeApiSecretKey() {
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim() || "";
+  if (!secretKey) throw new Error("Stripe secret key is not configured.");
+  return secretKey;
+}
+
+function stripeFormBody(values: Record<string, string | boolean | number | null | undefined>) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) {
+    if (value === null || typeof value === "undefined") continue;
+    params.set(key, String(value));
+  }
+  return params;
+}
+
+function normaliseStripeSubscription(data: Record<string, any>) {
+  return {
+    id: getString(data.id),
+    status: getString(data.status),
+    customerId: getString(data.customer),
+    currentPeriodEnd: typeof data.current_period_end === "number" ? new Date(data.current_period_end * 1000).toISOString() : null,
+    cancelAtPeriodEnd: Boolean(data.cancel_at_period_end),
+    cancelAt: typeof data.cancel_at === "number" ? new Date(data.cancel_at * 1000).toISOString() : null,
+    canceledAt: typeof data.canceled_at === "number" ? new Date(data.canceled_at * 1000).toISOString() : null,
+  };
+}
+
 export async function retrieveStripeCheckoutSession(sessionId: string): Promise<StripeSessionStatus | null> {
   const secretKey = process.env.STRIPE_SECRET_KEY?.trim() || "";
   const cleanSessionId = String(sessionId || "").trim();
@@ -80,13 +107,28 @@ export async function retrieveStripeSubscriptionStatus(subscriptionId: string) {
   });
   const data = (await response.json().catch(() => null)) as Record<string, any> | null;
   if (!response.ok || !data?.id) return null;
-  return {
-    id: getString(data.id),
-    status: getString(data.status),
-    customerId: getString(data.customer),
-    currentPeriodEnd: typeof data.current_period_end === "number" ? new Date(data.current_period_end * 1000).toISOString() : null,
-    cancelAtPeriodEnd: Boolean(data.cancel_at_period_end),
-  };
+  return normaliseStripeSubscription(data);
+}
+
+export async function setStripeSubscriptionCancelAtPeriodEnd(subscriptionId: string, cancelAtPeriodEnd: boolean) {
+  const cleanSubscriptionId = String(subscriptionId || "").trim();
+  if (!cleanSubscriptionId.startsWith("sub_")) throw new Error("No valid Stripe subscription is linked to this tenant.");
+
+  const response = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(cleanSubscriptionId)}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${stripeApiSecretKey()}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: stripeFormBody({ cancel_at_period_end: cancelAtPeriodEnd }),
+    cache: "no-store",
+  });
+  const data = (await response.json().catch(() => null)) as Record<string, any> | null;
+  if (!response.ok || !data?.id) {
+    const message = getString(data?.error?.message) || "Stripe subscription could not be updated.";
+    throw new Error(message);
+  }
+  return normaliseStripeSubscription(data);
 }
 
 export async function loadTenantBillingStatus(tenantId: string): Promise<TenantBillingStatus | null> {
