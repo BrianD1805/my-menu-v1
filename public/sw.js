@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-195';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-195';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-195';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-195a';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-195a';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-195a';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -226,4 +226,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.195 subscription management basics cache bump
+// Orduva Ver-0.195A subscription renewal date fix cache bump

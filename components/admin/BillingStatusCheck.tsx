@@ -18,6 +18,7 @@ type BillingStatusPayload = {
   stripeSubscription?: {
     id?: string | null;
     status?: string | null;
+    currentPeriodStart?: string | null;
     currentPeriodEnd?: string | null;
     cancelAtPeriodEnd?: boolean;
     cancelAt?: string | null;

@@ -55,15 +55,46 @@ function stripeFormBody(values: Record<string, string | boolean | number | null 
   return params;
 }
 
+function stripeTimestampToIso(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? new Date(value * 1000).toISOString() : null;
+}
+
+function getSubscriptionItemPeriodEnd(data: Record<string, any>) {
+  const items = Array.isArray(data?.items?.data) ? data.items.data : [];
+  const periodEnds = items
+    .map((item: Record<string, any>) => item?.current_period_end)
+    .filter((value: unknown): value is number => typeof value === "number" && Number.isFinite(value));
+
+  if (!periodEnds.length) return null;
+
+  // Orduva currently creates one subscription item per checkout session. If Stripe ever
+  // returns more than one, the earliest item period end is the safest customer-facing
+  // renewal/access date to display.
+  return new Date(Math.min(...periodEnds) * 1000).toISOString();
+}
+
+function getSubscriptionItemPeriodStart(data: Record<string, any>) {
+  const items = Array.isArray(data?.items?.data) ? data.items.data : [];
+  const periodStarts = items
+    .map((item: Record<string, any>) => item?.current_period_start)
+    .filter((value: unknown): value is number => typeof value === "number" && Number.isFinite(value));
+
+  if (!periodStarts.length) return null;
+  return new Date(Math.max(...periodStarts) * 1000).toISOString();
+}
+
 function normaliseStripeSubscription(data: Record<string, any>) {
+  const currentPeriodEnd = stripeTimestampToIso(data.current_period_end) || getSubscriptionItemPeriodEnd(data);
+
   return {
     id: getString(data.id),
     status: getString(data.status),
     customerId: getString(data.customer),
-    currentPeriodEnd: typeof data.current_period_end === "number" ? new Date(data.current_period_end * 1000).toISOString() : null,
+    currentPeriodStart: stripeTimestampToIso(data.current_period_start) || getSubscriptionItemPeriodStart(data),
+    currentPeriodEnd,
     cancelAtPeriodEnd: Boolean(data.cancel_at_period_end),
-    cancelAt: typeof data.cancel_at === "number" ? new Date(data.cancel_at * 1000).toISOString() : null,
-    canceledAt: typeof data.canceled_at === "number" ? new Date(data.canceled_at * 1000).toISOString() : null,
+    cancelAt: stripeTimestampToIso(data.cancel_at) || (Boolean(data.cancel_at_period_end) ? currentPeriodEnd : null),
+    canceledAt: stripeTimestampToIso(data.canceled_at),
   };
 }
 
