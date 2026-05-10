@@ -39,7 +39,7 @@ export default async function StripeBillingCancelPage({ searchParams }: Props) {
               <div><p className="font-black text-[#B74A16]">Currency</p><p className="mt-1 text-[#0E0E10]">{currency.toUpperCase()}</p></div>
             </div>
             <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3 text-sm font-bold leading-6 text-[#5C5F66]">
-              No subscription changes were made from this cancelled checkout. You can return to admin and start checkout again when ready.
+              No subscription changes were made. You can return to admin, review the plan selection, and continue to secure checkout again when ready.
             </p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/admin" className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:bg-[#E85C32]">Return to admin</Link>

@@ -30,9 +30,9 @@ function trialShortLabel(trial?: TenantTrialState | null) {
 
 function trialStatusText(trial?: TenantTrialState | null) {
   if (!trial) return "Trial details are unavailable.";
-  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active — checkout open";
-  if (trial.isTrialExpired) return "Trial expired — checkout paused";
-  if (trial.trialDaysRemaining === null) return "Trial active";
+  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active — store open";
+  if (trial.isTrialExpired) return "Trial ended — activate billing";
+  if (trial.trialDaysRemaining === null) return "Trial active — choose a plan when ready";
   if (trial.trialDaysRemaining === 1) return "1 day left in trial";
   return `${trial.trialDaysRemaining} days left in trial`;
 }
@@ -187,21 +187,31 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                       </div>
                       {trialState?.isTrialExpired ? (
                         <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold leading-6 text-red-800">
-                          Checkout is currently paused because the trial has expired. Upgrade with Stripe or ask the platform owner to add more trial days to re-enable checkout.
+                          The trial has ended and customer checkout is paused. Choose a paid plan below to reactivate the store immediately after Stripe confirms payment.
                         </p>
                       ) : (
                         <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold leading-6 text-emerald-900">
-                          Storefront checkout remains available while the trial or paid subscription is active.
+                          The store remains open during the trial. When you are ready, choose a paid plan below and Stripe will activate billing securely.
                         </p>
                       )}
                       {trialState?.subscriptionStatus === "active" || trialState?.trialStatus === "converted" ? null : (
-                        <div className="mt-5 rounded-[24px] border border-[#FF6A3D]/20 bg-white p-4 shadow-sm">
-                          <p className="text-sm font-black text-[#0E0E10]">Ready to activate this store?</p>
-                          <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
-                            Stripe checkout now lets you test any configured plan, billing interval and launch currency before we lock the final live upgrade flow.
-                          </p>
-                          <div className="mt-4">
-                            <StripeUpgradeButton label="Open Stripe Checkout" showControls />
+                        <div className="mt-5 rounded-[26px] border border-[#FF6A3D]/20 bg-white p-4 shadow-sm sm:p-5">
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
+                              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">Step 1</p>
+                              <p className="mt-1 text-sm font-black text-[#0E0E10]">Choose a plan</p>
+                            </div>
+                            <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
+                              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">Step 2</p>
+                              <p className="mt-1 text-sm font-black text-[#0E0E10]">Pay securely</p>
+                            </div>
+                            <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
+                              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">Step 3</p>
+                              <p className="mt-1 text-sm font-black text-[#0E0E10]">Store becomes active</p>
+                            </div>
+                          </div>
+                          <div className="mt-5">
+                            <StripeUpgradeButton label="Continue to secure checkout" showControls />
                           </div>
                         </div>
                       )}

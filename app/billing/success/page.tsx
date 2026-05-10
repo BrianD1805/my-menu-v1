@@ -43,12 +43,12 @@ export default async function StripeBillingSuccessPage({ searchParams }: Props) 
             <img src="/orduva-logo-hero-updated.png" alt="Orduva" className="h-10 w-auto" />
           </div>
           <div className="px-6 py-8 text-center sm:px-10 sm:py-10">
-            <p className="mx-auto inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Stripe checkout complete</p>
+            <p className="mx-auto inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Payment confirmed</p>
             <h1 className="mt-5 text-3xl font-black tracking-tight text-[#0E0E10] sm:text-4xl">
               {orduvaActive ? "Your Orduva subscription is active." : "Thank you — your plan is being activated."}
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-              Stripe returned successfully for <span className="font-black text-[#0E0E10]">{tenantSlug}</span>. Orduva is checking the payment session and tenant subscription record so the store can remain open on the paid plan.
+              Stripe returned successfully for <span className="font-black text-[#0E0E10]">{tenantSlug}</span>. Orduva is confirming the payment and subscription record so the store stays open on the paid plan.
             </p>
 
             <div className="mx-auto mt-6 grid max-w-xl gap-3 rounded-[26px] border border-[#E8D8C8] bg-[#FFF8EF] p-4 text-left text-sm sm:grid-cols-3">
@@ -72,7 +72,7 @@ export default async function StripeBillingSuccessPage({ searchParams }: Props) 
 
             {!orduvaActive ? (
               <p className="mx-auto mt-4 max-w-xl rounded-2xl border border-[#FFB168]/45 bg-[#FFF7F0] px-4 py-3 text-sm font-bold leading-6 text-[#9A4219]">
-                This can take a short moment while Stripe sends the webhook. Refresh this page, or return to admin and use the billing status check in the billing popup.
+                This can take a short moment while Stripe sends the webhook. Refresh this page, or return to admin and use Refresh status in the billing popup.
               </p>
             ) : null}
 
