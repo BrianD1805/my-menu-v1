@@ -5,12 +5,13 @@ import { createPortal } from "react-dom";
 import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 import StripeUpgradeButton from "@/components/admin/StripeUpgradeButton";
 import BillingStatusCheck from "@/components/admin/BillingStatusCheck";
+import BillingActivationJourney from "@/components/admin/BillingActivationJourney";
 import type { TenantTrialState } from "@/lib/trial";
 
 type ChecklistItem = { status?: "pending" | "complete" };
 type ChecklistPayload = { items?: ChecklistItem[]; dismissed?: boolean } | null;
 
-type ModalKind = "checklist" | "trial" | null;
+type ModalKind = "checklist" | "trial" | "activation" | null;
 
 function formatTrialDate(value?: string | null) {
   if (!value) return "Date unavailable";
@@ -126,9 +127,20 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
 
         <button
           type="button"
-          onClick={() => setModal("trial")}
+          onClick={() => {
+            const shouldOpenActivation = Boolean(trialState?.isTrialExpired && trialState?.subscriptionStatus !== "active" && trialState?.trialStatus !== "converted");
+            if (!shouldOpenActivation) {
+              setModal("trial");
+              return;
+            }
+            if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) {
+              setModal("activation");
+              return;
+            }
+            window.location.href = "/admin/billing/activate";
+          }}
           className={`admin-pressable inline-flex min-h-[48px] min-w-[64px] flex-col items-center justify-center rounded-[20px] border px-2.5 py-2 shadow-[0_12px_28px_rgba(0,0,0,0.10)] transition hover:-translate-y-[1px] sm:min-h-[60px] sm:min-w-[90px] ${trialTone(trialState)}`}
-          aria-label="Open trial details"
+          aria-label={trialState?.isTrialExpired ? "Open billing activation" : "Open trial details"}
         >
           <span className="text-sm font-black leading-none sm:text-base">{trialShortLabel(trialState)}</span>
           <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] opacity-75 sm:text-[11px]">{trialSecondaryLabel(trialState)}</span>
@@ -148,6 +160,21 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                 onClick={() => setModal(null)}
                 aria-label="Close popup backdrop"
               />
+              {modal === "activation" ? (
+                <section className="relative mx-auto flex max-h-[calc(100dvh-1.25rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/20 bg-[#F7F2EA] text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] sm:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setModal(null)}
+                    className="admin-pressable absolute right-3 top-3 z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0E0E10] text-2xl font-light leading-none text-white shadow-[0_12px_26px_rgba(14,14,16,0.25)] transition hover:bg-[#252528]"
+                    aria-label="Close billing activation"
+                  >
+                    ×
+                  </button>
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                    <BillingActivationJourney mode="popup" />
+                  </div>
+                </section>
+              ) : (
               <section className="relative mx-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-[920px] flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] sm:max-h-[calc(100dvh-4rem)]">
                 <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#0E0E10]/10 px-5 py-4 sm:px-7 sm:py-5">
                   <div className="min-w-0">
@@ -220,6 +247,7 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                   )}
                 </div>
               </section>
+              )}
             </div>,
             document.body,
           )

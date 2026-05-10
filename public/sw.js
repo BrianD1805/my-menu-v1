@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-200';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-200';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-200';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-200a';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-200a';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-200a';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -226,4 +226,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.200 owner dashboard billing overview cache bump
+// Orduva Ver-0.200A owner dashboard billing overview cache bump
