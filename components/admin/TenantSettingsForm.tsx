@@ -1417,53 +1417,59 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end bg-slate-950/60 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6" onClick={onClose}>
-      <div className="max-h-[92dvh] w-full max-w-3xl overflow-y-auto rounded-[30px] bg-white p-4 shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:p-6" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">Stripe setup guide</p>
-            <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">Where do I find the tenant Stripe keys?</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Use this when helping a non-technical store owner connect their own Stripe account for storefront customer payments.</p>
-          </div>
-          <button type="button" onClick={onClose} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50" aria-label="Close Stripe setup guide">×</button>
-        </div>
-
-        <div className="mt-4 rounded-[22px] border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-950">
-          <strong>Keep this separate:</strong> these must be the tenant's own Stripe keys. Do not paste the Orduva owner Stripe keys here, because customer order money should go to the store owner, not the Orduva SaaS billing account.
-        </div>
-
-        <div className="mt-4 grid gap-3">
-          {steps.map((step) => (
-            <div key={step.title} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-black text-slate-950">{step.title}</p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">{step.body}</p>
+      <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]" onClick={(event) => event.stopPropagation()}>
+        <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">Stripe setup guide</p>
+              <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">Where do I find the tenant Stripe keys?</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Use this when helping a non-technical store owner connect their own Stripe account for storefront customer payments.</p>
             </div>
-          ))}
-        </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Publishable key</p>
-            <p className="mt-2 font-mono text-sm font-black text-slate-950">pk_test_...</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Safe for browser-side Stripe setup.</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Secret key</p>
-            <p className="mt-2 font-mono text-sm font-black text-slate-950">sk_test_...</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Private. Store server-side only.</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Webhook secret</p>
-            <p className="mt-2 font-mono text-sm font-black text-slate-950">whsec_...</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Used to verify Stripe payment messages.</p>
+            <button type="button" onClick={onClose} className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50" aria-label="Close Stripe setup guide">×</button>
           </div>
         </div>
 
-        <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
-          <strong>Webhook note:</strong> the final Stripe storefront checkout build will confirm the exact webhook endpoint URL for tenant order payments. If you are not sure which webhook endpoint to use yet, save the keys you have and leave Stripe disabled until the endpoint is confirmed.
-        </div>
+        <div className="overflow-y-auto px-4 pb-7 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
+          <div className="rounded-[22px] border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-950">
+            <strong>Keep this separate:</strong> these must be the tenant's own Stripe keys. Do not paste the Orduva owner Stripe keys here, because customer order money should go to the store owner, not the Orduva SaaS billing account.
+          </div>
 
-        <div className="mt-5 flex justify-end">
-          <button type="button" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto">Close guide</button>
+          <div className="mt-4 grid gap-3">
+            {steps.map((step) => (
+              <div key={step.title} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-black text-slate-950">{step.title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{step.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Publishable key</p>
+              <p className="mt-2 font-mono text-sm font-black text-slate-950">pk_test_...</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Safe for browser-side Stripe setup.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Secret key</p>
+              <p className="mt-2 font-mono text-sm font-black text-slate-950">sk_test_...</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Private. Store server-side only.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Webhook secret</p>
+              <p className="mt-2 font-mono text-sm font-black text-slate-950">whsec_...</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Used to verify Stripe payment messages.</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
+            <strong>Webhook note:</strong> the final Stripe storefront checkout build will confirm the exact webhook endpoint URL for tenant order payments. If you are not sure which webhook endpoint to use yet, save the keys you have and leave Stripe disabled until the endpoint is confirmed.
+          </div>
+
+          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+            <button type="button" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto">Close guide</button>
+          </div>
+
+          <div className="h-5 sm:h-6" aria-hidden="true" />
         </div>
       </div>
     </div>
