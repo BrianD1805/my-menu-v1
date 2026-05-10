@@ -1,3 +1,4 @@
+import OwnerBillingOverviewPanel from "@/components/admin/OwnerBillingOverviewPanel";
 import OwnerStoreReadinessPanel from "@/components/admin/OwnerStoreReadinessPanel";
 import Link from "next/link";
 import { LIVE_VERSION } from "@/lib/version";
@@ -68,6 +69,10 @@ export default function PlatformDashboardPage() {
               </div>
             </div>
           </header>
+
+          <div className="mt-6">
+            <OwnerBillingOverviewPanel />
+          </div>
 
           <div className="mt-6">
             <OwnerStoreReadinessPanel />
