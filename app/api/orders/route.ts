@@ -8,7 +8,7 @@ import { enqueueNotificationEvent } from "@/lib/notifications";
 import { sendAdminPushForTenant } from "@/lib/web-push";
 import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/trial";
 import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
-import { createTenantStripeOrderCheckoutSession } from "@/lib/storefront-stripe";
+import { createTenantStripeOrderCheckoutIntent } from "@/lib/storefront-stripe";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -147,6 +147,43 @@ export async function POST(req: Request) {
       );
     }
 
+    if (selectedPayment.id === "stripe") {
+      const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+      try {
+        const checkoutIntent = await createTenantStripeOrderCheckoutIntent({
+          req,
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          tenantName: branding.displayName,
+          customerName: body.customerName.trim(),
+          customerPhone: body.customerPhone.trim(),
+          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
+          orderType: body.orderType,
+          notes: body.notes?.trim() || null,
+          items: orderItems,
+          total,
+          currencyCode: branding.currencyCode || settings?.currency_code || "GBP",
+          paymentMethodLabel: selectedPayment.label,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          orderId: null,
+          checkoutId: checkoutIntent.checkoutId,
+          customerAccountId: body.customerAccountId?.trim() || null,
+          paymentProvider: selectedPayment.id,
+          paymentMethodLabel: selectedPayment.label,
+          paymentStatus: "checkout_started",
+          stripeCheckoutUrl: checkoutIntent.url,
+          stripeCheckoutSessionId: checkoutIntent.sessionId,
+        });
+      } catch (stripeError) {
+        const message = stripeError instanceof Error ? stripeError.message : "Stripe checkout could not be started.";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+    }
+
     const { data: order, error: orderError } = await db
       .from("orders")
       .insert({
@@ -216,42 +253,8 @@ export async function POST(req: Request) {
 
     await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
 
-    let stripeCheckoutUrl: string | null = null;
-    let stripeCheckoutSessionId: string | null = null;
-    if (selectedPayment.id === "stripe") {
-      try {
-        const checkoutSession = await createTenantStripeOrderCheckoutSession({
-          req,
-          tenantId: tenant.id,
-          tenantSlug: tenant.slug,
-          tenantName: branding.displayName,
-          orderId: order.id,
-          customerName: body.customerName.trim(),
-          customerPhone: body.customerPhone.trim(),
-          total,
-          currencyCode: branding.currencyCode || settings?.currency_code || "GBP",
-        });
-        stripeCheckoutUrl = checkoutSession.url;
-        stripeCheckoutSessionId = checkoutSession.sessionId;
-        await db
-          .from("orders")
-          .update({
-            payment_checkout_session_id: checkoutSession.sessionId,
-            payment_intent_id: checkoutSession.paymentIntentId,
-            payment_reference: checkoutSession.sessionId,
-          })
-          .eq("id", order.id)
-          .eq("tenant_id", tenant.id);
-      } catch (stripeError) {
-        await db
-          .from("orders")
-          .update({ payment_status: "failed" })
-          .eq("id", order.id)
-          .eq("tenant_id", tenant.id);
-        const message = stripeError instanceof Error ? stripeError.message : "Stripe checkout could not be started.";
-        return NextResponse.json({ error: message }, { status: 400 });
-      }
-    }
+    const stripeCheckoutUrl: string | null = null;
+    const stripeCheckoutSessionId: string | null = null;
 
     await Promise.allSettled([
       enqueueNotificationEvent({

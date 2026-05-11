@@ -33,7 +33,7 @@ export default async function StorefrontStripeSuccessPage({ searchParams }: Prop
           <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-100">Secure payment</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Payment received</h1>
           <p className="mt-3 text-sm leading-6 text-white/85 sm:text-base">
-            Thank you. Stripe has returned you to Orduva after payment. The store will receive your order details.
+            Thank you. Stripe has returned you to Orduva after payment. Once Stripe confirms the payment, Orduva creates the order and sends it to the store.
           </p>
         </div>
         <div className="px-6 py-6 sm:px-8 sm:py-8">
@@ -41,8 +41,8 @@ export default async function StorefrontStripeSuccessPage({ searchParams }: Prop
             <p className="text-sm font-black uppercase tracking-[0.14em]">{paid ? "Confirmed" : "Final confirmation pending"}</p>
             <p className="mt-2 text-sm leading-6">
               {paid
-                ? "The order payment is marked as paid in Orduva."
-                : "Your payment was sent to Stripe. If this page loaded before the webhook arrived, the order may show as pending for a few seconds."}
+                ? "The order has been created and marked as paid in Orduva."
+                : "Your payment was sent to Stripe. If this page loaded before the webhook arrived, Orduva may still be creating the paid order for a few seconds."}
             </p>
           </div>
 

@@ -11,14 +11,13 @@ function first(value: string | string[] | undefined) {
 
 export default async function StorefrontStripeCancelPage({ searchParams }: Props) {
   const params = (await searchParams) || {};
-  const orderId = first(params.order_id).trim();
-  if (orderId) {
+  const checkoutId = first(params.checkout_id).trim();
+  if (checkoutId) {
     await db
-      .from("orders")
-      .update({ payment_status: "cancelled" })
-      .eq("id", orderId)
-      .eq("payment_provider", "stripe")
-      .eq("payment_status", "pending_online_payment");
+      .from("storefront_payment_intents")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", checkoutId)
+      .in("status", ["created", "checkout_started"]);
   }
 
   return (
@@ -29,12 +28,12 @@ export default async function StorefrontStripeCancelPage({ searchParams }: Props
           <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-100">Payment cancelled</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">No payment was taken</h1>
           <p className="mt-3 text-sm leading-6 text-white/85 sm:text-base">
-            You returned from Stripe before completing payment. Your card has not been charged.
+            You returned from Stripe before completing payment. Your card has not been charged and no order has been placed.
           </p>
         </div>
         <div className="px-6 py-6 sm:px-8 sm:py-8">
           <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-950">
-            Your order is not paid. You can return to checkout and choose Stripe again, or choose an available cash payment option if the store offers one.
+            Your basket has not been sent to the store yet. You can return to checkout and try again, or choose an available cash payment option if the store offers one.
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/checkout" className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800">Return to checkout</Link>
