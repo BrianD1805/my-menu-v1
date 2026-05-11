@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -12,13 +11,25 @@ function first(value: string | string[] | undefined) {
 export default async function StorefrontStripeCancelPage({ searchParams }: Props) {
   const params = (await searchParams) || {};
   const checkoutId = first(params.checkout_id).trim();
+  let tenantSlug = "";
   if (checkoutId) {
+    const { data: intent } = await db
+      .from("storefront_payment_intents")
+      .select("order_payload")
+      .eq("id", checkoutId)
+      .maybeSingle();
+    const payload = intent?.order_payload as Record<string, unknown> | null;
+    tenantSlug = typeof payload?.tenantSlug === "string" ? payload.tenantSlug.trim() : "";
+
     await db
       .from("storefront_payment_intents")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", checkoutId)
       .in("status", ["created", "checkout_started"]);
   }
+
+  const storeUrl = tenantSlug ? `https://${tenantSlug}.orduva.com/` : "/";
+  const checkoutUrl = tenantSlug ? `https://${tenantSlug}.orduva.com/checkout` : "/checkout";
 
   return (
     <main className="min-h-screen bg-[#fff7f0] px-4 py-8 text-slate-950 sm:px-6 sm:py-12">
@@ -36,8 +47,8 @@ export default async function StorefrontStripeCancelPage({ searchParams }: Props
             Your basket has not been sent to the store yet. You can return to checkout and try again, or choose an available cash payment option if the store offers one.
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/checkout" className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800">Return to checkout</Link>
-            <Link href="/" className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50">Back to store</Link>
+            <a href={checkoutUrl} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800">Return to checkout</a>
+            <a href={storeUrl} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50">Back to store</a>
           </div>
         </div>
       </section>

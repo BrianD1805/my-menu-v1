@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-203b';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-203b';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-203b';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-203d';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-203d';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-203d';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -139,7 +139,7 @@ async function navigationFastFallback(request) {
     return response;
   });
 
-  // Ver-0.203B: use a short network-first window for navigations. Returning
+  // Ver-0.203D: use a short network-first window for navigations. Returning
   // the cached shell immediately made installed PWAs look fast, but it could
   // also leave customer session panels, favourites, and Buy Again stuck until
   // the user performed a hard refresh. Give the live page a fair chance first,
@@ -233,4 +233,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.203B storefront PWA customer session cache bump
+// Orduva Ver-0.203D storefront PWA customer session cache bump

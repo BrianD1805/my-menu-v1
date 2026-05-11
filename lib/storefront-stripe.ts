@@ -311,9 +311,10 @@ async function createPaidOrderFromIntent(input: {
   paymentReference?: string | null;
   paidAt?: string | null;
 }) {
+  const finalSessionId = input.sessionId || input.intent.stripe_checkout_session_id || null;
+  const finalPaymentIntentId = input.paymentIntentId || input.intent.stripe_payment_intent_id || null;
+
   if (input.intent.order_id) {
-    const finalSessionId = input.sessionId || input.intent.stripe_checkout_session_id || null;
-    const finalPaymentIntentId = input.paymentIntentId || input.intent.stripe_payment_intent_id || null;
     await db
       .from("orders")
       .update({
@@ -337,6 +338,31 @@ async function createPaidOrderFromIntent(input: {
       .eq("tenant_id", input.intent.tenant_id);
     return input.intent.order_id as string;
   }
+
+  const { data: claimedIntent, error: claimError } = await db
+    .from("storefront_payment_intents")
+    .update({
+      status: "processing",
+      stripe_checkout_session_id: finalSessionId,
+      stripe_payment_intent_id: finalPaymentIntentId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.intent.id)
+    .eq("tenant_id", input.intent.tenant_id)
+    .is("order_id", null)
+    .in("status", ["created", "checkout_started"])
+    .select("*")
+    .maybeSingle();
+
+  if (claimError) throw new Error("Could not claim Stripe checkout intent.");
+
+  if (!claimedIntent) {
+    const latest = await loadIntentByCheckout({ checkoutId: input.intent.id, tenantId: input.intent.tenant_id });
+    if (latest?.order_id) return latest.order_id as string;
+    return input.intent.order_id as string;
+  }
+
+  input.intent = claimedIntent;
 
   const payload = input.intent.order_payload as PendingOrderPayload | null;
   if (!payload?.items?.length) throw new Error("Stripe checkout intent is missing order payload.");
