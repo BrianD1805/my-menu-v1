@@ -1,20 +1,23 @@
-# Orduva Ver-0.204A — Tenant admin mobile icon navigation
+# Orduva Ver-0.204A — Tenant admin mobile app icon navigation
 
-## Summary
+Rebuilt cleanly from Ver-0.203D after the previous 0.204 chain was discarded.
 
-Replaced the mobile tenant admin bottom navigation buttons with a cleaner app-style icon navigation bar.
+## Scope
 
-## Behaviour
+Only the tenant admin mobile bottom navigation was changed. The mobile nav now uses app-style icons with smaller labels under each icon and active colour feedback.
 
-- Mobile bottom nav now shows app-style icons with smaller labels underneath.
-- The active page uses the Orduva orange highlight.
-- Pressing a nav item gives a clear touch response before navigating.
-- Desktop navigation is unchanged.
-- No Supabase SQL required.
+## Intentionally not touched
 
-## Files touched
+- Tenant settings form
+- Payment settings
+- Storefront Stripe payment logic
+- Checkout logic
+- Storefront payment options
+- Pricing plans
+- Referrals
+- Platform billing
+- Yoco/Pesapal/M-Pesa code
 
-- components/admin/AdminShell.tsx
-- lib/version.ts
-- public/sw.js
-- components/menu/StorefrontClientLoader.tsx
+## Supabase
+
+No Supabase SQL required.

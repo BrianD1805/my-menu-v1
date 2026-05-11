@@ -13,7 +13,30 @@ import {
 } from "@/lib/tenant-settings";
 import { normalizeStorefrontTheme } from "@/lib/storefront-theme";
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, stripe_customer_secret_key, stripe_customer_webhook_secret, enable_yoco_customer_payments, yoco_connection_status, enable_mpesa_customer_payments, mpesa_connection_status";
+
+function secretHint(value: unknown) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  return text.length <= 6 ? "saved" : `••••${text.slice(-4)}`;
+}
+
+function normalizeStripePaymentMode(value: unknown) {
+  const mode = String(value || "manual_keys").trim().toLowerCase();
+  return mode === "stripe_connect" ? "stripe_connect" : "manual_keys";
+}
+
+function normalizeLongSecret(value: unknown, maxLength = 800) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  return text.slice(0, maxLength);
+}
+
+function normalizeStripeConnectionStatus(value: unknown) {
+  const status = String(value || "not_configured").trim().toLowerCase();
+  return ["not_configured", "configured", "connected", "active", "disabled"].includes(status) ? status : "not_configured";
+}
+
 
 export async function GET(req: Request) {
   const tenantLookup = await resolveAdminTenant(req);
@@ -29,7 +52,19 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Failed to load tenant settings" }, { status: 500 });
   }
 
-  return NextResponse.json({ settings: data || null });
+
+  const sensitive = data as Record<string, unknown> | null;
+  return NextResponse.json({
+    settings: data
+      ? {
+          ...Object.fromEntries(Object.entries(data as Record<string, unknown>).filter(([key]) => !["stripe_customer_secret_key", "stripe_customer_webhook_secret"].includes(key))),
+          stripe_customer_secret_key_set: Boolean(sensitive?.stripe_customer_secret_key),
+          stripe_customer_secret_key_hint: secretHint(sensitive?.stripe_customer_secret_key),
+          stripe_customer_webhook_secret_set: Boolean(sensitive?.stripe_customer_webhook_secret),
+          stripe_customer_webhook_secret_hint: secretHint(sensitive?.stripe_customer_webhook_secret),
+        }
+      : null,
+  });
 }
 
 export async function PATCH(req: Request) {
@@ -38,7 +73,31 @@ export async function PATCH(req: Request) {
     if (!tenantLookup.ok) return tenantLookup.error;
 
     const body = await req.json();
-    const payload = {
+
+    const { data: existingSettings } = await db
+      .from("tenant_settings")
+      .select("stripe_customer_secret_key, stripe_customer_webhook_secret, stripe_customer_payments_live")
+      .eq("tenant_id", tenantLookup.tenant.id)
+      .maybeSingle();
+
+    const stripePublishableKey = normalizeOptionalText(body?.stripeCustomerPublishableKey, 260);
+    const stripeSecretKeyInput = normalizeLongSecret(body?.stripeCustomerSecretKeyInput);
+    const stripeWebhookSecretInput = normalizeLongSecret(body?.stripeCustomerWebhookSecretInput);
+    const hasStripeSecretKey = Boolean(stripeSecretKeyInput || (existingSettings as Record<string, unknown> | null)?.stripe_customer_secret_key);
+    const hasStripeWebhookSecret = Boolean(stripeWebhookSecretInput || (existingSettings as Record<string, unknown> | null)?.stripe_customer_webhook_secret);
+    const requestedStripeCustomerPayments = normalizeBoolean(body?.enableStripeCustomerPayments) ?? false;
+    const stripeCredentialsReady = Boolean(stripePublishableKey && hasStripeSecretKey && hasStripeWebhookSecret);
+    const requestedStripeStatus = normalizeStripeConnectionStatus(body?.stripeConnectionStatus);
+    const nextStripeStatus = stripeCredentialsReady ? (requestedStripeStatus === "not_configured" ? "configured" : requestedStripeStatus) : "not_configured";
+
+    if (requestedStripeCustomerPayments && !stripeCredentialsReady) {
+      return NextResponse.json(
+        { error: "Add this tenant's Stripe publishable key, secret key and webhook secret before enabling Stripe for storefront customers." },
+        { status: 400 },
+      );
+    }
+
+    const payload: Record<string, unknown> = {
       tenant_id: tenantLookup.tenant.id,
       business_display_name: normalizeOptionalText(body?.businessDisplayName, 120),
       storefront_heading: normalizeOptionalText(body?.storefrontHeading, 160),
@@ -74,7 +133,20 @@ export async function PATCH(req: Request) {
       currency_decimal_separator: normalizeSeparator(body?.currencyDecimalSeparator),
       currency_thousands_separator: normalizeSeparator(body?.currencyThousandsSeparator),
       currency_suffix: normalizeOptionalText(body?.currencySuffix, 12),
+      enable_cash_on_collection: normalizeBoolean(body?.enableCashOnCollection) ?? true,
+      enable_cash_on_delivery: normalizeBoolean(body?.enableCashOnDelivery) ?? true,
+      enable_stripe_customer_payments: requestedStripeCustomerPayments && stripeCredentialsReady,
+      stripe_connection_status: nextStripeStatus,
+      stripe_customer_payment_mode: normalizeStripePaymentMode(body?.stripeCustomerPaymentMode),
+      stripe_customer_publishable_key: stripePublishableKey,
+      stripe_customer_account_label: normalizeOptionalText(body?.stripeCustomerAccountLabel, 120),
+      stripe_customer_test_mode: normalizeBoolean(body?.stripeCustomerTestMode) ?? true,
+      stripe_customer_setup_notes: normalizeOptionalText(body?.stripeCustomerSetupNotes, 500),
+      stripe_customer_payments_live: requestedStripeCustomerPayments && stripeCredentialsReady,
     };
+
+    if (stripeSecretKeyInput) payload.stripe_customer_secret_key = stripeSecretKeyInput;
+    if (stripeWebhookSecretInput) payload.stripe_customer_webhook_secret = stripeWebhookSecretInput;
 
     const { data, error } = await db
       .from("tenant_settings")
@@ -86,7 +158,16 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Failed to save tenant settings" }, { status: 500 });
     }
 
-    return NextResponse.json({ settings: data });
+    const safeData = Object.fromEntries(Object.entries(data as Record<string, unknown>).filter(([key]) => !["stripe_customer_secret_key", "stripe_customer_webhook_secret"].includes(key)));
+    return NextResponse.json({
+      settings: {
+        ...safeData,
+        stripe_customer_secret_key_set: Boolean(stripeSecretKeyInput || (existingSettings as Record<string, unknown> | null)?.stripe_customer_secret_key),
+        stripe_customer_secret_key_hint: secretHint(stripeSecretKeyInput || (existingSettings as Record<string, unknown> | null)?.stripe_customer_secret_key),
+        stripe_customer_webhook_secret_set: Boolean(stripeWebhookSecretInput || (existingSettings as Record<string, unknown> | null)?.stripe_customer_webhook_secret),
+        stripe_customer_webhook_secret_hint: secretHint(stripeWebhookSecretInput || (existingSettings as Record<string, unknown> | null)?.stripe_customer_webhook_secret),
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save tenant settings";
     return NextResponse.json({ error: message }, { status: 500 });

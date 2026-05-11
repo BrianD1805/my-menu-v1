@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type CustomerMe = {
   id: string;
@@ -44,31 +44,69 @@ export default function CustomerAccountHeaderActions() {
   const [customer, setCustomer] = useState<CustomerMe | null>(null);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    async function load() {
-      const startedAt = performance.now();
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 3500);
+  const loadCustomer = useCallback(async () => {
+    const startedAt = performance.now();
 
+    const tryFetch = async (timeoutMs: number) => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const res = await fetch("/api/customer/auth/me", { cache: "no-store", signal: controller.signal });
+        const res = await fetch(`/api/customer/auth/me?ts=${Date.now()}`, {
+          cache: "no-store",
+          credentials: "include",
+          headers: { "Cache-Control": "no-cache" },
+          signal: controller.signal,
+        });
         const data = await res.json().catch(() => ({}));
-        if (res.ok && data?.customer) {
-          setCustomer(data.customer);
-        } else {
-          setCustomer(null);
-        }
-      } catch {
-        setCustomer(null);
+        return { res, data };
       } finally {
         window.clearTimeout(timeout);
-        setReady(true);
-        console.info(`[Orduva load] storefront account header check: ${Math.round(performance.now() - startedAt)}ms`);
       }
-    }
+    };
 
-    void load();
+    try {
+      let result;
+      try {
+        result = await tryFetch(5500);
+      } catch {
+        await new Promise((resolve) => window.setTimeout(resolve, 850));
+        result = await tryFetch(10000);
+      }
+
+      if (result.res.ok && result.data?.customer) {
+        setCustomer(result.data.customer);
+      } else {
+        setCustomer(null);
+      }
+    } catch {
+      // Keep any existing signed-in header state during a transient PWA startup miss.
+      setCustomer((current) => current);
+    } finally {
+      setReady(true);
+      console.info(`[Orduva load] storefront account header check: ${Math.round(performance.now() - startedAt)}ms`);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadCustomer();
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadCustomer();
+    };
+    const refreshOnPageShow = () => {
+      void loadCustomer();
+    };
+
+    window.addEventListener("focus", refreshOnPageShow);
+    window.addEventListener("pageshow", refreshOnPageShow);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.removeEventListener("focus", refreshOnPageShow);
+      window.removeEventListener("pageshow", refreshOnPageShow);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [loadCustomer]);
 
   if (!ready) {
     return (

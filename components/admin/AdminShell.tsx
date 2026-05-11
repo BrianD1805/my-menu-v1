@@ -13,7 +13,6 @@ type NavItem = {
   current?: boolean;
 };
 
-
 function AdminNavIcon({ icon }: { icon: NavIcon }) {
   const common = {
     className: "h-5 w-5",

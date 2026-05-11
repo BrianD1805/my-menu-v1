@@ -4,6 +4,9 @@ import { db } from "@/lib/db";
 import {
   billingIntervalFromTenantPlanName,
   createStripeCheckoutSession,
+  getStripePlanSummary,
+  getStripePriceId,
+  maskStripePriceId,
   normaliseBillingInterval,
   planCodeFromTenantPlanName,
 } from "@/lib/stripe-checkout";
@@ -49,6 +52,8 @@ export async function POST(req: Request) {
       currencyCode,
       billingInterval,
     });
+    const priceConfig = getStripePriceId(planCode, currencyCode, billingInterval);
+    const planSummary = getStripePlanSummary(planCode, currencyCode, billingInterval);
 
     await db
       .from("tenants")
@@ -61,6 +66,10 @@ export async function POST(req: Request) {
       planCode,
       currencyCode,
       billingInterval,
+      priceEnvKey: priceConfig.envKey,
+      priceId: maskStripePriceId(priceConfig.priceId),
+      formattedAmount: planSummary.formattedAmount,
+      planName: planSummary.plan.name,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not start Stripe checkout.";

@@ -4,10 +4,19 @@ import { requireAdminPageUser } from "@/lib/admin-auth";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { calculateTenantTrialState } from "@/lib/trial";
 import { DEFAULT_MONEY_SETTINGS } from "@/lib/money";
+import { db } from "@/lib/db";
 
 export default async function AdminSettingsPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
+  const { data: stripeSecretSummary } = await db
+    .from("tenant_settings")
+    .select("stripe_customer_secret_key, stripe_customer_webhook_secret")
+    .eq("tenant_id", tenant.id)
+    .maybeSingle();
+  const stripeSecrets = stripeSecretSummary as Record<string, unknown> | null;
+  const stripeSecretKey = String(stripeSecrets?.stripe_customer_secret_key || "").trim();
+  const stripeWebhookSecret = String(stripeSecrets?.stripe_customer_webhook_secret || "").trim();
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
   const trialState = calculateTenantTrialState(tenant);
 
@@ -85,6 +94,26 @@ export default async function AdminSettingsPage() {
             DEFAULT_MONEY_SETTINGS.currencyThousandsSeparator,
           currencySuffix:
             settings?.currency_suffix ?? DEFAULT_MONEY_SETTINGS.currencySuffix,
+          enableCashOnCollection: settings?.enable_cash_on_collection !== false,
+          enableCashOnDelivery: settings?.enable_cash_on_delivery !== false,
+          enableStripeCustomerPayments: settings?.enable_stripe_customer_payments === true,
+          stripeConnectionStatus: settings?.stripe_connection_status || "not_configured",
+          stripeCustomerPaymentMode: settings?.stripe_customer_payment_mode === "stripe_connect" ? "stripe_connect" : "manual_keys",
+          stripeCustomerPublishableKey: settings?.stripe_customer_publishable_key || "",
+          stripeCustomerSecretKeyInput: "",
+          stripeCustomerSecretKeySet: Boolean(stripeSecretKey),
+          stripeCustomerSecretKeyHint: stripeSecretKey ? `••••${stripeSecretKey.slice(-4)}` : "",
+          stripeCustomerWebhookSecretInput: "",
+          stripeCustomerWebhookSecretSet: Boolean(stripeWebhookSecret),
+          stripeCustomerWebhookSecretHint: stripeWebhookSecret ? `••••${stripeWebhookSecret.slice(-4)}` : "",
+          stripeCustomerAccountLabel: settings?.stripe_customer_account_label || "",
+          stripeCustomerTestMode: settings?.stripe_customer_test_mode !== false,
+          stripeCustomerSetupNotes: settings?.stripe_customer_setup_notes || "",
+          stripeCustomerPaymentsLive: settings?.stripe_customer_payments_live === true,
+          enableYocoCustomerPayments: settings?.enable_yoco_customer_payments === true,
+          yocoConnectionStatus: settings?.yoco_connection_status || "not_configured",
+          enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,
+          mpesaConnectionStatus: settings?.mpesa_connection_status || "not_configured",
         }}
       />
     </AdminShell>

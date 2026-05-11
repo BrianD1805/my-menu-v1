@@ -15,6 +15,9 @@ type OrderRow = {
   notes: string | null;
   order_type: string | null;
   created_at: string;
+  payment_provider: string | null;
+  payment_method_label: string | null;
+  payment_status: string | null;
 };
 
 type OrderItemRow = {
@@ -47,6 +50,9 @@ function mapOrdersForPopup(
     notes: order.notes,
     orderType: order.order_type,
     createdAt: order.created_at,
+    paymentProvider: order.payment_provider,
+    paymentMethodLabel: order.payment_method_label,
+    paymentStatus: order.payment_status,
     items: (itemsByOrder[order.id] || []).map((item) => ({
       quantity: item.quantity,
       lineTotal: Number(item.line_total),
@@ -63,7 +69,7 @@ export default async function AdminOrdersPage() {
 
   const { data: orders } = await db
     .from("orders")
-    .select("id,status,total,customer_name,customer_phone,notes,order_type,created_at")
+    .select("id,status,total,customer_name,customer_phone,notes,order_type,created_at,payment_provider,payment_method_label,payment_status")
     .eq("tenant_id", tenant.id)
     .order("created_at", { ascending: false });
 
