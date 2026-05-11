@@ -369,54 +369,84 @@ export default function MenuBrowser({
   ].filter((item) => Boolean(item.href)).slice(0, 8);
   const referralSignupHref = `https://www.orduva.com/?ref_tenant=${encodeURIComponent(tenantSlug)}&ref=${encodeURIComponent(`tenant_${tenantSlug}`)}&ref_source=storefront_footer`;
 
-  useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 3500);
-
-    async function loadCustomerWelcomeName() {
+  const refreshCustomerSession = useCallback(async (options?: { initial?: boolean }) => {
+    const fetchCustomer = async (timeoutMs: number) => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const res = await fetch("/api/customer/auth/me", { cache: "no-store", signal: controller.signal });
+        const res = await fetch(`/api/customer/auth/me?ts=${Date.now()}`, {
+          cache: "no-store",
+          credentials: "include",
+          headers: { "Cache-Control": "no-cache" },
+          signal: controller.signal,
+        });
         const data = await res.json().catch(() => ({}));
-        if (!cancelled && res.ok && data?.customer) {
-          const fullName = String(data.customer.fullName || "").trim();
-          const email = String(data.customer.email || "").trim();
-          const firstName = fullName.split(/\s+/).filter(Boolean)[0] || email.split("@")[0] || null;
-          setWelcomeCustomerName(firstName);
-          setCustomerAuthStatus("signedIn");
-          setFavouritesSignedIn(true);
-        } else if (!cancelled) {
-          setWelcomeCustomerName(null);
-          setCustomerAuthStatus("signedOut");
-          setFavouritesSignedIn(false);
-          setFavouriteIds([]);
-          setFavouritesMessage(null);
-          setBuyAgainIds([]);
-          setBuyAgainMessage(null);
-        }
-      } catch {
-        if (!cancelled) {
-          setWelcomeCustomerName(null);
-          setCustomerAuthStatus("signedOut");
-          setFavouritesSignedIn(false);
-          setFavouriteIds([]);
-          setFavouritesMessage(null);
-          setBuyAgainIds([]);
-          setBuyAgainMessage(null);
-        }
+        return { res, data };
       } finally {
         window.clearTimeout(timeout);
       }
-    }
+    };
 
-    void loadCustomerWelcomeName();
+    const applySignedOut = () => {
+      setWelcomeCustomerName(null);
+      setCustomerAuthStatus("signedOut");
+      setFavouritesSignedIn(false);
+      setFavouriteIds([]);
+      setFavouritesMessage(null);
+      setBuyAgainIds([]);
+      setBuyAgainMessage(null);
+    };
+
+    try {
+      if (options?.initial) setCustomerAuthStatus("checking");
+      let result;
+      try {
+        result = await fetchCustomer(5500);
+      } catch {
+        await new Promise((resolve) => window.setTimeout(resolve, 850));
+        result = await fetchCustomer(10000);
+      }
+
+      const { res, data } = result;
+      if (res.ok && data?.customer) {
+        const fullName = String(data.customer.fullName || "").trim();
+        const email = String(data.customer.email || "").trim();
+        const firstName = fullName.split(/\s+/).filter(Boolean)[0] || email.split("@")[0] || null;
+        setWelcomeCustomerName(firstName);
+        setCustomerAuthStatus("signedIn");
+        setFavouritesSignedIn(true);
+      } else {
+        applySignedOut();
+      }
+    } catch {
+      // Installed PWAs can resume from a cached shell before cookies/API calls are
+      // ready. Do not permanently hide customer, favourites, or Buy Again after a
+      // transient startup miss; keep any previous signed-in state and retry when
+      // the app becomes visible/focused.
+      setCustomerAuthStatus((current) => (current === "checking" ? "signedOut" : current));
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshCustomerSession({ initial: true });
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refreshCustomerSession();
+    };
+    const refreshOnPageShow = () => {
+      void refreshCustomerSession();
+    };
+
+    window.addEventListener("focus", refreshOnPageShow);
+    window.addEventListener("pageshow", refreshOnPageShow);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
 
     return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-      controller.abort();
+      window.removeEventListener("focus", refreshOnPageShow);
+      window.removeEventListener("pageshow", refreshOnPageShow);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
-  }, []);
+  }, [refreshCustomerSession]);
 
   useEffect(() => {
     let cancelled = false;

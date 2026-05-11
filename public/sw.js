@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-203a';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-203a';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-203a';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-203b';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-203b';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-203b';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -139,15 +139,22 @@ async function navigationFastFallback(request) {
     return response;
   });
 
-  // For installed PWAs, return the cached shell immediately so Android does not
-  // sit on the native splash while Netlify/Next warms up. Refresh in background.
+  // Ver-0.203B: use a short network-first window for navigations. Returning
+  // the cached shell immediately made installed PWAs look fast, but it could
+  // also leave customer session panels, favourites, and Buy Again stuck until
+  // the user performed a hard refresh. Give the live page a fair chance first,
+  // then fall back to cache only when the network is slow/offline.
   if (cached) {
-    network.catch(() => undefined);
-    return cached;
+    try {
+      return await Promise.race([network, timeoutPromise(1800)]);
+    } catch {
+      network.catch(() => undefined);
+      return cached;
+    }
   }
 
   try {
-    return await Promise.race([network, timeoutPromise(3500)]);
+    return await Promise.race([network, timeoutPromise(4500)]);
   } catch {
     return openingFallbackResponse();
   }
@@ -226,4 +233,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.203A owner dashboard billing overview cache bump
+// Orduva Ver-0.203B storefront PWA customer session cache bump
