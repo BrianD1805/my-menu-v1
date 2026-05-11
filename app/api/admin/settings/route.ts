@@ -142,7 +142,7 @@ export async function PATCH(req: Request) {
       stripe_customer_account_label: normalizeOptionalText(body?.stripeCustomerAccountLabel, 120),
       stripe_customer_test_mode: normalizeBoolean(body?.stripeCustomerTestMode) ?? true,
       stripe_customer_setup_notes: normalizeOptionalText(body?.stripeCustomerSetupNotes, 500),
-      stripe_customer_payments_live: Boolean((existingSettings as Record<string, unknown> | null)?.stripe_customer_payments_live),
+      stripe_customer_payments_live: requestedStripeCustomerPayments && stripeCredentialsReady,
     };
 
     if (stripeSecretKeyInput) payload.stripe_customer_secret_key = stripeSecretKeyInput;

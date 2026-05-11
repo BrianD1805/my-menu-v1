@@ -471,6 +471,12 @@ useEffect(() => {
 
       await saveCheckoutDetailsToProfile();
 
+      if (selectedPaymentOption.online && data.stripeCheckoutUrl) {
+        setErrorMessage("");
+        window.location.assign(data.stripeCheckoutUrl);
+        return;
+      }
+
       clearCart(tenantSlug);
       setItems([]);
       setSuccessState({
@@ -799,7 +805,7 @@ useEffect(() => {
             disabled={loading || !cartRows.length || checkoutBlockedByTrial || !selectedPaymentOption}
             className="rounded-xl px-5 py-3 text-white disabled:opacity-50" style={{ backgroundColor: checkoutPrimary }}
           >
-            {checkoutBlockedByTrial ? "Checkout paused" : loading ? "Placing order..." : selectedPaymentOption?.online ? "Continue to payment" : "Confirm order"}
+            {checkoutBlockedByTrial ? "Checkout paused" : loading ? selectedPaymentOption?.online ? "Connecting to secure payment..." : "Placing order..." : selectedPaymentOption?.online ? "Continue to secure payment" : "Confirm order"}
           </button>
 
           <p className="text-xs leading-5 text-gray-500">

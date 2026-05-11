@@ -8,6 +8,7 @@ import { enqueueNotificationEvent } from "@/lib/notifications";
 import { sendAdminPushForTenant } from "@/lib/web-push";
 import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/trial";
 import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
+import { createTenantStripeOrderCheckoutSession } from "@/lib/storefront-stripe";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -139,9 +140,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (selectedPayment.online) {
+    if (selectedPayment.online && selectedPayment.id !== "stripe") {
       return NextResponse.json(
-        { error: "Online payments are not enabled for this store yet. Please choose a cash payment option." },
+        { error: "This online payment provider is not live for this store yet. Please choose another payment option." },
         { status: 400 }
       );
     }
@@ -161,7 +162,7 @@ export async function POST(req: Request) {
         notes: body.notes?.trim() || null,
         payment_provider: selectedPayment.id,
         payment_method_label: selectedPayment.label,
-        payment_status: "pay_on_fulfilment",
+        payment_status: selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
       })
       .select()
       .single();
@@ -215,6 +216,43 @@ export async function POST(req: Request) {
 
     await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
 
+    let stripeCheckoutUrl: string | null = null;
+    let stripeCheckoutSessionId: string | null = null;
+    if (selectedPayment.id === "stripe") {
+      try {
+        const checkoutSession = await createTenantStripeOrderCheckoutSession({
+          req,
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          tenantName: branding.displayName,
+          orderId: order.id,
+          customerName: body.customerName.trim(),
+          customerPhone: body.customerPhone.trim(),
+          total,
+          currencyCode: branding.currencyCode || settings?.currency_code || "GBP",
+        });
+        stripeCheckoutUrl = checkoutSession.url;
+        stripeCheckoutSessionId = checkoutSession.sessionId;
+        await db
+          .from("orders")
+          .update({
+            payment_checkout_session_id: checkoutSession.sessionId,
+            payment_intent_id: checkoutSession.paymentIntentId,
+            payment_reference: checkoutSession.sessionId,
+          })
+          .eq("id", order.id)
+          .eq("tenant_id", tenant.id);
+      } catch (stripeError) {
+        await db
+          .from("orders")
+          .update({ payment_status: "failed" })
+          .eq("id", order.id)
+          .eq("tenant_id", tenant.id);
+        const message = stripeError instanceof Error ? stripeError.message : "Stripe checkout could not be started.";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+    }
+
     await Promise.allSettled([
       enqueueNotificationEvent({
         tenantId: tenant.id,
@@ -222,7 +260,7 @@ export async function POST(req: Request) {
         audience: "admin",
         eventType: "new_order",
         title: "New order received",
-        body: `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        body: selectedPayment.online ? `${body.customerName.trim()} started a Stripe payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
         payload: { orderId: order.id, route: "/admin/orders" },
       }),
       enqueueNotificationEvent({
@@ -231,18 +269,27 @@ export async function POST(req: Request) {
         audience: "customer",
         eventType: "order_received",
         title: "Order received",
-        body: "Your order has been received and is waiting for confirmation.",
+        body: selectedPayment.online ? "Your order has been received and is waiting for secure card payment." : "Your order has been received and is waiting for confirmation.",
         payload: { orderId: order.id, status: "new" },
       }),
       sendAdminPushForTenant(tenant.id, {
         title: "New order received",
-        body: `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        body: selectedPayment.online ? `${body.customerName.trim()} started a Stripe payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
         url: "/admin/orders",
         tag: `orduva-order-${order.id}`,
       }),
     ]);
 
-    return NextResponse.json({ ok: true, orderId: order.id, customerAccountId: body.customerAccountId?.trim() || null, paymentProvider: selectedPayment.id, paymentMethodLabel: selectedPayment.label, paymentStatus: "pay_on_fulfilment" });
+    return NextResponse.json({
+      ok: true,
+      orderId: order.id,
+      customerAccountId: body.customerAccountId?.trim() || null,
+      paymentProvider: selectedPayment.id,
+      paymentMethodLabel: selectedPayment.label,
+      paymentStatus: selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
+      stripeCheckoutUrl,
+      stripeCheckoutSessionId,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

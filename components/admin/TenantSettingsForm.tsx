@@ -1098,7 +1098,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Stripe customer payments</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">Save this tenant's own Stripe keys now. Storefront Stripe checkout will stay hidden from customers until the Stripe order-payment build switches the provider live.</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Save this tenant's own Stripe keys and webhook secret. Once enabled, Stripe appears as a customer payment option on the storefront checkout.</p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <button
@@ -1132,7 +1132,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 </Field>
                 <Field label={form.stripeCustomerWebhookSecretSet ? `Tenant webhook secret saved (${form.stripeCustomerWebhookSecretHint || "saved"})` : "Tenant Stripe webhook secret"}>
                   <input value={form.stripeCustomerWebhookSecretInput} onChange={(e) => update("stripeCustomerWebhookSecretInput", e.target.value)} placeholder={form.stripeCustomerWebhookSecretSet ? "Leave blank to keep saved webhook secret" : "whsec_..."} className="input" autoComplete="off" />
-                  <p className="mt-2 text-xs leading-5 text-amber-700">Webhook endpoint URL: not active yet. The live tenant Stripe checkout build will show the exact URL before this is switched on.</p>
+                  <p className="mt-2 text-xs leading-5 text-amber-700">Webhook endpoint URL: https://www.orduva.com/api/storefront/stripe/webhook</p>
                 </Field>
                 <Field label="Setup notes">
                   <input value={form.stripeCustomerSetupNotes} onChange={(e) => update("stripeCustomerSetupNotes", e.target.value)} placeholder="Example: Tenant live Stripe account added by owner" className="input" />
@@ -1157,7 +1157,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                     disabled={!stripeCredentialReady}
                     className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                   />
-                  <span><strong>Enable Stripe for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires this tenant's publishable key, secret key and webhook secret. Stripe remains hidden from the customer checkout until the next Stripe order-payment build makes it live.</span></span>
+                  <span><strong>Enable Stripe for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires this tenant's publishable key, secret key and webhook secret. When enabled, Stripe appears on the customer checkout for this store.</span></span>
                 </label>
               </div>
 
@@ -1524,11 +1524,11 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
     },
     {
       title: "6. Do not use the Orduva owner billing webhook URL",
-      body: "The tenant storefront payment webhook endpoint is not active yet. Do not use /api/billing/stripe/webhook, because that is for tenants paying Orduva subscriptions. The exact customer order payment webhook URL will be shown once the live tenant Stripe checkout build is complete.",
+      body: "Use https://www.orduva.com/api/storefront/stripe/webhook as the endpoint URL. Do not use /api/billing/stripe/webhook, because that is for tenants paying Orduva subscriptions.",
     },
     {
       title: "7. Events to choose when the endpoint is live",
-      body: "When Orduva shows the final endpoint URL, create the Stripe webhook endpoint and select these events: checkout.session.completed, checkout.session.expired, payment_intent.succeeded, payment_intent.payment_failed and charge.refunded.",
+      body: "Create the Stripe webhook endpoint using the URL shown in Orduva, then select these events: checkout.session.completed, checkout.session.expired, payment_intent.succeeded, payment_intent.payment_failed and charge.refunded.",
     },
     {
       title: "8. Reveal the webhook signing secret",
@@ -1536,7 +1536,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
     },
     {
       title: "9. Save, then enable Stripe later",
-      body: "Save the settings first. Stripe customer payments should stay disabled until the endpoint URL is available and the tenant checkout build has been tested.",
+      body: "Save the settings first. Keep Stripe disabled until the tenant keys, webhook endpoint and webhook signing secret have all been added and tested.",
     },
   ];
 
@@ -1587,12 +1587,12 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
-            <strong>Webhook endpoint URL:</strong> not active yet. The tenant storefront Stripe checkout route has not been switched on in this build, so do not create the webhook endpoint yet.
+            <strong>Webhook endpoint URL:</strong> https://www.orduva.com/api/storefront/stripe/webhook
             <span className="mt-2 block"><strong>Do not use:</strong> https://www.orduva.com/api/billing/stripe/webhook — that endpoint is only for Orduva subscription billing.</span>
           </div>
 
           <div className="mt-4 rounded-[22px] border border-indigo-200 bg-indigo-50 p-4 text-xs leading-5 text-indigo-950">
-            <p className="font-black uppercase tracking-[0.16em] text-indigo-700">When the endpoint is live</p>
+            <p className="font-black uppercase tracking-[0.16em] text-indigo-700">Required Stripe webhook events</p>
             <p className="mt-2">Use destination name <strong>Orduva - Customer Orders</strong> and select these events:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li><span className="font-mono">checkout.session.completed</span></li>
