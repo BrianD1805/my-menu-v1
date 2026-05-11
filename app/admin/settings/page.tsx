@@ -9,11 +9,19 @@ import { db } from "@/lib/db";
 export default async function AdminSettingsPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
-  const { data: stripeSecretSummary } = await db
+  const [{ data: stripeSecretSummary }, { data: checklistVisibilityRow }] = await Promise.all([
+    db
     .from("tenant_settings")
     .select("stripe_customer_secret_key, stripe_customer_webhook_secret")
     .eq("tenant_id", tenant.id)
-    .maybeSingle();
+    .maybeSingle(),
+    db
+      .from("tenant_launch_checklists")
+      .select("status")
+      .eq("tenant_id", tenant.id)
+      .eq("checklist_key", "__dismissed")
+      .maybeSingle(),
+  ]);
   const stripeSecrets = stripeSecretSummary as Record<string, unknown> | null;
   const stripeSecretKey = String(stripeSecrets?.stripe_customer_secret_key || "").trim();
   const stripeWebhookSecret = String(stripeSecrets?.stripe_customer_webhook_secret || "").trim();
@@ -62,6 +70,7 @@ export default async function AdminSettingsPage() {
           footerBlurb: settings?.footer_blurb || "",
           footerNotice: settings?.footer_notice || "",
           showOrduvaReferralAd: settings?.show_orduva_referral_ad !== false,
+          showAdminLaunchChecklist: String(checklistVisibilityRow?.status || "").toLowerCase() !== "complete",
           socialFacebookUrl: settings?.social_facebook_url || "",
           socialInstagramUrl: settings?.social_instagram_url || "",
           socialTikTokUrl: settings?.social_tiktok_url || "",

@@ -25,6 +25,7 @@ type FormState = {
   footerBlurb: string;
   footerNotice: string;
   showOrduvaReferralAd: boolean;
+  showAdminLaunchChecklist: boolean;
   socialFacebookUrl: string;
   socialInstagramUrl: string;
   socialTikTokUrl: string;
@@ -482,10 +483,11 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const brandingDirty = formValueChanged(["businessDisplayName", "adminHeadingLabel", "storefrontHeading", "storefrontSubheading"]);
   const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
+  const adminWorkspaceDirty = formValueChanged(["showAdminLaunchChecklist"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
   const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty;
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -703,6 +705,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to save settings");
+
+      if (adminWorkspaceDirty) {
+        const checklistResponse = await fetch("/api/admin/launch-checklist", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checklistKey: "__dismissed", status: form.showAdminLaunchChecklist ? "pending" : "complete" }),
+        });
+        const checklistPayload = await checklistResponse.json().catch(() => ({}));
+        if (!checklistResponse.ok) throw new Error(checklistPayload?.error || "Failed to save admin checklist setting");
+      }
       const nextStripeSecretSet = form.stripeCustomerSecretKeySet || Boolean(form.stripeCustomerSecretKeyInput.trim());
       const nextStripeWebhookSet = form.stripeCustomerWebhookSecretSet || Boolean(form.stripeCustomerWebhookSecretInput.trim());
       const savedPayload = {
@@ -825,6 +837,17 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             </p>
           </div>
         </div>
+
+        <Section id="admin-workspace" title="Admin workspace" dirty={adminWorkspaceDirty} saving={saving}>
+          <div className="rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
+            <ToggleRow
+              label="Show new client setup checklist"
+              help="Switch this off once the store owner no longer needs the launch checklist button in the tenant admin header. You can switch it back on here later."
+              checked={form.showAdminLaunchChecklist}
+              onChange={(checked) => update("showAdminLaunchChecklist", checked)}
+            />
+          </div>
+        </Section>
 
         <Section id="logo-and-favicon" title="Logo and favicon" showSave={false}>
           <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
@@ -1445,6 +1468,7 @@ function UploadField({
 }
 
 const SETTINGS_MENU_ITEMS = [
+  { id: "admin-workspace", title: "Admin workspace", help: "Show or hide the new client setup checklist." },
   { id: "logo-and-favicon", title: "Logo and favicon", help: "Upload or replace the store logo and browser icon." },
   { id: "branding-and-wording", title: "Branding and wording", help: "Business name, storefront heading and admin labels." },
   { id: "theme-presets", title: "Theme presets", help: "Choose a ready-made colour starting point." },

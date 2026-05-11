@@ -109,21 +109,24 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
     const completed = items.filter((item) => item.status === "complete").length;
     return { completed, total };
   }, [payload]);
+  const showChecklistButton = !loadingChecklist && !payload?.dismissed;
 
   return (
     <>
       <div className="flex shrink-0 items-stretch gap-1.5 sm:gap-2 sm:items-center sm:justify-end">
-        <button
-          type="button"
-          onClick={() => setModal("checklist")}
-          className="admin-pressable inline-flex min-h-[48px] min-w-[64px] flex-col items-center justify-center rounded-[18px] border border-[#0E0E10]/10 bg-[#FFF7F0] px-2.5 py-2 text-[#0E0E10] shadow-sm transition hover:-translate-y-[1px] hover:border-[#FF6A3D]/35 hover:bg-white sm:min-h-[60px] sm:min-w-[90px]"
-          aria-label="Open launch checklist"
-        >
-          <span className="text-sm font-black leading-none text-[#C84F2A] sm:text-base">
-            {loadingChecklist ? "…" : `${checklistSummary.completed}/${checklistSummary.total}`}
-          </span>
-          <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] text-[#5C5F66] sm:text-[11px]">Checklist</span>
-        </button>
+        {showChecklistButton ? (
+          <button
+            type="button"
+            onClick={() => setModal("checklist")}
+            className="admin-pressable inline-flex min-h-[48px] min-w-[64px] flex-col items-center justify-center rounded-[18px] border border-[#0E0E10]/10 bg-[#FFF7F0] px-2.5 py-2 text-[#0E0E10] shadow-sm transition hover:-translate-y-[1px] hover:border-[#FF6A3D]/35 hover:bg-white sm:min-h-[60px] sm:min-w-[90px]"
+            aria-label="Open launch checklist"
+          >
+            <span className="text-sm font-black leading-none text-[#C84F2A] sm:text-base">
+              {loadingChecklist ? "…" : `${checklistSummary.completed}/${checklistSummary.total}`}
+            </span>
+            <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] text-[#5C5F66] sm:text-[11px]">Checklist</span>
+          </button>
+        ) : null}
 
         <button
           type="button"
