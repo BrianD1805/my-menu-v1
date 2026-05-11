@@ -57,6 +57,16 @@ type ThemePreset = {
 
 const LOGO_PALETTE_PRESET_NAME = "Logo palette";
 
+const SETTINGS_ANCHORS: Array<{ id: string; title: string; description: string; keywords: string }> = [
+  { id: "logo-and-favicon", title: "Logo and favicon", description: "Upload or change the store logo, favicon and saved asset links.", keywords: "logo favicon icon browser tab app icon upload image" },
+  { id: "branding-and-wording", title: "Branding and wording", description: "Business display name, admin heading, welcome heading and storefront wording.", keywords: "business name admin heading storefront heading welcome text wording" },
+  { id: "theme-presets", title: "Theme presets", description: "Choose the main colour palette or generate suggested colours from the logo.", keywords: "theme preset palette colours colors logo palette suggested" },
+  { id: "per-item-storefront-colours", title: "Per-item storefront colours", description: "Fine-tune header, welcome, product cards, favourites and footer colours.", keywords: "header welcome products product cards favourites footer add button hearts price colours colors" },
+  { id: "business-contact-details", title: "Business contact details", description: "Phone, WhatsApp, email, address, footer text, referral advert and social links.", keywords: "phone whatsapp email address footer referral advert socials facebook instagram tiktok x website" },
+  { id: "advanced-currency-display", title: "Advanced currency display", description: "Currency name, code, symbol, decimals and number formatting.", keywords: "currency money symbol code decimal thousands separator price" },
+];
+
+
 const THEME_PRESETS: ThemePreset[] = [
   makePreset("Premium Blue & Orange", "Clean, professional and tech-led.", "#336699", "#F28C28", "#F3F8FC", "#BED3E8", "#16283A"),
   makePreset("Forest Green & Gold", "Warm, natural and restaurant-friendly.", "#1F5C3B", "#D8A63A", "#F4F7EF", "#C9D8B8", "#1D2B22"),
@@ -434,6 +444,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
+  const [settingsNavOpen, setSettingsNavOpen] = useState(true);
+  const [settingsSearch, setSettingsSearch] = useState("");
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -453,6 +465,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     currencyThousandsSeparator: form.currencyThousandsSeparator || ",",
     currencySuffix: form.currencySuffix,
   };
+
+  const visibleSettingsAnchors = useMemo(() => {
+    const query = settingsSearch.trim().toLowerCase();
+    if (!query) return SETTINGS_ANCHORS;
+    return SETTINGS_ANCHORS.filter((item) => `${item.title} ${item.description} ${item.keywords}`.toLowerCase().includes(query));
+  }, [settingsSearch]);
+
+  function jumpToSettingsSection(id: string) {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   const savedTheme = normaliseTheme(savedForm.storefrontTheme, savedForm);
   const formValueChanged = (keys: Array<keyof FormState>) => keys.some((key) => JSON.stringify(form[key]) !== JSON.stringify(savedForm[key]));
@@ -755,7 +779,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </p>
         </div>
 
-        <Section title="Logo and favicon" showSave={false}>
+        <SettingsAnchorPanel
+          open={settingsNavOpen}
+          search={settingsSearch}
+          items={visibleSettingsAnchors}
+          onToggle={() => setSettingsNavOpen((current) => !current)}
+          onSearch={setSettingsSearch}
+          onJump={jumpToSettingsSection}
+        />
+
+        <Section id="logo-and-favicon" title="Logo and favicon" showSave={false}>
           <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
             Logo and favicon uploads save automatically. No Save button is needed for this section.
           </div>
@@ -822,7 +855,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Theme presets" dirty={themeDirty} saving={saving}>
+        <Section id="theme-presets" title="Theme presets" dirty={themeDirty} saving={saving}>
           <div className="mb-4 rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
             <p className="text-sm font-semibold text-slate-900">
               Active preset: {activePreset ? `${activePreset.name}${theme.customised ? " — customised" : ""}` : "Custom"}
@@ -858,7 +891,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Per-item storefront colours" showSave={false}>
+        <Section id="per-item-storefront-colours" title="Per-item storefront colours" showSave={false}>
           <div className="space-y-4">
             {THEME_GROUPS.map((group) => {
               const isOpen = openThemeGroup === group.id;
@@ -945,7 +978,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Business contact details" dirty={contactDirty} saving={saving}>
+        <Section id="business-contact-details" title="Business contact details" dirty={contactDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Contact phone"><input value={form.contactPhone} onChange={(e) => update("contactPhone", e.target.value)} className="input" placeholder="+254..." /></Field>
             <Field label="WhatsApp"><input value={form.contactWhatsApp} onChange={(e) => update("contactWhatsApp", e.target.value)} className="input" placeholder="+254..." /></Field>
@@ -981,7 +1014,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section title="Advanced currency display" dirty={currencyDirty} saving={saving}>
+        <Section id="advanced-currency-display" title="Advanced currency display" dirty={currencyDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="input" /></Field>
             <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="input uppercase" maxLength={3} /></Field>
@@ -1071,6 +1104,70 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 faviconUrl={form.faviconUrl}
               />
             ) : renderSuggestedColoursPanel(true)}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function SettingsAnchorPanel({
+  open,
+  search,
+  items,
+  onToggle,
+  onSearch,
+  onJump,
+}: {
+  open: boolean;
+  search: string;
+  items: typeof SETTINGS_ANCHORS;
+  onToggle: () => void;
+  onSearch: (value: string) => void;
+  onJump: (id: string) => void;
+}) {
+  return (
+    <div className="mb-5 overflow-hidden rounded-[24px] border border-orange-100 bg-orange-50/80 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left sm:px-5"
+      >
+        <span>
+          <span className="block text-xs font-black uppercase tracking-[0.18em] text-orange-800">Settings search</span>
+          <span className="mt-1 block text-sm font-semibold text-slate-900">Jump straight to the section you need</span>
+        </span>
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-lg font-black text-slate-700 shadow-sm">
+          {open ? "−" : "+"}
+        </span>
+      </button>
+      {open ? (
+        <div className="border-t border-orange-100 bg-white/70 px-4 py-4 sm:px-5">
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">⌕</span>
+            <input
+              value={search}
+              onChange={(event) => onSearch(event.target.value)}
+              className="w-full rounded-2xl border border-orange-100 bg-white py-3 pl-9 pr-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+              placeholder="Search settings, colours, WhatsApp, currency..."
+            />
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {items.length ? items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onJump(item.id)}
+                className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition hover:border-orange-200 hover:bg-orange-50"
+              >
+                <span className="block text-sm font-black text-slate-950">{item.title}</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-500">{item.description}</span>
+              </button>
+            )) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-5 text-center text-sm font-semibold text-slate-500 sm:col-span-2">
+                No matching settings sections found.
+              </div>
+            )}
           </div>
         </div>
       ) : null}
