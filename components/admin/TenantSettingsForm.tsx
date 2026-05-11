@@ -40,26 +40,6 @@ type FormState = {
   currencyDecimalSeparator: string;
   currencyThousandsSeparator: string;
   currencySuffix: string;
-  enableCashOnCollection: boolean;
-  enableCashOnDelivery: boolean;
-  enableStripeCustomerPayments: boolean;
-  stripeConnectionStatus: string;
-  stripeCustomerPaymentMode: "manual_keys" | "stripe_connect";
-  stripeCustomerPublishableKey: string;
-  stripeCustomerSecretKeyInput: string;
-  stripeCustomerSecretKeySet: boolean;
-  stripeCustomerSecretKeyHint: string;
-  stripeCustomerWebhookSecretInput: string;
-  stripeCustomerWebhookSecretSet: boolean;
-  stripeCustomerWebhookSecretHint: string;
-  stripeCustomerAccountLabel: string;
-  stripeCustomerTestMode: boolean;
-  stripeCustomerSetupNotes: string;
-  stripeCustomerPaymentsLive: boolean;
-  enableYocoCustomerPayments: boolean;
-  yocoConnectionStatus: string;
-  enableMpesaCustomerPayments: boolean;
-  mpesaConnectionStatus: string;
 };
 
 type PreviewTarget = "global" | "header" | "welcome" | "products" | "favourites" | "footer";
@@ -453,10 +433,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const themePresetsRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
-  const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
-  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
-  const settingsTopRef = useRef<HTMLDivElement | null>(null);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -483,9 +460,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const themeDirty = JSON.stringify(theme) !== JSON.stringify(savedTheme) || formValueChanged(["primaryColor", "accentColor", "backgroundTint", "borderColor", "textColor"]);
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
-  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes"]);
-  const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty;
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -643,18 +618,6 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     }, 50);
   }
 
-  function scrollToSettingsSection(id: string) {
-    setSettingsMenuOpen(false);
-    window.setTimeout(() => {
-      const target = document.getElementById(id);
-      target?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
-  }
-
-  function scrollSettingsToTop() {
-    settingsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   async function uploadAsset(file: File, kind: "logo" | "favicon") {
     const setUploading = kind === "logo" ? setUploadingLogo : setUploadingFavicon;
     const label = kind === "logo" ? "logo" : "favicon";
@@ -703,19 +666,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Failed to save settings");
-      const nextStripeSecretSet = form.stripeCustomerSecretKeySet || Boolean(form.stripeCustomerSecretKeyInput.trim());
-      const nextStripeWebhookSet = form.stripeCustomerWebhookSecretSet || Boolean(form.stripeCustomerWebhookSecretInput.trim());
-      const savedPayload = {
-        ...form,
-        storefrontTheme: theme,
-        stripeConnectionStatus: stripeCredentialReady ? (form.stripeConnectionStatus === "not_configured" ? "configured" : form.stripeConnectionStatus || "configured") : "not_configured",
-        stripeCustomerSecretKeyInput: "",
-        stripeCustomerSecretKeySet: nextStripeSecretSet,
-        stripeCustomerSecretKeyHint: nextStripeSecretSet ? form.stripeCustomerSecretKeyHint || "saved" : "",
-        stripeCustomerWebhookSecretInput: "",
-        stripeCustomerWebhookSecretSet: nextStripeWebhookSet,
-        stripeCustomerWebhookSecretHint: nextStripeWebhookSet ? form.stripeCustomerWebhookSecretHint || "saved" : "",
-      };
+      const savedPayload = { ...form, storefrontTheme: theme };
       setForm(savedPayload);
       setSavedForm(savedPayload);
       setTone("success");
@@ -796,37 +747,15 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] xl:items-start">
       <form onSubmit={onSubmit} className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-        <div ref={settingsTopRef} className="mb-6 scroll-mt-28">
-          <div className="mb-5 rounded-[24px] border border-orange-200/70 bg-gradient-to-br from-orange-50 via-white to-slate-50 p-4 shadow-[0_16px_38px_rgba(15,23,42,0.07)] sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-700">Store workspace</p>
-                <h2 className="mt-1 text-lg font-black text-slate-950 sm:text-xl">Settings shortcuts</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  Jump straight to the part of settings you want to work on, instead of scrolling through the full page.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSettingsMenuOpen(true)}
-                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-orange-900 shadow-[0_12px_28px_rgba(255,106,61,0.12)] transition hover:-translate-y-[1px] hover:border-orange-300 hover:bg-orange-50"
-              >
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 text-sm text-orange-800">☰</span>
-                Settings menu
-              </button>
-            </div>
-          </div>
-
+        <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
-          <div className="mt-2">
-            <h2 className="text-2xl font-bold text-slate-900">Storefront branding and theme editor</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Choose a preset as a starting point, then fine-tune each visible storefront section. Draft colours update the preview automatically.
-            </p>
-          </div>
+          <h2 className="mt-2 text-2xl font-bold text-slate-900">Storefront branding and theme editor</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Choose a preset as a starting point, then fine-tune each visible storefront section. Draft colours update the preview automatically.
+          </p>
         </div>
 
-        <Section id="logo-and-favicon" title="Logo and favicon" showSave={false}>
+        <Section title="Logo and favicon" showSave={false}>
           <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
             Logo and favicon uploads save automatically. No Save button is needed for this section.
           </div>
@@ -893,7 +822,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section id="theme-presets" title="Theme presets" dirty={themeDirty} saving={saving}>
+        <Section title="Theme presets" dirty={themeDirty} saving={saving}>
           <div className="mb-4 rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
             <p className="text-sm font-semibold text-slate-900">
               Active preset: {activePreset ? `${activePreset.name}${theme.customised ? " — customised" : ""}` : "Custom"}
@@ -929,7 +858,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section id="per-item-storefront-colours" title="Per-item storefront colours" showSave={false}>
+        <Section title="Per-item storefront colours" showSave={false}>
           <div className="space-y-4">
             {THEME_GROUPS.map((group) => {
               const isOpen = openThemeGroup === group.id;
@@ -1016,7 +945,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-        <Section id="business-contact-details" title="Business contact details" dirty={contactDirty} saving={saving}>
+        <Section title="Business contact details" dirty={contactDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Contact phone"><input value={form.contactPhone} onChange={(e) => update("contactPhone", e.target.value)} className="input" placeholder="+254..." /></Field>
             <Field label="WhatsApp"><input value={form.contactWhatsApp} onChange={(e) => update("contactWhatsApp", e.target.value)} className="input" placeholder="+254..." /></Field>
@@ -1052,140 +981,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </Section>
 
-
-
-        <Section id="storefront-payment-options" title="Storefront payment options" dirty={paymentDirty} saving={saving}>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
-              <label className="flex items-start justify-between gap-4">
-                <span>
-                  <span className="block text-sm font-black text-slate-900">Cash on collection</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-600">Allow customers collecting their order to pay the store directly on collection.</span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={form.enableCashOnCollection}
-                  onChange={(e) => update("enableCashOnCollection", e.target.checked)}
-                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200"
-                />
-              </label>
-            </div>
-            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
-              <label className="flex items-start justify-between gap-4">
-                <span>
-                  <span className="block text-sm font-black text-slate-900">Cash on delivery</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-600">Allow delivery customers to pay the store directly when the order arrives.</span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={form.enableCashOnDelivery}
-                  onChange={(e) => update("enableCashOnDelivery", e.target.checked)}
-                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200"
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <p className="text-sm font-black uppercase tracking-[0.16em] text-slate-600">Online payment providers</p>
-            <p className="mt-2 text-xs leading-5 text-slate-600">These settings belong to the store owner. They do not use the Orduva owner Stripe account that collects SaaS subscriptions.</p>
-            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950">
-              <strong>Important:</strong> each store must use its own payment provider account. For Stripe, use the tenant's own Stripe keys, not the Orduva subscription billing keys.
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-[22px] border border-indigo-100 bg-white p-4 text-sm shadow-sm">
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className="font-black text-slate-950">Stripe customer payments</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">Save this tenant's own Stripe keys and webhook secret. Once enabled, Stripe appears as a customer payment option on the storefront checkout.</p>
-                </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setStripeGuideOpen(true)}
-                    className="inline-flex min-h-9 items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-2 text-[11px] font-black text-indigo-800 transition hover:bg-indigo-100"
-                  >
-                    Help me find these keys
-                  </button>
-                  <span className={`w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
-                    {stripeCredentialReady ? "credentials saved" : "not configured"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <Field label="Stripe setup mode">
-                  <select value={form.stripeCustomerPaymentMode} onChange={(e) => update("stripeCustomerPaymentMode", e.target.value as FormState["stripeCustomerPaymentMode"])} className="input">
-                    <option value="manual_keys">Tenant Stripe keys</option>
-                    <option value="stripe_connect">Stripe Connect - later</option>
-                  </select>
-                </Field>
-                <Field label="Account label / business name">
-                  <input value={form.stripeCustomerAccountLabel} onChange={(e) => update("stripeCustomerAccountLabel", e.target.value)} placeholder="Example: ZimZa Express Stripe" className="input" />
-                </Field>
-                <Field label="Tenant Stripe publishable key">
-                  <input value={form.stripeCustomerPublishableKey} onChange={(e) => update("stripeCustomerPublishableKey", e.target.value)} placeholder="pk_test_... or pk_live_..." className="input" autoComplete="off" />
-                </Field>
-                <Field label={form.stripeCustomerSecretKeySet ? `Tenant secret key saved (${form.stripeCustomerSecretKeyHint || "saved"})` : "Tenant Stripe secret key"}>
-                  <input value={form.stripeCustomerSecretKeyInput} onChange={(e) => update("stripeCustomerSecretKeyInput", e.target.value)} placeholder={form.stripeCustomerSecretKeySet ? "Leave blank to keep saved secret key" : "sk_test_... or sk_live_..."} className="input" autoComplete="off" />
-                </Field>
-                <Field label={form.stripeCustomerWebhookSecretSet ? `Tenant webhook secret saved (${form.stripeCustomerWebhookSecretHint || "saved"})` : "Tenant Stripe webhook secret"}>
-                  <input value={form.stripeCustomerWebhookSecretInput} onChange={(e) => update("stripeCustomerWebhookSecretInput", e.target.value)} placeholder={form.stripeCustomerWebhookSecretSet ? "Leave blank to keep saved webhook secret" : "whsec_..."} className="input" autoComplete="off" />
-                  <p className="mt-2 text-xs leading-5 text-amber-700">Webhook endpoint URL: https://www.orduva.com/api/storefront/stripe/webhook</p>
-                </Field>
-                <Field label="Setup notes">
-                  <input value={form.stripeCustomerSetupNotes} onChange={(e) => update("stripeCustomerSetupNotes", e.target.value)} placeholder="Example: Tenant live Stripe account added by owner" className="input" />
-                </Field>
-              </div>
-
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={form.stripeCustomerTestMode}
-                    onChange={(e) => update("stripeCustomerTestMode", e.target.checked)}
-                    className="mt-1 h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-200"
-                  />
-                  <span><strong className="text-slate-900">Test mode credentials</strong><span className="mt-1 block text-xs leading-5 text-slate-600">Use test keys until the tenant is ready for real customer payments.</span></span>
-                </label>
-                <label className={`flex items-start gap-3 rounded-2xl border p-3 text-sm ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
-                  <input
-                    type="checkbox"
-                    checked={form.enableStripeCustomerPayments}
-                    onChange={(e) => update("enableStripeCustomerPayments", e.target.checked)}
-                    disabled={!stripeCredentialReady}
-                    className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
-                  />
-                  <span><strong>Enable Stripe for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires this tenant's publishable key, secret key and webhook secret. When enabled, Stripe appears on the customer checkout for this store.</span></span>
-                </label>
-              </div>
-
-              {!stripeCredentialReady ? (
-                <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Add this tenant's Stripe publishable key, secret key and webhook secret before enabling Stripe.</p>
-              ) : null}
-            </div>
-
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {[
-                { name: "Yoco", enabled: form.enableYocoCustomerPayments, status: form.yocoConnectionStatus, note: "Card/local payments for South Africa." },
-                { name: "M-Pesa / Pesapal", enabled: form.enableMpesaCustomerPayments, status: form.mpesaConnectionStatus, note: "Mobile money-focused payments for Kenya." },
-              ].map((provider) => (
-                <div key={provider.name} className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-bold text-slate-950">{provider.name}</p>
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                      {provider.enabled ? provider.status : "not configured"}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs leading-5 text-slate-600">{provider.note}</p>
-                  <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700">Coming in a later provider setup build</p>
-                </div>
-              ))}
-            </div>
-        </Section>
-
-        <Section id="advanced-currency-display" title="Advanced currency display" dirty={currencyDirty} saving={saving}>
+        <Section title="Advanced currency display" dirty={currencyDirty} saving={saving}>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="input" /></Field>
             <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="input uppercase" maxLength={3} /></Field>
@@ -1251,26 +1047,6 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={scrollSettingsToTop}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5.75rem)] right-4 z-[80] inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/80 bg-white/90 text-slate-800 shadow-[0_16px_42px_rgba(15,23,42,0.20)] backdrop-blur transition hover:-translate-y-[1px] hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800 sm:bottom-10 sm:right-8"
-        aria-label="Back to top"
-        title="Back to top"
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 19V5" />
-          <path d="M6 11l6-6 6 6" />
-        </svg>
-      </button>
-
-      {settingsMenuOpen ? (
-        <SettingsMenuModal
-          onClose={() => setSettingsMenuOpen(false)}
-          onSelect={scrollToSettingsSection}
-        />
-      ) : null}
-
       {mobileThemeModal ? (
         <div className="fixed inset-0 z-[90] flex items-end bg-slate-950/55 px-3 pb-3 pt-8 backdrop-blur-[2px] md:hidden" onClick={() => setMobileThemeModal(null)}>
           <div className="max-h-[88dvh] w-full overflow-y-auto rounded-[28px] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.35)]" onClick={(event) => event.stopPropagation()}>
@@ -1297,10 +1073,6 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             ) : renderSuggestedColoursPanel(true)}
           </div>
         </div>
-      ) : null}
-
-      {stripeGuideOpen ? (
-        <StripeKeyGuideModal onClose={() => setStripeGuideOpen(false)} />
       ) : null}
     </div>
   );
@@ -1440,176 +1212,6 @@ function UploadField({
       >
         {busy ? "Uploading..." : label}
       </label>
-    </div>
-  );
-}
-
-const SETTINGS_MENU_ITEMS = [
-  { id: "logo-and-favicon", title: "Logo and favicon", help: "Upload or replace the store logo and browser icon." },
-  { id: "branding-and-wording", title: "Branding and wording", help: "Business name, storefront heading and admin labels." },
-  { id: "theme-presets", title: "Theme presets", help: "Choose a ready-made colour starting point." },
-  { id: "per-item-storefront-colours", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
-  { id: "business-contact-details", title: "Business contact details", help: "Phone, email, address, footer and social links." },
-  { id: "storefront-payment-options", title: "Storefront payment options", help: "Cash, COD and future online payment provider setup." },
-  { id: "advanced-currency-display", title: "Advanced currency display", help: "Currency name, symbol, separators and sample pricing." },
-];
-
-function SettingsMenuModal({ onClose, onSelect }: { onClose: () => void; onSelect: (id: string) => void }) {
-  return (
-    <div className="fixed inset-0 z-[110] flex items-end bg-slate-950/60 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6" onClick={onClose}>
-      <div className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]" onClick={(event) => event.stopPropagation()}>
-        <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-700">Settings menu</p>
-              <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">What do you want to work on?</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Jump straight to the section you need, especially useful on mobile where the settings page is longer.</p>
-            </div>
-            <button type="button" onClick={onClose} className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50" aria-label="Close settings menu">×</button>
-          </div>
-        </div>
-
-        <div className="overflow-y-auto px-4 pb-7 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
-          <div className="grid gap-3">
-            {SETTINGS_MENU_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect(item.id)}
-                className="group rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:-translate-y-[1px] hover:border-orange-200 hover:bg-orange-50"
-              >
-                <span className="flex items-start justify-between gap-3">
-                  <span>
-                    <span className="block text-sm font-black text-slate-950">{item.title}</span>
-                    <span className="mt-1 block text-xs leading-5 text-slate-600">{item.help}</span>
-                  </span>
-                  <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-orange-700 shadow-sm transition group-hover:bg-orange-100">↓</span>
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
-            <button type="button" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto">Close menu</button>
-          </div>
-
-          <div className="h-5 sm:h-6" aria-hidden="true" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
-  const steps = [
-    {
-      title: "1. Open the tenant's own Stripe account",
-      body: "Log in to Stripe as the store owner, or sit with them while they log in. Make sure this is the store owner's Stripe account, not the Orduva owner billing account.",
-    },
-    {
-      title: "2. Choose Test mode or Live mode",
-      body: "Use test mode while setting up and testing. Only switch to live keys when the store is ready to take real customer payments.",
-    },
-    {
-      title: "3. Find the publishable key",
-      body: "In Stripe, go to Developers, then API keys. Copy the key that starts with pk_test_ or pk_live_ and paste it into Tenant Stripe publishable key.",
-    },
-    {
-      title: "4. Create or reveal the secret key",
-      body: "Still under API keys, create or reveal the secret key. It starts with sk_test_ or sk_live_. Copy it once and paste it into Tenant Stripe secret key. Stripe may only show live secret keys once, so store it safely.",
-    },
-    {
-      title: "5. Prepare the webhook destination",
-      body: "A webhook is how Stripe tells Orduva that a customer order payment succeeded, failed, expired or was refunded. Use the destination name: Orduva - Customer Orders.",
-    },
-    {
-      title: "6. Do not use the Orduva owner billing webhook URL",
-      body: "Use https://www.orduva.com/api/storefront/stripe/webhook as the endpoint URL. Do not use /api/billing/stripe/webhook, because that is for tenants paying Orduva subscriptions.",
-    },
-    {
-      title: "7. Events to choose when the endpoint is live",
-      body: "Create the Stripe webhook endpoint using the URL shown in Orduva, then select these events: checkout.session.completed, checkout.session.expired, payment_intent.succeeded, payment_intent.payment_failed and charge.refunded.",
-    },
-    {
-      title: "8. Reveal the webhook signing secret",
-      body: "After the endpoint has been created in Stripe, open it and click Reveal signing secret. Copy the value that starts with whsec_ and paste it into Tenant Stripe webhook secret. Do not paste the webhook endpoint ID.",
-    },
-    {
-      title: "9. Save, then enable Stripe later",
-      body: "Save the settings first. Keep Stripe disabled until the tenant keys, webhook endpoint and webhook signing secret have all been added and tested.",
-    },
-  ];
-
-  return (
-    <div className="fixed inset-0 z-[110] flex items-end bg-slate-950/60 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6" onClick={onClose}>
-      <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]" onClick={(event) => event.stopPropagation()}>
-        <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">Stripe setup guide</p>
-              <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">Where do I find the tenant Stripe keys?</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Use this when helping a non-technical store owner connect their own Stripe account for storefront customer payments.</p>
-            </div>
-            <button type="button" onClick={onClose} className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50" aria-label="Close Stripe setup guide">×</button>
-          </div>
-        </div>
-
-        <div className="overflow-y-auto px-4 pb-7 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
-          <div className="rounded-[22px] border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-950">
-            <strong>Keep this separate:</strong> these must be the tenant's own Stripe keys. Do not paste the Orduva owner Stripe keys here, because customer order money should go to the store owner, not the Orduva SaaS billing account.
-          </div>
-
-          <div className="mt-4 grid gap-3">
-            {steps.map((step) => (
-              <div key={step.title} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm font-black text-slate-950">{step.title}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{step.body}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Publishable key</p>
-              <p className="mt-2 font-mono text-sm font-black text-slate-950">pk_test_...</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">Safe for browser-side Stripe setup.</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Secret key</p>
-              <p className="mt-2 font-mono text-sm font-black text-slate-950">sk_test_...</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">Private. Store server-side only.</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Webhook secret</p>
-              <p className="mt-2 font-mono text-sm font-black text-slate-950">whsec_...</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">Used to verify Stripe payment messages.</p>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-950">
-            <strong>Webhook endpoint URL:</strong> https://www.orduva.com/api/storefront/stripe/webhook
-            <span className="mt-2 block"><strong>Do not use:</strong> https://www.orduva.com/api/billing/stripe/webhook — that endpoint is only for Orduva subscription billing.</span>
-          </div>
-
-          <div className="mt-4 rounded-[22px] border border-indigo-200 bg-indigo-50 p-4 text-xs leading-5 text-indigo-950">
-            <p className="font-black uppercase tracking-[0.16em] text-indigo-700">Required Stripe webhook events</p>
-            <p className="mt-2">Use destination name <strong>Orduva - Customer Orders</strong> and select these events:</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li><span className="font-mono">checkout.session.completed</span></li>
-              <li><span className="font-mono">checkout.session.expired</span></li>
-              <li><span className="font-mono">payment_intent.succeeded</span></li>
-              <li><span className="font-mono">payment_intent.payment_failed</span></li>
-              <li><span className="font-mono">charge.refunded</span></li>
-            </ul>
-          </div>
-
-          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
-            <button type="button" onClick={onClose} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto">Close guide</button>
-          </div>
-
-          <div className="h-5 sm:h-6" aria-hidden="true" />
-        </div>
-      </div>
     </div>
   );
 }

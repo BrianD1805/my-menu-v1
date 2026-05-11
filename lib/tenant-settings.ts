@@ -53,24 +53,21 @@ export type TenantSettings = {
   currency_decimal_separator: string | null;
   currency_thousands_separator: string | null;
   currency_suffix: string | null;
-  enable_cash_on_collection: boolean | null;
-  enable_cash_on_delivery: boolean | null;
-  enable_stripe_customer_payments: boolean | null;
-  stripe_connection_status: string | null;
-  stripe_customer_payment_mode: string | null;
-  stripe_customer_publishable_key: string | null;
-  stripe_customer_account_label: string | null;
-  stripe_customer_test_mode: boolean | null;
-  stripe_customer_setup_notes: string | null;
-  stripe_customer_secret_key_set?: boolean | null;
-  stripe_customer_secret_key_hint?: string | null;
-  stripe_customer_webhook_secret_set?: boolean | null;
-  stripe_customer_webhook_secret_hint?: string | null;
+  enable_cash_on_collection?: boolean | null;
+  enable_cash_on_delivery?: boolean | null;
+  enable_stripe_customer_payments?: boolean | null;
+  stripe_connection_status?: string | null;
   stripe_customer_payments_live?: boolean | null;
-  enable_yoco_customer_payments: boolean | null;
-  yoco_connection_status: string | null;
-  enable_mpesa_customer_payments: boolean | null;
-  mpesa_connection_status: string | null;
+  stripe_customer_payments_test_mode?: boolean | null;
+  enable_yoco_customer_payments?: boolean | null;
+  yoco_connection_status?: string | null;
+  yoco_customer_payments_live?: boolean | null;
+  enable_pesapal_customer_payments?: boolean | null;
+  pesapal_connection_status?: string | null;
+  pesapal_customer_payments_live?: boolean | null;
+  enable_mpesa_customer_payments?: boolean | null;
+  mpesa_connection_status?: string | null;
+  mpesa_customer_payments_live?: boolean | null;
 };
 
 export const DEFAULT_PRIMARY_COLOR = "#0f172a";
@@ -146,7 +143,7 @@ export function normalizeSeparator(value: unknown) {
   return text.slice(0, 1);
 }
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, enable_yoco_customer_payments, yoco_connection_status, enable_mpesa_customer_payments, mpesa_connection_status";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix";
 
 export async function getTenantSettings(tenantId: string): Promise<TenantSettings | null> {
   const { data, error } = await db
@@ -202,16 +199,14 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     enable_cash_on_delivery: asBooleanOrNull((data as Record<string, unknown>).enable_cash_on_delivery),
     enable_stripe_customer_payments: asBooleanOrNull((data as Record<string, unknown>).enable_stripe_customer_payments),
     stripe_connection_status: asStringOrNull((data as Record<string, unknown>).stripe_connection_status),
-    stripe_customer_payment_mode: asStringOrNull((data as Record<string, unknown>).stripe_customer_payment_mode),
-    stripe_customer_publishable_key: asStringOrNull((data as Record<string, unknown>).stripe_customer_publishable_key),
-    stripe_customer_account_label: asStringOrNull((data as Record<string, unknown>).stripe_customer_account_label),
-    stripe_customer_test_mode: asBooleanOrNull((data as Record<string, unknown>).stripe_customer_test_mode),
-    stripe_customer_setup_notes: asStringOrNull((data as Record<string, unknown>).stripe_customer_setup_notes),
     stripe_customer_payments_live: asBooleanOrNull((data as Record<string, unknown>).stripe_customer_payments_live),
+    stripe_customer_payments_test_mode: asBooleanOrNull((data as Record<string, unknown>).stripe_customer_payments_test_mode),
     enable_yoco_customer_payments: asBooleanOrNull((data as Record<string, unknown>).enable_yoco_customer_payments),
     yoco_connection_status: asStringOrNull((data as Record<string, unknown>).yoco_connection_status),
-    enable_mpesa_customer_payments: asBooleanOrNull((data as Record<string, unknown>).enable_mpesa_customer_payments),
-    mpesa_connection_status: asStringOrNull((data as Record<string, unknown>).mpesa_connection_status),
+    yoco_customer_payments_live: asBooleanOrNull((data as Record<string, unknown>).yoco_customer_payments_live),
+    enable_pesapal_customer_payments: asBooleanOrNull((data as Record<string, unknown>).enable_pesapal_customer_payments),
+    pesapal_connection_status: asStringOrNull((data as Record<string, unknown>).pesapal_connection_status),
+    pesapal_customer_payments_live: asBooleanOrNull((data as Record<string, unknown>).pesapal_customer_payments_live),
   };
 }
 

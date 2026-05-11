@@ -4,14 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import AdminLaunchChecklist from "@/components/admin/AdminLaunchChecklist";
 import StripeUpgradeButton from "@/components/admin/StripeUpgradeButton";
-import BillingStatusCheck from "@/components/admin/BillingStatusCheck";
-import BillingActivationJourney from "@/components/admin/BillingActivationJourney";
 import type { TenantTrialState } from "@/lib/trial";
 
 type ChecklistItem = { status?: "pending" | "complete" };
 type ChecklistPayload = { items?: ChecklistItem[]; dismissed?: boolean } | null;
 
-type ModalKind = "checklist" | "trial" | "activation" | null;
+type ModalKind = "checklist" | "trial" | null;
 
 function formatTrialDate(value?: string | null) {
   if (!value) return "Date unavailable";
@@ -31,22 +29,11 @@ function trialShortLabel(trial?: TenantTrialState | null) {
 
 function trialStatusText(trial?: TenantTrialState | null) {
   if (!trial) return "Trial details are unavailable.";
-  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active — store open";
-  if (trial.isTrialExpired) return "Trial ended — activate billing";
-  if (trial.trialDaysRemaining === null) return "Trial active — choose a plan when ready";
+  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active";
+  if (trial.isTrialExpired) return "Trial expired — checkout paused";
+  if (trial.trialDaysRemaining === null) return "Trial active";
   if (trial.trialDaysRemaining === 1) return "1 day left in trial";
   return `${trial.trialDaysRemaining} days left in trial`;
-}
-
-
-function trialSecondaryLabel(trial?: TenantTrialState | null) {
-  if (trial?.subscriptionStatus === "active" || trial?.trialStatus === "converted") return "Billing";
-  return "Trial";
-}
-
-function trialModalLabel(trial?: TenantTrialState | null) {
-  if (trial?.subscriptionStatus === "active" || trial?.trialStatus === "converted") return "Billing details";
-  return "Trial details";
 }
 
 function trialTone(trial?: TenantTrialState | null) {
@@ -127,23 +114,12 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
 
         <button
           type="button"
-          onClick={() => {
-            const shouldOpenActivation = Boolean(trialState?.isTrialExpired && trialState?.subscriptionStatus !== "active" && trialState?.trialStatus !== "converted");
-            if (!shouldOpenActivation) {
-              setModal("trial");
-              return;
-            }
-            if (typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches) {
-              setModal("activation");
-              return;
-            }
-            window.location.href = "/admin/billing/activate";
-          }}
+          onClick={() => setModal("trial")}
           className={`admin-pressable inline-flex min-h-[48px] min-w-[64px] flex-col items-center justify-center rounded-[20px] border px-2.5 py-2 shadow-[0_12px_28px_rgba(0,0,0,0.10)] transition hover:-translate-y-[1px] sm:min-h-[60px] sm:min-w-[90px] ${trialTone(trialState)}`}
-          aria-label={trialState?.isTrialExpired ? "Open billing activation" : "Open trial details"}
+          aria-label="Open trial details"
         >
           <span className="text-sm font-black leading-none sm:text-base">{trialShortLabel(trialState)}</span>
-          <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] opacity-75 sm:text-[11px]">{trialSecondaryLabel(trialState)}</span>
+          <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] opacity-75 sm:text-[11px]">Trial</span>
         </button>
       </div>
 
@@ -160,25 +136,10 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                 onClick={() => setModal(null)}
                 aria-label="Close popup backdrop"
               />
-              {modal === "activation" ? (
-                <section className="relative mx-auto flex max-h-[calc(100dvh-1.25rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/20 bg-[#F7F2EA] text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] sm:hidden">
-                  <button
-                    type="button"
-                    onClick={() => setModal(null)}
-                    className="admin-pressable absolute right-3 top-3 z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0E0E10] text-2xl font-light leading-none text-white shadow-[0_12px_26px_rgba(14,14,16,0.25)] transition hover:bg-[#252528]"
-                    aria-label="Close billing activation"
-                  >
-                    ×
-                  </button>
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                    <BillingActivationJourney mode="popup" />
-                  </div>
-                </section>
-              ) : (
               <section className="relative mx-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-[920px] flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] sm:max-h-[calc(100dvh-4rem)]">
                 <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#0E0E10]/10 px-5 py-4 sm:px-7 sm:py-5">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">{modal === "checklist" ? "Admin checklist" : trialModalLabel(trialState)}</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">{modal === "checklist" ? "Admin checklist" : "Trial details"}</p>
                     <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10] sm:text-2xl">
                       {modal === "checklist" ? "Launch checklist" : trialStatusText(trialState)}
                     </h2>
@@ -204,8 +165,8 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                           <p className="mt-2 text-lg font-black text-[#0E0E10]">{trialStatusText(trialState)}</p>
                         </div>
                         <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
-                          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">{trialState?.isSubscriptionActive ? "Billing" : "Trial ends"}</p>
-                          <p className="mt-2 text-lg font-black text-[#0E0E10]">{trialState?.isSubscriptionActive ? "Open billing below" : formatTrialDate(trialState?.trialEndsAt)}</p>
+                          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Trial ends</p>
+                          <p className="mt-2 text-lg font-black text-[#0E0E10]">{formatTrialDate(trialState?.trialEndsAt)}</p>
                         </div>
                         <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
                           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Plan</p>
@@ -214,40 +175,28 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                       </div>
                       {trialState?.isTrialExpired ? (
                         <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold leading-6 text-red-800">
-                          The trial has ended and customer checkout is paused. Choose a paid plan below to reactivate the store immediately after Stripe confirms payment.
+                          Checkout is currently paused because the trial has expired. Upgrade with Stripe or ask the platform owner to add more trial days to re-enable checkout.
                         </p>
                       ) : (
                         <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold leading-6 text-emerald-900">
-                          The store remains open during the trial. When you are ready, choose a paid plan below and Stripe will activate billing securely.
+                          Storefront checkout remains available while the trial or subscription is active.
                         </p>
                       )}
                       {trialState?.subscriptionStatus === "active" || trialState?.trialStatus === "converted" ? null : (
-                        <div className="mt-5 rounded-[26px] border border-[#FF6A3D]/20 bg-white p-4 shadow-sm sm:p-5">
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
-                              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">Step 1</p>
-                              <p className="mt-1 text-sm font-black text-[#0E0E10]">Choose a plan</p>
-                            </div>
-                            <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
-                              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">Step 2</p>
-                              <p className="mt-1 text-sm font-black text-[#0E0E10]">Pay securely</p>
-                            </div>
-                            <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
-                              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">Step 3</p>
-                              <p className="mt-1 text-sm font-black text-[#0E0E10]">Store becomes active</p>
-                            </div>
-                          </div>
-                          <div className="mt-5">
-                            <StripeUpgradeButton label="Continue to secure checkout" showControls />
+                        <div className="mt-5 rounded-[24px] border border-[#FF6A3D]/20 bg-white p-4 shadow-sm">
+                          <p className="text-sm font-black text-[#0E0E10]">Ready to activate this store?</p>
+                          <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
+                            Stripe checkout uses this tenant’s saved plan and storefront currency. Webhook automation will complete the automatic subscription updates in the next phase.
+                          </p>
+                          <div className="mt-4">
+                            <StripeUpgradeButton label="Upgrade with Stripe" />
                           </div>
                         </div>
                       )}
-                      <BillingStatusCheck />
                     </div>
                   )}
                 </div>
               </section>
-              )}
             </div>,
             document.body,
           )

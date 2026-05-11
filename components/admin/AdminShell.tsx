@@ -4,11 +4,72 @@ import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
 import type { TenantTrialState } from "@/lib/trial";
 
+type NavIcon = "home" | "orders" | "products" | "categories" | "settings";
+
 type NavItem = {
   href: string;
   label: string;
+  icon: NavIcon;
   current?: boolean;
 };
+
+
+function AdminNavIcon({ icon }: { icon: NavIcon }) {
+  const common = {
+    className: "h-5 w-5",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2.15,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+
+  switch (icon) {
+    case "home":
+      return (
+        <svg {...common}>
+          <path d="M3.5 11.5 12 4l8.5 7.5" />
+          <path d="M5.5 10.5V20h13v-9.5" />
+          <path d="M9.5 20v-5.5h5V20" />
+        </svg>
+      );
+    case "orders":
+      return (
+        <svg {...common}>
+          <path d="M7 4.75h10a1.75 1.75 0 0 1 1.75 1.75v13l-2.5-1.45-2.5 1.45-2.5-1.45-2.5 1.45-2.5-1.45v-11.55A1.75 1.75 0 0 1 7 4.75Z" />
+          <path d="M8.75 9h6.5" />
+          <path d="M8.75 12.25h6.5" />
+          <path d="M8.75 15.5h3.75" />
+        </svg>
+      );
+    case "products":
+      return (
+        <svg {...common}>
+          <path d="M12 3.75 20 8.2v7.6l-8 4.45-8-4.45V8.2l8-4.45Z" />
+          <path d="m4.35 8.45 7.65 4.3 7.65-4.3" />
+          <path d="M12 12.75v7.25" />
+        </svg>
+      );
+    case "categories":
+      return (
+        <svg {...common}>
+          <path d="M5.25 5.25h5.25v5.25H5.25z" />
+          <path d="M13.5 5.25h5.25v5.25H13.5z" />
+          <path d="M5.25 13.5h5.25v5.25H5.25z" />
+          <path d="M13.5 13.5h5.25v5.25H13.5z" />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg {...common}>
+          <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z" />
+          <path d="M19.25 12a7.3 7.3 0 0 0-.08-1.06l2.03-1.58-2-3.46-2.39.96a7.7 7.7 0 0 0-1.84-1.06L14.6 3.25h-4l-.37 2.55a7.7 7.7 0 0 0-1.84 1.06L6 5.9l-2 3.46 2.03 1.58a7.33 7.33 0 0 0 0 2.12L4 14.64l2 3.46 2.39-.96c.56.45 1.18.81 1.84 1.06l.37 2.55h4l.37-2.55a7.7 7.7 0 0 0 1.84-1.06l2.39.96 2-3.46-2.03-1.58c.05-.35.08-.7.08-1.06Z" />
+        </svg>
+      );
+  }
+}
 
 function navClassName(current?: boolean) {
   return [
@@ -52,11 +113,11 @@ export default function AdminShell({
   trialState?: TenantTrialState | null;
 }) {
   const nav: NavItem[] = [
-    { href: "/admin", label: "Home", current: current === "home" },
-    { href: "/admin/orders", label: "Orders", current: current === "orders" },
-    { href: "/admin/products", label: "Products", current: current === "products" },
-    { href: "/admin/categories", label: "Categories", current: current === "categories" },
-    { href: "/admin/settings", label: "Settings", current: current === "settings" },
+    { href: "/admin", label: "Home", icon: "home", current: current === "home" },
+    { href: "/admin/orders", label: "Orders", icon: "orders", current: current === "orders" },
+    { href: "/admin/products", label: "Products", icon: "products", current: current === "products" },
+    { href: "/admin/categories", label: "Categories", icon: "categories", current: current === "categories" },
+    { href: "/admin/settings", label: "Settings", icon: "settings", current: current === "settings" },
   ];
 
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
@@ -156,21 +217,31 @@ export default function AdminShell({
         </div>
       </div>
 
-      <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#0E0E10]/10 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] pt-2 shadow-[0_-12px_30px_rgba(14,14,16,0.10)] backdrop-blur sm:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-5 gap-1.5">
+      <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#0E0E10]/10 bg-white px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.45rem)] pt-1.5 shadow-[0_-12px_30px_rgba(14,14,16,0.10)] backdrop-blur sm:hidden">
+        <div className="mx-auto grid max-w-6xl grid-cols-5 gap-1">
           {nav.map((item) => (
             <a
               key={item.href}
               href={item.href}
               aria-current={item.current ? "page" : undefined}
               className={[
-                "admin-pressable inline-flex min-h-[52px] flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-bold transition",
+                "group inline-flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1 text-[10px] font-black leading-tight transition duration-200 active:scale-[0.94]",
                 item.current
-                  ? "border border-[#FF6A3D] bg-[#FF6A3D] text-white shadow-[0_14px_34px_rgba(255,106,61,0.22)]"
-                  : "border border-[#0E0E10]/10 bg-[#FFF7F0] text-[#0E0E10]",
+                  ? "text-[#C84F2A]"
+                  : "text-[#5C5F66] hover:text-[#C84F2A]",
               ].join(" ")}
             >
-              <span>{item.label}</span>
+              <span
+                className={[
+                  "flex h-8 w-8 items-center justify-center rounded-[14px] transition duration-200",
+                  item.current
+                    ? "bg-[#FF6A3D] text-white shadow-[0_10px_24px_rgba(255,106,61,0.24)]"
+                    : "bg-[#F5F2EE] text-[#1F2328] group-hover:bg-[#FFF7F0] group-hover:text-[#C84F2A]",
+                ].join(" ")}
+              >
+                <AdminNavIcon icon={item.icon} />
+              </span>
+              <span className="max-w-full truncate text-center tracking-[-0.01em]">{item.label}</span>
             </a>
           ))}
         </div>

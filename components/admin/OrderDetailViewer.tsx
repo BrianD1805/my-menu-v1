@@ -17,8 +17,6 @@ type OrderPayload = {
   orderType: string | null;
   createdAt: string;
   total: number;
-  paymentMethodLabel?: string | null;
-  paymentStatus?: string | null;
   items: OrderItem[];
 };
 
@@ -88,11 +86,6 @@ export default function OrderDetailViewer({
                   <p className="mt-2 font-semibold text-slate-900">{order.orderType || "Order"}</p>
                   <p className="mt-1 text-sm text-slate-600">{new Date(order.createdAt).toLocaleString()}</p>
                   <p className="mt-1 text-sm text-slate-600">Status: {order.status}</p>
-                </div>
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Payment</p>
-                  <p className="mt-2 font-semibold text-slate-900">{order.paymentMethodLabel || "Payment method not recorded"}</p>
-                  <p className="mt-1 text-sm text-slate-600">Status: {order.paymentStatus || "pay_on_fulfilment"}</p>
                 </div>
               </div>
 

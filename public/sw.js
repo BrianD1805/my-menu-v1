@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-203d';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-203d';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-203d';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-204C';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-204C';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-204C';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -139,22 +139,15 @@ async function navigationFastFallback(request) {
     return response;
   });
 
-  // Ver-0.203D: use a short network-first window for navigations. Returning
-  // the cached shell immediately made installed PWAs look fast, but it could
-  // also leave customer session panels, favourites, and Buy Again stuck until
-  // the user performed a hard refresh. Give the live page a fair chance first,
-  // then fall back to cache only when the network is slow/offline.
+  // For installed PWAs, return the cached shell immediately so Android does not
+  // sit on the native splash while Netlify/Next warms up. Refresh in background.
   if (cached) {
-    try {
-      return await Promise.race([network, timeoutPromise(1800)]);
-    } catch {
-      network.catch(() => undefined);
-      return cached;
-    }
+    network.catch(() => undefined);
+    return cached;
   }
 
   try {
-    return await Promise.race([network, timeoutPromise(4500)]);
+    return await Promise.race([network, timeoutPromise(3500)]);
   } catch {
     return openingFallbackResponse();
   }
@@ -233,4 +226,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.203D storefront PWA customer session cache bump
+// Orduva Ver-0.204C Stripe checkout foundation cache bump

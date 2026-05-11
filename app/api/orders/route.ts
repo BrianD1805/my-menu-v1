@@ -7,8 +7,6 @@ import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { enqueueNotificationEvent } from "@/lib/notifications";
 import { sendAdminPushForTenant } from "@/lib/web-push";
 import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/trial";
-import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
-import { createTenantStripeOrderCheckoutIntent } from "@/lib/storefront-stripe";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -130,60 +128,6 @@ export async function POST(req: Request) {
       };
     });
 
-    const settings = await getTenantSettings(tenant.id);
-    const selectedPayment = getStorefrontPaymentOption(settings, body.orderType, body.paymentProvider);
-
-    if (!selectedPayment) {
-      return NextResponse.json(
-        { error: "No payment method is currently available for this order type" },
-        { status: 400 }
-      );
-    }
-
-    if (selectedPayment.online && selectedPayment.id !== "stripe") {
-      return NextResponse.json(
-        { error: "This online payment provider is not live for this store yet. Please choose another payment option." },
-        { status: 400 }
-      );
-    }
-
-    if (selectedPayment.id === "stripe") {
-      const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
-      try {
-        const checkoutIntent = await createTenantStripeOrderCheckoutIntent({
-          req,
-          tenantId: tenant.id,
-          tenantSlug: tenant.slug,
-          tenantName: branding.displayName,
-          customerName: body.customerName.trim(),
-          customerPhone: body.customerPhone.trim(),
-          customerAccountId: body.customerAccountId?.trim() || null,
-          customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
-          orderType: body.orderType,
-          notes: body.notes?.trim() || null,
-          items: orderItems,
-          total,
-          currencyCode: branding.currencyCode || settings?.currency_code || "GBP",
-          paymentMethodLabel: selectedPayment.label,
-        });
-
-        return NextResponse.json({
-          ok: true,
-          orderId: null,
-          checkoutId: checkoutIntent.checkoutId,
-          customerAccountId: body.customerAccountId?.trim() || null,
-          paymentProvider: selectedPayment.id,
-          paymentMethodLabel: selectedPayment.label,
-          paymentStatus: "checkout_started",
-          stripeCheckoutUrl: checkoutIntent.url,
-          stripeCheckoutSessionId: checkoutIntent.sessionId,
-        });
-      } catch (stripeError) {
-        const message = stripeError instanceof Error ? stripeError.message : "Stripe checkout could not be started.";
-        return NextResponse.json({ error: message }, { status: 400 });
-      }
-    }
-
     const { data: order, error: orderError } = await db
       .from("orders")
       .insert({
@@ -197,9 +141,6 @@ export async function POST(req: Request) {
         status: "new",
         total,
         notes: body.notes?.trim() || null,
-        payment_provider: selectedPayment.id,
-        payment_method_label: selectedPayment.label,
-        payment_status: selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
       })
       .select()
       .single();
@@ -235,6 +176,7 @@ export async function POST(req: Request) {
       }
     }
 
+    const settings = await getTenantSettings(tenant.id);
     const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
 
     const message = buildWhatsAppOrderMessage({
@@ -253,9 +195,6 @@ export async function POST(req: Request) {
 
     await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
 
-    const stripeCheckoutUrl: string | null = null;
-    const stripeCheckoutSessionId: string | null = null;
-
     await Promise.allSettled([
       enqueueNotificationEvent({
         tenantId: tenant.id,
@@ -263,7 +202,7 @@ export async function POST(req: Request) {
         audience: "admin",
         eventType: "new_order",
         title: "New order received",
-        body: selectedPayment.online ? `${body.customerName.trim()} started a Stripe payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        body: `${body.customerName.trim()} placed a new ${body.orderType} order.`,
         payload: { orderId: order.id, route: "/admin/orders" },
       }),
       enqueueNotificationEvent({
@@ -272,27 +211,18 @@ export async function POST(req: Request) {
         audience: "customer",
         eventType: "order_received",
         title: "Order received",
-        body: selectedPayment.online ? "Your order has been received and is waiting for secure card payment." : "Your order has been received and is waiting for confirmation.",
+        body: "Your order has been received and is waiting for confirmation.",
         payload: { orderId: order.id, status: "new" },
       }),
       sendAdminPushForTenant(tenant.id, {
         title: "New order received",
-        body: selectedPayment.online ? `${body.customerName.trim()} started a Stripe payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        body: `${body.customerName.trim()} placed a new ${body.orderType} order.`,
         url: "/admin/orders",
         tag: `orduva-order-${order.id}`,
       }),
     ]);
 
-    return NextResponse.json({
-      ok: true,
-      orderId: order.id,
-      customerAccountId: body.customerAccountId?.trim() || null,
-      paymentProvider: selectedPayment.id,
-      paymentMethodLabel: selectedPayment.label,
-      paymentStatus: selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
-      stripeCheckoutUrl,
-      stripeCheckoutSessionId,
-    });
+    return NextResponse.json({ ok: true, orderId: order.id, customerAccountId: body.customerAccountId?.trim() || null });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
