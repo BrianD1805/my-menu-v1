@@ -440,6 +440,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [logoPalettePreset, setLogoPalettePreset] = useState<ThemePreset | null>(initialForm.storefrontTheme?.selectedPreset === LOGO_PALETTE_PRESET_NAME ? buildLogoPalettePreset(initialForm.storefrontTheme.logoPaletteColours?.length ? initialForm.storefrontTheme.logoPaletteColours : [initialForm.primaryColor, initialForm.accentColor, initialForm.backgroundTint, initialForm.borderColor, initialForm.textColor]) : null);
   const [generatingLogoPalette, setGeneratingLogoPalette] = useState(false);
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
+  const settingsTopRef = useRef<HTMLDivElement | null>(null);
   const themePresetsRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
@@ -476,6 +477,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     const element = document.getElementById(id);
     if (!element) return;
     element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function scrollToSettingsTop() {
+    settingsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   const savedTheme = normaliseTheme(savedForm.storefrontTheme, savedForm);
@@ -771,7 +776,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] xl:items-start">
       <form onSubmit={onSubmit} className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
-        <div className="mb-6">
+        <div ref={settingsTopRef} id="settings-top" className="mb-6 scroll-mt-28">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
           <h2 className="mt-2 text-2xl font-bold text-slate-900">Storefront branding and theme editor</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -1045,6 +1050,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             {saving ? "Saving..." : hasUnsavedChanges ? "Save settings" : "Nothing to save"}
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={scrollToSettingsTop}
+          className="fixed bottom-24 right-4 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full border border-orange-200 bg-white text-lg font-black text-orange-700 shadow-[0_14px_35px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 focus:outline-none focus:ring-4 focus:ring-orange-100 sm:bottom-8 sm:right-8"
+          aria-label="Back to top of settings"
+          title="Back to top"
+        >
+          ↑
+        </button>
       </form>
 
       <div ref={previewPanelRef} className="hidden space-y-3 xl:sticky xl:top-5 xl:block xl:self-start">
