@@ -15,7 +15,7 @@ export async function GET(req: Request) {
 
   const { data: partner, error: partnerError } = await db
     .from("affiliate_partners")
-    .select("id, display_name, email, tracking_code, access_key, status, affiliate_reward_rate_percent, tenant_reward_rate_percent")
+    .select("id, display_name, email, tracking_code, access_key, status, affiliate_reward_rate_percent, tenant_reward_rate_percent, payout_currency_code, earning_region, earning_region_other")
     .eq("tracking_code", code)
     .eq("access_key", key)
     .maybeSingle();
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     db.from("referral_reward_credits").select("id, reward_rule_id, paid_month, subscription_amount, reward_rate_percent, reward_amount, currency_code, credit_status, created_at").eq("affiliate_id", partner.id).order("created_at", { ascending: false }).limit(500),
   ]);
 
-  if (signupsResult.error || rewardsResult.error || creditsResult.error) return jsonNoStore({ error: "Could not load affiliate revenue. Run the Ver-0.206 Supabase SQL first." }, { status: 500 });
+  if (signupsResult.error || rewardsResult.error || creditsResult.error) return jsonNoStore({ error: "Could not load affiliate revenue. Run the Ver-0.206 and Ver-0.206A Supabase SQL first." }, { status: 500 });
 
   const rewards = rewardsResult.data || [];
   const credits = creditsResult.data || [];
@@ -46,6 +46,9 @@ export async function GET(req: Request) {
       trackingCode: partner.tracking_code,
       shareUrl: buildAffiliateShareUrl(partner.tracking_code),
       affiliateRewardRatePercent: partner.affiliate_reward_rate_percent,
+      payoutCurrencyCode: partner.payout_currency_code || "GBP",
+      earningRegion: partner.earning_region || null,
+      earningRegionOther: partner.earning_region_other || null,
     },
     signups: signupsResult.data || [],
     rewards,

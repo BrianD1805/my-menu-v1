@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
-import { buildAffiliateShareUrl } from "@/lib/affiliates";
+import { affiliatePayoutCurrencyLabel, buildAffiliateShareUrl } from "@/lib/affiliates";
 
 type Application = {
   id: string;
@@ -10,6 +10,9 @@ type Application = {
   email: string | null;
   phone: string | null;
   country: string | null;
+  payout_currency_code: string | null;
+  earning_region: string | null;
+  earning_region_other: string | null;
   website_url: string | null;
   audience_notes: string | null;
   promotion_plan: string | null;
@@ -26,6 +29,9 @@ type Partner = {
   email: string | null;
   tracking_code: string | null;
   access_key?: string | null;
+  payout_currency_code: string | null;
+  earning_region: string | null;
+  earning_region_other: string | null;
   status: string | null;
   affiliate_reward_rate_percent: number | null;
   referring_tenant_id: string | null;
@@ -169,6 +175,8 @@ export default function OwnerAffiliateApplicationsPanel() {
                     </div>
                     <p className="mt-1 text-sm font-bold text-[#5C5F66]">{application.email}</p>
                     <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-[#9A3412]">Applied {dateLabel(application.created_at)}</p>
+                    <p className="mt-2 text-sm text-[#5C5F66]"><strong>Payout currency:</strong> {affiliatePayoutCurrencyLabel(application.payout_currency_code || application.country || "GBP")}</p>
+                    <p className="mt-1 text-sm text-[#5C5F66]"><strong>Target earning region:</strong> {application.earning_region || "Not supplied"}{application.earning_region_other ? ` — ${application.earning_region_other}` : ""}</p>
                     {tenant ? <p className="mt-2 text-sm text-[#5C5F66]">Introduced by tenant: <strong>{tenant.name || tenant.slug}</strong></p> : application.ref_tenant_slug ? <p className="mt-2 text-sm text-[#5C5F66]">Tenant source: <strong>{application.ref_tenant_slug}</strong></p> : null}
                     <p className="mt-3 text-sm leading-6 text-[#5C5F66]"><strong>Audience:</strong> {application.audience_notes}</p>
                     <p className="mt-2 text-sm leading-6 text-[#5C5F66]"><strong>Promotion plan:</strong> {application.promotion_plan}</p>
@@ -199,6 +207,7 @@ export default function OwnerAffiliateApplicationsPanel() {
                   </div>
                   <p className="mt-1 break-all text-sm text-[#5C5F66]">{buildAffiliateShareUrl(partner.tracking_code || "")}</p>
                   <p className="mt-1 text-sm text-[#5C5F66]">Affiliate {partner.affiliate_reward_rate_percent ?? 10}% · Tenant {partner.tenant_reward_rate_percent ?? 5}% {partner.referring_tenant_slug ? `· Tenant source ${partner.referring_tenant_slug}` : ""}</p>
+                  <p className="mt-1 text-sm text-[#5C5F66]">Payout: <strong>{affiliatePayoutCurrencyLabel(partner.payout_currency_code || "GBP")}</strong>{partner.earning_region ? ` · Target: ${partner.earning_region}` : ""}</p>
                   {partner.access_key ? <p className="mt-1 break-all text-xs font-bold uppercase tracking-[0.12em] text-[#9A3412]">Login key: {partner.access_key}</p> : null}
                 </div>
                 <div className="flex gap-2">

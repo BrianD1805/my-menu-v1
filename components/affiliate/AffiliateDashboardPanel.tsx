@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 type Payload = {
-  partner: { displayName: string | null; email: string | null; trackingCode: string; shareUrl: string; affiliateRewardRatePercent: number | null };
+  partner: { displayName: string | null; email: string | null; trackingCode: string; shareUrl: string; affiliateRewardRatePercent: number | null; payoutCurrencyCode: string | null; earningRegion: string | null; earningRegionOther: string | null };
   signups: Array<{ id: string; status: string | null; created_at: string | null }>;
   credits: Array<{ id: string; paid_month: string | null; reward_amount: number | null; currency_code: string | null; credit_status: string | null; created_at: string | null }>;
   summary: { capturedSignups: number; activeRewards: number; estimatedMonthly: number; pendingAmount: number; paidAmount: number };
@@ -69,6 +69,9 @@ export default function AffiliateDashboardPanel() {
     return <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-6 text-center shadow-[0_24px_70px_rgba(14,14,16,0.14)]"><p className="text-sm font-bold text-[#5C5F66]">{message}</p></section>;
   }
 
+  const payoutCurrency = payload?.partner.payoutCurrencyCode || "GBP";
+  const mixedCreditCurrencies = Array.from(new Set((payload?.credits || []).map((credit) => credit.currency_code).filter(Boolean))).filter((currency) => currency !== payoutCurrency);
+
   return (
     <section className="space-y-6">
       <div className="rounded-[34px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_28px_80px_rgba(14,14,16,0.12)] sm:p-7">
@@ -86,15 +89,18 @@ export default function AffiliateDashboardPanel() {
           </div>
         </div>
         <p className="mt-5 break-all rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm font-bold text-[#9A3412]">{payload?.partner.shareUrl || "No link loaded"}</p>
+        <p className="mt-3 rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-sm font-bold text-[#5C5F66]">Payout currency: <strong>{payoutCurrency}</strong>{payload?.partner.earningRegion ? ` · Target earning region: ${payload.partner.earningRegion}` : ""}</p>
         {message ? <p className="mt-4 rounded-2xl border border-[#FF6A3D]/25 bg-white px-4 py-3 text-sm font-bold text-[#C84F2A]">{message}</p> : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-[28px] border border-white/10 bg-[#0E0E10] p-5 text-white shadow-[0_20px_60px_rgba(14,14,16,0.18)]"><p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Signups</p><p className="mt-2 text-4xl font-black">{payload?.summary.capturedSignups || 0}</p></div>
         <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-[0_18px_45px_rgba(14,14,16,0.08)]"><p className="text-xs font-black uppercase tracking-[0.22em]">Active</p><p className="mt-2 text-4xl font-black">{payload?.summary.activeRewards || 0}</p></div>
-        <div className="rounded-[28px] border border-[#FF6A3D]/20 bg-[#FFF7F0] p-5 text-[#9A3412] shadow-[0_18px_45px_rgba(14,14,16,0.08)]"><p className="text-xs font-black uppercase tracking-[0.22em]">Pending</p><p className="mt-2 text-2xl font-black">{money(payload?.summary.pendingAmount || 0)}</p></div>
-        <div className="rounded-[28px] border border-slate-200 bg-white p-5 text-[#0E0E10] shadow-[0_18px_45px_rgba(14,14,16,0.08)]"><p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">Paid</p><p className="mt-2 text-2xl font-black">{money(payload?.summary.paidAmount || 0)}</p></div>
+        <div className="rounded-[28px] border border-[#FF6A3D]/20 bg-[#FFF7F0] p-5 text-[#9A3412] shadow-[0_18px_45px_rgba(14,14,16,0.08)]"><p className="text-xs font-black uppercase tracking-[0.22em]">Pending</p><p className="mt-2 text-2xl font-black">{money(payload?.summary.pendingAmount || 0, payoutCurrency)}</p></div>
+        <div className="rounded-[28px] border border-slate-200 bg-white p-5 text-[#0E0E10] shadow-[0_18px_45px_rgba(14,14,16,0.08)]"><p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">Paid</p><p className="mt-2 text-2xl font-black">{money(payload?.summary.paidAmount || 0, payoutCurrency)}</p></div>
       </div>
+
+      {mixedCreditCurrencies.length ? <p className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-900">Some referred clients paid in {mixedCreditCurrencies.join(", ")}. These entries may need manual conversion to {payoutCurrency} until automatic exchange-rate conversion is added.</p> : null}
 
       <div className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
         <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FF6A3D]">Commission ledger</p>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { looksLikeAffiliateEmail, normaliseAffiliateEmail, safeAffiliateText } from "@/lib/affiliates";
+import { looksLikeAffiliateEmail, normaliseAffiliateEmail, normaliseAffiliateEarningRegion, normaliseAffiliatePayoutCurrency, safeAffiliateText } from "@/lib/affiliates";
 
 type Window = { count: number; resetAt: number };
 const WINDOWS = new Map<string, Window>();
@@ -54,7 +54,11 @@ export async function POST(req: Request) {
     const applicantName = safeAffiliateText(body?.applicantName, 120);
     const email = normaliseAffiliateEmail(body?.email);
     const phone = safeAffiliateText(body?.phone, 80);
-    const country = safeAffiliateText(body?.country, 80);
+    const legacyCountry = safeAffiliateText(body?.country, 80);
+    const payoutCurrencyCode = normaliseAffiliatePayoutCurrency(body?.payoutCurrencyCode || body?.country);
+    const earningRegion = normaliseAffiliateEarningRegion(body?.earningRegion, body?.earningRegionOther);
+    const earningRegionOther = safeAffiliateText(body?.earningRegionOther, 120);
+    const country = legacyCountry || payoutCurrencyCode;
     const websiteUrl = safeAffiliateText(body?.websiteUrl, 300);
     const audienceNotes = safeAffiliateText(body?.audienceNotes, 1200);
     const promotionPlan = safeAffiliateText(body?.promotionPlan, 1200);
@@ -62,6 +66,8 @@ export async function POST(req: Request) {
 
     if (!applicantName) return jsonNoStore({ error: "Your name is required." }, { status: 400 });
     if (!email || !looksLikeAffiliateEmail(email)) return jsonNoStore({ error: "Please enter a valid email address." }, { status: 400 });
+    if (!payoutCurrencyCode) return jsonNoStore({ error: "Please select your payout currency." }, { status: 400 });
+    if (!earningRegion) return jsonNoStore({ error: "Please select the country or region you intend to earn from." }, { status: 400 });
     if (!audienceNotes || !promotionPlan) return jsonNoStore({ error: "Please tell us who you would promote Orduva to and how you would share it." }, { status: 400 });
 
     let referringTenantId: string | null = null;
@@ -77,6 +83,9 @@ export async function POST(req: Request) {
         email,
         phone,
         country,
+        payout_currency_code: payoutCurrencyCode,
+        earning_region: earningRegion,
+        earning_region_other: earningRegion === "Other" ? earningRegionOther : null,
         website_url: websiteUrl,
         audience_notes: audienceNotes,
         promotion_plan: promotionPlan,

@@ -71,7 +71,7 @@ export function normalizeReferralPayload(body: Record<string, unknown> | null | 
 async function captureAffiliateReferral(input: CaptureReferralInput, affiliateCode: string, referralCode: string) {
   const { data: affiliate } = await db
     .from("affiliate_partners")
-    .select("id, display_name, email, tracking_code, status, affiliate_reward_rate_percent, referring_tenant_id, referring_tenant_slug, tenant_reward_rate_percent")
+    .select("id, display_name, email, tracking_code, status, affiliate_reward_rate_percent, referring_tenant_id, referring_tenant_slug, tenant_reward_rate_percent, payout_currency_code, earning_region, earning_region_other")
     .eq("tracking_code", affiliateCode)
     .maybeSingle();
 
@@ -115,6 +115,8 @@ async function captureAffiliateReferral(input: CaptureReferralInput, affiliateCo
           referring_tenant_id: affiliate.referring_tenant_id || null,
           referring_tenant_slug: affiliate.referring_tenant_slug || null,
           tenant_reward_rate_percent: tenantRate,
+          payout_currency_code: affiliate.payout_currency_code || null,
+          earning_region: affiliate.earning_region || null,
         },
       },
       { onConflict: "referral_code" },
@@ -139,6 +141,8 @@ async function captureAffiliateReferral(input: CaptureReferralInput, affiliateCo
         affiliate_code: affiliateCode,
         referring_tenant_id: affiliate.referring_tenant_id || null,
         tenant_reward_rate_percent: tenantRate,
+        payout_currency_code: affiliate.payout_currency_code || null,
+        earning_region: affiliate.earning_region || null,
         client_ip: normalizeOptionalText(input.clientIp, 80),
         user_agent: normalizeOptionalText(input.userAgent, 500),
       },

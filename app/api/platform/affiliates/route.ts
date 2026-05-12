@@ -22,13 +22,13 @@ export async function GET(req: Request) {
   if (accessError) return accessError;
 
   const [applicationsResult, partnersResult, tenantsResult] = await Promise.all([
-    db.from("affiliate_applications").select("id, applicant_name, email, phone, country, website_url, audience_notes, promotion_plan, ref_tenant_slug, referring_tenant_id, status, owner_notes, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
-    db.from("affiliate_partners").select("id, application_id, display_name, email, phone, country, website_url, tracking_code, access_key, status, affiliate_reward_rate_percent, referring_tenant_id, referring_tenant_slug, tenant_reward_rate_percent, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
+    db.from("affiliate_applications").select("id, applicant_name, email, phone, country, payout_currency_code, earning_region, earning_region_other, website_url, audience_notes, promotion_plan, ref_tenant_slug, referring_tenant_id, status, owner_notes, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
+    db.from("affiliate_partners").select("id, application_id, display_name, email, phone, country, payout_currency_code, earning_region, earning_region_other, website_url, tracking_code, access_key, status, affiliate_reward_rate_percent, referring_tenant_id, referring_tenant_slug, tenant_reward_rate_percent, created_at, updated_at").order("created_at", { ascending: false }).limit(200),
     db.from("tenants").select("id, name, slug").limit(500),
   ]);
 
-  if (applicationsResult.error) return jsonNoStore({ error: "Could not load affiliate applications. Run the Ver-0.206 Supabase SQL first." }, { status: 500 });
-  if (partnersResult.error) return jsonNoStore({ error: "Could not load affiliate partners. Run the Ver-0.206 Supabase SQL first." }, { status: 500 });
+  if (applicationsResult.error) return jsonNoStore({ error: "Could not load affiliate applications. Run the Ver-0.206 and Ver-0.206A Supabase SQL first." }, { status: 500 });
+  if (partnersResult.error) return jsonNoStore({ error: "Could not load affiliate partners. Run the Ver-0.206 and Ver-0.206A Supabase SQL first." }, { status: 500 });
   if (tenantsResult.error) return jsonNoStore({ error: "Could not load tenants." }, { status: 500 });
 
   return jsonNoStore({ applications: applicationsResult.data || [], partners: partnersResult.data || [], tenants: tenantsResult.data || [] });
@@ -48,7 +48,7 @@ export async function PATCH(req: Request) {
       if (!applicationId) return jsonNoStore({ error: "Application id is required." }, { status: 400 });
       const { data: application, error: applicationError } = await db
         .from("affiliate_applications")
-        .select("id, applicant_name, email, phone, country, website_url, ref_tenant_slug, referring_tenant_id, status")
+        .select("id, applicant_name, email, phone, country, payout_currency_code, earning_region, earning_region_other, website_url, ref_tenant_slug, referring_tenant_id, status")
         .eq("id", applicationId)
         .maybeSingle();
       if (applicationError || !application) return jsonNoStore({ error: "Affiliate application was not found." }, { status: 404 });
@@ -67,6 +67,9 @@ export async function PATCH(req: Request) {
             email: application.email,
             phone: application.phone,
             country: application.country,
+            payout_currency_code: application.payout_currency_code || application.country || "GBP",
+            earning_region: application.earning_region || null,
+            earning_region_other: application.earning_region_other || null,
             website_url: application.website_url,
             tracking_code: trackingCode,
             access_key: accessKey,
@@ -79,7 +82,7 @@ export async function PATCH(req: Request) {
           },
           { onConflict: "tracking_code" },
         )
-        .select("id, display_name, email, tracking_code, access_key, status, affiliate_reward_rate_percent, referring_tenant_id, referring_tenant_slug, tenant_reward_rate_percent")
+        .select("id, display_name, email, tracking_code, access_key, status, affiliate_reward_rate_percent, referring_tenant_id, referring_tenant_slug, tenant_reward_rate_percent, payout_currency_code, earning_region, earning_region_other")
         .single();
       if (partnerError || !partner) return jsonNoStore({ error: partnerError?.message || "Could not approve affiliate." }, { status: 500 });
 
