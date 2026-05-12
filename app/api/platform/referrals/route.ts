@@ -48,7 +48,7 @@ async function ensureRewardForSignup(signup: ReferralSignupRow, source: Referral
       },
       { onConflict: "referral_signup_id" },
     )
-    .select("id, referral_signup_id, referral_source_id, referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, currency_code, reward_status, notes, created_at, updated_at")
+    .select("id, referral_signup_id, referral_source_id, affiliate_id, referrer_type, referrer_tenant_id, secondary_referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, secondary_reward_rate_percent, secondary_estimated_monthly_reward, currency_code, reward_status, notes, created_at, updated_at")
     .maybeSingle();
 
   if (error) return null;
@@ -128,7 +128,7 @@ export async function GET(req: Request) {
           .from("referral_rewards")
           .update({ currency_code: referredCurrencyCode, updated_at: new Date().toISOString() })
           .eq("id", reward.id)
-          .select("id, referral_signup_id, referral_source_id, referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, currency_code, reward_status, notes, created_at, updated_at")
+          .select("id, referral_signup_id, referral_source_id, affiliate_id, referrer_type, referrer_tenant_id, secondary_referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, secondary_reward_rate_percent, secondary_estimated_monthly_reward, currency_code, reward_status, notes, created_at, updated_at")
           .maybeSingle();
         if (updatedReward?.referral_signup_id) rewardBySignupId.set(updatedReward.referral_signup_id, updatedReward as ReferralRewardRow);
       }
@@ -241,19 +241,37 @@ export async function PATCH(req: Request) {
     const notes = safeText(body?.notes, 1000);
     const estimatedMonthlyReward = calculateReferralRewardAmount(monthlySubscriptionAmount, rewardRatePercent);
 
+    const { data: existingReward, error: existingRewardError } = await db
+      .from("referral_rewards")
+      .select("id, secondary_referrer_tenant_id, secondary_reward_rate_percent")
+      .eq("id", rewardId)
+      .single();
+
+    if (existingRewardError || !existingReward) return NextResponse.json({ error: "Referral reward not found." }, { status: 404 });
+
+    const hasTenantIntroductionShare = Boolean(existingReward.secondary_referrer_tenant_id);
+    const secondaryRewardRatePercent = hasTenantIntroductionShare
+      ? normaliseRewardRate(body?.secondaryRewardRatePercent, existingReward.secondary_reward_rate_percent ?? 5)
+      : 0;
+    const secondaryEstimatedMonthlyReward = hasTenantIntroductionShare
+      ? calculateReferralRewardAmount(monthlySubscriptionAmount, secondaryRewardRatePercent)
+      : 0;
+
     const { data, error } = await db
       .from("referral_rewards")
       .update({
         reward_rate_percent: rewardRatePercent,
         monthly_subscription_amount: monthlySubscriptionAmount,
         estimated_monthly_reward: estimatedMonthlyReward,
+        secondary_reward_rate_percent: secondaryRewardRatePercent,
+        secondary_estimated_monthly_reward: secondaryEstimatedMonthlyReward,
         currency_code: currencyCode,
         reward_status: rewardStatus,
         notes,
         updated_at: new Date().toISOString(),
       })
       .eq("id", rewardId)
-      .select("id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, currency_code, reward_status, notes, updated_at")
+      .select("id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, secondary_reward_rate_percent, secondary_estimated_monthly_reward, currency_code, reward_status, notes, updated_at")
       .single();
 
     if (error || !data) return NextResponse.json({ error: "Could not update referral reward." }, { status: 500 });
@@ -294,7 +312,9 @@ export async function POST(req: Request) {
     const currencyCode = normaliseCurrency(body?.currencyCode, reward.currency_code || "GBP");
     const billingPeriodMonth = monthStart(body?.paidMonth || body?.billingPeriodMonth || new Date());
     const rewardAmount = calculateReferralRewardAmount(subscriptionAmount, rewardRatePercent);
-    const secondaryRewardRatePercent = normaliseRewardRate(reward.secondary_reward_rate_percent || 0, 0);
+    const secondaryRewardRatePercent = reward.secondary_referrer_tenant_id
+      ? normaliseRewardRate(body?.secondaryRewardRatePercent, reward.secondary_reward_rate_percent || 5)
+      : 0;
     const secondaryRewardAmount = reward.secondary_referrer_tenant_id ? calculateReferralRewardAmount(subscriptionAmount, secondaryRewardRatePercent) : 0;
     const paymentSource = normaliseSubscriptionPaymentSource(body?.paymentSource || "manual");
     const paymentStatus = normaliseSubscriptionPaymentStatus(body?.paymentStatus || "paid");
@@ -318,7 +338,7 @@ export async function POST(req: Request) {
         payment_status: paymentStatus,
         payment_reference: paymentReference,
         notes,
-        metadata: { created_from: "platform_referrals", reward_rate_percent: rewardRatePercent },
+        metadata: { created_from: "platform_referrals", reward_rate_percent: rewardRatePercent, secondary_reward_rate_percent: secondaryRewardRatePercent },
       })
       .select("id, billing_period_month, subscription_amount, currency_code, payment_source, payment_status, payment_reference")
       .single();

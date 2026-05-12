@@ -8,6 +8,7 @@ type ReferralReward = {
   id: string;
   affiliate_id?: string | null;
   referrer_type?: string | null;
+  secondary_referrer_tenant_id?: string | null;
   reward_rate_percent: number | null;
   monthly_subscription_amount: number | null;
   estimated_monthly_reward: number | null;
@@ -71,7 +72,16 @@ type ReferralPayload = {
     totalsByCurrency?: Record<string, { estimatedMonthlyLiability: number; pendingCredits: number; paidCredits: number; subscriptionPayments: number }>;
   };
 };
-type DraftState = Record<string, { rewardRatePercent: string; monthlySubscriptionAmount: string; currencyCode: string; rewardStatus: string; notes: string; creditMonth: string; paymentReference: string }>;
+type DraftState = Record<string, {
+  rewardRatePercent: string;
+  tenantIntroductionSharePercent: string;
+  monthlySubscriptionAmount: string;
+  currencyCode: string;
+  rewardStatus: string;
+  notes: string;
+  creditMonth: string;
+  paymentReference: string;
+}>;
 
 type FilterKey = "all" | "trial" | "active" | "paused" | "cancelled" | "pending" | "paid";
 
@@ -194,6 +204,7 @@ export default function OwnerReferralRewardsPanel() {
         if (!row.reward?.id) continue;
         nextDrafts[row.reward.id] = {
           rewardRatePercent: String(row.reward.reward_rate_percent ?? row.source?.reward_rate_percent ?? 15),
+          tenantIntroductionSharePercent: String(row.reward.secondary_reward_rate_percent ?? (row.reward.secondary_referrer_tenant_id ? 5 : "")),
           monthlySubscriptionAmount: String(row.reward.monthly_subscription_amount ?? ""),
           currencyCode: String(row.reward.currency_code || "GBP"),
           rewardStatus: String(row.reward.reward_status || "trial"),
@@ -282,6 +293,7 @@ export default function OwnerReferralRewardsPanel() {
           rewardId: row.reward.id,
           subscriptionAmount: draft.monthlySubscriptionAmount,
           rewardRatePercent: draft.rewardRatePercent,
+          secondaryRewardRatePercent: draft.tenantIntroductionSharePercent,
           currencyCode: draft.currencyCode,
           paidMonth: `${draft.creditMonth || monthInputValue()}-01`,
           creditStatus: "pending",
@@ -393,13 +405,16 @@ export default function OwnerReferralRewardsPanel() {
                     </p>
                     {isAffiliateReferral && row.reward?.secondary_reward_rate_percent ? (
                       <p className="mt-2 rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-3 py-2 text-xs font-bold text-[#9A3412]">
-                        Affiliate earns {row.reward.reward_rate_percent ?? 10}% monthly. {row.reward.secondary_reward_rate_percent}% tenant introduction share goes to {secondaryTenantName}.
+                        Affiliate earns {row.reward.reward_rate_percent ?? 10}% monthly. Tenant introduction share is {row.reward.secondary_reward_rate_percent ?? 5}% and goes to {secondaryTenantName}.
                       </p>
                     ) : null}
                   </div>
                   <div className="rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3 text-sm text-right">
                     <p className="text-xs font-black uppercase tracking-[0.16em] text-[#68707A]">Estimated monthly credit</p>
                     <p className="mt-1 text-2xl font-black text-[#0E0E10]">{money(row.reward?.estimated_monthly_reward, currency)}</p>
+                    {isAffiliateReferral && row.reward?.secondary_referrer_tenant_id ? (
+                      <p className="mt-1 text-xs font-black text-[#9A3412]">Tenant intro estimate {money(row.reward?.secondary_estimated_monthly_reward || 0, currency)}</p>
+                    ) : null}
                     <p className="mt-1 text-xs font-bold text-[#68707A]">Payments {money(row.totals.subscriptionPaymentsAmount || 0, currency)} · Pending {money(row.totals.pendingAmount, currency)} · Paid {money(row.totals.paidAmount, currency)}</p>
                     {isAffiliateReferral && (row.totals.secondaryPendingAmount || row.totals.secondaryPaidAmount) ? (
                       <p className="mt-1 text-xs font-bold text-[#9A3412]">Tenant share pending {money(row.totals.secondaryPendingAmount || 0, currency)} · paid {money(row.totals.secondaryPaidAmount || 0, currency)}</p>
@@ -408,13 +423,16 @@ export default function OwnerReferralRewardsPanel() {
                 </div>
 
                 {draft && row.reward ? (
-                  <div className="mt-4 grid gap-3 rounded-[22px] border border-[#0E0E10]/8 bg-white p-4 lg:grid-cols-6">
-                    <label className="block lg:col-span-1"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Reward %</span><input value={draft.rewardRatePercent} onChange={(event) => updateDraft(row.reward!.id, "rewardRatePercent", event.target.value)} inputMode="decimal" className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 px-3 py-2 text-sm font-bold outline-none focus:border-[#FF6A3D]" /></label>
+                  <div className="mt-4 grid gap-3 rounded-[22px] border border-[#0E0E10]/8 bg-white p-4 lg:grid-cols-7">
+                    <label className="block lg:col-span-1"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Affiliate %</span><input value={draft.rewardRatePercent} onChange={(event) => updateDraft(row.reward!.id, "rewardRatePercent", event.target.value)} inputMode="decimal" className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 px-3 py-2 text-sm font-bold outline-none focus:border-[#FF6A3D]" /></label>
+                    {isAffiliateReferral && row.reward.secondary_referrer_tenant_id ? (
+                      <label className="block lg:col-span-1"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Tenant intro %</span><input value={draft.tenantIntroductionSharePercent} onChange={(event) => updateDraft(row.reward!.id, "tenantIntroductionSharePercent", event.target.value)} inputMode="decimal" placeholder="5" className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 px-3 py-2 text-sm font-bold outline-none focus:border-[#FF6A3D]" /></label>
+                    ) : null}
                     <label className="block lg:col-span-1"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Monthly fee</span><input value={draft.monthlySubscriptionAmount} onChange={(event) => updateDraft(row.reward!.id, "monthlySubscriptionAmount", event.target.value)} inputMode="decimal" placeholder="29.00" className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 px-3 py-2 text-sm font-bold outline-none focus:border-[#FF6A3D]" /></label>
                     <label className="block lg:col-span-1"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Currency</span><input value={draft.currencyCode} onChange={(event) => updateDraft(row.reward!.id, "currencyCode", event.target.value.toUpperCase().slice(0, 3))} className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 px-3 py-2 text-sm font-bold uppercase outline-none focus:border-[#FF6A3D]" /></label>
                     <label className="block lg:col-span-1"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Status</span><select value={draft.rewardStatus} onChange={(event) => updateDraft(row.reward!.id, "rewardStatus", event.target.value)} className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 bg-white px-3 py-2 text-sm font-bold outline-none focus:border-[#FF6A3D]"><option value="trial">Trial</option><option value="active">Active</option><option value="paused">Paused</option><option value="cancelled">Cancelled</option></select></label>
                     <label className="block lg:col-span-2"><span className="mb-1 block text-xs font-black text-[#0E0E10]">Notes</span><input value={draft.notes} onChange={(event) => updateDraft(row.reward!.id, "notes", event.target.value)} placeholder="Internal note" className="min-h-11 w-full rounded-2xl border border-[#0E0E10]/12 px-3 py-2 text-sm font-bold outline-none focus:border-[#FF6A3D]" /></label>
-                    <div className="flex flex-col gap-2 lg:col-span-6 sm:flex-row sm:flex-wrap">
+                    <div className="flex flex-col gap-2 lg:col-span-7 sm:flex-row sm:flex-wrap">
                       <button type="button" onClick={() => void saveReward(row)} disabled={busyId === row.reward.id} className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#252528] disabled:cursor-not-allowed disabled:opacity-60">{busyId === row.reward.id ? "Saving..." : "Save reward settings"}</button>
                       <label className="inline-flex min-h-10 items-center gap-2 rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-2 text-xs font-black text-[#0E0E10]">Paid month <input type="month" value={draft.creditMonth} onChange={(event) => updateDraft(row.reward!.id, "creditMonth", event.target.value)} className="bg-transparent font-black outline-none" /></label>
                       <input value={draft.paymentReference} onChange={(event) => updateDraft(row.reward!.id, "paymentReference", event.target.value)} placeholder="Payment reference / note" className="min-h-10 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-xs font-bold outline-none focus:border-[#FF6A3D]" />
