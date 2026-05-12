@@ -15,10 +15,10 @@ import {
 
 type TenantRow = { id: string; name: string | null; slug: string | null; subscription_status?: string | null; trial_status?: string | null; trial_ends_at?: string | null };
 type TenantSettingsRow = { tenant_id: string; currency_code: string | null; currency_symbol?: string | null };
-type ReferralSourceRow = { id: string; referral_code: string | null; referrer_type: string | null; referrer_tenant_id: string | null; display_name: string | null; status: string | null; reward_rate_percent: number | null };
+type ReferralSourceRow = { id: string; referral_code: string | null; referrer_type: string | null; affiliate_id?: string | null; referrer_tenant_id: string | null; display_name: string | null; status: string | null; reward_rate_percent: number | null };
 type ReferralSignupRow = { id: string; referral_source_id: string | null; referred_tenant_id: string | null; referral_code: string | null; ref_tenant_slug: string | null; ref_source: string | null; status: string | null; reward_rate_percent: number | null; created_at: string | null };
-type ReferralRewardRow = { id: string; referral_signup_id: string | null; referral_source_id: string | null; referrer_tenant_id: string | null; referred_tenant_id: string | null; reward_rate_percent: number | null; monthly_subscription_amount: number | null; estimated_monthly_reward: number | null; currency_code: string | null; reward_status: string | null; notes: string | null; created_at: string | null; updated_at: string | null };
-type ReferralCreditRow = { id: string; reward_rule_id: string | null; payment_event_id?: string | null; referral_signup_id: string | null; referrer_tenant_id: string | null; referred_tenant_id: string | null; paid_month: string | null; subscription_amount: number | null; reward_rate_percent: number | null; reward_amount: number | null; currency_code: string | null; credit_status: string | null; payment_reference: string | null; notes: string | null; created_at: string | null; updated_at: string | null };
+type ReferralRewardRow = { id: string; referral_signup_id: string | null; referral_source_id: string | null; affiliate_id?: string | null; referrer_type?: string | null; referrer_tenant_id: string | null; secondary_referrer_tenant_id?: string | null; referred_tenant_id: string | null; reward_rate_percent: number | null; monthly_subscription_amount: number | null; estimated_monthly_reward: number | null; secondary_reward_rate_percent?: number | null; secondary_estimated_monthly_reward?: number | null; currency_code: string | null; reward_status: string | null; notes: string | null; created_at: string | null; updated_at: string | null };
+type ReferralCreditRow = { id: string; reward_rule_id: string | null; payment_event_id?: string | null; referral_signup_id: string | null; affiliate_id?: string | null; referrer_tenant_id: string | null; secondary_referrer_tenant_id?: string | null; referred_tenant_id: string | null; paid_month: string | null; subscription_amount: number | null; reward_rate_percent: number | null; reward_amount: number | null; secondary_reward_rate_percent?: number | null; secondary_reward_amount?: number | null; currency_code: string | null; credit_status: string | null; payment_reference: string | null; notes: string | null; created_at: string | null; updated_at: string | null };
 type SubscriptionPaymentRow = { id: string; tenant_id: string | null; referral_reward_id: string | null; referral_signup_id: string | null; billing_period_month: string | null; subscription_amount: number | null; currency_code: string | null; payment_source: string | null; payment_status: string | null; payment_reference: string | null; notes: string | null; created_at: string | null; updated_at: string | null };
 
 function safeText(value: unknown, max = 500) {
@@ -63,10 +63,10 @@ export async function GET(req: Request) {
     const [tenantsResult, settingsResult, sourcesResult, signupsResult, rewardsResult, creditsResult, paymentsResult] = await Promise.all([
       db.from("tenants").select("id, name, slug, subscription_status, trial_status, trial_ends_at").limit(500),
       db.from("tenant_settings").select("tenant_id, currency_code, currency_symbol").limit(500),
-      db.from("referral_sources").select("id, referral_code, referrer_type, referrer_tenant_id, display_name, status, reward_rate_percent").limit(500),
+      db.from("referral_sources").select("id, referral_code, referrer_type, affiliate_id, referrer_tenant_id, display_name, status, reward_rate_percent").limit(500),
       db.from("referral_signups").select("id, referral_source_id, referred_tenant_id, referral_code, ref_tenant_slug, ref_source, status, reward_rate_percent, created_at").order("created_at", { ascending: false }).limit(500),
-      db.from("referral_rewards").select("id, referral_signup_id, referral_source_id, referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, currency_code, reward_status, notes, created_at, updated_at").limit(500),
-      db.from("referral_reward_credits").select("id, reward_rule_id, payment_event_id, referral_signup_id, referrer_tenant_id, referred_tenant_id, paid_month, subscription_amount, reward_rate_percent, reward_amount, currency_code, credit_status, payment_reference, notes, created_at, updated_at").order("created_at", { ascending: false }).limit(1000),
+      db.from("referral_rewards").select("id, referral_signup_id, referral_source_id, affiliate_id, referrer_type, referrer_tenant_id, secondary_referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, estimated_monthly_reward, secondary_reward_rate_percent, secondary_estimated_monthly_reward, currency_code, reward_status, notes, created_at, updated_at").limit(500),
+      db.from("referral_reward_credits").select("id, reward_rule_id, payment_event_id, referral_signup_id, affiliate_id, referrer_tenant_id, secondary_referrer_tenant_id, referred_tenant_id, paid_month, subscription_amount, reward_rate_percent, reward_amount, secondary_reward_rate_percent, secondary_reward_amount, currency_code, credit_status, payment_reference, notes, created_at, updated_at").order("created_at", { ascending: false }).limit(1000),
       db.from("tenant_subscription_payments").select("id, tenant_id, referral_reward_id, referral_signup_id, billing_period_month, subscription_amount, currency_code, payment_source, payment_status, payment_reference, notes, created_at, updated_at").order("created_at", { ascending: false }).limit(1000),
     ]);
 
@@ -138,6 +138,7 @@ export async function GET(req: Request) {
       const source = signup.referral_source_id ? sourceById.get(signup.referral_source_id) || null : null;
       const reward = rewardBySignupId.get(signup.id) || null;
       const referrerTenant = source?.referrer_tenant_id ? tenantById.get(source.referrer_tenant_id) || null : null;
+      const secondaryReferrerTenant = reward?.secondary_referrer_tenant_id ? tenantById.get(reward.secondary_referrer_tenant_id) || null : null;
       const referredTenant = signup.referred_tenant_id ? tenantById.get(signup.referred_tenant_id) || null : null;
       const rowCredits = reward?.id ? creditsByRewardId.get(reward.id) || [] : [];
       const rowPayments = reward?.id ? paymentsByRewardId.get(reward.id) || [] : [];
@@ -146,6 +147,8 @@ export async function GET(req: Request) {
       const livePayments = rowPayments.filter((payment) => payment.payment_status === "paid");
       const totalPending = pendingCredits.reduce((sum, credit) => sum + Number(credit.reward_amount || 0), 0);
       const totalPaid = paidCredits.reduce((sum, credit) => sum + Number(credit.reward_amount || 0), 0);
+      const totalSecondaryPending = pendingCredits.reduce((sum, credit) => sum + Number(credit.secondary_reward_amount || 0), 0);
+      const totalSecondaryPaid = paidCredits.reduce((sum, credit) => sum + Number(credit.secondary_reward_amount || 0), 0);
       const totalPayments = livePayments.reduce((sum, payment) => sum + Number(payment.subscription_amount || 0), 0);
       const referredTenantCurrencyCode = normaliseCurrency(settingsByTenantId.get(signup.referred_tenant_id || "")?.currency_code, reward?.currency_code || "GBP");
       return {
@@ -153,6 +156,7 @@ export async function GET(req: Request) {
         source,
         reward,
         referrerTenant,
+        secondaryReferrerTenant,
         referredTenant,
         referredTenantCurrencyCode,
         credits: rowCredits,
@@ -164,6 +168,8 @@ export async function GET(req: Request) {
           paidCredits: paidCredits.length,
           pendingAmount: Math.round(totalPending * 100) / 100,
           paidAmount: Math.round(totalPaid * 100) / 100,
+          secondaryPendingAmount: Math.round(totalSecondaryPending * 100) / 100,
+          secondaryPaidAmount: Math.round(totalSecondaryPaid * 100) / 100,
           subscriptionPaymentsAmount: Math.round(totalPayments * 100) / 100,
         },
       };

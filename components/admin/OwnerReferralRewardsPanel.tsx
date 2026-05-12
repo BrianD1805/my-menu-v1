@@ -6,19 +6,26 @@ import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGa
 type TenantRef = { id: string; name: string | null; slug: string | null; subscription_status?: string | null; trial_status?: string | null } | null;
 type ReferralReward = {
   id: string;
+  affiliate_id?: string | null;
+  referrer_type?: string | null;
   reward_rate_percent: number | null;
   monthly_subscription_amount: number | null;
   estimated_monthly_reward: number | null;
+  secondary_reward_rate_percent?: number | null;
+  secondary_estimated_monthly_reward?: number | null;
   currency_code: string | null;
   reward_status: string | null;
   notes: string | null;
 };
 type ReferralCredit = {
   id: string;
+  affiliate_id?: string | null;
   paid_month: string | null;
   subscription_amount: number | null;
   reward_rate_percent: number | null;
   reward_amount: number | null;
+  secondary_reward_rate_percent?: number | null;
+  secondary_reward_amount?: number | null;
   currency_code: string | null;
   credit_status: string | null;
   payment_reference: string | null;
@@ -41,10 +48,11 @@ type ReferralRow = {
   source: { id: string; referral_code: string | null; display_name: string | null; referrer_type: string | null; reward_rate_percent: number | null; status: string | null } | null;
   reward: ReferralReward | null;
   referrerTenant: TenantRef;
+  secondaryReferrerTenant?: TenantRef;
   referredTenant: TenantRef;
   credits: ReferralCredit[];
   payments?: SubscriptionPayment[];
-  totals: { creditsCount: number; paymentsCount?: number; pendingCredits: number; paidCredits: number; pendingAmount: number; paidAmount: number; subscriptionPaymentsAmount?: number };
+  totals: { creditsCount: number; paymentsCount?: number; pendingCredits: number; paidCredits: number; pendingAmount: number; paidAmount: number; secondaryPendingAmount?: number; secondaryPaidAmount?: number; subscriptionPaymentsAmount?: number };
 };
 type ReferralPayload = {
   rows: ReferralRow[];
@@ -365,8 +373,10 @@ export default function OwnerReferralRewardsPanel() {
             const rewardId = row.reward?.id || "";
             const draft = rewardId ? drafts[rewardId] : null;
             const currency = draft?.currencyCode || row.reward?.currency_code || "GBP";
+            const isAffiliateReferral = row.source?.referrer_type === "public_affiliate" || Boolean(row.reward?.affiliate_id);
             const referrerName = row.referrerTenant?.name || row.source?.display_name || row.signup.referral_code || "Referral source";
             const referredName = row.referredTenant?.name || row.referredTenant?.slug || "Referred store";
+            const secondaryTenantName = row.secondaryReferrerTenant?.name || row.secondaryReferrerTenant?.slug || "Referring tenant";
             return (
               <article key={row.signup.id} className="rounded-[26px] border border-[#0E0E10]/10 bg-[#FDFBF8] p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -376,16 +386,24 @@ export default function OwnerReferralRewardsPanel() {
                       <span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] ring-1", statusClasses(row.reward?.reward_status)].join(" ")}>{row.reward?.reward_status || "trial"}</span>
                       <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[#5C5F66] ring-1 ring-[#0E0E10]/10">{row.reward?.reward_rate_percent ?? row.source?.reward_rate_percent ?? 15}% monthly</span>
                     </div>
-                    <p className="mt-1 text-sm font-black uppercase tracking-[0.14em] text-[#C84F2A]">Referring tenant</p>
+                    <p className="mt-1 text-sm font-black uppercase tracking-[0.14em] text-[#C84F2A]">{isAffiliateReferral ? "Approved affiliate" : "Referring tenant"}</p>
                     <p className="mt-2 text-sm font-bold text-[#0E0E10]">Referred store: <span className="text-[#C84F2A]">{referredName}</span></p>
                     <p className="mt-1 text-xs font-semibold text-[#68707A]">
                       Code {row.signup.referral_code || row.source?.referral_code || "not recorded"} · Source {row.signup.ref_source || "storefront footer"} · Captured {dateLabel(row.signup.created_at)}
                     </p>
+                    {isAffiliateReferral && row.reward?.secondary_reward_rate_percent ? (
+                      <p className="mt-2 rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-3 py-2 text-xs font-bold text-[#9A3412]">
+                        Affiliate earns {row.reward.reward_rate_percent ?? 10}% monthly. {row.reward.secondary_reward_rate_percent}% tenant introduction share goes to {secondaryTenantName}.
+                      </p>
+                    ) : null}
                   </div>
                   <div className="rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3 text-sm text-right">
                     <p className="text-xs font-black uppercase tracking-[0.16em] text-[#68707A]">Estimated monthly credit</p>
                     <p className="mt-1 text-2xl font-black text-[#0E0E10]">{money(row.reward?.estimated_monthly_reward, currency)}</p>
                     <p className="mt-1 text-xs font-bold text-[#68707A]">Payments {money(row.totals.subscriptionPaymentsAmount || 0, currency)} · Pending {money(row.totals.pendingAmount, currency)} · Paid {money(row.totals.paidAmount, currency)}</p>
+                    {isAffiliateReferral && (row.totals.secondaryPendingAmount || row.totals.secondaryPaidAmount) ? (
+                      <p className="mt-1 text-xs font-bold text-[#9A3412]">Tenant share pending {money(row.totals.secondaryPendingAmount || 0, currency)} · paid {money(row.totals.secondaryPaidAmount || 0, currency)}</p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -431,6 +449,7 @@ export default function OwnerReferralRewardsPanel() {
                           <div>
                             <p className="font-black text-[#0E0E10]">{monthLabel(credit.paid_month)} · {money(credit.reward_amount, credit.currency_code || currency)}</p>
                             <p className="text-xs font-semibold text-[#68707A]">Subscription {money(credit.subscription_amount, credit.currency_code || currency)} · {credit.reward_rate_percent || 15}% · {credit.payment_reference || "No reference"}</p>
+                            {credit.secondary_reward_amount ? <p className="text-xs font-bold text-[#9A3412]">Tenant introduction share: {money(credit.secondary_reward_amount, credit.currency_code || currency)} at {credit.secondary_reward_rate_percent || 5}%</p> : null}
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className={["rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] ring-1", creditClasses(credit.credit_status)].join(" ")}>{credit.credit_status || "pending"}</span>

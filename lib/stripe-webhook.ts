@@ -207,7 +207,7 @@ async function markTenantActive(input: {
 async function loadReferralRewardForTenant(tenantId: string) {
   const { data } = await db
     .from("referral_rewards")
-    .select("id, referral_signup_id, referral_source_id, referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, currency_code, reward_status")
+    .select("id, referral_signup_id, referral_source_id, affiliate_id, referrer_type, referrer_tenant_id, secondary_referrer_tenant_id, secondary_reward_rate_percent, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, currency_code, reward_status")
     .eq("referred_tenant_id", tenantId)
     .maybeSingle();
   return data as any | null;
@@ -276,7 +276,9 @@ async function recordTenantSubscriptionPayment(input: {
 
   const rewardRatePercent = normaliseRewardRate(reward.reward_rate_percent, 15);
   const rewardAmount = calculateReferralRewardAmount(amount, rewardRatePercent);
-  if (!rewardAmount) return { paymentEvent, credit: null, duplicatePayment: false };
+  const secondaryRewardRatePercent = normaliseRewardRate(reward.secondary_reward_rate_percent || 0, 0);
+  const secondaryRewardAmount = reward.secondary_referrer_tenant_id ? calculateReferralRewardAmount(amount, secondaryRewardRatePercent) : 0;
+  if (!rewardAmount && !secondaryRewardAmount) return { paymentEvent, credit: null, duplicatePayment: false };
 
   const { data: credit, error: creditError } = await db
     .from("referral_reward_credits")
@@ -285,12 +287,16 @@ async function recordTenantSubscriptionPayment(input: {
       payment_event_id: paymentEvent.id,
       referral_signup_id: reward.referral_signup_id,
       referral_source_id: reward.referral_source_id,
+      affiliate_id: reward.affiliate_id || null,
       referrer_tenant_id: reward.referrer_tenant_id,
+      secondary_referrer_tenant_id: reward.secondary_referrer_tenant_id || null,
       referred_tenant_id: reward.referred_tenant_id,
       paid_month: input.billingPeriodMonth,
       subscription_amount: amount,
       reward_rate_percent: rewardRatePercent,
       reward_amount: rewardAmount,
+      secondary_reward_rate_percent: secondaryRewardRatePercent,
+      secondary_reward_amount: secondaryRewardAmount,
       currency_code: currencyCode,
       credit_status: "pending",
       payment_reference: input.paymentReference,
@@ -315,6 +321,7 @@ async function recordTenantSubscriptionPayment(input: {
       monthly_subscription_amount: amount,
       reward_rate_percent: rewardRatePercent,
       estimated_monthly_reward: rewardAmount,
+      secondary_estimated_monthly_reward: secondaryRewardAmount,
       currency_code: currencyCode,
       updated_at: new Date().toISOString(),
     })
