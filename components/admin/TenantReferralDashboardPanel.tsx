@@ -17,6 +17,15 @@ type DashboardPayload = {
     rewardRatePercent: number | null;
     referredStore: { id: string; name: string | null; slug: string | null; subscriptionStatus: string | null; trialStatus: string | null } | null;
   }>;
+  affiliateSignups: Array<{
+    id: string;
+    referralCode: string | null;
+    status: string | null;
+    refSource: string | null;
+    createdAt: string | null;
+    tenantRewardRatePercent: number | null;
+    referredStore: { id: string; name: string | null; slug: string | null; subscriptionStatus: string | null; trialStatus: string | null } | null;
+  }>;
   applications: Array<{ id: string; applicant_name: string | null; email: string | null; payout_currency_code: string | null; earning_region: string | null; status: string | null; created_at: string | null }>;
   partners: Array<{ id: string; display_name: string | null; email: string | null; tracking_code: string | null; status: string | null; tenant_reward_rate_percent: number | null; created_at: string | null; shareUrl: string | null }>;
   summaries: {
@@ -248,6 +257,18 @@ export default function TenantReferralDashboardPanel() {
                 {application.earning_region ? <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Target earning region: {application.earning_region}</p> : null}
               </article>
             ))}
+            {payload.affiliateSignups.slice(0, 8).map((signup) => (
+              <article key={`affiliate-signup-${signup.id}`} className="rounded-[22px] border border-amber-200 bg-[#FFFDF8] p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-base font-black text-[#0E0E10]">{signup.referredStore?.name || signup.referredStore?.slug || "Store pending"}</p>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#68707A]">{statusLabel(signup.status)} · {dateLabel(signup.createdAt)}</p>
+                  </div>
+                  <p className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-black text-[#9A3412]">{signup.tenantRewardRatePercent || affiliateSummary.tenantRewardRatePercent || 5}% tenant share</p>
+                </div>
+                <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Store referred by an approved affiliate you introduced · Code {signup.referralCode || "affiliate link"} · Source {signup.refSource || "affiliate_partner"}</p>
+              </article>
+            ))}
             {payload.partners.slice(0, 8).map((partner) => (
               <article key={partner.id} className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -260,7 +281,7 @@ export default function TenantReferralDashboardPanel() {
                 {partner.tracking_code ? <p className="mt-3 break-all text-xs font-semibold leading-5 text-emerald-900">Affiliate code: {partner.tracking_code}</p> : null}
               </article>
             ))}
-            {!payload.applications.length && !payload.partners.length ? <p className="rounded-2xl border border-dashed border-[#0E0E10]/15 bg-[#F8FAFC] px-4 py-4 text-sm font-bold text-[#5C5F66]">No affiliate applicants have been introduced from this tenant yet.</p> : null}
+            {!payload.applications.length && !payload.partners.length && !payload.affiliateSignups.length ? <p className="rounded-2xl border border-dashed border-[#0E0E10]/15 bg-[#F8FAFC] px-4 py-4 text-sm font-bold text-[#5C5F66]">No affiliate applicants or affiliate-led stores have been introduced from this tenant yet.</p> : null}
           </div>
         </section>
       </div>

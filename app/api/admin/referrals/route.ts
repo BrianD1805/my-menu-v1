@@ -165,8 +165,10 @@ export async function GET(req: Request) {
     if (applicationsResult.error) throw new Error("Could not load affiliate applications. Run the Ver-0.206 Supabase SQL first.");
     if (partnersResult.error) throw new Error("Could not load affiliate partners. Run the Ver-0.206 Supabase SQL first.");
 
-    const signups = uniqueById([...(sourceSignupsResult.data || []), ...(slugSignupsResult.data || [])] as ReferralSignupRow[]).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
-    const referredTenantIds = Array.from(new Set(signups.map((signup) => signup.referred_tenant_id).filter(Boolean) as string[]));
+    const allSignups = uniqueById([...(sourceSignupsResult.data || []), ...(slugSignupsResult.data || [])] as ReferralSignupRow[]).sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    const affiliateSignups = allSignups.filter((signup) => signup.ref_source === "affiliate_partner");
+    const signups = allSignups.filter((signup) => signup.ref_source !== "affiliate_partner");
+    const referredTenantIds = Array.from(new Set(allSignups.map((signup) => signup.referred_tenant_id).filter(Boolean) as string[]));
     const tenantsResult = referredTenantIds.length
       ? await db.from("tenants").select("id, name, slug, subscription_status, trial_status").in("id", referredTenantIds)
       : { data: [], error: null };
@@ -179,6 +181,9 @@ export async function GET(req: Request) {
     const affiliateCredits = (affiliateCreditsResult.data || []) as ReferralCreditRow[];
     const applications = (applicationsResult.data || []) as AffiliateApplicationRow[];
     const partners = (partnersResult.data || []) as AffiliatePartnerRow[];
+    const affiliateRewardBySignupId = new Map(affiliateRewards.filter((reward) => reward.referral_signup_id).map((reward) => [reward.referral_signup_id as string, reward]));
+    const affiliateRewardByTenantId = new Map(affiliateRewards.filter((reward) => reward.referred_tenant_id).map((reward) => [reward.referred_tenant_id as string, reward]));
+    const defaultTenantAffiliateShare = partners[0]?.tenant_reward_rate_percent ?? DEFAULT_AFFILIATE_REFERRING_TENANT_REWARD_RATE_PERCENT;
 
     const tenantEstimated = rewards.map((reward) => ({ currency_code: reward.currency_code, amount: Number(reward.estimated_monthly_reward || 0) }));
     const tenantPendingCredits = credits.filter((credit) => credit.credit_status === "pending" || credit.credit_status === "credited").map((credit) => ({ currency_code: credit.currency_code, amount: Number(credit.reward_amount || 0) }));
@@ -222,6 +227,19 @@ export async function GET(req: Request) {
           referredStore: referred ? { id: referred.id, name: referred.name, slug: referred.slug, subscriptionStatus: referred.subscription_status, trialStatus: referred.trial_status } : null,
         };
       }),
+      affiliateSignups: affiliateSignups.map((signup) => {
+        const referred = signup.referred_tenant_id ? tenantById.get(signup.referred_tenant_id) : null;
+        const reward = affiliateRewardBySignupId.get(signup.id) || (signup.referred_tenant_id ? affiliateRewardByTenantId.get(signup.referred_tenant_id) : null);
+        return {
+          id: signup.id,
+          referralCode: signup.referral_code,
+          status: signup.status,
+          refSource: signup.ref_source,
+          createdAt: signup.created_at,
+          tenantRewardRatePercent: reward?.secondary_reward_rate_percent ?? defaultTenantAffiliateShare,
+          referredStore: referred ? { id: referred.id, name: referred.name, slug: referred.slug, subscriptionStatus: referred.subscription_status, trialStatus: referred.trial_status } : null,
+        };
+      }),
       applications,
       partners: partners.map((partner) => ({ ...partner, shareUrl: partner.tracking_code ? `https://www.orduva.com/?aff=${encodeURIComponent(partner.tracking_code)}&ref=${encodeURIComponent(partner.tracking_code)}&ref_source=affiliate_partner` : null })),
       summaries: {
@@ -238,7 +256,7 @@ export async function GET(req: Request) {
           applicationCount: applications.length,
           pendingApplicationCount: applications.filter((application) => application.status === "pending").length,
           approvedPartnerCount: partners.filter((partner) => partner.status === "active").length,
-          tenantRewardRatePercent: partners[0]?.tenant_reward_rate_percent ?? DEFAULT_AFFILIATE_REFERRING_TENANT_REWARD_RATE_PERCENT,
+          tenantRewardRatePercent: defaultTenantAffiliateShare,
           estimatedByCurrency: sumCurrency(affiliateEstimated),
           pendingByCurrency: sumCurrency(affiliatePendingCredits),
           paidByCurrency: sumCurrency(affiliatePaidCredits),
