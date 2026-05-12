@@ -245,6 +245,7 @@ export default function MenuBrowser({
   currencySuffix,
   storefrontTheme,
   trialState,
+  initialProductId,
 }: {
   tenantSlug: string;
   tenantId: string;
@@ -285,6 +286,7 @@ export default function MenuBrowser({
   currencySuffix?: string | null;
   storefrontTheme?: StorefrontTheme | null;
   trialState?: { checkoutBlocked?: boolean; isTrialExpired?: boolean; customerMessage?: string | null } | null;
+  initialProductId?: string | null;
 }) {
   const moneySettings = buildMoneySettings({
     currencyName,
@@ -1074,6 +1076,7 @@ export default function MenuBrowser({
                   favouriteBusy={Boolean(favouriteBusyById[product.id])}
                   onToggleFavourite={(productId) => void toggleFavourite(productId)}
                   onAddToCartAnimation={(payload) => launchAddToCartAnimation({ ...payload, destination: "header" })}
+                  initiallyOpen={initialProductId === product.id}
                 />
               ))}
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
@@ -23,6 +23,7 @@ type Props = {
   isFavourite?: boolean;
   favouriteBusy?: boolean;
   onToggleFavourite?: (productId: string) => void;
+  initiallyOpen?: boolean;
 };
 
 function withAlpha(color: string, alphaHex: string, fallback: string) {
@@ -35,9 +36,10 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
   const modalImageFrameRef = useRef<HTMLDivElement | null>(null);
 
@@ -48,6 +50,77 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const isOutOfStock = trackedStock && availableStock <= 0;
   const isLowStock = trackedStock && availableStock > 0 && availableStock <= Math.max(0, Number(lowStockThreshold || 5));
   const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
+
+  useEffect(() => {
+    if (initiallyOpen) setDetailsOpen(true);
+  }, [initiallyOpen]);
+
+  function cleanShareDescription(value: string | null | undefined) {
+    return String(value || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function productShareUrl() {
+    if (typeof window === "undefined") return `/product/${encodeURIComponent(id)}`;
+    return `${window.location.origin}/product/${encodeURIComponent(id)}`;
+  }
+
+  async function copyShareText(text: string) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "true");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+  }
+
+  async function shareProduct() {
+    const url = productShareUrl();
+    const cleanDescription = cleanShareDescription(description);
+    const shareDescription = cleanDescription || `Have a look at ${name} on this menu.`;
+    const text = `${shareDescription}\n\n${url}`;
+
+    setShareStatus("idle");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: name,
+          text: shareDescription,
+          url,
+        });
+        return;
+      }
+
+      await copyShareText(`${name}\n${text}`);
+      setShareStatus("copied");
+      window.setTimeout(() => setShareStatus("idle"), 2200);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+
+      try {
+        await copyShareText(`${name}\n${text}`);
+        setShareStatus("copied");
+        window.setTimeout(() => setShareStatus("idle"), 2200);
+      } catch {
+        setShareStatus("error");
+        window.setTimeout(() => setShareStatus("idle"), 2600);
+      }
+    }
+  }
 
   async function addToCart(source: "card" | "modal" = "card") {
     if (buttonState === "adding" || isOutOfStock) return;
@@ -242,7 +315,26 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       ) : null}
                     </div>
                   </div>
-                  <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close details">×</button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void shareProduct()}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-black text-emerald-800 shadow-[0_14px_30px_rgba(15,23,42,0.13)] ring-1 ring-emerald-50 transition hover:-translate-y-[1px] hover:bg-emerald-50 hover:text-emerald-950"
+                      aria-label={`Share ${name}`}
+                      title="Share product"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <path d="m8.6 10.6 6.8-4.2" />
+                        <path d="m8.6 13.4 6.8 4.2" />
+                      </svg>
+                      <span className="hidden sm:inline">Share product</span>
+                      <span className="sm:hidden">Share</span>
+                    </button>
+                    <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close details">×</button>
+                  </div>
                 </div>
               </div>
 
@@ -260,6 +352,27 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   </div>
 
                   <div className="space-y-4 xl:space-y-5">
+                    <button
+                      type="button"
+                      onClick={() => void shareProduct()}
+                      className="flex w-full items-center justify-between gap-4 rounded-[24px] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-4 text-left shadow-[0_14px_34px_rgba(15,23,42,0.08)] ring-1 ring-white transition hover:-translate-y-[1px] hover:border-emerald-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.11)] sm:p-5"
+                      aria-label={`Share ${name}`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">Share this product</span>
+                        <span className="mt-1 block text-sm font-medium leading-6 text-slate-600">Send this item to a friend by WhatsApp, email or messages.</span>
+                      </span>
+                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-800 shadow-[0_12px_26px_rgba(15,23,42,0.10)] ring-1 ring-emerald-100" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="18" cy="5" r="3" />
+                          <circle cx="6" cy="12" r="3" />
+                          <circle cx="18" cy="19" r="3" />
+                          <path d="m8.6 10.6 6.8-4.2" />
+                          <path d="m8.6 13.4 6.8 4.2" />
+                        </svg>
+                      </span>
+                    </button>
+
                     <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Description</p>
                       <div
@@ -278,7 +391,23 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
               <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
+                    <button
+                      type="button"
+                      onClick={() => void shareProduct()}
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-3 text-sm font-black text-emerald-800 shadow-[0_12px_28px_rgba(15,23,42,0.10)] transition hover:-translate-y-[1px] hover:bg-emerald-100 lg:px-7"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <path d="m8.6 10.6 6.8-4.2" />
+                        <path d="m8.6 13.4 6.8 4.2" />
+                      </svg>
+                      Share
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => { void addToCart("modal"); }}
@@ -289,6 +418,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     {buttonState === "adding" ? "Adding..." : isOutOfStock ? "Sold out" : "Add"}
                   </button>
                 </div>
+                {shareStatus !== "idle" ? (
+                  <p className={`mt-3 text-center text-xs font-semibold ${shareStatus === "copied" ? "text-emerald-700" : "text-red-600"}`}>
+                    {shareStatus === "copied" ? "Product link copied." : "Could not share this product."}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>

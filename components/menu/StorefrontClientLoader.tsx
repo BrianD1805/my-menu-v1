@@ -54,7 +54,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-203d";
+const STOREFRONT_CACHE_VERSION = "ver-0-205b";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -127,7 +127,7 @@ function ErrorStorefrontShell({ message, onRetry }: { message: string; onRetry: 
   );
 }
 
-export default function StorefrontClientLoader({ tenantSlug, version }: { tenantSlug: string; version: string }) {
+export default function StorefrontClientLoader({ tenantSlug, version, initialProductId }: { tenantSlug: string; version: string; initialProductId?: string | null }) {
   const [payload, setPayload] = useState<StorefrontPayload | null>(() => readCachedPayload(tenantSlug));
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
@@ -241,6 +241,7 @@ export default function StorefrontClientLoader({ tenantSlug, version }: { tenant
         currencySuffix={settings.currencySuffix}
         storefrontTheme={settings.storefrontTheme}
         trialState={settings.trialState}
+        initialProductId={initialProductId}
       />
     </main>
   );
