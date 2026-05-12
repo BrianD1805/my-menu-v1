@@ -4,7 +4,7 @@ import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
 import type { TenantTrialState } from "@/lib/trial";
 
-type NavIcon = "home" | "orders" | "products" | "categories" | "settings";
+type NavIcon = "home" | "orders" | "products" | "categories" | "settings" | "referrals";
 
 type NavItem = {
   href: string;
@@ -67,6 +67,16 @@ function AdminNavIcon({ icon }: { icon: NavIcon }) {
           <path d="M19.25 12a7.3 7.3 0 0 0-.08-1.06l2.03-1.58-2-3.46-2.39.96a7.7 7.7 0 0 0-1.84-1.06L14.6 3.25h-4l-.37 2.55a7.7 7.7 0 0 0-1.84 1.06L6 5.9l-2 3.46 2.03 1.58a7.33 7.33 0 0 0 0 2.12L4 14.64l2 3.46 2.39-.96c.56.45 1.18.81 1.84 1.06l.37 2.55h4l.37-2.55a7.7 7.7 0 0 0 1.84-1.06l2.39.96 2-3.46-2.03-1.58c.05-.35.08-.7.08-1.06Z" />
         </svg>
       );
+    case "referrals":
+      return (
+        <svg {...common}>
+          <path d="M12 4.75v15" />
+          <path d="M6.75 8.5h10.5a2 2 0 0 1 2 2v7.25a2 2 0 0 1-2 2H6.75a2 2 0 0 1-2-2V10.5a2 2 0 0 1 2-2Z" />
+          <path d="M4.75 12.25h14.5" />
+          <path d="M9.25 8.5c-1.7-.15-2.75-.95-2.75-2.1 0-1.05.82-1.9 1.95-1.9 1.75 0 2.72 2.1 3.55 4" />
+          <path d="M14.75 8.5c1.7-.15 2.75-.95 2.75-2.1 0-1.05-.82-1.9-1.95-1.9-1.75 0-2.72 2.1-3.55 4" />
+        </svg>
+      );
   }
 }
 
@@ -104,7 +114,7 @@ export default function AdminShell({
   signedInAs: string;
   title: string;
   description: string;
-  current: "home" | "orders" | "products" | "categories" | "settings";
+  current: "home" | "orders" | "products" | "categories" | "settings" | "referrals";
   children: ReactNode;
   logoUrl?: string | null;
   faviconUrl?: string | null;
@@ -117,6 +127,7 @@ export default function AdminShell({
     { href: "/admin/products", label: "Products", icon: "products", current: current === "products" },
     { href: "/admin/categories", label: "Categories", icon: "categories", current: current === "categories" },
     { href: "/admin/settings", label: "Settings", icon: "settings", current: current === "settings" },
+    { href: "/admin/referrals", label: "Referrals", icon: "referrals", current: current === "referrals" },
   ];
 
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
@@ -217,7 +228,7 @@ export default function AdminShell({
       </div>
 
       <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#0E0E10]/10 bg-white px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.45rem)] pt-1.5 shadow-[0_-12px_30px_rgba(14,14,16,0.10)] backdrop-blur sm:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-5 gap-1">
+        <div className="mx-auto grid max-w-6xl grid-cols-6 gap-1">
           {nav.map((item) => (
             <a
               key={item.href}
