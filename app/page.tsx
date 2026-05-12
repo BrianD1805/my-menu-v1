@@ -16,10 +16,12 @@ function firstSearchValue(searchParams: SearchParamsRecord, key: string) {
 function buildOnboardingHref(searchParams: SearchParamsRecord) {
   const params = new URLSearchParams();
   const refTenant = firstSearchValue(searchParams, "ref_tenant") || firstSearchValue(searchParams, "refTenant");
-  const refCode = firstSearchValue(searchParams, "ref") || firstSearchValue(searchParams, "referralCode") || firstSearchValue(searchParams, "referral_code");
+  const affiliateCode = firstSearchValue(searchParams, "aff") || firstSearchValue(searchParams, "affiliate") || firstSearchValue(searchParams, "affiliate_code");
+  const refCode = firstSearchValue(searchParams, "ref") || firstSearchValue(searchParams, "referralCode") || firstSearchValue(searchParams, "referral_code") || affiliateCode;
   const refSource = firstSearchValue(searchParams, "ref_source") || firstSearchValue(searchParams, "refSource");
 
   if (refTenant) params.set("ref_tenant", refTenant);
+  if (affiliateCode) params.set("aff", affiliateCode);
   if (refCode) params.set("ref", refCode);
   if (refSource) params.set("ref_source", refSource);
 
@@ -33,7 +35,10 @@ function hasReferralParams(searchParams: SearchParamsRecord) {
     firstSearchValue(searchParams, "refTenant") ||
     firstSearchValue(searchParams, "ref") ||
     firstSearchValue(searchParams, "referralCode") ||
-    firstSearchValue(searchParams, "referral_code")
+    firstSearchValue(searchParams, "referral_code") ||
+    firstSearchValue(searchParams, "aff") ||
+    firstSearchValue(searchParams, "affiliate") ||
+    firstSearchValue(searchParams, "affiliate_code")
   );
 }
 

@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-205d';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-205d';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-205d';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-206';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-206';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-206';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -32,6 +32,8 @@ function isSessionSensitivePath(url) {
   return (
     url.pathname === '/account' ||
     url.pathname.startsWith('/account/') ||
+    url.pathname === '/affiliate' ||
+    url.pathname.startsWith('/affiliate/') ||
     url.pathname === '/admin' ||
     url.pathname.startsWith('/admin/') ||
     url.pathname === '/platform' ||

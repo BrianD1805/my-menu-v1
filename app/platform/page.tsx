@@ -38,6 +38,12 @@ export default function PlatformDashboardPage() {
                   Referrals
                 </Link>
                 <Link
+                  href="/platform/affiliates"
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-900 transition hover:bg-white"
+                >
+                  Affiliates
+                </Link>
+                <Link
                   href="/platform/billing"
                   className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-5 py-3 text-sm font-black text-[#9A3412] transition hover:bg-white"
                 >

@@ -28,7 +28,7 @@ type Props = {
   clientMode?: boolean;
 };
 
-const RESERVED_SLUGS = new Set(["admin", "api", "app", "assets", "static", "www", "orduva", "zimzaexpress", "zimza-express", "localhost", "support", "help", "login", "platform"]);
+const RESERVED_SLUGS = new Set(["admin", "api", "app", "assets", "static", "www", "orduva", "zimzaexpress", "zimza-express", "localhost", "support", "help", "login", "platform", "affiliate"]);
 
 const STORE_CURRENCY_OPTIONS = PRICING_CURRENCIES.map((currency) => ({
   code: currency.code,
@@ -130,6 +130,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
   const [refTenant, setRefTenant] = useState("");
   const [refSource, setRefSource] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [affiliateCode, setAffiliateCode] = useState("");
   const [refLandingUrl, setRefLandingUrl] = useState("");
   const ownerAccess = useOwnerPlatformAccess();
   const autoLoadedOwnerTenants = useRef(false);
@@ -241,12 +242,14 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
     const params = new URLSearchParams(window.location.search);
     const incomingRefTenant = (params.get("ref_tenant") || params.get("refTenant") || "").trim().toLowerCase();
     const incomingRefSource = (params.get("ref_source") || params.get("refSource") || "").trim();
-    const incomingReferralCode = (params.get("ref") || params.get("referralCode") || "").trim().toLowerCase();
+    const incomingAffiliateCode = (params.get("aff") || params.get("affiliate") || params.get("affiliate_code") || "").trim().toLowerCase();
+    const incomingReferralCode = (params.get("ref") || params.get("referralCode") || incomingAffiliateCode || "").trim().toLowerCase();
 
     if (incomingRefTenant) window.sessionStorage.setItem("orduva_ref_tenant", incomingRefTenant);
     if (incomingRefSource) window.sessionStorage.setItem("orduva_ref_source", incomingRefSource);
+    if (incomingAffiliateCode) window.sessionStorage.setItem("orduva_affiliate_code", incomingAffiliateCode);
     if (incomingReferralCode) window.sessionStorage.setItem("orduva_ref_code", incomingReferralCode);
-    if ((incomingRefTenant || incomingReferralCode) && !window.sessionStorage.getItem("orduva_ref_landing_url")) {
+    if ((incomingRefTenant || incomingReferralCode || incomingAffiliateCode) && !window.sessionStorage.getItem("orduva_ref_landing_url")) {
       window.sessionStorage.setItem("orduva_ref_landing_url", window.location.href);
     }
 
@@ -261,7 +264,8 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
 
     setRefTenant(incomingRefTenant || window.sessionStorage.getItem("orduva_ref_tenant") || "");
     setRefSource(incomingRefSource || window.sessionStorage.getItem("orduva_ref_source") || "");
-    setReferralCode(incomingReferralCode || window.sessionStorage.getItem("orduva_ref_code") || "");
+    setAffiliateCode(incomingAffiliateCode || window.sessionStorage.getItem("orduva_affiliate_code") || "");
+    setReferralCode(incomingReferralCode || window.sessionStorage.getItem("orduva_ref_code") || incomingAffiliateCode || window.sessionStorage.getItem("orduva_affiliate_code") || "");
     setRefLandingUrl(window.sessionStorage.getItem("orduva_ref_landing_url") || window.location.href);
   }, [clientMode]);
 
@@ -333,6 +337,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
           refTenant,
           refSource,
           referralCode,
+          affiliateCode,
           refLandingUrl,
         }),
       });
@@ -344,10 +349,11 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setTenants((current) => [createdTenant.tenant, ...current.filter((tenant) => tenant.id !== createdTenant.tenant.id)]);
 
       if (clientMode && typeof window !== "undefined") {
-        if (refTenant || referralCode) {
+        if (refTenant || referralCode || affiliateCode) {
           window.sessionStorage.removeItem("orduva_ref_tenant");
           window.sessionStorage.removeItem("orduva_ref_source");
           window.sessionStorage.removeItem("orduva_ref_code");
+          window.sessionStorage.removeItem("orduva_affiliate_code");
           window.sessionStorage.removeItem("orduva_ref_landing_url");
         }
         const params = new URLSearchParams({
@@ -379,6 +385,7 @@ export default function TenantOnboardingManager({ initialTenants, apiPath = "/ap
       setRefTenant("");
       setRefSource("");
       setReferralCode("");
+      setAffiliateCode("");
       setRefLandingUrl("");
       setStoreCurrencyCode(DEFAULT_PRICING_CURRENCY);
       setSelectedPlanCode(DEFAULT_PRICING_PLAN);

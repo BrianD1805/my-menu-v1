@@ -31,7 +31,7 @@ const RESERVED_SLUGS = new Set([
   "support",
   "help",
   "login",
-  "platform",
+  "platform", "affiliate",
 ]);
 
 type PublicOnboardingWindow = { count: number; resetAt: number };
@@ -332,14 +332,15 @@ export async function POST(req: Request) {
     }
 
     let referralCapture: Awaited<ReturnType<typeof captureTenantReferral>> | null = null;
-    if (referral.refTenantSlug || referral.referralCode) {
+    if (referral.refTenantSlug || referral.referralCode || referral.affiliateCode) {
       try {
         referralCapture = await captureTenantReferral({
           referredTenantId: tenant.id,
           referredTenantSlug: tenant.slug,
           refTenantSlug: referral.refTenantSlug,
           referralCode: referral.referralCode,
-          refSource: referral.refSource || "public_onboarding",
+          affiliateCode: referral.affiliateCode,
+          refSource: referral.refSource || (referral.affiliateCode ? "affiliate_partner" : "public_onboarding"),
           landingUrl: referral.landingUrl,
           clientIp,
           userAgent: req.headers.get("user-agent"),

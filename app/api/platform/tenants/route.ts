@@ -30,7 +30,7 @@ const RESERVED_SLUGS = new Set([
   "support",
   "help",
   "login",
-  "platform",
+  "platform", "affiliate",
 ]);
 
 const COUNTRY_DEFAULTS: Record<string, CurrencyDefaults> = {

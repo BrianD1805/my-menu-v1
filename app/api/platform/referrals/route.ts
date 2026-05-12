@@ -274,7 +274,7 @@ export async function POST(req: Request) {
 
     const { data: reward, error: rewardError } = await db
       .from("referral_rewards")
-      .select("id, referral_signup_id, referral_source_id, referrer_tenant_id, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, currency_code, reward_status")
+      .select("id, referral_signup_id, referral_source_id, affiliate_id, referrer_type, referrer_tenant_id, secondary_referrer_tenant_id, secondary_reward_rate_percent, referred_tenant_id, reward_rate_percent, monthly_subscription_amount, currency_code, reward_status")
       .eq("id", rewardId)
       .single();
 
@@ -288,6 +288,8 @@ export async function POST(req: Request) {
     const currencyCode = normaliseCurrency(body?.currencyCode, reward.currency_code || "GBP");
     const billingPeriodMonth = monthStart(body?.paidMonth || body?.billingPeriodMonth || new Date());
     const rewardAmount = calculateReferralRewardAmount(subscriptionAmount, rewardRatePercent);
+    const secondaryRewardRatePercent = normaliseRewardRate(reward.secondary_reward_rate_percent || 0, 0);
+    const secondaryRewardAmount = reward.secondary_referrer_tenant_id ? calculateReferralRewardAmount(subscriptionAmount, secondaryRewardRatePercent) : 0;
     const paymentSource = normaliseSubscriptionPaymentSource(body?.paymentSource || "manual");
     const paymentStatus = normaliseSubscriptionPaymentStatus(body?.paymentStatus || "paid");
     const creditStatus = normaliseCreditStatus(body?.creditStatus || "pending");
@@ -326,12 +328,16 @@ export async function POST(req: Request) {
         payment_event_id: paymentEvent.id,
         referral_signup_id: reward.referral_signup_id,
         referral_source_id: reward.referral_source_id,
+        affiliate_id: reward.affiliate_id || null,
         referrer_tenant_id: reward.referrer_tenant_id,
+        secondary_referrer_tenant_id: reward.secondary_referrer_tenant_id || null,
         referred_tenant_id: reward.referred_tenant_id,
         paid_month: billingPeriodMonth,
         subscription_amount: subscriptionAmount,
         reward_rate_percent: rewardRatePercent,
         reward_amount: rewardAmount,
+        secondary_reward_rate_percent: secondaryRewardRatePercent,
+        secondary_reward_amount: secondaryRewardAmount,
         currency_code: currencyCode,
         credit_status: creditStatus,
         payment_reference: paymentReference,
@@ -352,6 +358,7 @@ export async function POST(req: Request) {
         monthly_subscription_amount: subscriptionAmount,
         reward_rate_percent: rewardRatePercent,
         estimated_monthly_reward: rewardAmount,
+        secondary_estimated_monthly_reward: secondaryRewardAmount,
         currency_code: currencyCode,
         updated_at: new Date().toISOString(),
       })

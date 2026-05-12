@@ -370,6 +370,7 @@ export default function MenuBrowser({
     { label: "Website", href: normaliseExternalUrl(socialWebsiteUrl), icon: <WebsiteIcon /> },
   ].filter((item) => Boolean(item.href)).slice(0, 8);
   const referralSignupHref = `https://www.orduva.com/?ref_tenant=${encodeURIComponent(tenantSlug)}&ref=${encodeURIComponent(`tenant_${tenantSlug}`)}&ref_source=storefront_footer`;
+  const affiliateApplicationHref = `https://www.orduva.com/affiliate/apply?ref_tenant=${encodeURIComponent(tenantSlug)}&ref_source=storefront_footer_affiliate`;
 
   const refreshCustomerSession = useCallback(async (options?: { initial?: boolean }) => {
     const fetchCustomer = async (timeoutMs: number) => {
@@ -1103,6 +1104,7 @@ export default function MenuBrowser({
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Powered by Orduva</p>
                   <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10]">Do you need a store like this?</h2>
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C5F66]">Launch your own branded ordering storefront with products, customer accounts and simple order management.</p>
+                  <a href={affiliateApplicationHref} className="mt-3 inline-flex text-xs font-black uppercase tracking-[0.18em] text-[#0E6F5C] underline decoration-[#0E6F5C]/30 underline-offset-4 transition hover:text-[#084C41]">Apply to become an Orduva affiliate</a>
                 </div>
                 <a
                   href={referralSignupHref}

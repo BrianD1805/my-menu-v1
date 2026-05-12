@@ -33,12 +33,14 @@ export default function ReferralLandingTracker() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const refTenant = cleanSlug(params.get("ref_tenant") || params.get("refTenant"));
-    const refCode = cleanCode(params.get("ref") || params.get("referralCode") || params.get("referral_code"));
+    const affiliateCode = cleanCode(params.get("aff") || params.get("affiliate") || params.get("affiliate_code"));
+    const refCode = cleanCode(params.get("ref") || params.get("referralCode") || params.get("referral_code") || affiliateCode);
     const refSource = cleanSource(params.get("ref_source") || params.get("refSource"));
 
-    if (!refTenant && !refCode) return;
+    if (!refTenant && !refCode && !affiliateCode) return;
 
     if (refTenant) window.sessionStorage.setItem("orduva_ref_tenant", refTenant);
+    if (affiliateCode) window.sessionStorage.setItem("orduva_affiliate_code", affiliateCode);
     if (refCode) window.sessionStorage.setItem("orduva_ref_code", refCode);
     if (refSource) window.sessionStorage.setItem("orduva_ref_source", refSource);
     window.sessionStorage.setItem("orduva_ref_landing_url", window.location.href);
