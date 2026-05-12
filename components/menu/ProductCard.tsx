@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { StoredCartItem, readCart, writeCart } from "@/lib/cart";
+import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
 
@@ -19,7 +19,7 @@ type Props = {
   accentColor?: string | null;
   primaryColor?: string | null;
   themeColors?: StorefrontTheme | null;
-  onAddToCartAnimation?: (payload: { imageUrl: string | null; name: string; sourceRect: DOMRect | null }) => void;
+  onAddToCartAnimation?: (payload: { imageUrl: string | null; name: string; sourceRect: DOMRect | null; targetRect?: DOMRect | null }) => void;
   isFavourite?: boolean;
   favouriteBusy?: boolean;
   onToggleFavourite?: (productId: string) => void;
@@ -40,8 +40,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
+  const [cartCount, setCartCount] = useState(0);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
   const modalImageFrameRef = useRef<HTMLDivElement | null>(null);
+  const modalCartButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const hasImage = !!imageUrl;
   const fullDescription = description?.trim() || "<p>A fresh favourite from the menu, ready to add to your order.</p>";
@@ -54,6 +56,14 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   useEffect(() => {
     if (initiallyOpen) setDetailsOpen(true);
   }, [initiallyOpen]);
+
+  useEffect(() => {
+    const update = (items: StoredCartItem[]) => {
+      setCartCount(items.reduce((total, item) => total + Math.max(0, item.quantity || 0), 0));
+    };
+    update(readCart<StoredCartItem>(tenantSlug));
+    return subscribeToCartUpdates<StoredCartItem>(tenantSlug, update);
+  }, [tenantSlug]);
 
   function cleanShareDescription(value: string | null | undefined) {
     return String(value || "")
@@ -136,7 +146,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     setButtonState("adding");
 
     const sourceRect = (source === "modal" ? modalImageFrameRef.current : imageFrameRef.current)?.getBoundingClientRect() || null;
-    onAddToCartAnimation?.({ imageUrl, name, sourceRect });
+    const targetRect = source === "modal" ? modalCartButtonRef.current?.getBoundingClientRect() || null : null;
+    onAddToCartAnimation?.({ imageUrl, name, sourceRect, targetRect });
 
     const updated = found
       ? existing.map((item) => (item.productId === id ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, availableStock) : item.quantity + 1 } : item))
@@ -144,6 +155,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     writeCart(tenantSlug, updated);
     setButtonState("added");
     setTimeout(() => setButtonState("idle"), 1200);
+  }
+
+  function goToCheckout() {
+    setDetailsOpen(false);
+    if (typeof window !== "undefined") window.location.assign("/checkout");
   }
 
   function buttonLabel() {
@@ -317,21 +333,19 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <button
+                      ref={modalCartButtonRef}
                       type="button"
-                      onClick={() => void shareProduct()}
-                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-black text-emerald-800 shadow-[0_14px_30px_rgba(15,23,42,0.13)] ring-1 ring-emerald-50 transition hover:-translate-y-[1px] hover:bg-emerald-50 hover:text-emerald-950"
-                      aria-label={`Share ${name}`}
-                      title="Share product"
+                      onClick={goToCheckout}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50 hover:text-slate-950"
+                      aria-label={`Go to checkout with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
+                      title="Go to checkout"
                     >
-                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <circle cx="18" cy="5" r="3" />
-                        <circle cx="6" cy="12" r="3" />
-                        <circle cx="18" cy="19" r="3" />
-                        <path d="m8.6 10.6 6.8-4.2" />
-                        <path d="m8.6 13.4 6.8 4.2" />
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="9" cy="20" r="1" />
+                        <circle cx="18" cy="20" r="1" />
+                        <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" />
                       </svg>
-                      <span className="hidden sm:inline">Share product</span>
-                      <span className="sm:hidden">Share</span>
+                      <span>{cartCount}</span>
                     </button>
                     <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close details">×</button>
                   </div>
@@ -393,20 +407,6 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
-                    <button
-                      type="button"
-                      onClick={() => void shareProduct()}
-                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-3 text-sm font-black text-emerald-800 shadow-[0_12px_28px_rgba(15,23,42,0.10)] transition hover:-translate-y-[1px] hover:bg-emerald-100 lg:px-7"
-                    >
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <circle cx="18" cy="5" r="3" />
-                        <circle cx="6" cy="12" r="3" />
-                        <circle cx="18" cy="19" r="3" />
-                        <path d="m8.6 10.6 6.8-4.2" />
-                        <path d="m8.6 13.4 6.8 4.2" />
-                      </svg>
-                      Share
-                    </button>
                   </div>
                   <button
                     type="button"

@@ -34,7 +34,7 @@ type FavouriteProductStripCardProps = {
   isBusy: boolean;
   themeColors?: StorefrontTheme | null;
   stripKind?: "favourite" | "buyAgain";
-  onAddToCart: (productId: string, options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string }) => void;
+  onAddToCart: (productId: string, options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null }) => void;
   onRemoveFavourite?: (productId: string) => void;
 };
 
@@ -302,7 +302,7 @@ export default function MenuBrowser({
   });
   const [searchOpen, setSearchOpen] = useState(false);
   const cartButtonRef = useRef<HTMLAnchorElement | null>(null);
-  const searchCartIndicatorRef = useRef<HTMLDivElement | null>(null);
+  const searchCartIndicatorRef = useRef<HTMLButtonElement | null>(null);
   const favouritesStripRef = useRef<HTMLDivElement | null>(null);
   const buyAgainStripRef = useRef<HTMLDivElement | null>(null);
 
@@ -677,14 +677,13 @@ export default function MenuBrowser({
   }, []);
 
   const launchAddToCartAnimation = useCallback(
-    ({ imageUrl, name, sourceRect, destination = "header" }: { imageUrl: string | null; name: string; sourceRect: DOMRect | null; destination?: "header" | "search" }) => {
+    ({ imageUrl, name, sourceRect, targetRect, destination = "header" }: { imageUrl: string | null; name: string; sourceRect: DOMRect | null; targetRect?: DOMRect | null; destination?: "header" | "search" }) => {
       const targetElement = destination === "search" && searchCartIndicatorRef.current ? searchCartIndicatorRef.current : cartButtonRef.current;
-      if (!sourceRect || !targetElement) {
+      const resolvedTargetRect = targetRect ?? targetElement?.getBoundingClientRect() ?? null;
+      if (!sourceRect || !resolvedTargetRect) {
         triggerCartPulse();
         return;
       }
-
-      const targetRect = targetElement.getBoundingClientRect();
       const id = `fly-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const nextItem: FlyingCartItem = {
         id,
@@ -694,8 +693,8 @@ export default function MenuBrowser({
         startTop: sourceRect.top,
         startWidth: sourceRect.width,
         startHeight: sourceRect.height,
-        endCenterX: targetRect.left + targetRect.width / 2,
-        endCenterY: targetRect.top + targetRect.height / 2,
+        endCenterX: resolvedTargetRect.left + resolvedTargetRect.width / 2,
+        endCenterY: resolvedTargetRect.top + resolvedTargetRect.height / 2,
         started: false,
       };
 
@@ -717,7 +716,7 @@ export default function MenuBrowser({
 
   async function addToCart(
     productId: string,
-    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; destination?: "header" | "search" },
+    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" },
   ) {
     if (buttonStateById[productId] === "adding") return;
 
@@ -742,6 +741,7 @@ export default function MenuBrowser({
         imageUrl: options?.imageUrl ?? product?.image_url ?? null,
         name: options?.name ?? product?.name ?? "Menu item",
         sourceRect: options?.sourceRect ?? null,
+        targetRect: options?.targetRect ?? null,
         destination: options?.destination ?? "header",
       });
     }
@@ -1211,14 +1211,24 @@ export default function MenuBrowser({
                     <p className="mt-2 text-sm leading-6 text-slate-600">Search by product name, keyword, or narrow the results to a category.</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div ref={searchCartIndicatorRef} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                    <button
+                      ref={searchCartIndicatorRef}
+                      type="button"
+                      onClick={() => {
+                        setSearchOpen(false);
+                        if (typeof window !== "undefined") window.location.assign("/checkout");
+                      }}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50 hover:text-slate-950"
+                      aria-label={`Go to checkout with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
+                      title="Go to checkout"
+                    >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <circle cx="9" cy="20" r="1" />
                         <circle cx="18" cy="20" r="1" />
                         <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" />
                       </svg>
                       <span>{cartCount}</span>
-                    </div>
+                    </button>
                     <button
                       type="button"
                       onClick={() => setSearchOpen(false)}
