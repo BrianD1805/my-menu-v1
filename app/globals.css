@@ -112,37 +112,40 @@ body {
   animation: orduva-glow-sweep 6.8s ease-in-out infinite;
 }
 
-/* Orduva Ver-0.210 — Tenant Admin Premium Colour Refresh
-   Scoped to the tenant admin shell so storefront and owner platform styling remain untouched. */
+/* Orduva Ver-0.210B — Tenant Admin Palette Preset Cleanup
+   Option 2: Premium Slate & Emerald. Scoped to tenant admin only.
+   Premium app feel is created with clean white panels, slim borders and no shadows. */
 .orduva-admin-refresh {
-  --oa-bg: #F8FAF7;
+  --oa-bg: #F6F8F7;
+  --oa-bg-soft: #F1F5F4;
   --oa-panel: #FFFFFF;
-  --oa-primary: #2563EB;
-  --oa-primary-deep: #1D4ED8;
-  --oa-emerald: #16A34A;
-  --oa-mint: #ECFDF3;
-  --oa-amber: #F59E0B;
-  --oa-champagne: #FFF7E6;
-  --oa-violet: #7C3AED;
-  --oa-lavender: #F3EEFF;
-  --oa-ice: #EEF6FF;
+  --oa-primary: #0F766E;
+  --oa-primary-deep: #115E59;
+  --oa-accent: #2563EB;
+  --oa-accent-soft: #EAFBF5;
+  --oa-secondary: #F1F5F4;
   --oa-ink: #111827;
-  --oa-slate: #4B5563;
+  --oa-slate: #374151;
   --oa-muted: #6B7280;
-  --oa-line: #E5E7EB;
-  --oa-line-soft: #EDF0F2;
-  --oa-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
-  --oa-shadow-soft: 0 3px 10px rgba(15, 23, 42, 0.05);
+  --oa-line: #DCE5E1;
+  --oa-line-soft: #E8EFEC;
+  --oa-warning: #B45309;
+  --oa-danger: #B91C1C;
+  background: var(--oa-bg);
+  color: var(--oa-ink);
 }
 
-.orduva-admin-refresh [class*="shadow-"] {
-  box-shadow: var(--oa-shadow-soft) !important;
+.orduva-admin-refresh,
+.orduva-admin-refresh * {
+  box-shadow: none !important;
 }
 
 .orduva-admin-refresh header,
 .orduva-admin-refresh section,
 .orduva-admin-refresh article,
-.orduva-admin-refresh aside {
+.orduva-admin-refresh aside,
+.orduva-admin-refresh nav,
+.orduva-admin-refresh form {
   border-color: var(--oa-line) !important;
 }
 
@@ -153,7 +156,6 @@ body {
   border-color: var(--oa-line) !important;
   background: #ffffff !important;
   color: var(--oa-ink) !important;
-  box-shadow: none !important;
 }
 
 .orduva-admin-refresh input:focus,
@@ -161,29 +163,42 @@ body {
 .orduva-admin-refresh select:focus,
 .orduva-admin-refresh .input:focus {
   border-color: var(--oa-primary) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+  outline: 2px solid rgba(15, 118, 110, 0.14) !important;
+  outline-offset: 0;
 }
 
-/* Avoid broad arbitrary Tailwind attribute selectors here: Next/cssnano can choke on
-   raw square brackets inside selector strings during production minification.
-   Keep the refresh focused through the admin shell classes and direct component styles. */
+.orduva-admin-refresh .admin-pressable,
 .orduva-admin-refresh button:not(:disabled),
-.orduva-admin-refresh a.admin-pressable,
-.orduva-admin-refresh .admin-pressable {
+.orduva-admin-refresh a {
   -webkit-tap-highlight-color: transparent;
+}
+
+.orduva-admin-refresh .admin-pressable[aria-current="page"] {
+  border-color: var(--oa-primary) !important;
+  background: var(--oa-primary) !important;
+  color: #ffffff !important;
 }
 
 .orduva-admin-refresh .admin-bottom-nav {
   border-color: var(--oa-line) !important;
-  background: rgba(255,255,255,0.96) !important;
-  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.06) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
 }
 
-@media (max-width: 640px) {
-  .orduva-admin-refresh header,
-  .orduva-admin-refresh section,
-  .orduva-admin-refresh article,
-  .orduva-admin-refresh aside {
-    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.045) !important;
-  }
+.orduva-admin-refresh .oa-admin-surface {
+  background: var(--oa-panel) !important;
+  border-color: var(--oa-line) !important;
+}
+
+.orduva-admin-refresh .oa-admin-soft {
+  background: var(--oa-secondary) !important;
+  border-color: var(--oa-line) !important;
+}
+
+.orduva-admin-refresh .oa-admin-accent-soft {
+  background: var(--oa-accent-soft) !important;
+  border-color: #CFE8DD !important;
+}
+
+.orduva-admin-refresh .oa-admin-primary-text {
+  color: var(--oa-primary) !important;
 }

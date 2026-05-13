@@ -94,8 +94,8 @@ function navClassName(current?: boolean) {
   return [
     "admin-pressable inline-flex min-h-10 w-full items-center justify-center rounded-2xl px-3.5 py-2.5 text-sm font-bold transition sm:w-auto",
     current
-      ? "border border-[#2563EB] bg-[#2563EB] text-white shadow-[0_8px_20px_rgba(37,99,235,0.16)]"
-      : "border border-[#E5E7EB] bg-white text-[#111827] shadow-[0_3px_10px_rgba(15,23,42,0.04)] hover:-translate-y-[1px] hover:border-[#2563EB]/35 hover:bg-[#EEF6FF]",
+      ? "border border-[#0F766E] bg-[#0F766E] text-white"
+      : "border border-[#DCE5E1] bg-white text-[#111827] hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]",
   ].join(" ");
 }
 
@@ -145,61 +145,60 @@ export default function AdminShell({
 
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
   const tenantInitial = tenantName.trim().slice(0, 1).toUpperCase() || "O";
-  const identityAccent = accentColor || "#2563EB";
+  const identityAccent = accentColor || "#0F766E";
   const identityIconUrl = faviconUrl || null;
-  const adminBackgroundClass = "bg-[#F8FAF7]";
-  const adminBackdropClass = "bg-[radial-gradient(circle_at_14%_8%,rgba(37,99,235,0.10),transparent_32%),radial-gradient(circle_at_92%_18%,rgba(124,58,237,0.09),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(22,163,74,0.08),transparent_36%),linear-gradient(135deg,#F8FAF7_0%,#F2F7F4_48%,#FFFFFF_100%)]";
+  const adminBackgroundClass = "bg-[#F6F8F7]";
+  const adminBackdropClass = "bg-[linear-gradient(135deg,#F6F8F7_0%,#F1F5F4_58%,#FFFFFF_100%)]";
 
   return (
     <main className={`orduva-admin-refresh relative min-h-screen overflow-x-clip ${adminBackgroundClass} px-3 py-4 pb-24 text-[#111827] sm:px-6 sm:py-7 sm:pb-7`}>
       <div className={`pointer-events-none absolute inset-0 -z-10 ${adminBackdropClass}`} />
       <div className="mx-auto max-w-6xl">
-        <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#E5E7EB] bg-white text-[#111827] shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:-mx-6 sm:mb-4">
+        <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#DCE5E1] bg-white text-[#111827] sm:-mx-6 sm:mb-4">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-3">
             <div className="flex min-w-0 items-center gap-3">
               <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-[#DBEAFE] bg-[#EEF6FF] text-base font-black text-[#111827] shadow-[0_6px_16px_rgba(37,99,235,0.09)]"
-                style={{ boxShadow: `0 12px 26px ${identityAccent}24` }}
+                className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-[#DCE5E1] bg-[#EAFBF5] text-base font-black text-[#111827]"
               >
                 {identityIconUrl ? <img src={identityIconUrl} alt={`${tenantName} favicon`} className="h-full w-full object-contain p-1" /> : tenantInitial}
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2563EB]">Active store</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Active store</p>
                 <p className="truncate text-lg font-black leading-tight text-[#111827] sm:text-xl">{tenantName}</p>
                 {tenantSlug ? (
                   <a
                     href={storefrontUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-0.5 block truncate text-xs font-semibold text-[#4B5563] underline-offset-4 transition hover:text-[#2563EB] hover:underline"
+                    className="mt-0.5 block truncate text-xs font-semibold text-[#374151] underline-offset-4 transition hover:text-[#0F766E] hover:underline"
                     title="Open storefront"
                   >
                     {tenantSlug}.orduva.com
                   </a>
                 ) : (
-                  <p className="mt-0.5 truncate text-xs font-semibold text-[#4B5563]">Store address unavailable</p>
+                  <p className="mt-0.5 truncate text-xs font-semibold text-[#374151]">Store address unavailable</p>
                 )}
               </div>
             </div>
 
             <div className="flex items-center justify-between gap-2 sm:justify-end">
               <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
-              <span className="hidden min-h-10 items-center justify-center rounded-2xl border border-[#DBEAFE] bg-[#EEF6FF] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#2563EB] shadow-sm sm:inline-flex">
+              <span className="hidden min-h-10 items-center justify-center rounded-2xl border border-[#DCE5E1] bg-[#EAFBF5] px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#0F766E] sm:inline-flex">
                 {LIVE_VERSION.replace("Ver: ", "V ")}
               </span>
             </div>
           </div>
         </div>
 
-        <header className="overflow-hidden rounded-[26px] border border-[#E5E7EB] bg-white/[0.94] shadow-[0_8px_22px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-          <div className="flex flex-col gap-4 border-b border-[#E5E7EB] px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-7">
+        <header className="overflow-hidden rounded-[26px] border border-[#DCE5E1] bg-white/[0.98] backdrop-blur-xl oa-admin-surface">
+          <div className="flex flex-col gap-4 border-b border-[#DCE5E1] px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-7">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[#111827] shadow-[0_6px_16px_rgba(15,23,42,0.10)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[#111827]">
                 <img src="/orduva-platform-icon-192.png" alt="Orduva Admin" className="h-full w-full object-cover" />
               </div>
               <div className="min-w-0">
                 <p className="truncate text-lg font-black tracking-tight text-[#111827]">Orduva Admin</p>
-                <p className="mt-0.5 truncate text-[11px] font-black uppercase tracking-[0.2em] text-[#2563EB]">Store workspace</p>
+                <p className="mt-0.5 truncate text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Store workspace</p>
               </div>
             </div>
 
@@ -215,18 +214,18 @@ export default function AdminShell({
           <div className="px-4 py-5 sm:px-6 lg:px-7 lg:py-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
-                <p className="inline-flex w-fit rounded-full border border-[#DBEAFE] bg-[#EEF6FF] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#2563EB]">
+                <p className="inline-flex w-fit rounded-full border border-[#DCE5E1] bg-[#EAFBF5] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#0F766E]">
                   {current} dashboard
                 </p>
                 <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-tight text-[#111827] sm:text-3xl lg:text-[2.35rem]">
                   {title}
                 </h1>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-[#4B5563]">
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-[#374151]">
                   {description}
                 </p>
               </div>
 
-              <div className="rounded-[20px] border border-[#E5E7EB] bg-[#F8FAF7] px-4 py-3 text-sm leading-6 text-[#4B5563] shadow-sm lg:min-w-[15rem]">
+              <div className="rounded-[20px] border border-[#DCE5E1] bg-[#F1F5F4] px-4 py-3 oa-admin-soft text-sm leading-6 text-[#374151] lg:min-w-[15rem]">
                 Signed in as <span className="font-black text-[#111827]">{signedInAs}</span>
               </div>
             </div>
@@ -236,11 +235,11 @@ export default function AdminShell({
         <div className="mt-4 sm:mt-5">{children}</div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <LogoutButton className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_18px_rgba(37,99,235,0.16)] transition hover:-translate-y-[1px] hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60" />
+          <LogoutButton className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0F766E] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#115E59] disabled:cursor-not-allowed disabled:opacity-60" />
         </div>
       </div>
 
-      <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E7EB] bg-white px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.45rem)] pt-1.5 shadow-[0_-6px_18px_rgba(15,23,42,0.06)] backdrop-blur sm:hidden">
+      <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#DCE5E1] bg-white px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.45rem)] pt-1.5 backdrop-blur sm:hidden">
         <div className="mx-auto grid max-w-6xl grid-cols-7 gap-1">
           {nav.map((item) => (
             <a
@@ -250,16 +249,16 @@ export default function AdminShell({
               className={[
                 "group inline-flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1 text-[10px] font-black leading-tight transition duration-200 active:scale-[0.94]",
                 item.current
-                  ? "text-[#2563EB]"
-                  : "text-[#4B5563] hover:text-[#2563EB]",
+                  ? "text-[#0F766E]"
+                  : "text-[#374151] hover:text-[#0F766E]",
               ].join(" ")}
             >
               <span
                 className={[
                   "flex h-8 w-8 items-center justify-center rounded-[14px] transition duration-200",
                   item.current
-                    ? "bg-[#2563EB] text-white shadow-[0_6px_16px_rgba(37,99,235,0.17)]"
-                    : "bg-[#F5F2EE] text-[#1F2328] group-hover:bg-[#FFF7F0] group-hover:text-[#2563EB]",
+                    ? "bg-[#0F766E] text-white"
+                    : "bg-[#F1F5F4] text-[#374151] group-hover:bg-[#EAFBF5] group-hover:text-[#0F766E]",
                 ].join(" ")}
               >
                 <AdminNavIcon icon={item.icon} />

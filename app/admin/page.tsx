@@ -19,7 +19,7 @@ function ActionCard({
   return (
     <a
       href={href}
-      className={`group rounded-[26px] border border-[#0E0E10]/10 p-5 shadow-[0_16px_38px_rgba(14,14,16,0.06)] transition hover:-translate-y-0.5 hover:border-[#FF6A3D]/35 hover:shadow-[0_24px_60px_rgba(14,14,16,0.11)] ${toneClass}`}
+      className={`group rounded-[26px] border border-[#DCE5E1] p-5 transition hover:border-[#0F766E]/35 hover:bg-[#EAFBF5] ${toneClass}`}
     >
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#B85A35]">{eyebrow}</p>
       <div className="mt-3 flex min-h-[150px] flex-col justify-between gap-5 sm:min-h-[164px]">
@@ -27,7 +27,7 @@ function ActionCard({
           <h2 className="text-xl font-bold text-[#1F2328]">{title}</h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-[#4F535A]">{body}</p>
         </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#0E0E10]/10 bg-white/85 px-4 py-2 text-sm font-extrabold text-[#0E0E10] shadow-[0_10px_24px_rgba(14,14,16,0.08)] transition group-hover:border-[#FF6A3D]/45 group-hover:bg-[#0E0E10] group-hover:text-white">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#DCE5E1] bg-white/85 px-4 py-2 text-sm font-extrabold text-[#111827] transition group-hover:border-[#0F766E]/45 group-hover:bg-[#0F766E] group-hover:text-white">
           <span>Open</span>
           <span aria-hidden="true" className="transition group-hover:translate-x-0.5">↗</span>
         </div>
