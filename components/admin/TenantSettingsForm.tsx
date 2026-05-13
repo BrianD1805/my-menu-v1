@@ -503,6 +503,11 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
   const yocoCredentialReady = Boolean(form.yocoCustomerSecretKeySet || form.yocoCustomerSecretKeyInput.trim());
   const yocoWebhookReady = Boolean(form.yocoCustomerWebhookSecretSet || form.yocoCustomerWebhookSecretInput.trim());
+  const yocoModeDirty = form.yocoCustomerMode !== savedForm.yocoCustomerMode;
+  const yocoSecretDirty = Boolean(form.yocoCustomerSecretKeyInput.trim());
+  const yocoSetupNeedsSaveBeforeWebhook = yocoModeDirty || yocoSecretDirty;
+  const yocoLiveMode = form.yocoCustomerMode === "live";
+  const yocoReadyForCheckout = Boolean(form.enableYocoCustomerPayments && form.yocoCustomerPaymentsLive && yocoCurrencyAllowed && yocoCredentialReady);
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
@@ -766,6 +771,19 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     } finally {
       setSaving(false);
     }
+  }
+
+  function setYocoMode(value: FormState["yocoCustomerMode"]) {
+    setForm((current) => ({
+      ...current,
+      yocoCustomerMode: value,
+      yocoCustomerPaymentsLive: false,
+      yocoCustomerWebhookSecretInput: "",
+      yocoCustomerWebhookSecretSet: false,
+      yocoCustomerWebhookSecretHint: "",
+      yocoCustomerWebhookId: "",
+      yocoCustomerWebhookUrl: "",
+    }));
   }
 
   async function registerYocoWebhook() {
@@ -1264,10 +1282,11 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <Field label="Yoco mode">
-                  <select value={form.yocoCustomerMode} onChange={(e) => update("yocoCustomerMode", e.target.value as FormState["yocoCustomerMode"])} className="input">
+                  <select value={form.yocoCustomerMode} onChange={(e) => setYocoMode(e.target.value as FormState["yocoCustomerMode"])} className="input">
                     <option value="test">Test credentials</option>
                     <option value="live">Live credentials</option>
                   </select>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">Changing mode resets the webhook and checkout switch so Test and Live credentials cannot be mixed accidentally.</p>
                 </Field>
                 <Field label="Yoco account label">
                   <input value={form.yocoCustomerAccountLabel} onChange={(e) => update("yocoCustomerAccountLabel", e.target.value)} placeholder="Example: Kahuna Yoco account" className="input" />
@@ -1296,14 +1315,34 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   <button
                     type="button"
                     onClick={registerYocoWebhook}
-                    disabled={yocoWebhookRegistering || !yocoCurrencyAllowed || !form.yocoCustomerSecretKeySet || yocoWebhookReady}
+                    disabled={yocoWebhookRegistering || !yocoCurrencyAllowed || !form.yocoCustomerSecretKeySet || yocoWebhookReady || yocoSetupNeedsSaveBeforeWebhook}
                     className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-700 px-4 py-2 text-xs font-black text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500"
                   >
-                    {yocoWebhookRegistering ? "Registering..." : yocoWebhookReady ? "Webhook saved" : "Register Yoco webhook"}
+                    {yocoWebhookRegistering ? "Registering..." : yocoWebhookReady ? "Webhook saved" : yocoSetupNeedsSaveBeforeWebhook ? "Save changes first" : "Register Yoco webhook"}
                   </button>
                 </div>
                 {!form.yocoCustomerSecretKeySet ? <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Save the Yoco secret key first, then come back and register the webhook.</p> : null}
-                {yocoWebhookReady ? <p className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900">Webhook secret is saved. Yoco paid orders can now be confirmed by webhook.</p> : null}
+                {yocoSetupNeedsSaveBeforeWebhook ? <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Save the selected Yoco mode/secret key before registering the webhook.</p> : null}
+                {yocoWebhookReady ? <p className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900">Webhook secret is saved for the current Yoco mode. Paid orders can now be confirmed by webhook.</p> : null}
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-950">Yoco live-mode readiness</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">Use this checklist before moving a tenant from Test to Live. Live mode should use the tenant's Live Secret Key and a webhook registered after the Live key is saved.</p>
+                  </div>
+                  <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${yocoReadyForCheckout ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                    {yocoReadyForCheckout ? "checkout visible" : "not visible"}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-2 text-xs font-bold sm:grid-cols-2">
+                  <p className={yocoCurrencyAllowed ? "text-emerald-800" : "text-amber-800"}>✓ Store currency: {yocoCurrencyAllowed ? "ZAR" : "Change to ZAR"}</p>
+                  <p className={yocoCredentialReady ? "text-emerald-800" : "text-amber-800"}>✓ Secret key: {yocoCredentialReady ? "saved" : "required"}</p>
+                  <p className={yocoWebhookReady ? "text-emerald-800" : "text-amber-800"}>✓ Webhook: {yocoWebhookReady ? "saved" : "register before live use"}</p>
+                  <p className={yocoLiveMode ? "text-emerald-800" : "text-slate-600"}>✓ Mode: {yocoLiveMode ? "Live" : "Test"}</p>
+                </div>
+                {yocoLiveMode && !yocoWebhookReady ? <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Live mode should not be used without registering the Live webhook first.</p> : null}
               </div>
 
               <label className={`mt-4 flex items-start gap-3 rounded-2xl border p-3 text-sm ${yocoCurrencyAllowed && yocoCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}>
@@ -1322,10 +1361,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   type="checkbox"
                   checked={form.yocoCustomerPaymentsLive}
                   onChange={(e) => update("yocoCustomerPaymentsLive", e.target.checked)}
-                  disabled={!form.enableYocoCustomerPayments || !yocoCurrencyAllowed || !yocoCredentialReady}
+                  disabled={!form.enableYocoCustomerPayments || !yocoCurrencyAllowed || !yocoCredentialReady || (yocoLiveMode && !yocoWebhookReady)}
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
-                <span><strong>Show Yoco on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, ZAR storefront customers can choose Yoco and will be sent to the hosted Yoco payment page.</span></span>
+                <span><strong>Show Yoco on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, ZAR storefront customers can choose Yoco and will be sent to the hosted Yoco payment page. Live mode requires a saved webhook first.</span></span>
               </label>
             </div>
 

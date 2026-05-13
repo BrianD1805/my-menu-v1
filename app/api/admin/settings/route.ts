@@ -90,7 +90,7 @@ export async function PATCH(req: Request) {
 
     const { data: existingSettings } = await db
       .from("tenant_settings")
-      .select("stripe_customer_secret_key, stripe_customer_webhook_secret, stripe_customer_payments_live, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_payments_live")
+      .select("stripe_customer_secret_key, stripe_customer_webhook_secret, stripe_customer_payments_live, yoco_customer_mode, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live")
       .eq("tenant_id", tenantLookup.tenant.id)
       .maybeSingle();
 
@@ -113,7 +113,14 @@ export async function PATCH(req: Request) {
 
     const yocoSecretKeyInput = normalizeLongSecret(body?.yocoCustomerSecretKeyInput);
     const yocoWebhookSecretInput = normalizeLongSecret(body?.yocoCustomerWebhookSecretInput);
+    const nextYocoMode = normalizeYocoMode(body?.yocoCustomerMode);
+    const existingYocoMode = normalizeYocoMode((existingSettings as Record<string, unknown> | null)?.yoco_customer_mode);
+    const yocoModeChanged = Boolean((existingSettings as Record<string, unknown> | null)?.yoco_customer_mode) && existingYocoMode !== nextYocoMode;
+    const yocoSecretChanged = Boolean(yocoSecretKeyInput);
+    const shouldResetYocoWebhook = (yocoModeChanged || yocoSecretChanged) && !yocoWebhookSecretInput;
+    const hasExistingYocoWebhookSecret = Boolean((existingSettings as Record<string, unknown> | null)?.yoco_customer_webhook_secret) && !shouldResetYocoWebhook;
     const hasYocoSecretKey = Boolean(yocoSecretKeyInput || (existingSettings as Record<string, unknown> | null)?.yoco_customer_secret_key);
+    const hasYocoWebhookSecret = Boolean(yocoWebhookSecretInput || hasExistingYocoWebhookSecret);
     const requestedYocoCustomerPayments = normalizeBoolean(body?.enableYocoCustomerPayments) ?? false;
     const yocoCurrencyAllowed = normalizeCurrencyCode(body?.currencyCode) === "ZAR";
     const yocoCredentialsReady = Boolean(hasYocoSecretKey);
@@ -183,16 +190,21 @@ export async function PATCH(req: Request) {
       stripe_customer_payments_live: requestedStripeCustomerPayments && stripeCredentialsReady,
       enable_yoco_customer_payments: requestedYocoCustomerPayments && yocoCurrencyAllowed && yocoCredentialsReady,
       yoco_connection_status: nextYocoStatus,
-      yoco_customer_mode: normalizeYocoMode(body?.yocoCustomerMode),
+      yoco_customer_mode: nextYocoMode,
       yoco_customer_account_label: normalizeOptionalText(body?.yocoCustomerAccountLabel, 120),
       yoco_customer_setup_notes: normalizeOptionalText(body?.yocoCustomerSetupNotes, 500),
-      yoco_customer_payments_live: requestedYocoCustomerPayments && requestedYocoPaymentsLive && yocoCurrencyAllowed && yocoCredentialsReady,
+      yoco_customer_payments_live: requestedYocoCustomerPayments && requestedYocoPaymentsLive && yocoCurrencyAllowed && yocoCredentialsReady && (nextYocoMode !== "live" || hasYocoWebhookSecret),
     };
 
     if (stripeSecretKeyInput) payload.stripe_customer_secret_key = stripeSecretKeyInput;
     if (stripeWebhookSecretInput) payload.stripe_customer_webhook_secret = stripeWebhookSecretInput;
     if (yocoSecretKeyInput) payload.yoco_customer_secret_key = yocoSecretKeyInput;
     if (yocoWebhookSecretInput) payload.yoco_customer_webhook_secret = yocoWebhookSecretInput;
+    if (shouldResetYocoWebhook) {
+      payload.yoco_customer_webhook_secret = null;
+      payload.yoco_customer_webhook_id = null;
+      payload.yoco_customer_webhook_url = null;
+    }
 
     const { data, error } = await db
       .from("tenant_settings")
@@ -214,8 +226,8 @@ export async function PATCH(req: Request) {
         stripe_customer_webhook_secret_hint: secretHint(stripeWebhookSecretInput || (existingSettings as Record<string, unknown> | null)?.stripe_customer_webhook_secret),
         yoco_customer_secret_key_set: Boolean(yocoSecretKeyInput || (existingSettings as Record<string, unknown> | null)?.yoco_customer_secret_key),
         yoco_customer_secret_key_hint: secretHint(yocoSecretKeyInput || (existingSettings as Record<string, unknown> | null)?.yoco_customer_secret_key),
-        yoco_customer_webhook_secret_set: Boolean(yocoWebhookSecretInput || (existingSettings as Record<string, unknown> | null)?.yoco_customer_webhook_secret),
-        yoco_customer_webhook_secret_hint: secretHint(yocoWebhookSecretInput || (existingSettings as Record<string, unknown> | null)?.yoco_customer_webhook_secret),
+        yoco_customer_webhook_secret_set: Boolean(yocoWebhookSecretInput || hasExistingYocoWebhookSecret),
+        yoco_customer_webhook_secret_hint: secretHint(yocoWebhookSecretInput || (hasExistingYocoWebhookSecret ? (existingSettings as Record<string, unknown> | null)?.yoco_customer_webhook_secret : null)),
       },
     });
   } catch (error) {

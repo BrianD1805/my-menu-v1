@@ -9,10 +9,12 @@ function getString(value: unknown) {
 }
 
 function publicSiteOrigin(req: Request) {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.ORDUVA_PUBLIC_SITE_URL?.trim() || "";
+  const configured = process.env.ORDUVA_PUBLIC_SITE_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim() || "";
   if (configured) return configured.replace(/\/$/, "");
   const url = new URL(req.url);
-  return `${url.protocol}//${url.host}`.replace(/\/$/, "");
+  const host = url.host.toLowerCase();
+  if (host === "localhost:3000" || host.startsWith("localhost") || host.startsWith("127.0.0.1")) return `${url.protocol}//${url.host}`.replace(/\/$/, "");
+  return "https://www.orduva.com";
 }
 
 export async function POST(req: Request) {
