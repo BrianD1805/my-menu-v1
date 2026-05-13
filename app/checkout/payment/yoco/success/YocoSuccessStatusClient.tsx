@@ -9,8 +9,24 @@ type StatusPayload = {
   paid: boolean;
   orderId: string | null;
   checkoutUrl: string;
+  storeUrl?: string;
+  tenantSlug?: string;
   error?: string;
 };
+
+function cartKey(tenantSlug: string) {
+  return `cart:${tenantSlug || "orduva"}`;
+}
+
+function clearTenantCart(tenantSlug: string) {
+  if (!tenantSlug) return;
+  try {
+    window.localStorage.removeItem(cartKey(tenantSlug));
+    window.dispatchEvent(new CustomEvent("orduva:cart-updated", { detail: { tenantSlug, items: [] } }));
+  } catch {
+    // Cart clearing is best-effort only.
+  }
+}
 
 export default function YocoSuccessStatusClient({ checkoutId, yocoCheckoutId }: { checkoutId: string; yocoCheckoutId: string }) {
   const [status, setStatus] = useState<StatusPayload | null>(null);
@@ -30,7 +46,10 @@ export default function YocoSuccessStatusClient({ checkoutId, yocoCheckoutId }: 
       try {
         const response = await fetch(`/api/storefront/yoco/checkout-status?${params.toString()}`, { cache: "no-store" });
         const data = await response.json().catch(() => ({}));
-        if (!cancelled) setStatus(data);
+        if (!cancelled) {
+          setStatus(data);
+          if (data?.paid && data?.tenantSlug) clearTenantCart(String(data.tenantSlug));
+        }
 
         if (!cancelled && !data?.paid && attempt < 8) {
           timer = window.setTimeout(() => void loadStatus(attempt + 1), attempt < 3 ? 1800 : 3500);
@@ -50,6 +69,7 @@ export default function YocoSuccessStatusClient({ checkoutId, yocoCheckoutId }: 
   }, [checkoutId, yocoCheckoutId]);
 
   const paid = Boolean(status?.paid);
+  const storeUrl = status?.storeUrl || "/";
   const checkoutUrl = status?.checkoutUrl || "/checkout";
 
   return (
@@ -71,7 +91,7 @@ export default function YocoSuccessStatusClient({ checkoutId, yocoCheckoutId }: 
         {status?.error ? <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">{status.error}</p> : null}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           {!paid ? <a href={checkoutUrl} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-800 transition hover:bg-slate-50">Back to checkout</a> : null}
-          <a href="/" className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-800">Back to store</a>
+          <a href={storeUrl} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-black text-white transition hover:bg-emerald-800">Back to store</a>
         </div>
       </section>
     </main>

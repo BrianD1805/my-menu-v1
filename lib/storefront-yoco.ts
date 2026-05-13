@@ -65,6 +65,17 @@ function originFromRequest(req: Request) {
   return `${url.protocol}//${url.host}`;
 }
 
+function storefrontReturnOrigin(req: Request, tenantSlug: string) {
+  const requestOrigin = originFromRequest(req);
+  try {
+    const host = new URL(requestOrigin).hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1") return requestOrigin;
+  } catch {
+    // Fall through to the canonical tenant storefront host.
+  }
+  return `https://${tenantSlug}.orduva.com`;
+}
+
 function toYocoAmountCents(amount: number) {
   return Math.max(0, Math.round(Number(amount || 0) * 100));
 }
@@ -161,7 +172,7 @@ export async function createTenantYocoOrderCheckoutIntent(input: {
   const amountCents = toYocoAmountCents(input.total);
   if (amountCents < 200) throw new Error("Order total is too small for Yoco Checkout. The minimum card payment is R2.00.");
 
-  const origin = originFromRequest(input.req);
+  const origin = storefrontReturnOrigin(input.req, input.tenantSlug);
   const successUrl = `${origin}/checkout/payment/yoco/success?checkout_id=${encodeURIComponent(checkoutId)}`;
   const cancelUrl = `${origin}/checkout/payment/yoco/cancel?checkout_id=${encodeURIComponent(checkoutId)}`;
   const failureUrl = `${origin}/checkout/payment/yoco/failure?checkout_id=${encodeURIComponent(checkoutId)}`;

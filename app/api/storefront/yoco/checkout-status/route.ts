@@ -5,6 +5,18 @@ function first(value: string | null) {
   return String(value || "").split(",")[0].trim();
 }
 
+function readPayloadTenantSlug(payload: unknown) {
+  if (!payload || typeof payload !== "object") return "";
+  const record = payload as Record<string, unknown>;
+  return typeof record.tenantSlug === "string" ? record.tenantSlug.trim() : "";
+}
+
+function buildStoreUrl(tenantSlug: string, path = "/") {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  if (!tenantSlug) return cleanPath;
+  return `https://${tenantSlug}.orduva.com${cleanPath}`;
+}
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -18,6 +30,8 @@ export async function GET(req: Request) {
     const result = await reconcileYocoIntent({ checkoutId, yocoCheckoutId });
     if (!result) return NextResponse.json({ error: "Yoco checkout was not found." }, { status: 404 });
 
+    const tenantSlug = readPayloadTenantSlug(result.intent?.order_payload);
+
     return NextResponse.json({
       ok: true,
       checkoutId: result.intent?.id || checkoutId || null,
@@ -26,7 +40,9 @@ export async function GET(req: Request) {
       paid: result.status === "paid",
       orderId: result.orderId || result.intent?.order_id || null,
       paymentId: result.paymentId || null,
-      checkoutUrl: "/checkout",
+      tenantSlug,
+      storeUrl: buildStoreUrl(tenantSlug, "/"),
+      checkoutUrl: buildStoreUrl(tenantSlug, "/checkout"),
     });
   } catch (error) {
     console.error("Storefront Yoco checkout status failed", error);
