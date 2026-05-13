@@ -472,9 +472,9 @@ useEffect(() => {
 
       await saveCheckoutDetailsToProfile();
 
-      if (selectedPaymentOption.online && data.stripeCheckoutUrl) {
+      if (selectedPaymentOption.online && (data.stripeCheckoutUrl || data.yocoCheckoutUrl)) {
         setErrorMessage("");
-        window.location.assign(data.stripeCheckoutUrl);
+        window.location.assign(data.stripeCheckoutUrl || data.yocoCheckoutUrl);
         return;
       }
 

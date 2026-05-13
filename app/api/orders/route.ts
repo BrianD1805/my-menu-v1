@@ -9,6 +9,7 @@ import { sendAdminPushForTenant } from "@/lib/web-push";
 import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/trial";
 import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
 import { createTenantStripeOrderCheckoutIntent } from "@/lib/storefront-stripe";
+import { createTenantYocoOrderCheckoutIntent } from "@/lib/storefront-yoco";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -140,7 +141,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (selectedPayment.online && selectedPayment.id !== "stripe") {
+    if (selectedPayment.online && !["stripe", "yoco"].includes(selectedPayment.id)) {
       return NextResponse.json(
         { error: "This online payment provider is not live for this store yet. Please choose another payment option." },
         { status: 400 }
@@ -180,6 +181,44 @@ export async function POST(req: Request) {
         });
       } catch (stripeError) {
         const message = stripeError instanceof Error ? stripeError.message : "Stripe checkout could not be started.";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+    }
+
+
+    if (selectedPayment.id === "yoco") {
+      const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+      try {
+        const checkoutIntent = await createTenantYocoOrderCheckoutIntent({
+          req,
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          tenantName: branding.displayName,
+          customerName: body.customerName.trim(),
+          customerPhone: body.customerPhone.trim(),
+          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
+          orderType: body.orderType,
+          notes: body.notes?.trim() || null,
+          items: orderItems,
+          total,
+          currencyCode: branding.currencyCode || settings?.currency_code || "ZAR",
+          paymentMethodLabel: selectedPayment.label,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          orderId: null,
+          checkoutId: checkoutIntent.checkoutId,
+          customerAccountId: body.customerAccountId?.trim() || null,
+          paymentProvider: selectedPayment.id,
+          paymentMethodLabel: selectedPayment.label,
+          paymentStatus: "checkout_started",
+          yocoCheckoutUrl: checkoutIntent.url,
+          yocoCheckoutId: checkoutIntent.yocoCheckoutId,
+        });
+      } catch (yocoError) {
+        const message = yocoError instanceof Error ? yocoError.message : "Yoco checkout could not be started.";
         return NextResponse.json({ error: message }, { status: 400 });
       }
     }

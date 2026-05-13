@@ -495,7 +495,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const adminWorkspaceDirty = formValueChanged(["showAdminLaunchChecklist"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
-  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes"]);
+  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
   const yocoCredentialReady = Boolean(form.yocoCustomerSecretKeySet || form.yocoCustomerSecretKeyInput.trim());
@@ -748,7 +748,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         yocoCustomerWebhookSecretInput: "",
         yocoCustomerWebhookSecretSet: nextYocoWebhookSet,
         yocoCustomerWebhookSecretHint: nextYocoWebhookSet ? form.yocoCustomerWebhookSecretHint || "saved" : "",
-        yocoCustomerPaymentsLive: false,
+        yocoCustomerPaymentsLive: form.enableYocoCustomerPayments && form.yocoCustomerPaymentsLive && nextYocoSecretSet && yocoCurrencyAllowed,
       };
       setForm(savedPayload);
       setSavedForm(savedPayload);
@@ -1215,7 +1215,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Yoco customer payments</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">Foundation setup for South African ZAR stores. This saves the tenant's Yoco credentials safely, but customer checkout activation is held back until the Yoco checkout/webhook build is added.</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Hosted Yoco checkout for South African ZAR stores. Customer payments can be switched live once the tenant's Yoco secret key has been saved and tested.</p>
                 </div>
                 <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${yocoCredentialReady ? "border-emerald-200 bg-white text-emerald-800" : "border-slate-200 bg-white text-slate-500"}`}>
                   {form.enableYocoCustomerPayments ? form.yocoConnectionStatus : "not configured"}
@@ -1241,7 +1241,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 </Field>
                 <Field label={form.yocoCustomerWebhookSecretSet ? `Yoco webhook secret saved (${form.yocoCustomerWebhookSecretHint || "saved"})` : "Yoco webhook secret / signing key"}>
                   <input value={form.yocoCustomerWebhookSecretInput} onChange={(e) => update("yocoCustomerWebhookSecretInput", e.target.value)} placeholder={form.yocoCustomerWebhookSecretSet ? "Leave blank to keep saved webhook secret" : "Add later if supplied by Yoco"} className="input" autoComplete="off" />
-                  <p className="mt-2 text-xs leading-5 text-emerald-800">Planned webhook endpoint: https://www.orduva.com/api/storefront/yoco/webhook</p>
+                  <p className="mt-2 text-xs leading-5 text-emerald-800">Webhook endpoint planned for next hardening patch: https://www.orduva.com/api/storefront/yoco/webhook</p>
                 </Field>
                 <div className="md:col-span-2">
                   <Field label="Yoco setup notes">
@@ -1258,7 +1258,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   disabled={!yocoCurrencyAllowed || !yocoCredentialReady}
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
-                <span><strong>Enable Yoco setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires ZAR currency and a saved Yoco secret key. Storefront checkout activation remains off until the next Yoco checkout/webhook patch.</span></span>
+                <span><strong>Enable Yoco setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires ZAR currency and a saved Yoco secret key. This makes Yoco available to be switched on for checkout.</span></span>
+              </label>
+
+              <label className={`mt-3 flex items-start gap-3 rounded-2xl border p-3 text-sm ${form.enableYocoCustomerPayments && yocoCurrencyAllowed && yocoCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}>
+                <input
+                  type="checkbox"
+                  checked={form.yocoCustomerPaymentsLive}
+                  onChange={(e) => update("yocoCustomerPaymentsLive", e.target.checked)}
+                  disabled={!form.enableYocoCustomerPayments || !yocoCurrencyAllowed || !yocoCredentialReady}
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                />
+                <span><strong>Show Yoco on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, ZAR storefront customers can choose Yoco and will be sent to the hosted Yoco payment page.</span></span>
               </label>
             </div>
 

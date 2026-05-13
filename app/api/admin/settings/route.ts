@@ -117,6 +117,7 @@ export async function PATCH(req: Request) {
     const requestedYocoCustomerPayments = normalizeBoolean(body?.enableYocoCustomerPayments) ?? false;
     const yocoCurrencyAllowed = normalizeCurrencyCode(body?.currencyCode) === "ZAR";
     const yocoCredentialsReady = Boolean(hasYocoSecretKey);
+    const requestedYocoPaymentsLive = normalizeBoolean(body?.yocoCustomerPaymentsLive) ?? false;
     const requestedYocoStatus = normalizeYocoConnectionStatus(body?.yocoConnectionStatus);
     const nextYocoStatus = yocoCredentialsReady ? (requestedYocoStatus === "not_configured" ? "configured" : requestedYocoStatus) : "not_configured";
 
@@ -185,7 +186,7 @@ export async function PATCH(req: Request) {
       yoco_customer_mode: normalizeYocoMode(body?.yocoCustomerMode),
       yoco_customer_account_label: normalizeOptionalText(body?.yocoCustomerAccountLabel, 120),
       yoco_customer_setup_notes: normalizeOptionalText(body?.yocoCustomerSetupNotes, 500),
-      yoco_customer_payments_live: false,
+      yoco_customer_payments_live: requestedYocoCustomerPayments && requestedYocoPaymentsLive && yocoCurrencyAllowed && yocoCredentialsReady,
     };
 
     if (stripeSecretKeyInput) payload.stripe_customer_secret_key = stripeSecretKeyInput;
