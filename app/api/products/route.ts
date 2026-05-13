@@ -127,6 +127,7 @@ export async function GET(req: Request) {
       stripeCustomerPaymentsLive: settings?.stripe_customer_payments_live === true,
       enableYocoCustomerPayments: settings?.enable_yoco_customer_payments === true,
       yocoConnectionStatus: settings?.yoco_connection_status || "not_configured",
+      yocoCustomerPaymentsLive: settings?.yoco_customer_payments_live === true,
       enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,
       mpesaConnectionStatus: settings?.mpesa_connection_status || "not_configured",
     },

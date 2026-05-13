@@ -51,6 +51,7 @@ type TenantViewSettings = MoneyFormatSettings & {
   stripeCustomerPaymentsLive?: boolean;
   enableYocoCustomerPayments?: boolean;
   yocoConnectionStatus?: string;
+  yocoCustomerPaymentsLive?: boolean;
   enableMpesaCustomerPayments?: boolean;
   mpesaConnectionStatus?: string;
 };
@@ -110,7 +111,7 @@ function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery"
     });
   }
 
-  if (providerConfigured(settings.enableYocoCustomerPayments, settings.yocoConnectionStatus)) {
+  if (currencyCode === "ZAR" && providerConfigured(settings.enableYocoCustomerPayments, settings.yocoConnectionStatus, settings.yocoCustomerPaymentsLive === true)) {
     options.push({
       id: "yoco",
       label: "Pay with Yoco",

@@ -88,6 +88,10 @@ export type TenantSettings = {
   stripe_customer_payments_live?: boolean | null;
   enable_yoco_customer_payments?: boolean | null;
   yoco_connection_status?: string | null;
+  yoco_customer_mode?: string | null;
+  yoco_customer_account_label?: string | null;
+  yoco_customer_setup_notes?: string | null;
+  yoco_customer_payments_live?: boolean | null;
   enable_mpesa_customer_payments?: boolean | null;
   mpesa_connection_status?: string | null;
 };

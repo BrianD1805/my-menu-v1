@@ -12,7 +12,7 @@ export default async function AdminSettingsPage() {
   const [{ data: stripeSecretSummary }, { data: checklistVisibilityRow }] = await Promise.all([
     db
     .from("tenant_settings")
-    .select("stripe_customer_secret_key, stripe_customer_webhook_secret")
+    .select("stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret")
     .eq("tenant_id", tenant.id)
     .maybeSingle(),
     db
@@ -25,6 +25,8 @@ export default async function AdminSettingsPage() {
   const stripeSecrets = stripeSecretSummary as Record<string, unknown> | null;
   const stripeSecretKey = String(stripeSecrets?.stripe_customer_secret_key || "").trim();
   const stripeWebhookSecret = String(stripeSecrets?.stripe_customer_webhook_secret || "").trim();
+  const yocoSecretKey = String(stripeSecrets?.yoco_customer_secret_key || "").trim();
+  const yocoWebhookSecret = String(stripeSecrets?.yoco_customer_webhook_secret || "").trim();
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
   const trialState = calculateTenantTrialState(tenant);
 
@@ -121,6 +123,16 @@ export default async function AdminSettingsPage() {
           stripeCustomerPaymentsLive: settings?.stripe_customer_payments_live === true,
           enableYocoCustomerPayments: settings?.enable_yoco_customer_payments === true,
           yocoConnectionStatus: settings?.yoco_connection_status || "not_configured",
+          yocoCustomerMode: settings?.yoco_customer_mode === "live" ? "live" : "test",
+          yocoCustomerSecretKeyInput: "",
+          yocoCustomerSecretKeySet: Boolean(yocoSecretKey),
+          yocoCustomerSecretKeyHint: yocoSecretKey ? `••••${yocoSecretKey.slice(-4)}` : "",
+          yocoCustomerWebhookSecretInput: "",
+          yocoCustomerWebhookSecretSet: Boolean(yocoWebhookSecret),
+          yocoCustomerWebhookSecretHint: yocoWebhookSecret ? `••••${yocoWebhookSecret.slice(-4)}` : "",
+          yocoCustomerAccountLabel: settings?.yoco_customer_account_label || "",
+          yocoCustomerSetupNotes: settings?.yoco_customer_setup_notes || "",
+          yocoCustomerPaymentsLive: settings?.yoco_customer_payments_live === true,
           enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,
           mpesaConnectionStatus: settings?.mpesa_connection_status || "not_configured",
         }}
