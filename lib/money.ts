@@ -7,7 +7,7 @@ export const DEFAULT_CURRENCY_DECIMAL_PLACES = 0;
 export const DEFAULT_CURRENCY_USE_THOUSANDS_SEPARATOR = true;
 export const DEFAULT_CURRENCY_DECIMAL_SEPARATOR = ".";
 export const DEFAULT_CURRENCY_THOUSANDS_SEPARATOR = ",";
-export const DEFAULT_CURRENCY_SUFFIX = "/-";
+export const DEFAULT_CURRENCY_SUFFIX = "";
 
 export type CurrencyDisplayMode = "symbol" | "code" | "code_symbol" | "symbol_code" | "none";
 export type CurrencySymbolPosition = "before" | "after";

@@ -65,7 +65,6 @@ const COUNTRY_DEFAULTS: Record<string, CurrencyDefaults> = {
     currencyUseThousandsSeparator: true,
     currencyDecimalSeparator: ".",
     currencyThousandsSeparator: ",",
-    currencySuffix: "/-",
   },
   US: {
     currencyName: "US Dollar",

@@ -249,7 +249,7 @@ function _buildTenantBranding(slug: string, tenantName: string, settings: Tenant
     currencyUseThousandsSeparator: settings?.currency_use_thousands_separator ?? DEFAULT_CURRENCY_USE_THOUSANDS_SEPARATOR,
     currencyDecimalSeparator: settings?.currency_decimal_separator || DEFAULT_CURRENCY_DECIMAL_SEPARATOR,
     currencyThousandsSeparator: settings?.currency_thousands_separator || DEFAULT_CURRENCY_THOUSANDS_SEPARATOR,
-    currencySuffix: settings?.currency_suffix || DEFAULT_CURRENCY_SUFFIX,
+    currencySuffix: settings?.currency_suffix ?? DEFAULT_CURRENCY_SUFFIX,
   });
 
   return {

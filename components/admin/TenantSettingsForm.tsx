@@ -1385,6 +1385,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <Field label="Currency name"><input value={form.currencyName} onChange={(e) => update("currencyName", e.target.value)} className="input" /></Field>
             <Field label="Currency code"><input value={form.currencyCode} onChange={(e) => update("currencyCode", e.target.value.toUpperCase())} className="input uppercase" maxLength={3} /></Field>
             <Field label="Symbol"><input value={form.currencySymbol} onChange={(e) => update("currencySymbol", e.target.value)} className="input" maxLength={12} /></Field>
+            <Field label="Suffix"><input value={form.currencySuffix} onChange={(e) => update("currencySuffix", e.target.value)} className="input" maxLength={12} placeholder="Leave blank" /></Field>
             <Field label="Display mode"><select value={form.currencyDisplayMode} onChange={(e) => update("currencyDisplayMode", e.target.value as FormState["currencyDisplayMode"])} className="input"><option value="symbol">Symbol only</option><option value="code">Code only</option><option value="code_symbol">Code + symbol</option><option value="symbol_code">Symbol + code</option><option value="none">No prefix</option></select></Field>
             <Field label="Prefix position"><select value={form.currencySymbolPosition} onChange={(e) => update("currencySymbolPosition", e.target.value as FormState["currencySymbolPosition"])} className="input"><option value="before">Before amount</option><option value="after">After amount</option></select></Field>
             <Field label="Decimal places"><input type="number" min={0} max={4} value={form.currencyDecimalPlaces} onChange={(e) => update("currencyDecimalPlaces", e.target.value)} className="input" /></Field>
@@ -1393,6 +1394,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <input type="checkbox" checked={form.currencyUseThousandsSeparator} onChange={(e) => update("currencyUseThousandsSeparator", e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
             Use thousands separator
           </label>
+          <p className="mt-3 text-xs leading-5 text-slate-500">Currency suffix is optional. Leave it blank for normal pricing, or enter a tenant-specific suffix such as /- only when that store needs it.</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             {[100, 295, 1000].map((amount) => (
               <div key={amount} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
