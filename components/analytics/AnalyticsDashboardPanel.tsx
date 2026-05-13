@@ -46,12 +46,12 @@ function StatCard({ label, value, note }: { label: string; value: number | strin
 
 function ListCard({ title, items, empty }: { title: string; items: Array<{ label: string; value: number; sub?: string }>; empty: string }) {
   return (
-    <section className="rounded-[28px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_45px_rgba(14,14,16,0.07)]">
+    <section className="min-w-0 rounded-[28px] border border-[#0E0E10]/10 bg-white p-4 shadow-[0_18px_45px_rgba(14,14,16,0.07)] sm:p-5">
       <h2 className="text-xl font-black tracking-tight text-[#0E0E10]">{title}</h2>
       <div className="mt-4 space-y-3">
         {items.length ? items.map((item) => (
-          <div key={`${item.label}-${item.sub || ""}`} className="flex items-start justify-between gap-4 rounded-2xl border border-[#0E0E10]/8 bg-[#F8FAFC] px-4 py-3">
-            <div className="min-w-0">
+          <div key={`${item.label}-${item.sub || ""}`} className="flex min-w-0 flex-col items-start gap-3 rounded-2xl border border-[#0E0E10]/8 bg-[#F8FAFC] px-4 py-3 sm:flex-row sm:justify-between sm:gap-4">
+            <div className="min-w-0 w-full">
               <p className="truncate text-sm font-black text-[#0E0E10]">{item.label}</p>
               {item.sub ? <p className="mt-1 truncate text-xs font-semibold text-[#6B7280]">{item.sub}</p> : null}
             </div>
@@ -65,7 +65,7 @@ function ListCard({ title, items, empty }: { title: string; items: Array<{ label
 
 function ProductEngagementCard({ items }: { items: Summary["productEngagement"] }) {
   return (
-    <section className="rounded-[28px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_45px_rgba(14,14,16,0.07)] lg:col-span-2">
+    <section className="min-w-0 rounded-[28px] border border-[#0E0E10]/10 bg-white p-4 shadow-[0_18px_45px_rgba(14,14,16,0.07)] sm:p-5 lg:col-span-2">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Product polish</p>
@@ -99,38 +99,44 @@ function AccordionSection({
   title,
   note,
   children,
-  defaultOpen = false,
+  open,
+  onToggle,
 }: {
   title: string;
   note?: string;
   children: ReactNode;
-  defaultOpen?: boolean;
+  open: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <details
-      className="group scroll-mt-28 rounded-[24px] border border-slate-200 bg-slate-50/60 p-3 shadow-none sm:p-4"
-      open={defaultOpen}
-    >
-      <summary className="flex w-full cursor-pointer list-none items-start justify-between gap-3 rounded-[22px] border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
-          <span className="min-w-0 flex-1 pr-1">
-            <span className="block text-sm font-bold text-slate-900">{title}</span>
-            {note ? <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">{note}</span> : null}
-          </span>
-          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-bold text-slate-500 transition group-open:border-orange-200 group-open:bg-orange-50 group-open:text-orange-800" aria-hidden="true">
-            <span className="group-open:hidden">+</span>
-            <span className="hidden group-open:inline">−</span>
-          </span>
-      </summary>
-      <div className="mt-4 bg-transparent">
-        {children}
-      </div>
-    </details>
+    <section className="min-w-0 overflow-hidden rounded-[24px] border border-emerald-200 bg-[#F0FDF4] p-4 shadow-none">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full min-w-0 items-start justify-between gap-3 rounded-[22px] border border-emerald-100 bg-white p-4 text-left transition hover:border-emerald-200 hover:bg-emerald-50/40"
+        aria-expanded={open}
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-slate-900">{title}</span>
+          {note ? <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">{note}</span> : null}
+        </span>
+        <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold transition ${open ? "border-orange-200 bg-orange-50 text-orange-800" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`} aria-hidden="true">
+          {open ? "−" : "+"}
+        </span>
+      </button>
+      {open ? (
+        <div className="mt-4 min-w-0 overflow-hidden">
+          {children}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
 export default function AnalyticsDashboardPanel({ mode }: Props) {
   const ownerAccess = useOwnerPlatformAccess();
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [openAnalyticsSection, setOpenAnalyticsSection] = useState<"products" | "traffic" | "recent" | null>("products");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -209,9 +215,10 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
       <AccordionSection
         title="Product performance"
         note="Open this when you want to see which products are being viewed, shared and added to cart."
-        defaultOpen
+        open={openAnalyticsSection === "products"}
+        onToggle={() => setOpenAnalyticsSection((current) => current === "products" ? null : "products")}
       >
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-2">
           <ProductEngagementCard items={summary.productEngagement || []} />
           <ListCard title="Most viewed products" items={viewedProductItems} empty="No product views have been recorded yet." />
           <ListCard title="Most shared products" items={sharedProductItems} empty="No product shares have been recorded yet." />
@@ -223,8 +230,10 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
       <AccordionSection
         title={mode === "owner" ? "Traffic, pages and subdomains" : "Traffic and pages"}
         note={mode === "owner" ? "Owner view includes platform areas, hosts, subdomains and top pages." : "Tenant view keeps the page and event breakdown focused on this store only."}
+        open={openAnalyticsSection === "traffic"}
+        onToggle={() => setOpenAnalyticsSection((current) => current === "traffic" ? null : "traffic")}
       >
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-2">
           {mode === "owner" ? <ListCard title="Traffic by area" items={scopeItems} empty="No platform-wide traffic has been recorded yet." /> : null}
           <ListCard title="Event types" items={eventItems} empty="No events have been recorded yet." />
           {mode === "owner" ? <ListCard title="Top hosts / subdomains" items={hostItems} empty="No hosts have been recorded yet." /> : null}
@@ -235,8 +244,10 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
       <AccordionSection
         title="Recent activity"
         note="A compact activity feed for quick checking and troubleshooting."
+        open={openAnalyticsSection === "recent"}
+        onToggle={() => setOpenAnalyticsSection((current) => current === "recent" ? null : "recent")}
       >
-        <section className="rounded-[28px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_45px_rgba(14,14,16,0.07)]">
+        <section className="min-w-0 rounded-[28px] border border-[#0E0E10]/10 bg-white p-4 shadow-[0_18px_45px_rgba(14,14,16,0.07)] sm:p-5">
           <h2 className="text-xl font-black tracking-tight text-[#0E0E10]">Recent events</h2>
           <div className="mt-4 space-y-3">
             {summary.recentEvents.length ? summary.recentEvents.map((event) => (
