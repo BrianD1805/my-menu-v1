@@ -22,6 +22,7 @@ export default async function AdminAnalyticsPage() {
       faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
       trialState={trialState}
+      pageTone="white"
     >
       <AnalyticsDashboardPanel mode="tenant" />
     </AdminShell>

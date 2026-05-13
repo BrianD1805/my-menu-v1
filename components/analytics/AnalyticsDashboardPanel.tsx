@@ -64,7 +64,6 @@ function ListCard({ title, items, empty }: { title: string; items: Array<{ label
 }
 
 function ProductEngagementCard({ items }: { items: Summary["productEngagement"] }) {
-  const maxTotal = Math.max(1, ...items.map((item) => item.total));
   return (
     <section className="rounded-[28px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_45px_rgba(14,14,16,0.07)] lg:col-span-2">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -75,27 +74,22 @@ function ProductEngagementCard({ items }: { items: Summary["productEngagement"] 
         <p className="max-w-md text-sm font-semibold leading-6 text-[#6B7280]">Views, shares and add-to-cart events shown separately so tenants can spot what customers are looking at and what they are sending to friends.</p>
       </div>
       <div className="mt-5 space-y-3">
-        {items.length ? items.map((item) => {
-          const width = Math.max(7, Math.round((item.total / maxTotal) * 100));
-          return (
-            <div key={item.productId} className="rounded-2xl border border-[#0E0E10]/8 bg-[#F8FAFC] p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-[#0E0E10]">{item.productName}</p>
-                  <p className="mt-1 truncate text-xs font-semibold text-[#6B7280]">{item.productId}</p>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs font-black">
-                  <span className="rounded-full bg-white px-3 py-1 text-[#0E0E10] ring-1 ring-[#0E0E10]/8">{item.views} views</span>
-                  <span className="rounded-full bg-[#ECFDF5] px-3 py-1 text-[#047857] ring-1 ring-emerald-100">{item.shares} shares</span>
-                  <span className="rounded-full bg-[#FFF7F0] px-3 py-1 text-[#A33A16] ring-1 ring-orange-100">{item.addToCarts} carts</span>
-                </div>
+        {items.length ? items.map((item) => (
+          <div key={item.productId} className="rounded-2xl border border-[#0E0E10]/8 bg-[#F8FAFC] p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-[#0E0E10]">{item.productName}</p>
+                <p className="mt-1 truncate text-xs font-semibold text-[#6B7280]">{item.productId}</p>
               </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white ring-1 ring-[#0E0E10]/8">
-                <div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${width}%` }} />
+              <div className="flex flex-wrap gap-2 text-xs font-black">
+                <span className="rounded-full bg-white px-3 py-1 text-[#0E0E10] ring-1 ring-[#0E0E10]/8">{item.views} views</span>
+                <span className="rounded-full bg-[#ECFDF5] px-3 py-1 text-[#047857] ring-1 ring-emerald-100">{item.shares} shares</span>
+                <span className="rounded-full bg-[#FFF7F0] px-3 py-1 text-[#A33A16] ring-1 ring-orange-100">{item.addToCarts} carts</span>
+                <span className="rounded-full bg-[#EFF6FF] px-3 py-1 text-[#1D4ED8] ring-1 ring-blue-100">{item.total} total</span>
               </div>
             </div>
-          );
-        }) : <p className="rounded-2xl border border-dashed border-[#0E0E10]/12 bg-[#F8FAFC] px-4 py-5 text-sm font-semibold text-[#6B7280]">No product engagement has been recorded yet. Open a product, share it, or add it to the cart to start filling this section.</p>}
+          </div>
+        )) : <p className="rounded-2xl border border-dashed border-[#0E0E10]/12 bg-[#F8FAFC] px-4 py-5 text-sm font-semibold text-[#6B7280]">No product engagement has been recorded yet. Open a product, share it, or add it to the cart to start filling this section.</p>}
       </div>
     </section>
   );
@@ -114,18 +108,20 @@ function AccordionSection({
 }) {
   return (
     <details
-      className="group overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-white shadow-[0_18px_45px_rgba(14,14,16,0.07)]"
+      className="group scroll-mt-28 rounded-[24px] border border-slate-200 bg-slate-50/60 p-3 shadow-none sm:p-4"
       open={defaultOpen}
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-[#FFF7F0] px-5 py-4 transition hover:bg-[#FFEADC] [&::-webkit-details-marker]:hidden sm:px-6">
-        <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Analytics section</p>
-          <h2 className="mt-1 text-lg font-black tracking-tight text-[#0E0E10] sm:text-xl">{title}</h2>
-          {note ? <p className="mt-1 text-sm font-semibold leading-6 text-[#6B7280]">{note}</p> : null}
-        </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF6A3D]/20 bg-white text-xl font-black text-[#C84F2A] shadow-sm transition group-open:rotate-45">+</span>
+      <summary className="flex w-full cursor-pointer list-none items-start justify-between gap-3 rounded-[22px] border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+          <span className="min-w-0 flex-1 pr-1">
+            <span className="block text-sm font-bold text-slate-900">{title}</span>
+            {note ? <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">{note}</span> : null}
+          </span>
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-bold text-slate-500 transition group-open:border-orange-200 group-open:bg-orange-50 group-open:text-orange-800" aria-hidden="true">
+            <span className="group-open:hidden">+</span>
+            <span className="hidden group-open:inline">−</span>
+          </span>
       </summary>
-      <div className="border-t border-[#0E0E10]/8 bg-white p-5 sm:p-6">
+      <div className="mt-4 bg-transparent">
         {children}
       </div>
     </details>

@@ -118,6 +118,7 @@ export default function AdminShell({
   faviconUrl,
   accentColor,
   trialState,
+  pageTone = "default",
 }: {
   tenantName: string;
   tenantSlug?: string | null;
@@ -130,6 +131,7 @@ export default function AdminShell({
   faviconUrl?: string | null;
   accentColor?: string | null;
   trialState?: TenantTrialState | null;
+  pageTone?: "default" | "white";
 }) {
   const nav: NavItem[] = [
     { href: "/admin", label: "Home", icon: "home", current: current === "home" },
@@ -145,8 +147,8 @@ export default function AdminShell({
   const tenantInitial = tenantName.trim().slice(0, 1).toUpperCase() || "O";
   const identityAccent = accentColor || "#FF6A3D";
   const identityIconUrl = faviconUrl || null;
-  const adminBackgroundClass = "bg-[#F3F4F6]";
-  const adminBackdropClass = "bg-[radial-gradient(circle_at_16%_8%,rgba(148,163,184,0.20),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(15,23,42,0.08),transparent_28%),linear-gradient(135deg,#F3F4F6_0%,#EEF1F4_52%,#FFFFFF_100%)]";
+  const adminBackgroundClass = pageTone === "white" ? "bg-white" : "bg-[#F3F4F6]";
+  const adminBackdropClass = pageTone === "white" ? "bg-white" : "bg-[radial-gradient(circle_at_16%_8%,rgba(148,163,184,0.20),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(15,23,42,0.08),transparent_28%),linear-gradient(135deg,#F3F4F6_0%,#EEF1F4_52%,#FFFFFF_100%)]";
 
   return (
     <main className={`relative min-h-screen overflow-x-clip ${adminBackgroundClass} px-3 py-4 pb-24 text-[#1F2328] sm:px-6 sm:py-7 sm:pb-7`}>

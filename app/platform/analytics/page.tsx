@@ -4,7 +4,7 @@ import { LIVE_VERSION } from "@/lib/version";
 
 export default function PlatformAnalyticsPage() {
   return (
-    <main className="min-h-screen bg-[#FFF7F0] px-4 py-5 text-[#1F2328] sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-white px-4 py-5 text-[#1F2328] sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <header className="rounded-[34px] border border-[#0E0E10]/10 bg-white/90 p-5 shadow-[0_28px_80px_rgba(14,14,16,0.12)] backdrop-blur sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
