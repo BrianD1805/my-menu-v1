@@ -54,7 +54,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
 
   useEffect(() => {
-    if (initiallyOpen) setDetailsOpen(true);
+    if (!initiallyOpen) return;
+    trackStorefrontEvent("product_view", { source: "shared_product_link" });
+    setDetailsOpen(true);
   }, [initiallyOpen]);
 
   useEffect(() => {
@@ -78,6 +80,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
         metadata: extra,
       },
     }));
+  }
+
+  function openDetails(source: string) {
+    trackStorefrontEvent("product_view", { source });
+    setDetailsOpen(true);
   }
 
   function cleanShareDescription(value: string | null | undefined) {
@@ -256,7 +263,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
         ) : null}
         <div className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:p-6">
           <div className="grid grid-cols-[8.25rem_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:gap-5 lg:grid-cols-[10.5rem_minmax(0,1fr)] lg:gap-6">
-            <button type="button" onClick={() => setDetailsOpen(true)} className="block overflow-visible text-left" aria-label={`View details for ${name}`}>
+            <button type="button" onClick={() => openDetails("product_card_image")} className="block overflow-visible text-left" aria-label={`View details for ${name}`}>
               <div className="relative overflow-visible pt-2">
                 {stockRibbonLabel ? (
                   <div className="pointer-events-none absolute left-[10px] top-[10px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[12px] sm:top-[12px]"
@@ -279,7 +286,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             </button>
 
             <div className="min-w-0">
-              <button type="button" onClick={() => setDetailsOpen(true)} className="block min-w-0 text-left">
+              <button type="button" onClick={() => openDetails("product_card_title")} className="block min-w-0 text-left">
                 <h3 className="text-[1.1rem] font-semibold leading-[1.18] tracking-tight sm:text-[1.32rem] lg:text-[1.15rem] xl:text-[1.235rem]" style={{ color: productTitle }}>
                   {name}
                 </h3>
@@ -316,7 +323,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
             <button
               type="button"
-              onClick={() => { trackStorefrontEvent("product_view", { source: "product_card_more" }); setDetailsOpen(true); }}
+              onClick={() => openDetails("product_card_more") }
               className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={{ borderColor: cleanAccentSubtleBorder, color: moreButtonText, backgroundColor: moreButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
               aria-label={`More info for ${name}`}

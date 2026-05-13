@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
 
 type Summary = {
@@ -19,6 +19,10 @@ type Summary = {
   topPages: Array<{ pagePath: string; host: string; count: number }>;
   topHosts: Array<{ host: string; count: number }>;
   topProducts: Array<{ productId: string; productName: string; count: number }>;
+  topViewedProducts: Array<{ productId: string; productName: string; count: number }>;
+  topSharedProducts: Array<{ productId: string; productName: string; count: number }>;
+  topAddedProducts: Array<{ productId: string; productName: string; count: number }>;
+  productEngagement: Array<{ productId: string; productName: string; views: number; shares: number; addToCarts: number; total: number }>;
   recentEvents: Array<{ id: string; scope: string; eventType: string; host: string; pagePath: string; productName: string | null; createdAt: string }>;
 };
 
@@ -56,6 +60,75 @@ function ListCard({ title, items, empty }: { title: string; items: Array<{ label
         )) : <p className="rounded-2xl border border-dashed border-[#0E0E10]/12 bg-[#F8FAFC] px-4 py-5 text-sm font-semibold text-[#6B7280]">{empty}</p>}
       </div>
     </section>
+  );
+}
+
+function ProductEngagementCard({ items }: { items: Summary["productEngagement"] }) {
+  const maxTotal = Math.max(1, ...items.map((item) => item.total));
+  return (
+    <section className="rounded-[28px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_45px_rgba(14,14,16,0.07)] lg:col-span-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Product polish</p>
+          <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10]">Top product engagement</h2>
+        </div>
+        <p className="max-w-md text-sm font-semibold leading-6 text-[#6B7280]">Views, shares and add-to-cart events shown separately so tenants can spot what customers are looking at and what they are sending to friends.</p>
+      </div>
+      <div className="mt-5 space-y-3">
+        {items.length ? items.map((item) => {
+          const width = Math.max(7, Math.round((item.total / maxTotal) * 100));
+          return (
+            <div key={item.productId} className="rounded-2xl border border-[#0E0E10]/8 bg-[#F8FAFC] p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-[#0E0E10]">{item.productName}</p>
+                  <p className="mt-1 truncate text-xs font-semibold text-[#6B7280]">{item.productId}</p>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs font-black">
+                  <span className="rounded-full bg-white px-3 py-1 text-[#0E0E10] ring-1 ring-[#0E0E10]/8">{item.views} views</span>
+                  <span className="rounded-full bg-[#ECFDF5] px-3 py-1 text-[#047857] ring-1 ring-emerald-100">{item.shares} shares</span>
+                  <span className="rounded-full bg-[#FFF7F0] px-3 py-1 text-[#A33A16] ring-1 ring-orange-100">{item.addToCarts} carts</span>
+                </div>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white ring-1 ring-[#0E0E10]/8">
+                <div className="h-full rounded-full bg-[#FF6A3D]" style={{ width: `${width}%` }} />
+              </div>
+            </div>
+          );
+        }) : <p className="rounded-2xl border border-dashed border-[#0E0E10]/12 bg-[#F8FAFC] px-4 py-5 text-sm font-semibold text-[#6B7280]">No product engagement has been recorded yet. Open a product, share it, or add it to the cart to start filling this section.</p>}
+      </div>
+    </section>
+  );
+}
+
+function AccordionSection({
+  title,
+  note,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  note?: string;
+  children: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <details
+      className="group overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-white shadow-[0_18px_45px_rgba(14,14,16,0.07)]"
+      open={defaultOpen}
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-[#FFF7F0] px-5 py-4 transition hover:bg-[#FFEADC] [&::-webkit-details-marker]:hidden sm:px-6">
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Analytics section</p>
+          <h2 className="mt-1 text-lg font-black tracking-tight text-[#0E0E10] sm:text-xl">{title}</h2>
+          {note ? <p className="mt-1 text-sm font-semibold leading-6 text-[#6B7280]">{note}</p> : null}
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF6A3D]/20 bg-white text-xl font-black text-[#C84F2A] shadow-sm transition group-open:rotate-45">+</span>
+      </summary>
+      <div className="border-t border-[#0E0E10]/8 bg-white p-5 sm:p-6">
+        {children}
+      </div>
+    </details>
   );
 }
 
@@ -109,6 +182,9 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
   const pageItems = summary.topPages.map((item) => ({ label: item.pagePath, value: item.count, sub: item.host }));
   const hostItems = summary.topHosts.map((item) => ({ label: item.host, value: item.count }));
   const productItems = summary.topProducts.map((item) => ({ label: item.productName, value: item.count, sub: item.productId }));
+  const viewedProductItems = (summary.topViewedProducts || []).map((item) => ({ label: item.productName, value: item.count, sub: item.productId }));
+  const sharedProductItems = (summary.topSharedProducts || []).map((item) => ({ label: item.productName, value: item.count, sub: item.productId }));
+  const addedProductItems = (summary.topAddedProducts || []).map((item) => ({ label: item.productName, value: item.count, sub: item.productId }));
 
   return (
     <div className="space-y-5">
@@ -134,12 +210,36 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
         <StatCard label="Orders" value={summary.totals.ordersPlaced} />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        {mode === "owner" ? <ListCard title="Traffic by area" items={scopeItems} empty="No platform-wide traffic has been recorded yet." /> : null}
-        <ListCard title="Event types" items={eventItems} empty="No events have been recorded yet." />
-        {mode === "owner" ? <ListCard title="Top hosts / subdomains" items={hostItems} empty="No hosts have been recorded yet." /> : null}
-        <ListCard title="Top pages" items={pageItems} empty="No page views have been recorded yet." />
-        <ListCard title="Top products" items={productItems} empty="No product activity has been recorded yet." />
+      <AccordionSection
+        title="Product performance"
+        note="Open this when you want to see which products are being viewed, shared and added to cart."
+        defaultOpen
+      >
+        <div className="grid gap-5 lg:grid-cols-2">
+          <ProductEngagementCard items={summary.productEngagement || []} />
+          <ListCard title="Most viewed products" items={viewedProductItems} empty="No product views have been recorded yet." />
+          <ListCard title="Most shared products" items={sharedProductItems} empty="No product shares have been recorded yet." />
+          <ListCard title="Most added to cart" items={addedProductItems} empty="No add-to-cart product events have been recorded yet." />
+          <ListCard title="All product activity" items={productItems} empty="No product activity has been recorded yet." />
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
+        title={mode === "owner" ? "Traffic, pages and subdomains" : "Traffic and pages"}
+        note={mode === "owner" ? "Owner view includes platform areas, hosts, subdomains and top pages." : "Tenant view keeps the page and event breakdown focused on this store only."}
+      >
+        <div className="grid gap-5 lg:grid-cols-2">
+          {mode === "owner" ? <ListCard title="Traffic by area" items={scopeItems} empty="No platform-wide traffic has been recorded yet." /> : null}
+          <ListCard title="Event types" items={eventItems} empty="No events have been recorded yet." />
+          {mode === "owner" ? <ListCard title="Top hosts / subdomains" items={hostItems} empty="No hosts have been recorded yet." /> : null}
+          <ListCard title="Top pages" items={pageItems} empty="No page views have been recorded yet." />
+        </div>
+      </AccordionSection>
+
+      <AccordionSection
+        title="Recent activity"
+        note="A compact activity feed for quick checking and troubleshooting."
+      >
         <section className="rounded-[28px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_45px_rgba(14,14,16,0.07)]">
           <h2 className="text-xl font-black tracking-tight text-[#0E0E10]">Recent events</h2>
           <div className="mt-4 space-y-3">
@@ -155,7 +255,7 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
             )) : <p className="rounded-2xl border border-dashed border-[#0E0E10]/12 bg-[#F8FAFC] px-4 py-5 text-sm font-semibold text-[#6B7280]">No recent events yet.</p>}
           </div>
         </section>
-      </div>
+      </AccordionSection>
     </div>
   );
 }

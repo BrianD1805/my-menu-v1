@@ -20,6 +20,10 @@ export type AnalyticsSummary = {
   topPages: Array<{ pagePath: string; host: string; count: number }>;
   topHosts: Array<{ host: string; count: number }>;
   topProducts: Array<{ productId: string; productName: string; count: number }>;
+  topViewedProducts: Array<{ productId: string; productName: string; count: number }>;
+  topSharedProducts: Array<{ productId: string; productName: string; count: number }>;
+  topAddedProducts: Array<{ productId: string; productName: string; count: number }>;
+  productEngagement: Array<{ productId: string; productName: string; views: number; shares: number; addToCarts: number; total: number }>;
   recentEvents: Array<{
     id: string;
     scope: string;
@@ -128,6 +132,10 @@ export async function buildAnalyticsSummary(options: { tenantId?: string | null;
   const byHost = new Map<string, number>();
   const byPage = new Map<string, number>();
   const byProduct = new Map<string, { name: string; count: number }>();
+  const byViewedProduct = new Map<string, { name: string; count: number }>();
+  const bySharedProduct = new Map<string, { name: string; count: number }>();
+  const byAddedProduct = new Map<string, { name: string; count: number }>();
+  const byProductEngagement = new Map<string, { name: string; views: number; shares: number; addToCarts: number }>();
 
   let today = 0;
   let sevenDays = 0;
@@ -157,9 +165,31 @@ export async function buildAnalyticsSummary(options: { tenantId?: string | null;
     increment(byPage, `${row.host || "Unknown"}${row.page_path || "/"}`);
     if (row.product_id || row.product_name) {
       const key = row.product_id || row.product_name || "unknown";
-      const current = byProduct.get(key) || { name: row.product_name || "Unknown product", count: 0 };
+      const productName = row.product_name || "Unknown product";
+      const current = byProduct.get(key) || { name: productName, count: 0 };
       current.count += 1;
       byProduct.set(key, current);
+
+      const engagement = byProductEngagement.get(key) || { name: productName, views: 0, shares: 0, addToCarts: 0 };
+      if (eventType === "product_view") {
+        const viewed = byViewedProduct.get(key) || { name: productName, count: 0 };
+        viewed.count += 1;
+        byViewedProduct.set(key, viewed);
+        engagement.views += 1;
+      }
+      if (eventType === "product_share") {
+        const shared = bySharedProduct.get(key) || { name: productName, count: 0 };
+        shared.count += 1;
+        bySharedProduct.set(key, shared);
+        engagement.shares += 1;
+      }
+      if (eventType === "add_to_cart") {
+        const added = byAddedProduct.get(key) || { name: productName, count: 0 };
+        added.count += 1;
+        byAddedProduct.set(key, added);
+        engagement.addToCarts += 1;
+      }
+      byProductEngagement.set(key, engagement);
     }
   }
 
@@ -173,6 +203,14 @@ export async function buildAnalyticsSummary(options: { tenantId?: string | null;
       return { host: slashIndex > 0 ? combined.slice(0, slashIndex) : "Unknown", pagePath: slashIndex > 0 ? combined.slice(slashIndex) : combined, count };
     }),
     topProducts: Array.from(byProduct.entries()).sort((a, b) => b[1].count - a[1].count).slice(0, 12).map(([productId, item]) => ({ productId, productName: item.name, count: item.count })),
+    topViewedProducts: Array.from(byViewedProduct.entries()).sort((a, b) => b[1].count - a[1].count).slice(0, 8).map(([productId, item]) => ({ productId, productName: item.name, count: item.count })),
+    topSharedProducts: Array.from(bySharedProduct.entries()).sort((a, b) => b[1].count - a[1].count).slice(0, 8).map(([productId, item]) => ({ productId, productName: item.name, count: item.count })),
+    topAddedProducts: Array.from(byAddedProduct.entries()).sort((a, b) => b[1].count - a[1].count).slice(0, 8).map(([productId, item]) => ({ productId, productName: item.name, count: item.count })),
+    productEngagement: Array.from(byProductEngagement.entries())
+      .map(([productId, item]) => ({ productId, productName: item.name, views: item.views, shares: item.shares, addToCarts: item.addToCarts, total: item.views + item.shares + item.addToCarts }))
+      .filter((item) => item.total > 0)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 12),
     recentEvents: rows.slice(0, 20).map((row) => ({
       id: row.id,
       scope: row.scope || "unknown",

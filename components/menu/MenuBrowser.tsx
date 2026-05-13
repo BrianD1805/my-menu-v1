@@ -715,6 +715,21 @@ export default function MenuBrowser({
     [triggerCartPulse],
   );
 
+  function trackStorefrontProductEvent(eventType: string, product: Product | undefined, source: string) {
+    if (typeof window === "undefined" || !product) return;
+    window.dispatchEvent(new CustomEvent("orduva:analytics", {
+      detail: {
+        eventType,
+        scope: "tenant_storefront",
+        tenantId,
+        tenantSlug,
+        productId: product.id,
+        productName: product.name,
+        metadata: { source },
+      },
+    }));
+  }
+
   async function addToCart(
     productId: string,
     options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" },
@@ -737,6 +752,7 @@ export default function MenuBrowser({
     }
 
     setButtonStateById((current) => ({ ...current, [productId]: "adding" }));
+    trackStorefrontProductEvent("add_to_cart", product, options?.destination === "search" ? "search_popup" : "storefront_menu");
     if (options?.sourceRect || options?.imageUrl || options?.name) {
       launchAddToCartAnimation({
         imageUrl: options?.imageUrl ?? product?.image_url ?? null,
@@ -1219,7 +1235,18 @@ export default function MenuBrowser({
                       type="button"
                       onClick={() => {
                         setSearchOpen(false);
-                        if (typeof window !== "undefined") window.location.assign("/checkout");
+                        if (typeof window !== "undefined") {
+                          window.dispatchEvent(new CustomEvent("orduva:analytics", {
+                            detail: {
+                              eventType: "checkout_started",
+                              scope: "tenant_storefront",
+                              tenantId,
+                              tenantSlug,
+                              metadata: { source: "search_popup_cart_button" },
+                            },
+                          }));
+                          window.location.assign("/checkout");
+                        }
                       }}
                       className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50 hover:text-slate-950"
                       aria-label={`Go to checkout with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
