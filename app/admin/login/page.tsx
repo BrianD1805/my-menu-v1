@@ -131,31 +131,31 @@ export default function AdminLoginPage() {
       ? "border-rose-200 bg-rose-50 text-rose-700"
       : messageTone === "success"
         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-        : "border-[#E7D8CC] bg-[#FFF7F0] text-[#1F2328]";
+        : "border-[#DBEAFE] bg-[#EEF6FF] text-[#111827]";
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_16%_8%,rgba(148,163,184,0.20),transparent_30%),radial-gradient(circle_at_88%_16%,rgba(15,23,42,0.08),transparent_28%),linear-gradient(135deg,#F3F4F6_0%,#EEF1F4_52%,#FFFFFF_100%)] px-4 py-6 sm:px-6 sm:py-8">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_14%_8%,rgba(37,99,235,0.10),transparent_32%),radial-gradient(circle_at_92%_18%,rgba(124,58,237,0.09),transparent_30%),radial-gradient(circle_at_50%_100%,rgba(22,163,74,0.08),transparent_36%),linear-gradient(135deg,#F8FAF7_0%,#F2F7F4_48%,#FFFFFF_100%)] px-4 py-6 sm:px-6 sm:py-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-xl items-center justify-center sm:min-h-[calc(100vh-4rem)]">
         {session.loading ? (
-          <section className="w-full rounded-[28px] border border-[#E7D8CC] bg-white p-6 text-center shadow-[0_18px_48px_rgba(15,23,42,0.08)] sm:p-8">
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-3xl bg-[#0E0E10] text-lg font-black text-white shadow-[0_12px_30px_rgba(15,23,42,0.18)]">
+          <section className="w-full rounded-[28px] border border-[#E5E7EB] bg-white p-6 text-center shadow-[0_8px_22px_rgba(15,23,42,0.06)] sm:p-8">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-3xl bg-[#2563EB] text-lg font-black text-white shadow-[0_8px_18px_rgba(37,99,235,0.16)]">
               O
             </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF6A3D]">Orduva Admin</p>
-            <h1 className="mt-3 text-2xl font-bold text-[#1F2328]">We&apos;re getting things ready</h1>
-            <p className="mt-3 text-sm leading-6 text-[#5C5F66]">Checking whether you are already signed in.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2563EB]">Orduva Admin</p>
+            <h1 className="mt-3 text-2xl font-bold text-[#111827]">We&apos;re getting things ready</h1>
+            <p className="mt-3 text-sm leading-6 text-[#4B5563]">Checking whether you are already signed in.</p>
           </section>
         ) : session.authenticated ? (
-          <section className="w-full rounded-[28px] border border-[#FFD8C8] bg-[#FFF7F0] p-6 shadow-[0_18px_48px_rgba(15,23,42,0.08)] sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF6A3D]">Orduva Admin</p>
-            <h1 className="mt-3 text-2xl font-bold text-[#1F2328]">Already Signed in</h1>
-            <p className="mt-3 text-sm leading-6 text-[#5C5F66]">
+          <section className="w-full rounded-[28px] border border-[#DBEAFE] bg-[#EEF6FF] p-6 shadow-[0_8px_22px_rgba(15,23,42,0.06)] sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2563EB]">Orduva Admin</p>
+            <h1 className="mt-3 text-2xl font-bold text-[#111827]">Already Signed in</h1>
+            <p className="mt-3 text-sm leading-6 text-[#4B5563]">
               Signed in as {session.user.full_name || session.user.email} for {session.tenant.name}.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <a
                 href="/admin"
-                className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1F2328]"
+                className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(37,99,235,0.14)] transition hover:bg-[#1D4ED8]"
               >
                 Open admin
               </a>
@@ -163,7 +163,7 @@ export default function AdminLoginPage() {
                 type="button"
                 onClick={handleLogout}
                 disabled={busy === "logout"}
-                className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#1F2328] ring-1 ring-[#E7D8CC] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#111827] ring-1 ring-[#E5E7EB] transition hover:bg-[#EEF6FF] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busy === "logout" ? "Signing out..." : "Sign out"}
               </button>
@@ -171,32 +171,32 @@ export default function AdminLoginPage() {
             {message ? <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${messageClasses}`}>{message}</div> : null}
           </section>
         ) : (
-          <section className="w-full rounded-[28px] border border-[#E7D8CC] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.08)] sm:p-8">
+          <section className="w-full rounded-[28px] border border-[#E5E7EB] bg-white p-6 shadow-[0_8px_22px_rgba(15,23,42,0.06)] sm:p-8">
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF6A3D]">Orduva Admin</p>
-              <h1 className="mt-3 text-2xl font-bold text-[#1F2328]">Sign in</h1>
-              <p className="mt-2 text-sm leading-6 text-[#5C5F66]">Use your store owner email address and password.</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#2563EB]">Orduva Admin</p>
+              <h1 className="mt-3 text-2xl font-bold text-[#111827]">Sign in</h1>
+              <p className="mt-2 text-sm leading-6 text-[#4B5563]">Use your store owner email address and password.</p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-3">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Email address</label>
+                <label className="mb-2 block text-sm font-semibold text-[#111827]">Email address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
+                  className="w-full rounded-2xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]"
                   placeholder="owner@example.com"
                   required
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#1F2328]">Password</label>
+                <label className="mb-2 block text-sm font-semibold text-[#111827]">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="w-full rounded-2xl border border-[#E7D8CC] px-4 py-2.5 text-sm outline-none transition focus:border-[#FF6A3D]"
+                  className="w-full rounded-2xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm outline-none transition focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)]"
                   placeholder="Enter your password"
                   required
                 />
@@ -204,7 +204,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={busy === "login"}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1F2328] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(37,99,235,0.14)] transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busy === "login" ? "Signing in..." : "Sign in"}
               </button>

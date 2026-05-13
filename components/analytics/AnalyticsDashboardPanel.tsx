@@ -120,12 +120,12 @@ function AccordionSection({
           <span className="block text-sm font-bold text-slate-900">{title}</span>
           {note ? <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">{note}</span> : null}
         </span>
-        <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold transition ${open ? "border-orange-200 bg-orange-50 text-orange-800" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`} aria-hidden="true">
+        <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-white text-sm font-bold shadow-sm transition ${open ? "border-orange-200 text-orange-800" : "border-emerald-200 text-emerald-700"}`} aria-hidden="true">
           {open ? "−" : "+"}
         </span>
       </button>
       {open ? (
-        <div className="mt-4 min-w-0 overflow-hidden">
+        <div className="mt-4 min-w-0 overflow-hidden rounded-[22px] border border-emerald-100 bg-white p-3 shadow-sm sm:p-4">
           {children}
         </div>
       ) : null}

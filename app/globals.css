@@ -111,3 +111,79 @@ body {
 .orduva-glow-sweep {
   animation: orduva-glow-sweep 6.8s ease-in-out infinite;
 }
+
+/* Orduva Ver-0.210 — Tenant Admin Premium Colour Refresh
+   Scoped to the tenant admin shell so storefront and owner platform styling remain untouched. */
+.orduva-admin-refresh {
+  --oa-bg: #F8FAF7;
+  --oa-panel: #FFFFFF;
+  --oa-primary: #2563EB;
+  --oa-primary-deep: #1D4ED8;
+  --oa-emerald: #16A34A;
+  --oa-mint: #ECFDF3;
+  --oa-amber: #F59E0B;
+  --oa-champagne: #FFF7E6;
+  --oa-violet: #7C3AED;
+  --oa-lavender: #F3EEFF;
+  --oa-ice: #EEF6FF;
+  --oa-ink: #111827;
+  --oa-slate: #4B5563;
+  --oa-muted: #6B7280;
+  --oa-line: #E5E7EB;
+  --oa-line-soft: #EDF0F2;
+  --oa-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  --oa-shadow-soft: 0 3px 10px rgba(15, 23, 42, 0.05);
+}
+
+.orduva-admin-refresh [class*="shadow-"] {
+  box-shadow: var(--oa-shadow-soft) !important;
+}
+
+.orduva-admin-refresh header,
+.orduva-admin-refresh section,
+.orduva-admin-refresh article,
+.orduva-admin-refresh aside {
+  border-color: var(--oa-line) !important;
+}
+
+.orduva-admin-refresh input,
+.orduva-admin-refresh textarea,
+.orduva-admin-refresh select,
+.orduva-admin-refresh .input {
+  border-color: var(--oa-line) !important;
+  background: #ffffff !important;
+  color: var(--oa-ink) !important;
+  box-shadow: none !important;
+}
+
+.orduva-admin-refresh input:focus,
+.orduva-admin-refresh textarea:focus,
+.orduva-admin-refresh select:focus,
+.orduva-admin-refresh .input:focus {
+  border-color: var(--oa-primary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+/* Avoid broad arbitrary Tailwind attribute selectors here: Next/cssnano can choke on
+   raw square brackets inside selector strings during production minification.
+   Keep the refresh focused through the admin shell classes and direct component styles. */
+.orduva-admin-refresh button:not(:disabled),
+.orduva-admin-refresh a.admin-pressable,
+.orduva-admin-refresh .admin-pressable {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.orduva-admin-refresh .admin-bottom-nav {
+  border-color: var(--oa-line) !important;
+  background: rgba(255,255,255,0.96) !important;
+  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.06) !important;
+}
+
+@media (max-width: 640px) {
+  .orduva-admin-refresh header,
+  .orduva-admin-refresh section,
+  .orduva-admin-refresh article,
+  .orduva-admin-refresh aside {
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.045) !important;
+  }
+}

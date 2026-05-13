@@ -4,7 +4,7 @@ import AdminPwaRegistrar from "@/components/admin/AdminPwaRegistrar";
 
 
 export const viewport: Viewport = {
-  themeColor: "#0E0E10",
+  themeColor: "#2563EB",
   colorScheme: "light",
 };
 
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     shortcut: "/favicon.ico",
     apple: [{ url: "/orduva-apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
-  themeColor: "#0E0E10",
+  themeColor: "#2563EB",
   other: {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
