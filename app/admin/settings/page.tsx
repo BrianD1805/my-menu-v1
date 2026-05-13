@@ -12,7 +12,7 @@ export default async function AdminSettingsPage() {
   const [{ data: stripeSecretSummary }, { data: checklistVisibilityRow }] = await Promise.all([
     db
     .from("tenant_settings")
-    .select("stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret")
+    .select("stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url")
     .eq("tenant_id", tenant.id)
     .maybeSingle(),
     db
@@ -130,6 +130,8 @@ export default async function AdminSettingsPage() {
           yocoCustomerWebhookSecretInput: "",
           yocoCustomerWebhookSecretSet: Boolean(yocoWebhookSecret),
           yocoCustomerWebhookSecretHint: yocoWebhookSecret ? `••••${yocoWebhookSecret.slice(-4)}` : "",
+          yocoCustomerWebhookId: String(stripeSecrets?.yoco_customer_webhook_id || ""),
+          yocoCustomerWebhookUrl: String(stripeSecrets?.yoco_customer_webhook_url || ""),
           yocoCustomerAccountLabel: settings?.yoco_customer_account_label || "",
           yocoCustomerSetupNotes: settings?.yoco_customer_setup_notes || "",
           yocoCustomerPaymentsLive: settings?.yoco_customer_payments_live === true,

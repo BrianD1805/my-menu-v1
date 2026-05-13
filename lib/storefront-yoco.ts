@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { db } from "@/lib/db";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { buildWhatsAppOrderMessage } from "@/lib/whatsapp";
@@ -11,6 +12,8 @@ export type TenantYocoCustomerSettings = {
   yoco_customer_mode: string | null;
   yoco_customer_secret_key: string | null;
   yoco_customer_webhook_secret: string | null;
+  yoco_customer_webhook_id?: string | null;
+  yoco_customer_webhook_url?: string | null;
   yoco_customer_account_label: string | null;
   yoco_customer_payments_live: boolean | null;
 };
@@ -83,7 +86,7 @@ function isFailedStatus(status: string | null | undefined) {
 export async function loadTenantYocoCustomerSettings(tenantId: string) {
   const { data, error } = await db
     .from("tenant_settings")
-    .select("tenant_id, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_account_label, yoco_customer_payments_live")
+    .select("tenant_id, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_account_label, yoco_customer_payments_live")
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
@@ -180,6 +183,9 @@ export async function createTenantYocoOrderCheckoutIntent(input: {
         tenant_id: input.tenantId,
         tenant_slug: input.tenantSlug,
         checkout_id: checkoutId,
+        checkoutId,
+        orduva_checkout_id: checkoutId,
+        tenantId: input.tenantId,
         customer_name: input.customerName.slice(0, 120),
         customer_phone: input.customerPhone.slice(0, 80),
       },
@@ -259,7 +265,7 @@ async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPa
     .eq("tenant_id", tenantId);
 
   for (const item of items) {
-    const product = products?.find((p) => p.id === item.product_id);
+    const product = (products as Array<{ id: string; stock_enabled: boolean | null; stock_quantity: number | null }> | null | undefined)?.find((p) => p.id === item.product_id);
     if (!product?.stock_enabled) continue;
     const nextStock = Math.max(0, Number(product.stock_quantity || 0) - item.quantity);
     await db.from("products").update({ stock_quantity: nextStock }).eq("id", product.id).eq("tenant_id", tenantId);
@@ -417,4 +423,284 @@ export async function reconcileYocoIntent(input: { checkoutId?: string | null; y
   }
 
   return { intent, status: yocoStatus.status || intent.status || "checkout_started", orderId: null as string | null, paymentId: yocoStatus.paymentId };
+}
+
+
+type YocoWebhookEnvelope = {
+  id?: string;
+  type?: string;
+  event?: string;
+  name?: string;
+  mode?: string;
+  data?: Record<string, any>;
+  payload?: Record<string, any>;
+  metadata?: Record<string, any>;
+  [key: string]: any;
+};
+
+type VerifiedYocoWebhook = {
+  event: YocoWebhookEnvelope;
+  webhookId: string;
+  eventId: string;
+  tenantId: string | null;
+  checkoutId: string | null;
+  yocoCheckoutId: string | null;
+  paymentId: string | null;
+  eventType: string;
+};
+
+function timingSafeEqualText(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function parseYocoWebhookSignatures(header: string | null) {
+  if (!header) return [];
+  return header
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [, signature] = part.split(",");
+      return getString(signature || part);
+    })
+    .filter(Boolean);
+}
+
+function verifyYocoSignature(rawBody: string, headers: Headers, webhookSecret: string) {
+  const webhookId = getString(headers.get("webhook-id"));
+  const timestamp = getString(headers.get("webhook-timestamp"));
+  const signatureHeader = headers.get("webhook-signature");
+  if (!webhookId || !timestamp || !signatureHeader) throw new Error("Missing Yoco webhook signature headers.");
+
+  const timestampNumber = Number(timestamp);
+  if (!Number.isFinite(timestampNumber)) throw new Error("Invalid Yoco webhook timestamp.");
+  const timestampMs = timestampNumber > 10_000_000_000 ? timestampNumber : timestampNumber * 1000;
+  const ageMs = Math.abs(Date.now() - timestampMs);
+  if (ageMs > 3 * 60 * 1000) throw new Error("Yoco webhook timestamp is outside the allowed 3 minute window.");
+
+  const rawSecret = getString(webhookSecret);
+  if (!rawSecret.startsWith("whsec_")) throw new Error("Invalid Yoco webhook secret format.");
+  const secretPart = rawSecret.split("_")[1] || "";
+  const secretBytes = Buffer.from(secretPart, "base64");
+  const signedContent = `${webhookId}.${timestamp}.${rawBody}`;
+  const expected = crypto.createHmac("sha256", secretBytes).update(signedContent).digest("base64");
+  const signatures = parseYocoWebhookSignatures(signatureHeader);
+  if (!signatures.some((signature) => timingSafeEqualText(expected, signature))) {
+    throw new Error("Yoco webhook signature verification failed.");
+  }
+}
+
+function walkObject(value: unknown, visitor: (key: string, value: unknown) => string | null): string | null {
+  if (!value || typeof value !== "object") return null;
+  const stack: Array<Record<string, unknown>> = [value as Record<string, unknown>];
+  const seen = new Set<Record<string, unknown>>();
+  while (stack.length) {
+    const current = stack.shift()!;
+    if (seen.has(current)) continue;
+    seen.add(current);
+    for (const [key, child] of Object.entries(current)) {
+      const found = visitor(key, child);
+      if (found) return found;
+      if (child && typeof child === "object" && !Array.isArray(child)) stack.push(child as Record<string, unknown>);
+    }
+  }
+  return null;
+}
+
+function findDeepString(value: unknown, keys: string[]) {
+  const wanted = new Set(keys.map((key) => key.toLowerCase()));
+  return walkObject(value, (key, child) => wanted.has(key.toLowerCase()) ? getString(child) || null : null);
+}
+
+function extractYocoWebhookRefs(event: YocoWebhookEnvelope) {
+  const eventType = getString(event.type) || getString(event.event) || getString(event.name) || "unknown";
+  const metadataCheckoutId = findDeepString(event, ["orduva_checkout_id", "checkoutId", "checkout_id"]);
+  const tenantId = findDeepString(event, ["tenantId", "tenant_id"]);
+  const yocoCheckoutId = findDeepString(event, ["yoco_checkout_id", "yocoCheckoutId", "checkoutId", "checkout_id"]);
+  const paymentId = findDeepString(event, ["paymentId", "payment_id", "paymentID", "id"]);
+  return {
+    eventType,
+    tenantId,
+    checkoutId: metadataCheckoutId,
+    yocoCheckoutId: yocoCheckoutId && yocoCheckoutId !== metadataCheckoutId ? yocoCheckoutId : null,
+    paymentId,
+  };
+}
+
+async function loadYocoWebhookSecretForEvent(event: YocoWebhookEnvelope) {
+  const refs = extractYocoWebhookRefs(event);
+  if (refs.tenantId) {
+    const settings = await loadTenantYocoCustomerSettings(refs.tenantId);
+    const secret = getString(settings?.yoco_customer_webhook_secret);
+    if (!secret) throw new Error("Tenant Yoco webhook secret is not configured.");
+    return { secret, tenantId: refs.tenantId, refs };
+  }
+
+  const intent = refs.checkoutId || refs.yocoCheckoutId
+    ? await loadYocoIntentByCheckout({ checkoutId: refs.checkoutId, yocoCheckoutId: refs.yocoCheckoutId })
+    : null;
+  if (intent?.tenant_id) {
+    const settings = await loadTenantYocoCustomerSettings(String(intent.tenant_id));
+    const secret = getString(settings?.yoco_customer_webhook_secret);
+    if (!secret) throw new Error("Tenant Yoco webhook secret is not configured.");
+    return { secret, tenantId: String(intent.tenant_id), refs: { ...refs, checkoutId: refs.checkoutId || getString(intent.id), yocoCheckoutId: refs.yocoCheckoutId || getString(intent.yoco_checkout_id) } };
+  }
+
+  const { data, error } = await db
+    .from("tenant_settings")
+    .select("tenant_id, yoco_customer_webhook_secret")
+    .not("yoco_customer_webhook_secret", "is", null);
+  if (error || !data?.length) throw new Error("No tenant Yoco webhook secrets are available for verification.");
+
+  return { secret: "", tenantId: null, refs };
+}
+
+export async function verifyAndParseTenantYocoWebhook(rawBody: string, headers: Headers): Promise<VerifiedYocoWebhook> {
+  const event = JSON.parse(rawBody) as YocoWebhookEnvelope;
+  const webhookId = getString(headers.get("webhook-id"));
+  const eventId = getString(event.id) || webhookId || crypto.createHash("sha256").update(rawBody).digest("hex");
+  const loaded = await loadYocoWebhookSecretForEvent(event);
+
+  if (loaded.secret) {
+    verifyYocoSignature(rawBody, headers, loaded.secret);
+    return {
+      event,
+      webhookId,
+      eventId,
+      tenantId: loaded.tenantId,
+      checkoutId: loaded.refs.checkoutId || null,
+      yocoCheckoutId: loaded.refs.yocoCheckoutId || null,
+      paymentId: loaded.refs.paymentId || null,
+      eventType: loaded.refs.eventType,
+    };
+  }
+
+  const { data } = await db
+    .from("tenant_settings")
+    .select("tenant_id, yoco_customer_webhook_secret")
+    .not("yoco_customer_webhook_secret", "is", null);
+  for (const row of (data || []) as Array<{ tenant_id: string; yoco_customer_webhook_secret: string | null }>) {
+    const secret = getString(row.yoco_customer_webhook_secret);
+    if (!secret) continue;
+    try {
+      verifyYocoSignature(rawBody, headers, secret);
+      return {
+        event,
+        webhookId,
+        eventId,
+        tenantId: row.tenant_id,
+        checkoutId: loaded.refs.checkoutId || null,
+        yocoCheckoutId: loaded.refs.yocoCheckoutId || null,
+        paymentId: loaded.refs.paymentId || null,
+        eventType: loaded.refs.eventType,
+      };
+    } catch {
+      // Try next tenant webhook secret.
+    }
+  }
+
+  throw new Error("Yoco webhook signature verification failed for all tenant secrets.");
+}
+
+function webhookLooksPaid(event: YocoWebhookEnvelope, eventType: string) {
+  const haystack = [eventType, findDeepString(event, ["status", "paymentStatus", "checkoutStatus"])].filter(Boolean).join(" ").toLowerCase();
+  return ["paid", "succeeded", "successful", "completed", "payment_succeeded", "payment.succeeded", "checkout.succeeded", "checkout.completed"].some((word) => haystack.includes(word));
+}
+
+function webhookLooksFailed(event: YocoWebhookEnvelope, eventType: string) {
+  const haystack = [eventType, findDeepString(event, ["status", "paymentStatus", "checkoutStatus"])].filter(Boolean).join(" ").toLowerCase();
+  return ["failed", "cancelled", "canceled", "expired", "payment.failed", "checkout.failed", "checkout.cancelled", "checkout.canceled"].some((word) => haystack.includes(word));
+}
+
+function asUuid(value: string | null | undefined) {
+  const text = getString(value);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(text) ? text : null;
+}
+
+async function recordYocoWebhookEvent(input: VerifiedYocoWebhook, status: "processing" | "processed" | "ignored" | "failed", message?: string) {
+  const row = {
+    event_id: input.eventId,
+    webhook_id: input.webhookId || null,
+    tenant_id: input.tenantId,
+    checkout_id: asUuid(input.checkoutId),
+    yoco_checkout_id: input.yocoCheckoutId,
+    yoco_payment_id: input.paymentId,
+    event_type: input.eventType,
+    status,
+    message: message || null,
+    payload: input.event as Record<string, any>,
+    processed_at: status === "processed" || status === "ignored" ? new Date().toISOString() : null,
+  };
+  const { data, error } = await db
+    .from("storefront_yoco_webhook_events")
+    .insert(row)
+    .select("id")
+    .maybeSingle();
+  if (error) {
+    const code = String((error as any).code || "");
+    const msg = String((error as any).message || "").toLowerCase();
+    if (code === "23505" || msg.includes("duplicate")) return { duplicate: true };
+    throw new Error("Could not record Yoco webhook event. Run the Ver-0.213 Supabase SQL first.");
+  }
+  return { duplicate: false, id: data?.id as string | undefined };
+}
+
+async function finishYocoWebhookEvent(eventId: string, status: "processed" | "ignored" | "failed", message: string) {
+  await db
+    .from("storefront_yoco_webhook_events")
+    .update({ status, message, processed_at: new Date().toISOString() })
+    .eq("event_id", eventId);
+}
+
+export async function processTenantYocoWebhook(input: VerifiedYocoWebhook) {
+  const claim = await recordYocoWebhookEvent(input, "processing");
+  if (claim.duplicate) return "Yoco webhook event already processed or currently processing.";
+
+  try {
+    let intent = await loadYocoIntentByCheckout({ checkoutId: input.checkoutId, yocoCheckoutId: input.yocoCheckoutId });
+    if (!intent && input.tenantId && input.yocoCheckoutId) {
+      intent = await loadYocoIntentByCheckout({ yocoCheckoutId: input.yocoCheckoutId });
+    }
+
+    if (!intent) {
+      const message = "Yoco webhook verified but did not match an Orduva checkout intent.";
+      await finishYocoWebhookEvent(input.eventId, "ignored", message);
+      return message;
+    }
+
+    if (webhookLooksPaid(input.event, input.eventType)) {
+      const orderId = await createPaidOrderFromYocoIntent({
+        intent,
+        paymentId: input.paymentId || getString(intent.yoco_payment_id) || null,
+        paymentReference: input.paymentId || input.yocoCheckoutId || input.checkoutId || input.eventId,
+        paidAt: new Date().toISOString(),
+      });
+      const message = `Yoco webhook confirmed payment. Paid order ${orderId} is ready.`;
+      await finishYocoWebhookEvent(input.eventId, "processed", message);
+      return message;
+    }
+
+    if (webhookLooksFailed(input.event, input.eventType)) {
+      await db
+        .from("storefront_payment_intents")
+        .update({ status: input.eventType.toLowerCase().includes("cancel") ? "cancelled" : "failed", updated_at: new Date().toISOString() })
+        .eq("id", intent.id)
+        .eq("tenant_id", intent.tenant_id)
+        .is("order_id", null);
+      const message = `Yoco webhook marked checkout as ${input.eventType}. No paid order was created.`;
+      await finishYocoWebhookEvent(input.eventId, "processed", message);
+      return message;
+    }
+
+    const message = `Yoco webhook ignored: ${input.eventType}`;
+    await finishYocoWebhookEvent(input.eventId, "ignored", message);
+    return message;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Yoco webhook processing failed.";
+    await finishYocoWebhookEvent(input.eventId, "failed", message);
+    throw error;
+  }
 }

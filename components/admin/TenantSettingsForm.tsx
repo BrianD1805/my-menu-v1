@@ -66,6 +66,8 @@ type FormState = {
   yocoCustomerWebhookSecretInput: string;
   yocoCustomerWebhookSecretSet: boolean;
   yocoCustomerWebhookSecretHint: string;
+  yocoCustomerWebhookId: string;
+  yocoCustomerWebhookUrl: string;
   yocoCustomerAccountLabel: string;
   yocoCustomerSetupNotes: string;
   yocoCustomerPaymentsLive: boolean;
@@ -465,6 +467,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
   const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
+  const [yocoWebhookRegistering, setYocoWebhookRegistering] = useState(false);
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
   const settingsTopRef = useRef<HTMLDivElement | null>(null);
@@ -499,6 +502,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
   const yocoCredentialReady = Boolean(form.yocoCustomerSecretKeySet || form.yocoCustomerSecretKeyInput.trim());
+  const yocoWebhookReady = Boolean(form.yocoCustomerWebhookSecretSet || form.yocoCustomerWebhookSecretInput.trim());
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
@@ -748,6 +752,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         yocoCustomerWebhookSecretInput: "",
         yocoCustomerWebhookSecretSet: nextYocoWebhookSet,
         yocoCustomerWebhookSecretHint: nextYocoWebhookSet ? form.yocoCustomerWebhookSecretHint || "saved" : "",
+        yocoCustomerWebhookId: form.yocoCustomerWebhookId,
+        yocoCustomerWebhookUrl: form.yocoCustomerWebhookUrl,
         yocoCustomerPaymentsLive: form.enableYocoCustomerPayments && form.yocoCustomerPaymentsLive && nextYocoSecretSet && yocoCurrencyAllowed,
       };
       setForm(savedPayload);
@@ -759,6 +765,36 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       setMessage(error instanceof Error ? error.message : "Failed to save settings");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function registerYocoWebhook() {
+    setYocoWebhookRegistering(true);
+    setTone("info");
+    setMessage("Registering the Yoco webhook with Yoco...");
+    try {
+      const response = await fetch("/api/admin/settings/yoco-webhook", { method: "POST" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || "Failed to register Yoco webhook");
+
+      const nextForm = {
+        ...form,
+        yocoConnectionStatus: "configured",
+        yocoCustomerWebhookSecretInput: "",
+        yocoCustomerWebhookSecretSet: true,
+        yocoCustomerWebhookSecretHint: payload?.webhookSecretHint || "saved",
+        yocoCustomerWebhookId: payload?.webhookId || form.yocoCustomerWebhookId || "",
+        yocoCustomerWebhookUrl: payload?.webhookUrl || form.yocoCustomerWebhookUrl || "https://www.orduva.com/api/storefront/yoco/webhook",
+      };
+      setForm(nextForm);
+      setSavedForm({ ...savedForm, ...nextForm, yocoCustomerWebhookSecretInput: "" });
+      setTone("success");
+      setMessage(payload?.message || "Yoco webhook registered and saved.");
+    } catch (error) {
+      setTone("error");
+      setMessage(error instanceof Error ? error.message : "Failed to register Yoco webhook");
+    } finally {
+      setYocoWebhookRegistering(false);
     }
   }
 
@@ -1240,14 +1276,34 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   <input value={form.yocoCustomerSecretKeyInput} onChange={(e) => update("yocoCustomerSecretKeyInput", e.target.value)} placeholder={form.yocoCustomerSecretKeySet ? "Leave blank to keep saved Yoco secret key" : "Yoco secret key from the tenant's Yoco portal"} className="input" autoComplete="off" />
                 </Field>
                 <Field label={form.yocoCustomerWebhookSecretSet ? `Yoco webhook secret saved (${form.yocoCustomerWebhookSecretHint || "saved"})` : "Yoco webhook secret / signing key"}>
-                  <input value={form.yocoCustomerWebhookSecretInput} onChange={(e) => update("yocoCustomerWebhookSecretInput", e.target.value)} placeholder={form.yocoCustomerWebhookSecretSet ? "Leave blank to keep saved webhook secret" : "Add later if supplied by Yoco"} className="input" autoComplete="off" />
-                  <p className="mt-2 text-xs leading-5 text-emerald-800">Webhook endpoint planned for next hardening patch: https://www.orduva.com/api/storefront/yoco/webhook</p>
+                  <input value={form.yocoCustomerWebhookSecretInput} onChange={(e) => update("yocoCustomerWebhookSecretInput", e.target.value)} placeholder={form.yocoCustomerWebhookSecretSet ? "Leave blank to keep saved webhook secret" : "Use the register button below, or paste the Yoco webhook secret if already created"} className="input" autoComplete="off" />
+                  <p className="mt-2 text-xs leading-5 text-emerald-800">Webhook endpoint URL: {form.yocoCustomerWebhookUrl || "https://www.orduva.com/api/storefront/yoco/webhook"}</p>
+                  {form.yocoCustomerWebhookId ? <p className="mt-1 text-xs leading-5 text-slate-500">Yoco webhook ID: {form.yocoCustomerWebhookId}</p> : null}
                 </Field>
                 <div className="md:col-span-2">
                   <Field label="Yoco setup notes">
                     <input value={form.yocoCustomerSetupNotes} onChange={(e) => update("yocoCustomerSetupNotes", e.target.value)} placeholder="Example: Test Yoco key saved, waiting for checkout build" className="input" />
                   </Field>
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-emerald-100 bg-white p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-950">Yoco webhook setup</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">Register the Orduva webhook with Yoco after the Test Secret Key is saved. This lets Yoco confirm paid orders even if the customer closes the browser.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={registerYocoWebhook}
+                    disabled={yocoWebhookRegistering || !yocoCurrencyAllowed || !form.yocoCustomerSecretKeySet || yocoWebhookReady}
+                    className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-700 px-4 py-2 text-xs font-black text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500"
+                  >
+                    {yocoWebhookRegistering ? "Registering..." : yocoWebhookReady ? "Webhook saved" : "Register Yoco webhook"}
+                  </button>
+                </div>
+                {!form.yocoCustomerSecretKeySet ? <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Save the Yoco secret key first, then come back and register the webhook.</p> : null}
+                {yocoWebhookReady ? <p className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900">Webhook secret is saved. Yoco paid orders can now be confirmed by webhook.</p> : null}
               </div>
 
               <label className={`mt-4 flex items-start gap-3 rounded-2xl border p-3 text-sm ${yocoCurrencyAllowed && yocoCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}>

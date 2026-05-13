@@ -91,6 +91,8 @@ export type TenantSettings = {
   yoco_customer_mode?: string | null;
   yoco_customer_account_label?: string | null;
   yoco_customer_setup_notes?: string | null;
+  yoco_customer_webhook_id?: string | null;
+  yoco_customer_webhook_url?: string | null;
   yoco_customer_payments_live?: boolean | null;
   enable_mpesa_customer_payments?: boolean | null;
   mpesa_connection_status?: string | null;
