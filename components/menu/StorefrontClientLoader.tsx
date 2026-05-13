@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import MenuBrowser from "@/components/menu/MenuBrowser";
 import type { Category, Product } from "@/lib/types";
 import type { StorefrontTheme } from "@/lib/storefront-theme";
@@ -54,7 +54,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-206a";
+const STOREFRONT_CACHE_VERSION = "ver-0-209";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -131,6 +131,7 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
   const [payload, setPayload] = useState<StorefrontPayload | null>(() => readCachedPayload(tenantSlug));
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+  const trackedVisitKeyRef = useRef("");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -195,6 +196,21 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
 
   const settings = payload?.settings;
   const pageBackground = useMemo(() => settings?.storefrontTheme?.globalPageBackground || settings?.backgroundTint || "#F8F4F0", [settings]);
+
+  useEffect(() => {
+    if (!payload || !settings || typeof window === "undefined") return;
+    const visitKey = `${settings.tenantId || payload.tenant.id}:${window.location.pathname}`;
+    if (trackedVisitKeyRef.current === visitKey) return;
+    trackedVisitKeyRef.current = visitKey;
+    window.dispatchEvent(new CustomEvent("orduva:analytics", {
+      detail: {
+        eventType: "storefront_visit",
+        scope: "tenant_storefront",
+        tenantId: settings.tenantId || payload.tenant.id,
+        tenantSlug: payload.tenant.slug || tenantSlug,
+      },
+    }));
+  }, [payload, settings, tenantSlug]);
 
   if (error) return <ErrorStorefrontShell message={error} onRetry={() => setRetryKey((key) => key + 1)} />;
   if (!payload || !settings) return <StorefrontPreparingShell backgroundColor={pageBackground} />;

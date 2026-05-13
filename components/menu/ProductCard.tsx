@@ -65,6 +65,21 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     return subscribeToCartUpdates<StoredCartItem>(tenantSlug, update);
   }, [tenantSlug]);
 
+
+  function trackStorefrontEvent(eventType: string, extra: Record<string, unknown> = {}) {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(new CustomEvent("orduva:analytics", {
+      detail: {
+        eventType,
+        scope: "tenant_storefront",
+        tenantSlug,
+        productId: id,
+        productName: name,
+        metadata: extra,
+      },
+    }));
+  }
+
   function cleanShareDescription(value: string | null | undefined) {
     return String(value || "")
       .replace(/<[^>]+>/g, " ")
@@ -98,6 +113,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   }
 
   async function shareProduct() {
+    trackStorefrontEvent("product_share", { source: "product_details_popup" });
     const url = productShareUrl();
     const cleanDescription = cleanShareDescription(description);
     const shareDescription = cleanDescription || `Have a look at ${name} on this menu.`;
@@ -144,6 +160,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     }
 
     setButtonState("adding");
+    trackStorefrontEvent("add_to_cart", { source });
 
     const sourceRect = (source === "modal" ? modalImageFrameRef.current : imageFrameRef.current)?.getBoundingClientRect() || null;
     const targetRect = source === "modal" ? modalCartButtonRef.current?.getBoundingClientRect() || null : null;
@@ -158,6 +175,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   }
 
   function goToCheckout() {
+    trackStorefrontEvent("checkout_started", { source: "product_details_popup" });
     setDetailsOpen(false);
     if (typeof window !== "undefined") window.location.assign("/checkout");
   }
@@ -298,7 +316,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
             <button
               type="button"
-              onClick={() => setDetailsOpen(true)}
+              onClick={() => { trackStorefrontEvent("product_view", { source: "product_card_more" }); setDetailsOpen(true); }}
               className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
               style={{ borderColor: cleanAccentSubtleBorder, color: moreButtonText, backgroundColor: moreButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
               aria-label={`More info for ${name}`}

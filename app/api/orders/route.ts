@@ -219,6 +219,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to create order items" }, { status: 500 });
     }
 
+    // Ver-0.209: lightweight analytics. Never block order creation if analytics is unavailable.
+    db.from("analytics_events").insert({
+      tenant_id: tenant.id,
+      scope: "tenant_storefront",
+      event_type: "order_created",
+      host: req.headers.get("x-forwarded-host") || req.headers.get("host") || null,
+      page_path: "/checkout",
+      order_id: order.id,
+      anonymous_session_id: body.customerAccountId?.trim() || null,
+      metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, total },
+    }).then(undefined, () => undefined);
+
     for (const item of body.items) {
       const product = products.find((p) => p.id === item.productId);
       if (!product?.stock_enabled) continue;

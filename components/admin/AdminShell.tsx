@@ -4,7 +4,7 @@ import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
 import type { TenantTrialState } from "@/lib/trial";
 
-type NavIcon = "home" | "orders" | "products" | "categories" | "settings" | "referrals";
+type NavIcon = "home" | "orders" | "products" | "categories" | "settings" | "analytics" | "referrals";
 
 type NavItem = {
   href: string;
@@ -67,6 +67,16 @@ function AdminNavIcon({ icon }: { icon: NavIcon }) {
           <path d="M19.25 12a7.3 7.3 0 0 0-.08-1.06l2.03-1.58-2-3.46-2.39.96a7.7 7.7 0 0 0-1.84-1.06L14.6 3.25h-4l-.37 2.55a7.7 7.7 0 0 0-1.84 1.06L6 5.9l-2 3.46 2.03 1.58a7.33 7.33 0 0 0 0 2.12L4 14.64l2 3.46 2.39-.96c.56.45 1.18.81 1.84 1.06l.37 2.55h4l.37-2.55a7.7 7.7 0 0 0 1.84-1.06l2.39.96 2-3.46-2.03-1.58c.05-.35.08-.7.08-1.06Z" />
         </svg>
       );
+    case "analytics":
+      return (
+        <svg {...common}>
+          <path d="M4.75 19.25h14.5" />
+          <path d="M7 16.5V10" />
+          <path d="M12 16.5V5.75" />
+          <path d="M17 16.5v-8" />
+          <path d="M5.75 5.75h12.5" />
+        </svg>
+      );
     case "referrals":
       return (
         <svg {...common}>
@@ -114,7 +124,7 @@ export default function AdminShell({
   signedInAs: string;
   title: string;
   description: string;
-  current: "home" | "orders" | "products" | "categories" | "settings" | "referrals";
+  current: "home" | "orders" | "products" | "categories" | "settings" | "analytics" | "referrals";
   children: ReactNode;
   logoUrl?: string | null;
   faviconUrl?: string | null;
@@ -127,6 +137,7 @@ export default function AdminShell({
     { href: "/admin/products", label: "Products", icon: "products", current: current === "products" },
     { href: "/admin/categories", label: "Categories", icon: "categories", current: current === "categories" },
     { href: "/admin/settings", label: "Settings", icon: "settings", current: current === "settings" },
+    { href: "/admin/analytics", label: "Analytics", icon: "analytics", current: current === "analytics" },
     { href: "/admin/referrals", label: "Referrals", icon: "referrals", current: current === "referrals" },
   ];
 
@@ -228,7 +239,7 @@ export default function AdminShell({
       </div>
 
       <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#0E0E10]/10 bg-white px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.45rem)] pt-1.5 shadow-[0_-12px_30px_rgba(14,14,16,0.10)] backdrop-blur sm:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-6 gap-1">
+        <div className="mx-auto grid max-w-6xl grid-cols-7 gap-1">
           {nav.map((item) => (
             <a
               key={item.href}

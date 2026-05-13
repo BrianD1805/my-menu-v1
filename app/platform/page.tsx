@@ -32,6 +32,12 @@ export default function PlatformDashboardPage() {
                   Onboarding tools
                 </Link>
                 <Link
+                  href="/platform/analytics"
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm font-black text-sky-900 transition hover:bg-white"
+                >
+                  Analytics
+                </Link>
+                <Link
                   href="/platform/referrals"
                   className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-5 py-3 text-sm font-black text-[#9A3412] transition hover:bg-white"
                 >

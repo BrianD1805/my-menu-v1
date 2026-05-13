@@ -69,6 +69,17 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() || "";
 
   function goToCart() {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("orduva:analytics", {
+        detail: {
+          eventType: "checkout_started",
+          scope: "tenant_storefront",
+          tenantId: tenantId || null,
+          tenantSlug,
+          metadata: { source: "cart_button" },
+        },
+      }));
+    }
     setReminderOpen(false);
     router.push(href);
   }
