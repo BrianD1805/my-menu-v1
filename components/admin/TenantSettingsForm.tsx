@@ -669,7 +669,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   function scrollToSettingsSection(id: string) {
     setSettingsMenuOpen(false);
     window.setTimeout(() => {
-      const target = document.getElementById(id);
+      const target = document.getElementById(id) as HTMLDetailsElement | null;
+      if (target && target.tagName === "DETAILS") target.open = true;
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 80);
   }
@@ -914,7 +915,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
           </div>
         </div>
 
-        <Section id="admin-workspace" title="Admin workspace" dirty={adminWorkspaceDirty} saving={saving}>
+        <Section id="admin-workspace" title="Admin workspace" dirty={adminWorkspaceDirty} saving={saving} defaultOpen>
           <div className="rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
             <ToggleRow
               label="Show new client setup checklist"
@@ -1642,15 +1643,26 @@ function UploadField({
 }
 
 const SETTINGS_MENU_ITEMS = [
-  { id: "admin-workspace", title: "Admin workspace", help: "Show or hide the new client setup checklist." },
-  { id: "logo-and-favicon", title: "Logo and favicon", help: "Upload or replace the store logo and browser icon." },
-  { id: "branding-and-wording", title: "Branding and wording", help: "Business name, storefront heading and admin labels." },
-  { id: "theme-presets", title: "Theme presets", help: "Choose a ready-made colour starting point." },
-  { id: "per-item-storefront-colours", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
-  { id: "business-contact-details", title: "Business contact details", help: "Phone, email, address, footer and social links." },
-  { id: "storefront-payment-options", title: "Storefront payment options", help: "Cash, COD and future online payment provider setup." },
-  { id: "advanced-currency-display", title: "Advanced currency display", help: "Currency name, symbol, separators and sample pricing." },
+  { id: "admin-workspace", group: "Workspace", title: "Admin workspace", help: "Show or hide the new client setup checklist." },
+  { id: "logo-and-favicon", group: "Brand", title: "Logo and favicon", help: "Upload or replace the store logo and browser icon." },
+  { id: "branding-and-wording", group: "Brand", title: "Branding and wording", help: "Business name, storefront heading and admin labels." },
+  { id: "theme-presets", group: "Theme", title: "Theme presets", help: "Choose a ready-made colour starting point." },
+  { id: "per-item-storefront-colours", group: "Theme", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
+  { id: "business-contact-details", group: "Contact", title: "Business contact details", help: "Phone, email, address, footer and social links." },
+  { id: "storefront-payment-options", group: "Payments", title: "Storefront payment options", help: "Cash, COD, Stripe, Yoco and future provider setup." },
+  { id: "advanced-currency-display", group: "Payments", title: "Advanced currency display", help: "Currency name, symbol, suffix, separators and sample pricing." },
 ];
+
+const SETTINGS_SECTION_META: Record<string, { group: string; help: string; accent: string }> = {
+  "admin-workspace": { group: "Workspace", help: "Small controls that affect the tenant admin experience.", accent: "bg-slate-900 text-white" },
+  "logo-and-favicon": { group: "Brand", help: "Upload the public-facing logo and browser/app icon. Uploads autosave.", accent: "bg-orange-100 text-orange-800" },
+  "branding-and-wording": { group: "Brand", help: "Business name, admin label and customer-facing welcome wording.", accent: "bg-orange-100 text-orange-800" },
+  "theme-presets": { group: "Theme", help: "Start with a palette before fine-tuning individual storefront areas.", accent: "bg-indigo-100 text-indigo-800" },
+  "per-item-storefront-colours": { group: "Theme", help: "Detailed colour controls are tucked away until needed, especially on mobile.", accent: "bg-indigo-100 text-indigo-800" },
+  "business-contact-details": { group: "Contact", help: "Footer wording, contact details, referral advert and social links.", accent: "bg-emerald-100 text-emerald-800" },
+  "storefront-payment-options": { group: "Payments", help: "Cash, COD, Stripe and Yoco controls. Payment behaviour is unchanged.", accent: "bg-amber-100 text-amber-900" },
+  "advanced-currency-display": { group: "Payments", help: "Currency display formatting, including optional tenant-specific suffix.", accent: "bg-amber-100 text-amber-900" },
+};
 
 function SettingsMenuModal({ onClose, onSelect }: { onClose: () => void; onSelect: (id: string) => void }) {
   return (
@@ -1678,6 +1690,7 @@ function SettingsMenuModal({ onClose, onSelect }: { onClose: () => void; onSelec
               >
                 <span className="flex items-start justify-between gap-3">
                   <span>
+                    <span className="mb-2 inline-flex rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 shadow-sm">{item.group}</span>
                     <span className="block text-sm font-black text-slate-950">{item.title}</span>
                     <span className="mt-1 block text-xs leading-5 text-slate-600">{item.help}</span>
                   </span>
@@ -1820,6 +1833,7 @@ function Section({
   compact = false,
   dirty = true,
   saving = false,
+  defaultOpen = false,
 }: {
   id?: string;
   title: string;
@@ -1828,25 +1842,43 @@ function Section({
   compact?: boolean;
   dirty?: boolean;
   saving?: boolean;
+  defaultOpen?: boolean;
 }) {
+  const meta = id ? SETTINGS_SECTION_META[id] : null;
   return (
-    <section id={id} className={`${compact ? "mb-0" : "mb-6"} scroll-mt-28 rounded-[24px] border border-slate-200 bg-slate-50/60 p-4 sm:p-5`}>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-600">{title}</h3>
+    <details
+      id={id}
+      open={defaultOpen || undefined}
+      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition open:border-orange-100 open:bg-slate-50/60`}
+    >
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-4 outline-none transition hover:bg-orange-50/55 focus-visible:ring-2 focus-visible:ring-orange-300 sm:px-5 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="mb-2 flex flex-wrap items-center gap-2">
+            {meta ? <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${meta.accent}`}>{meta.group}</span> : null}
+            {dirty && showSave ? <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-800">Unsaved</span> : null}
+            {!dirty && showSave ? <span className="inline-flex rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">Saved</span> : null}
+            {!showSave ? <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Autosave / tools</span> : null}
+          </span>
+          <span className="block text-base font-black text-slate-950 sm:text-lg">{title}</span>
+          {meta ? <span className="mt-1.5 block text-xs leading-5 text-slate-600 sm:text-sm">{meta.help}</span> : null}
+        </span>
+        <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-black text-slate-500 shadow-sm transition group-open:rotate-45 group-open:border-orange-200 group-open:bg-orange-50 group-open:text-orange-800" aria-hidden="true">+</span>
+      </summary>
+      <div className="border-t border-slate-200/70 px-4 py-4 sm:px-5 sm:py-5">
+        {children}
+        {showSave ? (
+          <div className="mt-4 flex justify-end border-t border-slate-200/70 pt-4">
+            <button
+              type="submit"
+              disabled={saving || !dirty}
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
+            >
+              {saving ? "Saving..." : dirty ? "Save section" : "Nothing to save"}
+            </button>
+          </div>
+        ) : null}
       </div>
-      {children}
-      {showSave ? (
-        <div className="mt-4 flex justify-end border-t border-slate-200/70 pt-4">
-          <button
-            type="submit"
-            disabled={saving || !dirty}
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
-          >
-            {saving ? "Saving..." : dirty ? "Save section" : "Nothing to save"}
-          </button>
-        </div>
-      ) : null}
-    </section>
+    </details>
   );
 }
 
