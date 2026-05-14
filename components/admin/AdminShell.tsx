@@ -225,8 +225,13 @@ export default function AdminShell({
                 </p>
               </div>
 
-              <div className="rounded-[20px] border border-[#DCE5E1] bg-[#F1F5F4] px-4 py-3 oa-admin-soft text-sm leading-6 text-[#374151] lg:min-w-[15rem]">
-                Signed in as <span className="font-black text-[#111827]">{signedInAs}</span>
+              <div className="rounded-[20px] border border-[#DCE5E1] bg-[#F1F5F4] p-3 oa-admin-soft text-sm leading-6 text-[#374151] lg:min-w-[16rem]">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-stretch">
+                  <p>
+                    Signed in as <span className="font-black text-[#111827]">{signedInAs}</span>
+                  </p>
+                  <LogoutButton className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
+                </div>
               </div>
             </div>
           </div>
@@ -234,9 +239,6 @@ export default function AdminShell({
 
         <div className="mt-4 sm:mt-5">{children}</div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <LogoutButton className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0F766E] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#115E59] disabled:cursor-not-allowed disabled:opacity-60" />
-        </div>
       </div>
 
       <nav className="admin-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#DCE5E1] bg-white px-2 pb-[calc(env(safe-area-inset-bottom,0px)+0.45rem)] pt-1.5 backdrop-blur sm:hidden">

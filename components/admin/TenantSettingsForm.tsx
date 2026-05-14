@@ -1849,7 +1849,7 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition open:border-orange-100 open:bg-slate-50/60`}
+      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition open:border-orange-100`}
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-4 outline-none transition hover:bg-orange-50/55 focus-visible:ring-2 focus-visible:ring-orange-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
@@ -1864,10 +1864,10 @@ function Section({
         </span>
         <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-black text-slate-500 shadow-sm transition group-open:rotate-45 group-open:border-orange-200 group-open:bg-orange-50 group-open:text-orange-800" aria-hidden="true">+</span>
       </summary>
-      <div className="border-t border-slate-200/70 px-4 py-4 sm:px-5 sm:py-5">
+      <div className="px-4 pb-4 sm:px-5 sm:pb-5">
         {children}
         {showSave ? (
-          <div className="mt-4 flex justify-end border-t border-slate-200/70 pt-4">
+          <div className="mt-4 flex justify-end pt-1">
             <button
               type="submit"
               disabled={saving || !dirty}
