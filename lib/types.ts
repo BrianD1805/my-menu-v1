@@ -96,4 +96,10 @@ export type TenantSettings = {
   yoco_customer_payments_live?: boolean | null;
   enable_mpesa_customer_payments?: boolean | null;
   mpesa_connection_status?: string | null;
+  mpesa_customer_mode?: string | null;
+  mpesa_customer_consumer_key?: string | null;
+  mpesa_customer_ipn_id?: string | null;
+  mpesa_customer_account_label?: string | null;
+  mpesa_customer_setup_notes?: string | null;
+  mpesa_customer_payments_live?: boolean | null;
 };

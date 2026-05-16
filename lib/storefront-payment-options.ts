@@ -27,7 +27,7 @@ export function buildStorefrontPaymentOptions(settings: TenantSettings | null, o
   const cashDeliveryEnabled = enabled(settings?.enable_cash_on_delivery, true);
   const stripeConfigured = enabled(settings?.enable_stripe_customer_payments, false) && configured(settings?.stripe_connection_status) && enabled(settings?.stripe_customer_payments_live, false);
   const yocoConfigured = currencyCode === "ZAR" && enabled(settings?.enable_yoco_customer_payments, false) && configured(settings?.yoco_connection_status) && enabled(settings?.yoco_customer_payments_live, false);
-  const mpesaConfigured = enabled(settings?.enable_mpesa_customer_payments, false) && configured(settings?.mpesa_connection_status);
+  const mpesaConfigured = currencyCode === "KES" && enabled(settings?.enable_mpesa_customer_payments, false) && configured(settings?.mpesa_connection_status) && enabled(settings?.mpesa_customer_payments_live, false);
 
   const options: StorefrontPaymentOption[] = [];
 
@@ -60,7 +60,7 @@ export function buildStorefrontPaymentOptions(settings: TenantSettings | null, o
       id: "mpesa",
       label: "Pay with M-Pesa",
       shortLabel: "M-Pesa",
-      description: "Mobile money payment through this store owner’s connected M-Pesa/Pesapal account.",
+      description: "Mobile money payment through this store owner’s connected Pesapal account.",
       status: "available",
       online: true,
       allowedOrderTypes: ["delivery", "collection"],

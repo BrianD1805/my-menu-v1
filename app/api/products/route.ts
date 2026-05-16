@@ -130,6 +130,7 @@ export async function GET(req: Request) {
       yocoCustomerPaymentsLive: settings?.yoco_customer_payments_live === true,
       enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,
       mpesaConnectionStatus: settings?.mpesa_connection_status || "not_configured",
+      mpesaCustomerPaymentsLive: settings?.mpesa_customer_payments_live === true,
     },
   };
 

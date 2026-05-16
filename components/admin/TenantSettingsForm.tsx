@@ -73,6 +73,15 @@ type FormState = {
   yocoCustomerPaymentsLive: boolean;
   enableMpesaCustomerPayments: boolean;
   mpesaConnectionStatus: string;
+  mpesaCustomerMode: "test" | "live";
+  mpesaCustomerConsumerKey: string;
+  mpesaCustomerConsumerSecretInput: string;
+  mpesaCustomerConsumerSecretSet: boolean;
+  mpesaCustomerConsumerSecretHint: string;
+  mpesaCustomerIpnId: string;
+  mpesaCustomerAccountLabel: string;
+  mpesaCustomerSetupNotes: string;
+  mpesaCustomerPaymentsLive: boolean;
 };
 
 type PreviewTarget = "global" | "header" | "welcome" | "products" | "favourites" | "footer";
@@ -498,7 +507,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const adminWorkspaceDirty = formValueChanged(["showAdminLaunchChecklist"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
-  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive"]);
+  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
   const yocoCredentialReady = Boolean(form.yocoCustomerSecretKeySet || form.yocoCustomerSecretKeyInput.trim());
@@ -508,6 +517,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const yocoSetupNeedsSaveBeforeWebhook = yocoModeDirty || yocoSecretDirty;
   const yocoLiveMode = form.yocoCustomerMode === "live";
   const yocoReadyForCheckout = Boolean(form.enableYocoCustomerPayments && form.yocoCustomerPaymentsLive && yocoCurrencyAllowed && yocoCredentialReady);
+  const mpesaCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "KES";
+  const mpesaCredentialReady = Boolean(form.mpesaCustomerConsumerKey.trim() && (form.mpesaCustomerConsumerSecretSet || form.mpesaCustomerConsumerSecretInput.trim()) && form.mpesaCustomerIpnId.trim());
+  const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
@@ -741,6 +753,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       const nextStripeWebhookSet = form.stripeCustomerWebhookSecretSet || Boolean(form.stripeCustomerWebhookSecretInput.trim());
       const nextYocoSecretSet = form.yocoCustomerSecretKeySet || Boolean(form.yocoCustomerSecretKeyInput.trim());
       const nextYocoWebhookSet = form.yocoCustomerWebhookSecretSet || Boolean(form.yocoCustomerWebhookSecretInput.trim());
+      const nextMpesaConsumerSecretSet = form.mpesaCustomerConsumerSecretSet || Boolean(form.mpesaCustomerConsumerSecretInput.trim());
       const savedPayload = {
         ...form,
         storefrontTheme: theme,
@@ -761,6 +774,11 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         yocoCustomerWebhookId: form.yocoCustomerWebhookId,
         yocoCustomerWebhookUrl: form.yocoCustomerWebhookUrl,
         yocoCustomerPaymentsLive: form.enableYocoCustomerPayments && form.yocoCustomerPaymentsLive && nextYocoSecretSet && yocoCurrencyAllowed,
+        mpesaConnectionStatus: mpesaCredentialReady ? (form.mpesaConnectionStatus === "not_configured" ? "configured" : form.mpesaConnectionStatus || "configured") : "not_configured",
+        mpesaCustomerConsumerSecretInput: "",
+        mpesaCustomerConsumerSecretSet: nextMpesaConsumerSecretSet,
+        mpesaCustomerConsumerSecretHint: nextMpesaConsumerSecretSet ? form.mpesaCustomerConsumerSecretHint || "saved" : "",
+        mpesaCustomerPaymentsLive: form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && nextMpesaConsumerSecretSet && mpesaCurrencyAllowed,
       };
       setForm(savedPayload);
       setSavedForm(savedPayload);
@@ -1369,15 +1387,83 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               </label>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+            <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm">
               <div className="flex items-start justify-between gap-3">
-                <p className="font-bold text-slate-950">M-Pesa / Pesapal</p>
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600">
+                <div>
+                  <p className="font-black text-slate-950">M-Pesa / Pesapal customer payments</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Hosted Pesapal checkout for Kenyan KES stores. Customers will choose M-Pesa on the Pesapal payment page.</p>
+                </div>
+                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${mpesaReadyForCheckout ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
                   {form.enableMpesaCustomerPayments ? form.mpesaConnectionStatus : "not configured"}
                 </span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-600">Mobile money-focused payments for Kenya.</p>
-              <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700">Coming in a later provider setup build</p>
+
+              {!mpesaCurrencyAllowed ? <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">M-Pesa/Pesapal is currently intended for Kenyan Shilling stores. Change the store currency to KES before enabling it.</p> : null}
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <Field label="Pesapal mode">
+                  <select value={form.mpesaCustomerMode} onChange={(e) => update("mpesaCustomerMode", e.target.value as FormState["mpesaCustomerMode"])} className="input">
+                    <option value="test">Test / sandbox</option>
+                    <option value="live">Live</option>
+                  </select>
+                </Field>
+                <Field label="Pesapal account label">
+                  <input value={form.mpesaCustomerAccountLabel} onChange={(e) => update("mpesaCustomerAccountLabel", e.target.value)} placeholder="Example: Nairobi Cafe Pesapal" className="input" />
+                </Field>
+                <Field label="Pesapal consumer key">
+                  <input value={form.mpesaCustomerConsumerKey} onChange={(e) => update("mpesaCustomerConsumerKey", e.target.value)} placeholder="Tenant Pesapal consumer key" className="input" autoComplete="off" />
+                </Field>
+                <Field label={form.mpesaCustomerConsumerSecretSet ? `Pesapal consumer secret saved (${form.mpesaCustomerConsumerSecretHint || "saved"})` : "Pesapal consumer secret"}>
+                  <input value={form.mpesaCustomerConsumerSecretInput} onChange={(e) => update("mpesaCustomerConsumerSecretInput", e.target.value)} placeholder={form.mpesaCustomerConsumerSecretSet ? "Leave blank to keep saved Pesapal secret" : "Tenant Pesapal consumer secret"} className="input" autoComplete="off" />
+                </Field>
+                <Field label="Pesapal IPN notification ID">
+                  <input value={form.mpesaCustomerIpnId} onChange={(e) => update("mpesaCustomerIpnId", e.target.value)} placeholder="Notification ID generated by Pesapal" className="input" autoComplete="off" />
+                  <p className="mt-1 text-xs leading-5 text-emerald-800">Use this IPN URL in Pesapal: https://www.orduva.com/api/storefront/mpesa/ipn</p>
+                </Field>
+                <Field label="M-Pesa/Pesapal setup notes">
+                  <input value={form.mpesaCustomerSetupNotes} onChange={(e) => update("mpesaCustomerSetupNotes", e.target.value)} placeholder="Example: Sandbox keys saved, waiting for test payment" className="input" />
+                </Field>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-950">M-Pesa live readiness</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">Pesapal requires a consumer key, consumer secret and registered IPN notification ID. Use sandbox mode first, then switch to live once the tenant's Pesapal account is ready.</p>
+                  </div>
+                  <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${mpesaReadyForCheckout ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                    {mpesaReadyForCheckout ? "checkout visible" : "not visible"}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-2 text-xs font-bold sm:grid-cols-2">
+                  <p className={mpesaCurrencyAllowed ? "text-emerald-800" : "text-amber-800"}>✓ Store currency: {mpesaCurrencyAllowed ? "KES" : "Change to KES"}</p>
+                  <p className={form.mpesaCustomerConsumerKey.trim() ? "text-emerald-800" : "text-amber-800"}>✓ Consumer key: {form.mpesaCustomerConsumerKey.trim() ? "saved" : "required"}</p>
+                  <p className={(form.mpesaCustomerConsumerSecretSet || form.mpesaCustomerConsumerSecretInput.trim()) ? "text-emerald-800" : "text-amber-800"}>✓ Consumer secret: {(form.mpesaCustomerConsumerSecretSet || form.mpesaCustomerConsumerSecretInput.trim()) ? "saved" : "required"}</p>
+                  <p className={form.mpesaCustomerIpnId.trim() ? "text-emerald-800" : "text-amber-800"}>✓ IPN ID: {form.mpesaCustomerIpnId.trim() ? "saved" : "required"}</p>
+                </div>
+              </div>
+
+              <label className={`mt-4 flex items-start gap-3 rounded-2xl border p-3 text-sm ${mpesaCurrencyAllowed && mpesaCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}>
+                <input
+                  type="checkbox"
+                  checked={form.enableMpesaCustomerPayments}
+                  onChange={(e) => update("enableMpesaCustomerPayments", e.target.checked)}
+                  disabled={!mpesaCurrencyAllowed || !mpesaCredentialReady}
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                />
+                <span><strong>Enable M-Pesa setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires KES currency, Pesapal credentials and an IPN notification ID. This makes M-Pesa/Pesapal available to be switched on for checkout.</span></span>
+              </label>
+
+              <label className={`mt-3 flex items-start gap-3 rounded-2xl border p-3 text-sm ${form.enableMpesaCustomerPayments && mpesaCurrencyAllowed && mpesaCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}>
+                <input
+                  type="checkbox"
+                  checked={form.mpesaCustomerPaymentsLive}
+                  onChange={(e) => update("mpesaCustomerPaymentsLive", e.target.checked)}
+                  disabled={!form.enableMpesaCustomerPayments || !mpesaCurrencyAllowed || !mpesaCredentialReady}
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                />
+                <span><strong>Show M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES storefront customers can choose M-Pesa and will be sent to Pesapal's hosted payment page.</span></span>
+              </label>
             </div>
         </Section>
 

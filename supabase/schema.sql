@@ -103,7 +103,14 @@ alter table public.tenant_settings
   add column if not exists enable_yoco_customer_payments boolean not null default false,
   add column if not exists yoco_connection_status text not null default 'not_configured',
   add column if not exists enable_mpesa_customer_payments boolean not null default false,
-  add column if not exists mpesa_connection_status text not null default 'not_configured';
+  add column if not exists mpesa_connection_status text not null default 'not_configured',
+  add column if not exists mpesa_customer_mode text not null default 'test',
+  add column if not exists mpesa_customer_consumer_key text,
+  add column if not exists mpesa_customer_consumer_secret text,
+  add column if not exists mpesa_customer_ipn_id text,
+  add column if not exists mpesa_customer_account_label text,
+  add column if not exists mpesa_customer_setup_notes text,
+  add column if not exists mpesa_customer_payments_live boolean not null default false;
 
 alter table public.orders
   add column if not exists payment_provider text not null default 'cod',
@@ -134,6 +141,8 @@ create table if not exists public.storefront_payment_intents (
   order_id uuid references public.orders(id) on delete set null,
   stripe_checkout_session_id text,
   stripe_payment_intent_id text,
+  pesapal_order_tracking_id text,
+  pesapal_merchant_reference text,
   amount_total numeric not null default 0,
   currency_code text not null default 'GBP',
   customer_name text,
@@ -171,3 +180,9 @@ create unique index if not exists storefront_payment_intents_stripe_session_uidx
 create index if not exists storefront_payment_intents_stripe_payment_intent_idx
   on public.storefront_payment_intents (stripe_payment_intent_id)
   where stripe_payment_intent_id is not null;
+create unique index if not exists storefront_payment_intents_pesapal_tracking_uidx
+  on public.storefront_payment_intents (pesapal_order_tracking_id)
+  where pesapal_order_tracking_id is not null;
+create index if not exists storefront_payment_intents_pesapal_reference_idx
+  on public.storefront_payment_intents (pesapal_merchant_reference)
+  where pesapal_merchant_reference is not null;

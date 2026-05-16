@@ -54,6 +54,7 @@ type TenantViewSettings = MoneyFormatSettings & {
   yocoCustomerPaymentsLive?: boolean;
   enableMpesaCustomerPayments?: boolean;
   mpesaConnectionStatus?: string;
+  mpesaCustomerPaymentsLive?: boolean;
 };
 
 type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "mpesa";
@@ -120,11 +121,11 @@ function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery"
     });
   }
 
-  if (providerConfigured(settings.enableMpesaCustomerPayments, settings.mpesaConnectionStatus)) {
+  if (currencyCode === "KES" && providerConfigured(settings.enableMpesaCustomerPayments, settings.mpesaConnectionStatus, settings.mpesaCustomerPaymentsLive === true)) {
     options.push({
       id: "mpesa",
       label: "Pay with M-Pesa",
-      description: "Mobile money payment through this store owner’s connected M-Pesa/Pesapal account.",
+      description: "Mobile money payment through this store owner’s connected Pesapal account.",
       online: true,
     });
   }
@@ -472,9 +473,9 @@ useEffect(() => {
 
       await saveCheckoutDetailsToProfile();
 
-      if (selectedPaymentOption.online && (data.stripeCheckoutUrl || data.yocoCheckoutUrl)) {
+      if (selectedPaymentOption.online && (data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.mpesaCheckoutUrl)) {
         setErrorMessage("");
-        window.location.assign(data.stripeCheckoutUrl || data.yocoCheckoutUrl);
+        window.location.assign(data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.mpesaCheckoutUrl);
         return;
       }
 

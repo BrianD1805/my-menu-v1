@@ -12,7 +12,7 @@ export default async function AdminSettingsPage() {
   const [{ data: stripeSecretSummary }, { data: checklistVisibilityRow }] = await Promise.all([
     db
     .from("tenant_settings")
-    .select("stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url")
+    .select("stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, mpesa_customer_consumer_secret")
     .eq("tenant_id", tenant.id)
     .maybeSingle(),
     db
@@ -27,6 +27,7 @@ export default async function AdminSettingsPage() {
   const stripeWebhookSecret = String(stripeSecrets?.stripe_customer_webhook_secret || "").trim();
   const yocoSecretKey = String(stripeSecrets?.yoco_customer_secret_key || "").trim();
   const yocoWebhookSecret = String(stripeSecrets?.yoco_customer_webhook_secret || "").trim();
+  const mpesaConsumerSecret = String(stripeSecrets?.mpesa_customer_consumer_secret || "").trim();
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
   const trialState = calculateTenantTrialState(tenant);
 
@@ -137,6 +138,15 @@ export default async function AdminSettingsPage() {
           yocoCustomerPaymentsLive: settings?.yoco_customer_payments_live === true,
           enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,
           mpesaConnectionStatus: settings?.mpesa_connection_status || "not_configured",
+          mpesaCustomerMode: settings?.mpesa_customer_mode === "live" ? "live" : "test",
+          mpesaCustomerConsumerKey: settings?.mpesa_customer_consumer_key || "",
+          mpesaCustomerConsumerSecretInput: "",
+          mpesaCustomerConsumerSecretSet: Boolean(mpesaConsumerSecret),
+          mpesaCustomerConsumerSecretHint: mpesaConsumerSecret ? `••••${mpesaConsumerSecret.slice(-4)}` : "",
+          mpesaCustomerIpnId: settings?.mpesa_customer_ipn_id || "",
+          mpesaCustomerAccountLabel: settings?.mpesa_customer_account_label || "",
+          mpesaCustomerSetupNotes: settings?.mpesa_customer_setup_notes || "",
+          mpesaCustomerPaymentsLive: settings?.mpesa_customer_payments_live === true,
         }}
       />
     </AdminShell>
