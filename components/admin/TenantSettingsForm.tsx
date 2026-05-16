@@ -84,6 +84,39 @@ type FormState = {
   mpesaCustomerPaymentsLive: boolean;
 };
 
+
+
+type MpesaDiagnosticsResult = {
+  ok?: boolean;
+  message?: string;
+  safeToCreateOrder?: boolean;
+  completed?: boolean;
+  failed?: boolean;
+  orderId?: string | null;
+  intent?: {
+    id?: string | null;
+    status?: string | null;
+    orderId?: string | null;
+    amountTotal?: number | null;
+    currencyCode?: string | null;
+    pesapalOrderTrackingId?: string | null;
+    pesapalMerchantReference?: string | null;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+  } | null;
+  pesapal?: {
+    ok?: boolean;
+    httpStatus?: number;
+    status?: string | null;
+    statusCode?: string | number | null;
+    paymentMethod?: string | null;
+    confirmationCode?: string | null;
+    errorMessage?: string | null;
+    raw?: Record<string, unknown> | null;
+  } | null;
+  error?: string;
+};
+
 type PreviewTarget = "global" | "header" | "welcome" | "products" | "favourites" | "footer";
 
 type ThemePreset = {
@@ -477,6 +510,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [mobileThemeModal, setMobileThemeModal] = useState<null | "preview" | "suggested">(null);
   const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
   const [yocoWebhookRegistering, setYocoWebhookRegistering] = useState(false);
+  const [mpesaDiagnosticReference, setMpesaDiagnosticReference] = useState("");
+  const [mpesaDiagnosticChecking, setMpesaDiagnosticChecking] = useState(false);
+  const [mpesaDiagnosticAction, setMpesaDiagnosticAction] = useState<"check" | "create_order" | "mark_failed" | null>(null);
+  const [mpesaDiagnosticResult, setMpesaDiagnosticResult] = useState<MpesaDiagnosticsResult | null>(null);
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
   const settingsTopRef = useRef<HTMLDivElement | null>(null);
@@ -832,6 +869,39 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       setMessage(error instanceof Error ? error.message : "Failed to register Yoco webhook");
     } finally {
       setYocoWebhookRegistering(false);
+    }
+  }
+
+  async function runMpesaDiagnostic(action: "check" | "create_order" | "mark_failed") {
+    const reference = mpesaDiagnosticReference.trim();
+    if (!reference) {
+      setMpesaDiagnosticResult({ error: "Enter a checkout ID, Pesapal OrderTrackingId, or merchant reference first." });
+      return;
+    }
+
+    setMpesaDiagnosticChecking(true);
+    setMpesaDiagnosticAction(action);
+    setMpesaDiagnosticResult(null);
+
+    try {
+      const body: Record<string, string> = { action };
+      if (reference.startsWith("ORDUVA-")) body.merchantReference = reference;
+      else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(reference)) body.orderTrackingId = reference;
+      else body.checkoutId = reference;
+
+      const response = await fetch("/api/admin/settings/mpesa-diagnostics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const payload = (await response.json().catch(() => ({}))) as MpesaDiagnosticsResult;
+      if (!response.ok) throw new Error(payload.error || "Could not run M-Pesa/Pesapal diagnostic check.");
+      setMpesaDiagnosticResult(payload);
+    } catch (error) {
+      setMpesaDiagnosticResult({ error: error instanceof Error ? error.message : "Could not run M-Pesa/Pesapal diagnostic check." });
+    } finally {
+      setMpesaDiagnosticChecking(false);
+      setMpesaDiagnosticAction(null);
     }
   }
 
@@ -1445,6 +1515,85 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   <p className={(form.mpesaCustomerConsumerSecretSet || form.mpesaCustomerConsumerSecretInput.trim()) ? "text-emerald-800" : "text-amber-800"}>✓ Consumer secret: {(form.mpesaCustomerConsumerSecretSet || form.mpesaCustomerConsumerSecretInput.trim()) ? "saved" : "required"}</p>
                   <p className={form.mpesaCustomerIpnId.trim() ? "text-emerald-800" : "text-amber-800"}>✓ IPN ID: {form.mpesaCustomerIpnId.trim() ? "saved" : "required"}</p>
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50/70 p-4 text-sm text-orange-950">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-950">Pesapal recovery and diagnostics</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-700">Use this only for stuck M-Pesa/Pesapal attempts. It checks Pesapal directly and only allows order creation when Pesapal returns a completed payment.</p>
+                  </div>
+                  <span className="inline-flex w-fit rounded-full border border-orange-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-900">admin only</span>
+                </div>
+
+                <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto_auto_auto] lg:items-end">
+                  <Field label="Checkout ID / OrderTrackingId / merchant reference">
+                    <input
+                      value={mpesaDiagnosticReference}
+                      onChange={(event) => setMpesaDiagnosticReference(event.target.value)}
+                      placeholder="Example: 520349f3-... or ORDUVA-b623..."
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <button
+                    type="button"
+                    onClick={() => runMpesaDiagnostic("check")}
+                    disabled={mpesaDiagnosticChecking}
+                    className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-orange-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-orange-900 shadow-sm transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {mpesaDiagnosticChecking && mpesaDiagnosticAction === "check" ? "Checking..." : "Check status"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => runMpesaDiagnostic("create_order")}
+                    disabled={mpesaDiagnosticChecking || mpesaDiagnosticResult?.safeToCreateOrder !== true}
+                    className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-emerald-900 shadow-sm transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-45"
+                    title="Disabled until the status check says Pesapal completed the payment."
+                  >
+                    {mpesaDiagnosticChecking && mpesaDiagnosticAction === "create_order" ? "Creating..." : "Create order"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => runMpesaDiagnostic("mark_failed")}
+                    disabled={mpesaDiagnosticChecking || mpesaDiagnosticResult?.safeToCreateOrder === true}
+                    className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    {mpesaDiagnosticChecking && mpesaDiagnosticAction === "mark_failed" ? "Updating..." : "Mark failed/review"}
+                  </button>
+                </div>
+
+                {mpesaDiagnosticResult ? (
+                  <div className={`mt-4 rounded-2xl border p-4 ${mpesaDiagnosticResult.error ? "border-rose-200 bg-rose-50 text-rose-900" : mpesaDiagnosticResult.safeToCreateOrder ? "border-emerald-200 bg-emerald-50 text-emerald-950" : "border-amber-200 bg-amber-50 text-amber-950"}`}>
+                    <p className="text-sm font-black">{mpesaDiagnosticResult.error ? "Diagnostic error" : mpesaDiagnosticResult.safeToCreateOrder ? "Payment completed" : "Payment not completed"}</p>
+                    <p className="mt-1 text-xs leading-5">{mpesaDiagnosticResult.error || mpesaDiagnosticResult.message || "Status checked."}</p>
+                    {mpesaDiagnosticResult.intent ? (
+                      <div className="mt-3 grid gap-2 text-xs font-bold sm:grid-cols-2">
+                        <p>Intent: <span className="font-mono font-semibold">{mpesaDiagnosticResult.intent.id || "—"}</span></p>
+                        <p>Status: {mpesaDiagnosticResult.intent.status || "—"}</p>
+                        <p>Amount: {mpesaDiagnosticResult.intent.currencyCode || ""} {mpesaDiagnosticResult.intent.amountTotal ?? "—"}</p>
+                        <p>Order: {mpesaDiagnosticResult.intent.orderId || mpesaDiagnosticResult.orderId || "not created"}</p>
+                        <p className="sm:col-span-2">OrderTrackingId: <span className="font-mono font-semibold">{mpesaDiagnosticResult.intent.pesapalOrderTrackingId || "—"}</span></p>
+                        <p className="sm:col-span-2">Merchant ref: <span className="font-mono font-semibold">{mpesaDiagnosticResult.intent.pesapalMerchantReference || "—"}</span></p>
+                      </div>
+                    ) : null}
+                    {mpesaDiagnosticResult.pesapal ? (
+                      <div className="mt-3 rounded-2xl border border-white/70 bg-white/70 p-3 text-xs leading-5">
+                        <p><strong>Pesapal status:</strong> {mpesaDiagnosticResult.pesapal.status || "—"} / code {String(mpesaDiagnosticResult.pesapal.statusCode ?? "—")}</p>
+                        <p><strong>HTTP:</strong> {mpesaDiagnosticResult.pesapal.httpStatus ?? "—"}</p>
+                        <p><strong>Confirmation:</strong> {mpesaDiagnosticResult.pesapal.confirmationCode || "—"}</p>
+                        <p><strong>Method:</strong> {mpesaDiagnosticResult.pesapal.paymentMethod || "—"}</p>
+                        {mpesaDiagnosticResult.pesapal.errorMessage ? <p><strong>Message:</strong> {mpesaDiagnosticResult.pesapal.errorMessage}</p> : null}
+                      </div>
+                    ) : null}
+                    {mpesaDiagnosticResult.pesapal?.raw ? (
+                      <details className="mt-3 rounded-2xl border border-white/70 bg-white/70 p-3 text-xs">
+                        <summary className="cursor-pointer font-black">Raw Pesapal response</summary>
+                        <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap break-words rounded-xl bg-slate-950 p-3 text-[11px] leading-5 text-white">{JSON.stringify(mpesaDiagnosticResult.pesapal.raw, null, 2)}</pre>
+                      </details>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
 
               <label className={`mt-4 flex items-start gap-3 rounded-2xl border p-3 text-sm ${mpesaCurrencyAllowed && mpesaCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}>

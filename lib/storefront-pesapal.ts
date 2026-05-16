@@ -56,7 +56,7 @@ type PesapalSubmitOrderResponse = {
   message?: string;
 };
 
-type PesapalStatusResponse = {
+export type PesapalStatusResponse = {
   payment_method?: string;
   confirmation_code?: string;
   payment_status_description?: string;
@@ -69,7 +69,7 @@ type PesapalStatusResponse = {
   error?: { message?: string } | null;
 };
 
-function getString(value: unknown) {
+export function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
 }
 
@@ -114,12 +114,12 @@ function safeMerchantReference(checkoutId: string) {
   return `ORDUVA-${checkoutId.replace(/[^a-zA-Z0-9_.:-]/g, "").slice(0, 42)}`.slice(0, 50);
 }
 
-function isCompletedStatus(value: string | number | null | undefined) {
+export function isCompletedStatus(value: string | number | null | undefined) {
   const text = String(value || "").trim().toLowerCase();
   return text === "1" || text === "completed" || text === "complete" || text === "paid" || text === "success" || text === "successful";
 }
 
-function isFailedStatus(value: string | number | null | undefined) {
+export function isFailedStatus(value: string | number | null | undefined) {
   const text = String(value || "").trim().toLowerCase();
   return text === "2" || text === "failed" || text === "invalid" || text === "0" || text === "3" || text === "reversed" || text === "cancelled" || text === "canceled";
 }
@@ -281,7 +281,7 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
 }
 
 export async function loadPesapalIntentByCheckout(input: { checkoutId?: string | null; orderTrackingId?: string | null; merchantReference?: string | null }) {
-  let query = db.from("storefront_payment_intents").select("id,status,order_id,tenant_id,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code,updated_at");
+  let query = db.from("storefront_payment_intents").select("id,status,order_id,tenant_id,provider,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code,customer_name,customer_phone,created_at,updated_at");
   if (input.orderTrackingId) query = query.eq("pesapal_order_tracking_id", input.orderTrackingId);
   else if (input.merchantReference) query = query.eq("pesapal_merchant_reference", input.merchantReference);
   else if (input.checkoutId) query = query.eq("id", input.checkoutId);
@@ -292,12 +292,35 @@ export async function loadPesapalIntentByCheckout(input: { checkoutId?: string |
   return data as Record<string, any> | null;
 }
 
-export async function fetchPesapalTransactionStatus(input: { intent: Record<string, any> }) {
+export async function fetchPesapalTransactionStatusDetail(input: { intent: Record<string, any> }) {
   const orderTrackingId = getString(input.intent.pesapal_order_tracking_id);
-  if (!orderTrackingId) return { status: input.intent.status || "created", paymentMethod: null as string | null, confirmationCode: null as string | null };
+  if (!orderTrackingId) {
+    return {
+      ok: false,
+      httpStatus: 0,
+      status: input.intent.status || "created",
+      statusCode: null as string | number | null,
+      paymentMethod: null as string | null,
+      confirmationCode: null as string | null,
+      raw: null as PesapalStatusResponse | null,
+      errorMessage: "This payment intent has no Pesapal OrderTrackingId yet.",
+    };
+  }
 
   const settings = await loadTenantPesapalCustomerSettings(String(input.intent.tenant_id));
-  if (!settings) return { status: input.intent.status || "checkout_started", paymentMethod: null as string | null, confirmationCode: null as string | null };
+  if (!settings) {
+    return {
+      ok: false,
+      httpStatus: 0,
+      status: input.intent.status || "checkout_started",
+      statusCode: null as string | number | null,
+      paymentMethod: null as string | null,
+      confirmationCode: null as string | null,
+      raw: null as PesapalStatusResponse | null,
+      errorMessage: "Tenant M-Pesa/Pesapal settings could not be loaded.",
+    };
+  }
+
   const token = await requestPesapalToken(settings);
   const response = await fetch(`${pesapalApiBase(settings.mpesa_customer_mode)}/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(orderTrackingId)}`, {
     method: "GET",
@@ -306,13 +329,26 @@ export async function fetchPesapalTransactionStatus(input: { intent: Record<stri
   });
 
   const data = (await response.json().catch(() => null)) as PesapalStatusResponse | null;
-  if (!response.ok) return { status: input.intent.status || "checkout_started", paymentMethod: null as string | null, confirmationCode: null as string | null };
-
+  const status = getString(data?.payment_status_description) || getString(data?.status_code) || input.intent.status || "checkout_started";
   return {
-    status: getString(data?.payment_status_description) || getString(data?.status_code) || input.intent.status || "checkout_started",
+    ok: response.ok,
+    httpStatus: response.status,
+    status,
     statusCode: data?.status_code ?? null,
     paymentMethod: getString(data?.payment_method) || null,
     confirmationCode: getString(data?.confirmation_code) || null,
+    raw: data,
+    errorMessage: getString(data?.error?.message) || getString(data?.message) || (!response.ok ? `Pesapal status check returned HTTP ${response.status}` : null),
+  };
+}
+
+export async function fetchPesapalTransactionStatus(input: { intent: Record<string, any> }) {
+  const detail = await fetchPesapalTransactionStatusDetail(input);
+  return {
+    status: detail.status,
+    statusCode: detail.statusCode,
+    paymentMethod: detail.paymentMethod,
+    confirmationCode: detail.confirmationCode,
   };
 }
 
@@ -339,7 +375,7 @@ export async function createPaidOrderFromPesapalIntent(input: { intent: Record<s
     .eq("tenant_id", input.intent.tenant_id)
     .is("order_id", null)
     .in("status", ["created", "checkout_started"])
-    .select("id,status,order_id,tenant_id,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code")
+    .select("id,status,order_id,tenant_id,provider,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code,customer_name,customer_phone,created_at,updated_at")
     .maybeSingle();
 
   if (claimError) throw new Error("Could not claim M-Pesa checkout intent.");
