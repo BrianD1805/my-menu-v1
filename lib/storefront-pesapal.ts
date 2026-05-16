@@ -81,6 +81,14 @@ function pesapalApiBase(mode: string | null | undefined) {
   return mode === "live" ? "https://pay.pesapal.com/v3/api" : "https://cybqa.pesapal.com/pesapalv3/api";
 }
 
+function allowPesapalSandboxHostedCheckout() {
+  return String(process.env.ORDUVA_ALLOW_PESAPAL_SANDBOX_CHECKOUTS || "").trim().toLowerCase() === "true";
+}
+
+function isPesapalSandboxMode(mode: string | null | undefined) {
+  return String(mode || "test").trim().toLowerCase() !== "live";
+}
+
 function originFromRequest(req: Request) {
   const url = new URL(req.url);
   return `${url.protocol}//${url.host}`;
@@ -136,6 +144,9 @@ export function assertTenantPesapalReady(settings: TenantPesapalCustomerSettings
   if (!getString(settings.mpesa_customer_consumer_key)) throw new Error("Tenant Pesapal consumer key is missing.");
   if (!getString(settings.mpesa_customer_consumer_secret)) throw new Error("Tenant Pesapal consumer secret is missing.");
   if (!getString(settings.mpesa_customer_ipn_id)) throw new Error("Tenant Pesapal IPN notification ID is missing.");
+  if (isPesapalSandboxMode(settings.mpesa_customer_mode) && !allowPesapalSandboxHostedCheckout()) {
+    throw new Error("Pesapal sandbox checkout is safety-blocked because sandbox M-Pesa may still debit a real phone wallet. Use live mode with the tenant's real Pesapal merchant account for controlled low-value tests, or set ORDUVA_ALLOW_PESAPAL_SANDBOX_CHECKOUTS=true only if you deliberately want sandbox hosted checkout exposed.");
+  }
 }
 
 async function requestPesapalToken(settings: TenantPesapalCustomerSettings) {
@@ -210,8 +221,8 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
   const checkoutId = String(intent.id);
   const merchantReference = safeMerchantReference(checkoutId);
   const origin = storefrontReturnOrigin(input.req, input.tenantSlug);
-  const successUrl = `${origin}/checkout/payment/mpesa/success?checkout_id=${encodeURIComponent(checkoutId)}`;
-  const cancelUrl = `${origin}/checkout/payment/mpesa/cancel?checkout_id=${encodeURIComponent(checkoutId)}`;
+  const successUrl = `${origin}/checkout/payment/mpesa/success?checkout_id=${encodeURIComponent(checkoutId)}&merchant_reference=${encodeURIComponent(merchantReference)}`;
+  const cancelUrl = `${origin}/checkout/payment/mpesa/cancel?checkout_id=${encodeURIComponent(checkoutId)}&merchant_reference=${encodeURIComponent(merchantReference)}`;
   const { firstName, lastName } = firstLastName(input.customerName);
   const token = await requestPesapalToken(pesapalSettings!);
 

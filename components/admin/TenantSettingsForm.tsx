@@ -1400,10 +1400,14 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
               {!mpesaCurrencyAllowed ? <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">M-Pesa/Pesapal is currently intended for Kenyan Shilling stores. Change the store currency to KES before enabling it.</p> : null}
 
+              <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold leading-5 text-red-900">
+                Important testing safety: Pesapal sandbox hosted checkout can still trigger a real M-Pesa debit on a real Kenyan phone. Ver-0.215A blocks sandbox hosted checkout by default. Use live mode with the tenant's own Pesapal merchant account for controlled low-value tests, or only enable sandbox hosted checkout with the server environment flag after accepting that risk.
+              </div>
+
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <Field label="Pesapal mode">
                   <select value={form.mpesaCustomerMode} onChange={(e) => update("mpesaCustomerMode", e.target.value as FormState["mpesaCustomerMode"])} className="input">
-                    <option value="test">Test / sandbox</option>
+                    <option value="test">Test / sandbox (configuration only by default)</option>
                     <option value="live">Live</option>
                   </select>
                 </Field>
@@ -1429,7 +1433,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-black text-slate-950">M-Pesa live readiness</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-600">Pesapal requires a consumer key, consumer secret and registered IPN notification ID. Use sandbox mode first, then switch to live once the tenant's Pesapal account is ready.</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">Pesapal requires a consumer key, consumer secret and registered IPN notification ID. Sandbox mode is now treated as configuration-only unless the server explicitly allows sandbox hosted checkout.</p>
                   </div>
                   <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${mpesaReadyForCheckout ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
                     {mpesaReadyForCheckout ? "checkout visible" : "not visible"}
@@ -1462,7 +1466,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   disabled={!form.enableMpesaCustomerPayments || !mpesaCurrencyAllowed || !mpesaCredentialReady}
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
-                <span><strong>Show M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES storefront customers can choose M-Pesa and will be sent to Pesapal's hosted payment page.</span></span>
+                <span><strong>Show M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES storefront customers can choose M-Pesa and will be sent to Pesapal's hosted payment page. In test/sandbox mode the server will block checkout unless sandbox hosted checkout has been deliberately allowed via environment flag.</span></span>
               </label>
             </div>
         </Section>
