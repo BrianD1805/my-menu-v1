@@ -55,9 +55,12 @@ type TenantViewSettings = MoneyFormatSettings & {
   enableMpesaCustomerPayments?: boolean;
   mpesaConnectionStatus?: string;
   mpesaCustomerPaymentsLive?: boolean;
+  enableDarajaCustomerPayments?: boolean;
+  darajaConnectionStatus?: string;
+  darajaPaymentsLive?: boolean;
 };
 
-type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "mpesa";
+type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "mpesa" | "daraja";
 
 type PaymentOption = {
   id: PaymentProvider;
@@ -121,10 +124,19 @@ function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery"
     });
   }
 
+  if (currencyCode === "KES" && providerConfigured(settings.enableDarajaCustomerPayments, settings.darajaConnectionStatus, settings.darajaPaymentsLive === true)) {
+    options.push({
+      id: "daraja",
+      label: "Pay with M-Pesa",
+      description: "Direct Safaricom STK Push. Enter your phone number and approve the prompt on your phone.",
+      online: true,
+    });
+  }
+
   if (currencyCode === "KES" && providerConfigured(settings.enableMpesaCustomerPayments, settings.mpesaConnectionStatus, settings.mpesaCustomerPaymentsLive === true)) {
     options.push({
       id: "mpesa",
-      label: "Pay with M-Pesa",
+      label: "Pay with M-Pesa via Pesapal",
       description: "Mobile money payment through this store owner’s connected Pesapal account.",
       online: true,
     });
@@ -149,13 +161,13 @@ function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery"
   }
 
   const priorityByCurrency: Record<string, PaymentProvider[]> = {
-    KES: ["mpesa", "cod", "cash", "stripe", "yoco"],
-    ZAR: ["yoco", "cod", "cash", "stripe", "mpesa"],
-    GBP: ["stripe", "cash", "cod", "yoco", "mpesa"],
-    USD: ["stripe", "cash", "cod", "yoco", "mpesa"],
-    EUR: ["stripe", "cash", "cod", "yoco", "mpesa"],
+    KES: ["daraja", "mpesa", "cod", "cash", "stripe", "yoco"],
+    ZAR: ["yoco", "cod", "cash", "stripe", "daraja", "mpesa"],
+    GBP: ["stripe", "cash", "cod", "yoco", "daraja", "mpesa"],
+    USD: ["stripe", "cash", "cod", "yoco", "daraja", "mpesa"],
+    EUR: ["stripe", "cash", "cod", "yoco", "daraja", "mpesa"],
   };
-  const priority = priorityByCurrency[currencyCode] || ["cash", "cod", "stripe", "yoco", "mpesa"];
+  const priority = priorityByCurrency[currencyCode] || ["cash", "cod", "stripe", "yoco", "daraja", "mpesa"];
   return options.sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id));
 }
 
@@ -473,9 +485,9 @@ useEffect(() => {
 
       await saveCheckoutDetailsToProfile();
 
-      if (selectedPaymentOption.online && (data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.mpesaCheckoutUrl)) {
+      if (selectedPaymentOption.online && (data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.mpesaCheckoutUrl || data.darajaCheckoutUrl)) {
         setErrorMessage("");
-        window.location.assign(data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.mpesaCheckoutUrl);
+        window.location.assign(data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.darajaCheckoutUrl || data.mpesaCheckoutUrl);
         return;
       }
 
@@ -791,7 +803,7 @@ useEffect(() => {
               )}
             </div>
             <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-xs leading-5 text-slate-600">
-              Online payments are tenant-owned. Stripe, Yoco and M-Pesa/Pesapal will only be shown to customers after the store owner has connected the relevant provider.
+              Online payments are tenant-owned. Stripe, Yoco, direct M-Pesa and M-Pesa/Pesapal will only be shown to customers after the store owner has connected the relevant provider.
             </div>
           </div>
 

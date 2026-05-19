@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-216a';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-216a';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-216a';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-217';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-217';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-217';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',

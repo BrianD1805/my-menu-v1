@@ -212,6 +212,7 @@ export async function PATCH(req: Request) {
     const darajaCurrencyAllowed = normalizeCurrencyCode(body?.currencyCode) === "KES";
     const darajaCredentialsReady = Boolean(darajaConsumerKey && hasDarajaConsumerSecret && darajaShortcode && hasDarajaPasskey);
     const requestedDarajaStatus = normalizeDarajaConnectionStatus(body?.darajaConnectionStatus);
+    const requestedDarajaPaymentsLive = normalizeBoolean(body?.darajaPaymentsLive) ?? false;
     const nextDarajaStatus = darajaCredentialsReady ? (requestedDarajaStatus === "not_configured" ? "configured" : requestedDarajaStatus) : "not_configured";
 
     if (requestedDarajaCustomerPayments && !darajaCurrencyAllowed) {
@@ -298,7 +299,7 @@ export async function PATCH(req: Request) {
       daraja_callback_url: normalizeOptionalText(body?.darajaCallbackUrl, 500),
       daraja_account_label: normalizeOptionalText(body?.darajaAccountLabel, 120),
       daraja_setup_notes: normalizeOptionalText(body?.darajaSetupNotes, 500),
-      daraja_payments_live: false,
+      daraja_payments_live: requestedDarajaCustomerPayments && requestedDarajaPaymentsLive && darajaCurrencyAllowed && darajaCredentialsReady,
     };
 
     if (stripeSecretKeyInput) payload.stripe_customer_secret_key = stripeSecretKeyInput;

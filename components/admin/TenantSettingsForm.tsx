@@ -844,7 +844,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         darajaPasskeyInput: "",
         darajaPasskeySet: nextDarajaPasskeySet,
         darajaPasskeyHint: nextDarajaPasskeySet ? form.darajaPasskeyHint || "saved" : "",
-        darajaPaymentsLive: false,
+        darajaPaymentsLive: form.enableDarajaCustomerPayments && form.darajaPaymentsLive && nextDarajaConsumerSecretSet && nextDarajaPasskeySet && darajaCurrencyAllowed,
       };
       setForm(savedPayload);
       setSavedForm(savedPayload);
@@ -1680,10 +1680,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Direct M-Pesa / Safaricom Daraja foundation</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">Store the tenant's Daraja credentials and live-readiness notes here. Ver-0.216 does not change storefront checkout yet; this is preparation for a future STK Push build.</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Store the tenant's Daraja credentials and start a direct Safaricom STK Push checkout. Ver-0.217 sends the phone prompt only; order creation waits for the future callback/reconciliation build.</p>
                 </div>
                 <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${darajaCredentialReady ? "border-emerald-200 bg-white text-emerald-800" : "border-slate-200 bg-white text-slate-500"}`}>
-                  {form.enableDarajaCustomerPayments ? form.darajaConnectionStatus : "not configured"}
+                  {form.darajaPaymentsLive ? "checkout live" : form.enableDarajaCustomerPayments ? form.darajaConnectionStatus : "not configured"}
                 </span>
               </div>
 
@@ -1693,7 +1693,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
               <div className="mt-4 rounded-2xl border border-sky-100 bg-white/80 p-3 text-xs leading-5 text-sky-950">
                 <p className="font-black">Future STK Push flow</p>
-                <p className="mt-1">Customer enters phone number → Safaricom sends the M-Pesa PIN prompt → Daraja callback confirms result → Orduva creates the order only after a successful callback/status result.</p>
+                <p className="mt-1">Customer enters phone number → Safaricom sends the M-Pesa PIN prompt → Orduva records CheckoutRequestID → future callback/reconciliation build confirms payment and creates the order.</p>
               </div>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -1731,7 +1731,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 <div className="md:col-span-2">
                   <Field label="Future Daraja callback URL">
                     <input value={form.darajaCallbackUrl} onChange={(e) => update("darajaCallbackUrl", e.target.value)} placeholder="https://www.orduva.com/api/storefront/daraja/callback" className="input" />
-                    <p className="mt-2 text-xs leading-5 text-slate-500">Stored for setup/reference only in Ver-0.216. The actual callback route will be added in the checkout/callback build.</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">Used as the STK Push callback URL. Ver-0.217 starts the push only; the callback/reconciliation route is planned next.</p>
                   </Field>
                 </div>
                 <div className="md:col-span-2">
@@ -1749,17 +1749,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   disabled={!darajaCurrencyAllowed || !darajaCredentialReady}
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
-                <span><strong>Enable direct M-Pesa Daraja setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires KES currency, Daraja consumer key, consumer secret, shortcode and passkey. This stores readiness only and does not display a direct M-Pesa checkout option yet.</span></span>
+                <span><strong>Enable direct M-Pesa Daraja setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires KES currency, Daraja consumer key, consumer secret, shortcode and passkey. Keep this enabled before exposing the checkout option.</span></span>
               </label>
 
-              <label className="mt-3 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-100 p-3 text-sm text-slate-500">
+              <label className={`mt-3 flex items-start gap-3 rounded-2xl border p-3 text-sm ${form.enableDarajaCustomerPayments && darajaCurrencyAllowed && darajaCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
                 <input
                   type="checkbox"
-                  checked={false}
-                  disabled
+                  checked={form.darajaPaymentsLive}
+                  onChange={(e) => update("darajaPaymentsLive", e.target.checked)}
+                  disabled={!form.enableDarajaCustomerPayments || !darajaCurrencyAllowed || !darajaCredentialReady}
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
-                <span><strong>Show direct M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">Locked in Ver-0.216. Storefront checkout will be added in a later build after the settings foundation is tested.</span></span>
+                <span><strong>Show direct M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES customers can choose direct M-Pesa and receive a Safaricom STK Push prompt. Ver-0.217 does not create the order until the future callback/reconciliation build confirms payment.</span></span>
               </label>
               </div>
             </PaymentGatewayCard>

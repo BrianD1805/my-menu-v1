@@ -11,6 +11,7 @@ import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
 import { createTenantStripeOrderCheckoutIntent } from "@/lib/storefront-stripe";
 import { createTenantYocoOrderCheckoutIntent } from "@/lib/storefront-yoco";
 import { createTenantPesapalOrderCheckoutIntent } from "@/lib/storefront-pesapal";
+import { createTenantDarajaStkPushIntent } from "@/lib/storefront-daraja";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -142,7 +143,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (selectedPayment.online && !["stripe", "yoco", "mpesa"].includes(selectedPayment.id)) {
+    if (selectedPayment.online && !["stripe", "yoco", "mpesa", "daraja"].includes(selectedPayment.id)) {
       return NextResponse.json(
         { error: "This online payment provider is not live for this store yet. Please choose another payment option." },
         { status: 400 }
@@ -220,6 +221,48 @@ export async function POST(req: Request) {
         });
       } catch (yocoError) {
         const message = yocoError instanceof Error ? yocoError.message : "Yoco checkout could not be started.";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+    }
+
+
+
+    if (selectedPayment.id === "daraja") {
+      const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+      try {
+        const checkoutIntent = await createTenantDarajaStkPushIntent({
+          req,
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          tenantName: branding.displayName,
+          customerName: body.customerName.trim(),
+          customerPhone: body.customerPhone.trim(),
+          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
+          orderType: body.orderType,
+          notes: body.notes?.trim() || null,
+          items: orderItems,
+          total,
+          currencyCode: branding.currencyCode || settings?.currency_code || "KES",
+          paymentMethodLabel: selectedPayment.label,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          orderId: null,
+          checkoutId: checkoutIntent.checkoutId,
+          customerAccountId: body.customerAccountId?.trim() || null,
+          paymentProvider: selectedPayment.id,
+          paymentMethodLabel: selectedPayment.label,
+          paymentStatus: "checkout_started",
+          darajaCheckoutUrl: checkoutIntent.url,
+          darajaMerchantRequestId: checkoutIntent.merchantRequestId,
+          darajaCheckoutRequestId: checkoutIntent.checkoutRequestId,
+          darajaAccountReference: checkoutIntent.accountReference,
+          customerMessage: checkoutIntent.customerMessage,
+        });
+      } catch (darajaError) {
+        const message = darajaError instanceof Error ? darajaError.message : "Direct M-Pesa checkout could not be started.";
         return NextResponse.json({ error: message }, { status: 400 });
       }
     }
