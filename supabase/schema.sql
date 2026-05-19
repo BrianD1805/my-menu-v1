@@ -284,3 +284,11 @@ comment on column public.storefront_payment_intents.daraja_account_reference is 
 comment on column public.storefront_payment_intents.daraja_phone_number is 'Normalised Kenyan phone number used for the STK Push request.';
 comment on column public.storefront_payment_intents.daraja_stk_response is 'Raw initial STK Push response from Safaricom Daraja.';
 comment on column public.storefront_payment_intents.daraja_callback_payload is 'Reserved for the Daraja callback/reconciliation build.';
+
+-- Orduva Ver-0.218 — allow direct Daraja/M-Pesa orders to be stored as provider='daraja'
+alter table public.orders
+  drop constraint if exists orders_payment_provider_check;
+
+alter table public.orders
+  add constraint orders_payment_provider_check
+  check (payment_provider in ('cash', 'cod', 'stripe', 'yoco', 'mpesa', 'daraja', 'manual'));

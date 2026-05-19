@@ -1,4 +1,8 @@
 import { db } from "@/lib/db";
+import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
+import { buildWhatsAppOrderMessage } from "@/lib/whatsapp";
+import { enqueueNotificationEvent } from "@/lib/notifications";
+import { sendAdminPushForTenant } from "@/lib/web-push";
 
 export type TenantDarajaCustomerSettings = {
   tenant_id: string;
@@ -150,6 +154,35 @@ async function requestDarajaToken(settings: TenantDarajaCustomerSettings) {
   return token;
 }
 
+
+async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPayload["items"]) {
+  const ids = items.map((item) => item.product_id).filter(Boolean);
+  if (!ids.length) return;
+
+  const { data: products, error } = await db
+    .from("products")
+    .select("id, stock_enabled, stock_quantity")
+    .eq("tenant_id", tenantId)
+    .in("id", ids);
+
+  if (error) {
+    console.error("Daraja paid order stock lookup failed", error);
+    return;
+  }
+
+  for (const item of items) {
+    const product = (products as Array<{ id: string; stock_enabled: boolean | null; stock_quantity: number | null }> | null | undefined)?.find((p) => p.id === item.product_id);
+    if (!product?.stock_enabled) continue;
+    const nextStock = Math.max(0, Number(product.stock_quantity || 0) - item.quantity);
+    const { error: stockError } = await db.from("products").update({ stock_quantity: nextStock }).eq("id", product.id).eq("tenant_id", tenantId);
+    if (stockError) console.error("Daraja paid order stock update failed", stockError);
+  }
+}
+
+function isSuccessfulDarajaResult(intent: Record<string, any> | null | undefined) {
+  return String(intent?.daraja_result_code ?? "").trim() === "0" && Boolean(getString(intent?.daraja_mpesa_receipt_number));
+}
+
 export async function createTenantDarajaStkPushIntent(input: {
   req: Request;
   tenantId: string;
@@ -274,3 +307,135 @@ export async function loadDarajaIntentByCheckout(input: { checkoutId?: string | 
   if (error) throw new Error("Could not load direct M-Pesa checkout intent.");
   return data as Record<string, any> | null;
 }
+
+export async function createPaidOrderFromDarajaIntent(input: { intent: Record<string, any>; paidAt?: string | null }) {
+  if (!input.intent?.id) throw new Error("Missing direct M-Pesa checkout intent.");
+  if (input.intent.order_id) return input.intent.order_id as string;
+
+  if (!isSuccessfulDarajaResult(input.intent)) {
+    throw new Error("Direct M-Pesa payment has not been confirmed by Safaricom.");
+  }
+
+  const { data: claimedIntent, error: claimError } = await db
+    .from("storefront_payment_intents")
+    .update({ status: "paid", updated_at: new Date().toISOString() })
+    .eq("id", input.intent.id)
+    .eq("tenant_id", input.intent.tenant_id)
+    .is("order_id", null)
+    .in("status", ["created", "checkout_started"])
+    .select("id,status,order_id,tenant_id,provider,daraja_merchant_request_id,daraja_checkout_request_id,daraja_account_reference,daraja_phone_number,daraja_result_code,daraja_result_description,daraja_mpesa_receipt_number,order_payload,amount_total,currency_code,customer_name,customer_phone,created_at,updated_at")
+    .maybeSingle();
+
+  if (claimError) throw new Error("Could not claim direct M-Pesa checkout intent.");
+  if (!claimedIntent) {
+    const latest = await loadDarajaIntentByCheckout({ checkoutId: input.intent.id });
+    if (latest?.order_id) return latest.order_id as string;
+    if (input.intent.order_id) return input.intent.order_id as string;
+    throw new Error("Direct M-Pesa checkout intent could not be claimed for order creation.");
+  }
+
+  input.intent = claimedIntent;
+  const payload = input.intent.order_payload as PendingOrderPayload | null;
+  if (!payload?.items?.length) throw new Error("Direct M-Pesa checkout intent is missing order payload.");
+
+  const { data: tenant, error: tenantError } = await db.from("tenants").select("id, slug, name, whatsapp_number").eq("id", input.intent.tenant_id).maybeSingle();
+  if (tenantError || !tenant) throw new Error("Tenant not found for direct M-Pesa checkout intent.");
+
+  const mpesaReceipt = getString(input.intent.daraja_mpesa_receipt_number);
+  const { data: order, error: orderError } = await db
+    .from("orders")
+    .insert({
+      tenant_id: tenant.id,
+      customer_name: payload.customerName,
+      customer_phone: payload.customerPhone,
+      customer_account_id: payload.customerAccountId || null,
+      customer_address: payload.orderType === "collection" ? null : payload.customerAddress || null,
+      order_type: payload.orderType,
+      status: "new",
+      total: payload.total,
+      notes: payload.notes || null,
+      payment_provider: "daraja",
+      payment_method_label: payload.paymentMethodLabel || "Direct M-Pesa payment",
+      payment_status: "paid",
+      payment_checkout_session_id: input.intent.daraja_checkout_request_id || input.intent.id || null,
+      payment_intent_id: input.intent.daraja_merchant_request_id || input.intent.daraja_checkout_request_id || null,
+      payment_reference: mpesaReceipt || input.intent.daraja_checkout_request_id || input.intent.daraja_account_reference || null,
+      paid_at: input.paidAt || new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (orderError || !order) throw new Error("Could not create paid storefront order after direct M-Pesa payment.");
+
+  const orderItems = payload.items.map((item) => ({ ...item, order_id: order.id }));
+  const { error: itemsError } = await db.from("order_items").insert(orderItems);
+  if (itemsError) throw new Error("Could not create order items after direct M-Pesa payment.");
+
+  await reduceStockAfterPaidOrder(tenant.id, payload.items);
+
+  const settings = await getTenantSettings(tenant.id);
+  const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+  const message = buildWhatsAppOrderMessage({
+    tenantName: branding.displayName,
+    order,
+    ...branding,
+    items: payload.items.map((item) => ({ product_name: item.product_name, quantity: item.quantity, line_total: item.line_total })),
+  });
+
+  await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
+
+  await Promise.allSettled([
+    enqueueNotificationEvent({
+      tenantId: tenant.id,
+      orderId: order.id,
+      audience: "admin",
+      eventType: "new_order",
+      title: "Paid order received",
+      body: `${payload.customerName} paid by M-Pesa for a ${payload.orderType} order.`,
+      payload: { orderId: order.id, route: "/admin/orders" },
+    }),
+    enqueueNotificationEvent({
+      tenantId: tenant.id,
+      orderId: order.id,
+      audience: "customer",
+      eventType: "order_received",
+      title: "Payment received",
+      body: "Your M-Pesa payment has been received and the order has been sent to the store.",
+      payload: { orderId: order.id, status: "new" },
+    }),
+    sendAdminPushForTenant(tenant.id, {
+      title: "Paid order received",
+      body: `${payload.customerName} paid by M-Pesa for a ${payload.orderType} order.`,
+      url: "/admin/orders",
+      tag: `orduva-order-${order.id}`,
+    }),
+  ]);
+
+  await db
+    .from("storefront_payment_intents")
+    .update({ status: "paid", order_id: order.id, updated_at: new Date().toISOString() })
+    .eq("id", input.intent.id)
+    .eq("tenant_id", tenant.id);
+
+  return order.id as string;
+}
+
+export async function reconcileDarajaIntent(input: { checkoutId?: string | null; checkoutRequestId?: string | null; merchantRequestId?: string | null }) {
+  const intent = await loadDarajaIntentByCheckout(input);
+  if (!intent) return null;
+  if (intent.order_id) return { intent, status: "paid", orderId: intent.order_id as string, mpesaReceiptNumber: getString(intent.daraja_mpesa_receipt_number) || null };
+
+  if (isSuccessfulDarajaResult(intent)) {
+    const orderId = await createPaidOrderFromDarajaIntent({ intent, paidAt: new Date().toISOString() });
+    return { intent: { ...intent, order_id: orderId, status: "paid" }, status: "paid", orderId, mpesaReceiptNumber: getString(intent.daraja_mpesa_receipt_number) || null };
+  }
+
+  const resultCode = getString(intent.daraja_result_code);
+  if (resultCode && resultCode !== "0") {
+    await db.from("storefront_payment_intents").update({ status: "failed", updated_at: new Date().toISOString() }).eq("id", intent.id).eq("tenant_id", intent.tenant_id).is("order_id", null);
+    return { intent: { ...intent, status: "failed" }, status: "failed", orderId: null as string | null, mpesaReceiptNumber: null as string | null };
+  }
+
+  return { intent, status: intent.status || "checkout_started", orderId: null as string | null, mpesaReceiptNumber: getString(intent.daraja_mpesa_receipt_number) || null };
+}
+

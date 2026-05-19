@@ -90,7 +90,7 @@ export default function DarajaSuccessStatusClient({ checkoutId, checkoutRequestI
         <p className="mt-3 text-sm leading-6 text-slate-600">
           {paid
             ? "Your M-Pesa payment has been confirmed and the order has been sent to the store."
-            : "We have sent the Safaricom STK Push request. Please check your phone and enter your M-Pesa PIN. In this foundation build, the order will not be created until the Daraja callback/reconciliation build is added."}
+            : "We have sent the Safaricom STK Push request. Please check your phone and enter your M-Pesa PIN. Once Safaricom confirms payment, Orduva will create the order automatically."}
         </p>
         {status?.checkoutRequestId ? <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-xs font-bold text-slate-700">CheckoutRequestID: {status.checkoutRequestId}</p> : null}
         {status?.message ? <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">{status.message}</p> : null}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { reconcileDarajaIntent } from "@/lib/storefront-daraja";
 
 function getBodyObject(value: unknown) {
   if (!value || typeof value !== "object") return null;
@@ -48,9 +49,19 @@ export async function POST(req: Request) {
     const { error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ ok: true });
+    let reconciliation: Awaited<ReturnType<typeof reconcileDarajaIntent>> | null = null;
+    if (resultCode === "0" && receiptNumber) {
+      reconciliation = await reconcileDarajaIntent({ checkoutRequestId, merchantRequestId });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      reconciled: reconciliation?.status === "paid",
+      orderId: reconciliation?.orderId || null,
+      mpesaReceiptNumber: receiptNumber || reconciliation?.mpesaReceiptNumber || null,
+    });
   } catch (error) {
-    console.error("Daraja callback intake failed", error);
+    console.error("Daraja callback reconciliation failed", error);
     const message = error instanceof Error ? error.message : "Daraja callback could not be recorded.";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }

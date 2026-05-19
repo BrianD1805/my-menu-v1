@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { loadDarajaIntentByCheckout } from "@/lib/storefront-daraja";
+import { reconcileDarajaIntent } from "@/lib/storefront-daraja";
 
 function first(value: string | null) {
   return String(value || "").split(",")[0].trim();
@@ -28,10 +28,18 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Missing direct M-Pesa checkout reference." }, { status: 400 });
     }
 
-    const intent = await loadDarajaIntentByCheckout({ checkoutId, checkoutRequestId, merchantRequestId });
+    const result = await reconcileDarajaIntent({ checkoutId, checkoutRequestId, merchantRequestId });
+    const intent = result?.intent;
     if (!intent) return NextResponse.json({ error: "Direct M-Pesa checkout was not found." }, { status: 404 });
 
     const tenantSlug = readPayloadTenantSlug(intent.order_payload);
+    const paid = result?.status === "paid" || intent.status === "paid" || Boolean(result?.orderId || intent.order_id);
+    const waitingMessage = intent.daraja_result_code === "0" && intent.daraja_mpesa_receipt_number
+      ? "Safaricom has confirmed your M-Pesa payment. Your order is being finalised."
+      : intent.status === "checkout_started"
+        ? "STK Push sent. Waiting for Safaricom to confirm the payment."
+        : null;
+
     return NextResponse.json({
       ok: true,
       checkoutId: intent.id || checkoutId || null,
@@ -41,14 +49,14 @@ export async function GET(req: Request) {
       phoneNumber: intent.daraja_phone_number || null,
       resultCode: intent.daraja_result_code || null,
       resultDescription: intent.daraja_result_description || null,
-      mpesaReceiptNumber: intent.daraja_mpesa_receipt_number || null,
-      status: intent.status || "checkout_started",
-      paid: intent.status === "paid",
-      orderId: intent.order_id || null,
+      mpesaReceiptNumber: intent.daraja_mpesa_receipt_number || result?.mpesaReceiptNumber || null,
+      status: result?.status || intent.status || "checkout_started",
+      paid,
+      orderId: result?.orderId || intent.order_id || null,
       tenantSlug,
       storeUrl: buildStoreUrl(tenantSlug, "/"),
       checkoutUrl: buildStoreUrl(tenantSlug, "/checkout"),
-      message: intent.daraja_result_code === "0" ? "Safaricom callback received a successful payment result. Order creation will be added in the next reconciliation build." : intent.status === "checkout_started" ? "STK Push sent. Waiting for the Daraja callback/status result. Order creation is deliberately held for the next reconciliation build." : null,
+      message: paid ? "Payment confirmed. Your order has been sent to the store." : waitingMessage,
     });
   } catch (error) {
     console.error("Storefront Daraja checkout status failed", error);
