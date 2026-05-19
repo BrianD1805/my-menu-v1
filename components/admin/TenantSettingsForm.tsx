@@ -1311,7 +1311,14 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             </div>
           </div>
 
-          <div className="mt-4 rounded-[22px] border border-indigo-100 bg-white p-4 text-sm shadow-sm">
+          <div className="mt-4 space-y-3">
+            <PaymentGatewayCard
+              title="Stripe customer payments"
+              description="Cards and wallet payments through the tenant's own Stripe account."
+              badge={stripeCredentialReady ? "credentials saved" : "not configured"}
+              tone={stripeCredentialReady ? "ready" : "idle"}
+            >
+              <div className="rounded-[20px] border border-indigo-100 bg-white p-4 text-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Stripe customer payments</p>
@@ -1381,9 +1388,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               {!stripeCredentialReady ? (
                 <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Add this tenant's Stripe publishable key, secret key and webhook secret before enabling Stripe.</p>
               ) : null}
-            </div>
+              </div>
+            </PaymentGatewayCard>
 
-            <div className="mt-4 rounded-[24px] border border-emerald-100 bg-emerald-50/60 p-4">
+            <PaymentGatewayCard
+              title="Yoco customer payments"
+              description="Hosted Yoco checkout for South African ZAR stores."
+              badge={form.enableYocoCustomerPayments ? form.yocoConnectionStatus : "not configured"}
+              tone={yocoReadyForCheckout ? "ready" : yocoCredentialReady ? "warning" : "idle"}
+            >
+              <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/60 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Yoco customer payments</p>
@@ -1484,9 +1498,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 />
                 <span><strong>Show Yoco on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, ZAR storefront customers can choose Yoco and will be sent to the hosted Yoco payment page. Live mode requires a saved webhook first.</span></span>
               </label>
-            </div>
+              </div>
+            </PaymentGatewayCard>
 
-            <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-sm">
+            <PaymentGatewayCard
+              title="M-Pesa / Pesapal customer payments"
+              description="Hosted Pesapal checkout for Kenyan KES stores."
+              badge={mpesaReadyForCheckout ? "checkout visible" : form.enableMpesaCustomerPayments ? form.mpesaConnectionStatus : "not configured"}
+              tone={mpesaReadyForCheckout ? "ready" : form.enableMpesaCustomerPayments ? "warning" : "idle"}
+            >
+              <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/60 p-4 text-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-black text-slate-950">M-Pesa / Pesapal customer payments</p>
@@ -1646,9 +1667,16 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 />
                 <span><strong>Show M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES storefront customers can choose M-Pesa and will be sent to Pesapal's hosted payment page. In test/sandbox mode the server will block checkout unless sandbox hosted checkout has been deliberately allowed via environment flag.</span></span>
               </label>
-            </div>
+              </div>
+            </PaymentGatewayCard>
 
-            <div className="mt-4 rounded-[24px] border border-sky-100 bg-sky-50/70 p-4">
+            <PaymentGatewayCard
+              title="Direct M-Pesa / Safaricom Daraja"
+              description="Direct STK Push preparation for Kenyan KES stores."
+              badge={form.enableDarajaCustomerPayments ? form.darajaConnectionStatus : "not configured"}
+              tone={darajaCredentialReady ? "ready" : form.enableDarajaCustomerPayments ? "warning" : "idle"}
+            >
+              <div className="rounded-[20px] border border-sky-100 bg-sky-50/70 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Direct M-Pesa / Safaricom Daraja foundation</p>
@@ -1733,7 +1761,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 />
                 <span><strong>Show direct M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">Locked in Ver-0.216. Storefront checkout will be added in a later build after the settings foundation is tested.</span></span>
               </label>
-            </div>
+              </div>
+            </PaymentGatewayCard>
+          </div>
         </Section>
 
         <Section id="advanced-currency-display" title="Advanced currency display" dirty={currencyDirty} saving={saving}>
@@ -2177,6 +2207,46 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </div>
+  );
+}
+
+
+function PaymentGatewayCard({
+  title,
+  description,
+  badge,
+  tone = "idle",
+  children,
+}: {
+  title: string;
+  description: string;
+  badge: string;
+  tone?: "idle" | "ready" | "warning";
+  children: ReactNode;
+}) {
+  const toneClass = tone === "ready"
+    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+    : tone === "warning"
+      ? "border-amber-200 bg-amber-50 text-amber-800"
+      : "border-slate-200 bg-slate-50 text-slate-600";
+
+  return (
+    <details className="group overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition open:border-orange-100">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-4 outline-none transition hover:bg-orange-50/50 focus-visible:ring-2 focus-visible:ring-orange-300 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="mb-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Payment gateway</span>
+          <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
+          <span className="mt-1 block text-xs leading-5 text-slate-600">{description}</span>
+        </span>
+        <span className="flex shrink-0 flex-col items-end gap-2">
+          <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${toneClass}`}>{badge}</span>
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-base font-black text-slate-500 transition group-open:rotate-45 group-open:border-orange-200 group-open:bg-orange-50 group-open:text-orange-800" aria-hidden="true">+</span>
+        </span>
+      </summary>
+      <div className="border-t border-slate-100 bg-slate-50/40 p-3 sm:p-4">
+        {children}
+      </div>
+    </details>
   );
 }
 
