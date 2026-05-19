@@ -13,7 +13,7 @@ import {
 } from "@/lib/tenant-settings";
 import { normalizeStorefrontTheme } from "@/lib/storefront-theme";
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, stripe_customer_secret_key, stripe_customer_webhook_secret, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, yoco_customer_secret_key, yoco_customer_webhook_secret, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, stripe_customer_secret_key, stripe_customer_webhook_secret, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, yoco_customer_secret_key, yoco_customer_webhook_secret, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_consumer_secret, daraja_shortcode, daraja_passkey, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live";
 
 function secretHint(value: unknown) {
   const text = String(value || "").trim();
@@ -57,6 +57,21 @@ function normalizeMpesaConnectionStatus(value: unknown) {
   return ["not_configured", "configured", "connected", "active", "disabled"].includes(status) ? status : "not_configured";
 }
 
+function normalizeDarajaMode(value: unknown) {
+  const mode = String(value || "sandbox").trim().toLowerCase();
+  return mode === "live" ? "live" : "sandbox";
+}
+
+function normalizeDarajaConnectionStatus(value: unknown) {
+  const status = String(value || "not_configured").trim().toLowerCase();
+  return ["not_configured", "configured", "connected", "active", "disabled"].includes(status) ? status : "not_configured";
+}
+
+function normalizeDarajaTransactionType(value: unknown) {
+  const txType = String(value || "CustomerPayBillOnline").trim();
+  return txType === "CustomerBuyGoodsOnline" ? "CustomerBuyGoodsOnline" : "CustomerPayBillOnline";
+}
+
 
 export async function GET(req: Request) {
   const tenantLookup = await resolveAdminTenant(req);
@@ -77,7 +92,7 @@ export async function GET(req: Request) {
   return NextResponse.json({
     settings: data
       ? {
-          ...Object.fromEntries(Object.entries(data as Record<string, unknown>).filter(([key]) => !["stripe_customer_secret_key", "stripe_customer_webhook_secret", "yoco_customer_secret_key", "yoco_customer_webhook_secret", "mpesa_customer_consumer_secret"].includes(key))),
+          ...Object.fromEntries(Object.entries(data as Record<string, unknown>).filter(([key]) => !["stripe_customer_secret_key", "stripe_customer_webhook_secret", "yoco_customer_secret_key", "yoco_customer_webhook_secret", "mpesa_customer_consumer_secret", "daraja_consumer_secret", "daraja_passkey"].includes(key))),
           stripe_customer_secret_key_set: Boolean(sensitive?.stripe_customer_secret_key),
           stripe_customer_secret_key_hint: secretHint(sensitive?.stripe_customer_secret_key),
           stripe_customer_webhook_secret_set: Boolean(sensitive?.stripe_customer_webhook_secret),
@@ -88,6 +103,10 @@ export async function GET(req: Request) {
           yoco_customer_webhook_secret_hint: secretHint(sensitive?.yoco_customer_webhook_secret),
           mpesa_customer_consumer_secret_set: Boolean(sensitive?.mpesa_customer_consumer_secret),
           mpesa_customer_consumer_secret_hint: secretHint(sensitive?.mpesa_customer_consumer_secret),
+          daraja_consumer_secret_set: Boolean(sensitive?.daraja_consumer_secret),
+          daraja_consumer_secret_hint: secretHint(sensitive?.daraja_consumer_secret),
+          daraja_passkey_set: Boolean(sensitive?.daraja_passkey),
+          daraja_passkey_hint: secretHint(sensitive?.daraja_passkey),
         }
       : null,
   });
@@ -102,7 +121,7 @@ export async function PATCH(req: Request) {
 
     const { data: existingSettings } = await db
       .from("tenant_settings")
-      .select("stripe_customer_secret_key, stripe_customer_webhook_secret, stripe_customer_payments_live, yoco_customer_mode, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, mpesa_customer_consumer_secret")
+      .select("stripe_customer_secret_key, stripe_customer_webhook_secret, stripe_customer_payments_live, yoco_customer_mode, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, mpesa_customer_consumer_secret, daraja_consumer_secret, daraja_passkey")
       .eq("tenant_id", tenantLookup.tenant.id)
       .maybeSingle();
 
@@ -181,6 +200,34 @@ export async function PATCH(req: Request) {
       );
     }
 
+    const darajaConsumerKey = normalizeOptionalText(body?.darajaConsumerKey, 260);
+    const darajaConsumerSecretInput = normalizeLongSecret(body?.darajaConsumerSecretInput);
+    const darajaPasskeyInput = normalizeLongSecret(body?.darajaPasskeyInput, 1200);
+    const nextDarajaMode = normalizeDarajaMode(body?.darajaCustomerMode);
+    const darajaShortcode = normalizeOptionalText(body?.darajaShortcode, 40);
+    const darajaTransactionType = normalizeDarajaTransactionType(body?.darajaTransactionType);
+    const hasDarajaConsumerSecret = Boolean(darajaConsumerSecretInput || (existingSettings as Record<string, unknown> | null)?.daraja_consumer_secret);
+    const hasDarajaPasskey = Boolean(darajaPasskeyInput || (existingSettings as Record<string, unknown> | null)?.daraja_passkey);
+    const requestedDarajaCustomerPayments = normalizeBoolean(body?.enableDarajaCustomerPayments) ?? false;
+    const darajaCurrencyAllowed = normalizeCurrencyCode(body?.currencyCode) === "KES";
+    const darajaCredentialsReady = Boolean(darajaConsumerKey && hasDarajaConsumerSecret && darajaShortcode && hasDarajaPasskey);
+    const requestedDarajaStatus = normalizeDarajaConnectionStatus(body?.darajaConnectionStatus);
+    const nextDarajaStatus = darajaCredentialsReady ? (requestedDarajaStatus === "not_configured" ? "configured" : requestedDarajaStatus) : "not_configured";
+
+    if (requestedDarajaCustomerPayments && !darajaCurrencyAllowed) {
+      return NextResponse.json(
+        { error: "Direct M-Pesa Daraja is currently only prepared for KES stores. Change this tenant's currency to KES before enabling the Daraja setup." },
+        { status: 400 },
+      );
+    }
+
+    if (requestedDarajaCustomerPayments && !darajaCredentialsReady) {
+      return NextResponse.json(
+        { error: "Add this tenant's Daraja consumer key, consumer secret, shortcode and passkey before enabling the direct M-Pesa Daraja setup." },
+        { status: 400 },
+      );
+    }
+
     const payload: Record<string, unknown> = {
       tenant_id: tenantLookup.tenant.id,
       business_display_name: normalizeOptionalText(body?.businessDisplayName, 120),
@@ -241,6 +288,17 @@ export async function PATCH(req: Request) {
       mpesa_customer_account_label: normalizeOptionalText(body?.mpesaCustomerAccountLabel, 120),
       mpesa_customer_setup_notes: normalizeOptionalText(body?.mpesaCustomerSetupNotes, 500),
       mpesa_customer_payments_live: requestedMpesaCustomerPayments && requestedMpesaPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialsReady,
+      enable_daraja_customer_payments: requestedDarajaCustomerPayments && darajaCurrencyAllowed && darajaCredentialsReady,
+      daraja_connection_status: nextDarajaStatus,
+      daraja_customer_mode: nextDarajaMode,
+      daraja_consumer_key: darajaConsumerKey,
+      daraja_shortcode: darajaShortcode,
+      daraja_transaction_type: darajaTransactionType,
+      daraja_account_reference_prefix: normalizeOptionalText(body?.darajaAccountReferencePrefix, 40),
+      daraja_callback_url: normalizeOptionalText(body?.darajaCallbackUrl, 500),
+      daraja_account_label: normalizeOptionalText(body?.darajaAccountLabel, 120),
+      daraja_setup_notes: normalizeOptionalText(body?.darajaSetupNotes, 500),
+      daraja_payments_live: false,
     };
 
     if (stripeSecretKeyInput) payload.stripe_customer_secret_key = stripeSecretKeyInput;
@@ -248,6 +306,8 @@ export async function PATCH(req: Request) {
     if (yocoSecretKeyInput) payload.yoco_customer_secret_key = yocoSecretKeyInput;
     if (yocoWebhookSecretInput) payload.yoco_customer_webhook_secret = yocoWebhookSecretInput;
     if (mpesaConsumerSecretInput) payload.mpesa_customer_consumer_secret = mpesaConsumerSecretInput;
+    if (darajaConsumerSecretInput) payload.daraja_consumer_secret = darajaConsumerSecretInput;
+    if (darajaPasskeyInput) payload.daraja_passkey = darajaPasskeyInput;
     if (shouldResetYocoWebhook) {
       payload.yoco_customer_webhook_secret = null;
       payload.yoco_customer_webhook_id = null;
@@ -264,7 +324,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Failed to save tenant settings" }, { status: 500 });
     }
 
-    const safeData = Object.fromEntries(Object.entries(data as Record<string, unknown>).filter(([key]) => !["stripe_customer_secret_key", "stripe_customer_webhook_secret", "yoco_customer_secret_key", "yoco_customer_webhook_secret", "mpesa_customer_consumer_secret"].includes(key)));
+    const safeData = Object.fromEntries(Object.entries(data as Record<string, unknown>).filter(([key]) => !["stripe_customer_secret_key", "stripe_customer_webhook_secret", "yoco_customer_secret_key", "yoco_customer_webhook_secret", "mpesa_customer_consumer_secret", "daraja_consumer_secret", "daraja_passkey"].includes(key)));
     return NextResponse.json({
       settings: {
         ...safeData,
@@ -278,6 +338,10 @@ export async function PATCH(req: Request) {
         yoco_customer_webhook_secret_hint: secretHint(yocoWebhookSecretInput || (hasExistingYocoWebhookSecret ? (existingSettings as Record<string, unknown> | null)?.yoco_customer_webhook_secret : null)),
         mpesa_customer_consumer_secret_set: Boolean(mpesaConsumerSecretInput || (existingSettings as Record<string, unknown> | null)?.mpesa_customer_consumer_secret),
         mpesa_customer_consumer_secret_hint: secretHint(mpesaConsumerSecretInput || (existingSettings as Record<string, unknown> | null)?.mpesa_customer_consumer_secret),
+        daraja_consumer_secret_set: Boolean(darajaConsumerSecretInput || (existingSettings as Record<string, unknown> | null)?.daraja_consumer_secret),
+        daraja_consumer_secret_hint: secretHint(darajaConsumerSecretInput || (existingSettings as Record<string, unknown> | null)?.daraja_consumer_secret),
+        daraja_passkey_set: Boolean(darajaPasskeyInput || (existingSettings as Record<string, unknown> | null)?.daraja_passkey),
+        daraja_passkey_hint: secretHint(darajaPasskeyInput || (existingSettings as Record<string, unknown> | null)?.daraja_passkey),
       },
     });
   } catch (error) {

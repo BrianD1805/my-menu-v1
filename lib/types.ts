@@ -102,4 +102,15 @@ export type TenantSettings = {
   mpesa_customer_account_label?: string | null;
   mpesa_customer_setup_notes?: string | null;
   mpesa_customer_payments_live?: boolean | null;
+  enable_daraja_customer_payments?: boolean | null;
+  daraja_connection_status?: string | null;
+  daraja_customer_mode?: string | null;
+  daraja_consumer_key?: string | null;
+  daraja_shortcode?: string | null;
+  daraja_transaction_type?: string | null;
+  daraja_account_reference_prefix?: string | null;
+  daraja_callback_url?: string | null;
+  daraja_account_label?: string | null;
+  daraja_setup_notes?: string | null;
+  daraja_payments_live?: boolean | null;
 };

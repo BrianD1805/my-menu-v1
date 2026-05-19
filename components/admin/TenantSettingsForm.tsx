@@ -82,6 +82,23 @@ type FormState = {
   mpesaCustomerAccountLabel: string;
   mpesaCustomerSetupNotes: string;
   mpesaCustomerPaymentsLive: boolean;
+  enableDarajaCustomerPayments: boolean;
+  darajaConnectionStatus: string;
+  darajaCustomerMode: "sandbox" | "live";
+  darajaConsumerKey: string;
+  darajaConsumerSecretInput: string;
+  darajaConsumerSecretSet: boolean;
+  darajaConsumerSecretHint: string;
+  darajaShortcode: string;
+  darajaPasskeyInput: string;
+  darajaPasskeySet: boolean;
+  darajaPasskeyHint: string;
+  darajaTransactionType: "CustomerPayBillOnline" | "CustomerBuyGoodsOnline";
+  darajaAccountReferencePrefix: string;
+  darajaCallbackUrl: string;
+  darajaAccountLabel: string;
+  darajaSetupNotes: string;
+  darajaPaymentsLive: boolean;
 };
 
 
@@ -544,7 +561,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const adminWorkspaceDirty = formValueChanged(["showAdminLaunchChecklist"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
-  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive"]);
+  const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive", "enableDarajaCustomerPayments", "darajaConnectionStatus", "darajaCustomerMode", "darajaConsumerKey", "darajaConsumerSecretInput", "darajaShortcode", "darajaPasskeyInput", "darajaTransactionType", "darajaAccountReferencePrefix", "darajaCallbackUrl", "darajaAccountLabel", "darajaSetupNotes", "darajaPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
   const yocoCredentialReady = Boolean(form.yocoCustomerSecretKeySet || form.yocoCustomerSecretKeyInput.trim());
@@ -556,6 +573,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const yocoReadyForCheckout = Boolean(form.enableYocoCustomerPayments && form.yocoCustomerPaymentsLive && yocoCurrencyAllowed && yocoCredentialReady);
   const mpesaCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "KES";
   const mpesaCredentialReady = Boolean(form.mpesaCustomerConsumerKey.trim() && (form.mpesaCustomerConsumerSecretSet || form.mpesaCustomerConsumerSecretInput.trim()) && form.mpesaCustomerIpnId.trim());
+  const darajaCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "KES";
+  const darajaCredentialReady = Boolean(form.darajaConsumerKey.trim() && (form.darajaConsumerSecretSet || form.darajaConsumerSecretInput.trim()) && form.darajaShortcode.trim() && (form.darajaPasskeySet || form.darajaPasskeyInput.trim()));
   const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
@@ -791,6 +810,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       const nextYocoSecretSet = form.yocoCustomerSecretKeySet || Boolean(form.yocoCustomerSecretKeyInput.trim());
       const nextYocoWebhookSet = form.yocoCustomerWebhookSecretSet || Boolean(form.yocoCustomerWebhookSecretInput.trim());
       const nextMpesaConsumerSecretSet = form.mpesaCustomerConsumerSecretSet || Boolean(form.mpesaCustomerConsumerSecretInput.trim());
+      const nextDarajaConsumerSecretSet = form.darajaConsumerSecretSet || Boolean(form.darajaConsumerSecretInput.trim());
+      const nextDarajaPasskeySet = form.darajaPasskeySet || Boolean(form.darajaPasskeyInput.trim());
       const savedPayload = {
         ...form,
         storefrontTheme: theme,
@@ -816,6 +837,14 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         mpesaCustomerConsumerSecretSet: nextMpesaConsumerSecretSet,
         mpesaCustomerConsumerSecretHint: nextMpesaConsumerSecretSet ? form.mpesaCustomerConsumerSecretHint || "saved" : "",
         mpesaCustomerPaymentsLive: form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && nextMpesaConsumerSecretSet && mpesaCurrencyAllowed,
+        darajaConnectionStatus: darajaCredentialReady ? (form.darajaConnectionStatus === "not_configured" ? "configured" : form.darajaConnectionStatus || "configured") : "not_configured",
+        darajaConsumerSecretInput: "",
+        darajaConsumerSecretSet: nextDarajaConsumerSecretSet,
+        darajaConsumerSecretHint: nextDarajaConsumerSecretSet ? form.darajaConsumerSecretHint || "saved" : "",
+        darajaPasskeyInput: "",
+        darajaPasskeySet: nextDarajaPasskeySet,
+        darajaPasskeyHint: nextDarajaPasskeySet ? form.darajaPasskeyHint || "saved" : "",
+        darajaPaymentsLive: false,
       };
       setForm(savedPayload);
       setSavedForm(savedPayload);
@@ -1521,7 +1550,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-sm font-black text-slate-950">Pesapal recovery and diagnostics</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-700">Use this only for stuck M-Pesa/Pesapal attempts. It checks Pesapal directly and only allows order creation when Pesapal returns a completed payment.</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-700">Use this only for stuck M-Pesa/Pesapal attempts. It checks Pesapal directly, blocks order creation unless Pesapal returns COMPLETED, and can mark non-completed attempts as failed for review.</p>
                   </div>
                   <span className="inline-flex w-fit rounded-full border border-orange-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-900">admin only</span>
                 </div>
@@ -1559,7 +1588,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                     disabled={mpesaDiagnosticChecking || mpesaDiagnosticResult?.safeToCreateOrder === true}
                     className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    {mpesaDiagnosticChecking && mpesaDiagnosticAction === "mark_failed" ? "Updating..." : "Mark failed/review"}
+                    {mpesaDiagnosticChecking && mpesaDiagnosticAction === "mark_failed" ? "Updating..." : "Mark failed"}
                   </button>
                 </div>
 
@@ -1616,6 +1645,93 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
                 <span><strong>Show M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES storefront customers can choose M-Pesa and will be sent to Pesapal's hosted payment page. In test/sandbox mode the server will block checkout unless sandbox hosted checkout has been deliberately allowed via environment flag.</span></span>
+              </label>
+            </div>
+
+            <div className="mt-4 rounded-[24px] border border-sky-100 bg-sky-50/70 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="font-black text-slate-950">Direct M-Pesa / Safaricom Daraja foundation</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Store the tenant's Daraja credentials and live-readiness notes here. Ver-0.216 does not change storefront checkout yet; this is preparation for a future STK Push build.</p>
+                </div>
+                <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${darajaCredentialReady ? "border-emerald-200 bg-white text-emerald-800" : "border-slate-200 bg-white text-slate-500"}`}>
+                  {form.enableDarajaCustomerPayments ? form.darajaConnectionStatus : "not configured"}
+                </span>
+              </div>
+
+              {!darajaCurrencyAllowed ? (
+                <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">Direct M-Pesa Daraja is prepared for Kenyan Shilling stores. Change the store currency to KES before enabling the Daraja setup.</p>
+              ) : null}
+
+              <div className="mt-4 rounded-2xl border border-sky-100 bg-white/80 p-3 text-xs leading-5 text-sky-950">
+                <p className="font-black">Future STK Push flow</p>
+                <p className="mt-1">Customer enters phone number → Safaricom sends the M-Pesa PIN prompt → Daraja callback confirms result → Orduva creates the order only after a successful callback/status result.</p>
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <Field label="Daraja mode">
+                  <select value={form.darajaCustomerMode} onChange={(e) => update("darajaCustomerMode", e.target.value as FormState["darajaCustomerMode"])} className="input">
+                    <option value="sandbox">Sandbox credentials</option>
+                    <option value="live">Live credentials</option>
+                  </select>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">Use sandbox while collecting credentials. Use live only after the tenant has a Safaricom/Daraja merchant setup and a real shortcode/till/paybill.</p>
+                </Field>
+                <Field label="Daraja account label">
+                  <input value={form.darajaAccountLabel} onChange={(e) => update("darajaAccountLabel", e.target.value)} placeholder="Example: ZimZa Safaricom Daraja" className="input" />
+                </Field>
+                <Field label="Daraja consumer key">
+                  <input value={form.darajaConsumerKey} onChange={(e) => update("darajaConsumerKey", e.target.value)} placeholder="Consumer key from Safaricom Daraja" className="input" autoComplete="off" />
+                </Field>
+                <Field label={form.darajaConsumerSecretSet ? `Daraja consumer secret saved (${form.darajaConsumerSecretHint || "saved"})` : "Daraja consumer secret"}>
+                  <input value={form.darajaConsumerSecretInput} onChange={(e) => update("darajaConsumerSecretInput", e.target.value)} placeholder={form.darajaConsumerSecretSet ? "Leave blank to keep saved consumer secret" : "Consumer secret from Safaricom Daraja"} className="input" autoComplete="off" />
+                </Field>
+                <Field label="Business shortcode / till / paybill">
+                  <input value={form.darajaShortcode} onChange={(e) => update("darajaShortcode", e.target.value)} placeholder="Example: 174379 for sandbox, tenant live shortcode later" className="input" autoComplete="off" />
+                </Field>
+                <Field label={form.darajaPasskeySet ? `Daraja passkey saved (${form.darajaPasskeyHint || "saved"})` : "Daraja passkey"}>
+                  <input value={form.darajaPasskeyInput} onChange={(e) => update("darajaPasskeyInput", e.target.value)} placeholder={form.darajaPasskeySet ? "Leave blank to keep saved passkey" : "Lipa na M-Pesa Online passkey"} className="input" autoComplete="off" />
+                </Field>
+                <Field label="Transaction type">
+                  <select value={form.darajaTransactionType} onChange={(e) => update("darajaTransactionType", e.target.value as FormState["darajaTransactionType"])} className="input">
+                    <option value="CustomerPayBillOnline">CustomerPayBillOnline / Paybill</option>
+                    <option value="CustomerBuyGoodsOnline">CustomerBuyGoodsOnline / Till</option>
+                  </select>
+                </Field>
+                <Field label="Account reference prefix">
+                  <input value={form.darajaAccountReferencePrefix} onChange={(e) => update("darajaAccountReferencePrefix", e.target.value.toUpperCase())} placeholder="ORDUVA" className="input uppercase" maxLength={40} />
+                </Field>
+                <div className="md:col-span-2">
+                  <Field label="Future Daraja callback URL">
+                    <input value={form.darajaCallbackUrl} onChange={(e) => update("darajaCallbackUrl", e.target.value)} placeholder="https://www.orduva.com/api/storefront/daraja/callback" className="input" />
+                    <p className="mt-2 text-xs leading-5 text-slate-500">Stored for setup/reference only in Ver-0.216. The actual callback route will be added in the checkout/callback build.</p>
+                  </Field>
+                </div>
+                <div className="md:col-span-2">
+                  <Field label="Daraja setup notes">
+                    <input value={form.darajaSetupNotes} onChange={(e) => update("darajaSetupNotes", e.target.value)} placeholder="Example: Merchant account pending, waiting for live shortcode" className="input" />
+                  </Field>
+                </div>
+              </div>
+
+              <label className={`mt-4 flex items-start gap-3 rounded-2xl border p-3 text-sm ${darajaCurrencyAllowed && darajaCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}>
+                <input
+                  type="checkbox"
+                  checked={form.enableDarajaCustomerPayments}
+                  onChange={(e) => update("enableDarajaCustomerPayments", e.target.checked)}
+                  disabled={!darajaCurrencyAllowed || !darajaCredentialReady}
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                />
+                <span><strong>Enable direct M-Pesa Daraja setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires KES currency, Daraja consumer key, consumer secret, shortcode and passkey. This stores readiness only and does not display a direct M-Pesa checkout option yet.</span></span>
+              </label>
+
+              <label className="mt-3 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-100 p-3 text-sm text-slate-500">
+                <input
+                  type="checkbox"
+                  checked={false}
+                  disabled
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                />
+                <span><strong>Show direct M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">Locked in Ver-0.216. Storefront checkout will be added in a later build after the settings foundation is tested.</span></span>
               </label>
             </div>
         </Section>

@@ -12,7 +12,7 @@ export default async function AdminSettingsPage() {
   const [{ data: stripeSecretSummary }, { data: checklistVisibilityRow }] = await Promise.all([
     db
     .from("tenant_settings")
-    .select("stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, mpesa_customer_consumer_secret")
+    .select("stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, mpesa_customer_consumer_secret, daraja_consumer_secret, daraja_passkey")
     .eq("tenant_id", tenant.id)
     .maybeSingle(),
     db
@@ -28,6 +28,8 @@ export default async function AdminSettingsPage() {
   const yocoSecretKey = String(stripeSecrets?.yoco_customer_secret_key || "").trim();
   const yocoWebhookSecret = String(stripeSecrets?.yoco_customer_webhook_secret || "").trim();
   const mpesaConsumerSecret = String(stripeSecrets?.mpesa_customer_consumer_secret || "").trim();
+  const darajaConsumerSecret = String(stripeSecrets?.daraja_consumer_secret || "").trim();
+  const darajaPasskey = String(stripeSecrets?.daraja_passkey || "").trim();
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
   const trialState = calculateTenantTrialState(tenant);
 
@@ -147,6 +149,23 @@ export default async function AdminSettingsPage() {
           mpesaCustomerAccountLabel: settings?.mpesa_customer_account_label || "",
           mpesaCustomerSetupNotes: settings?.mpesa_customer_setup_notes || "",
           mpesaCustomerPaymentsLive: settings?.mpesa_customer_payments_live === true,
+          enableDarajaCustomerPayments: settings?.enable_daraja_customer_payments === true,
+          darajaConnectionStatus: settings?.daraja_connection_status || "not_configured",
+          darajaCustomerMode: settings?.daraja_customer_mode === "live" ? "live" : "sandbox",
+          darajaConsumerKey: settings?.daraja_consumer_key || "",
+          darajaConsumerSecretInput: "",
+          darajaConsumerSecretSet: Boolean(darajaConsumerSecret),
+          darajaConsumerSecretHint: darajaConsumerSecret ? `••••${darajaConsumerSecret.slice(-4)}` : "",
+          darajaShortcode: settings?.daraja_shortcode || "",
+          darajaPasskeyInput: "",
+          darajaPasskeySet: Boolean(darajaPasskey),
+          darajaPasskeyHint: darajaPasskey ? `••••${darajaPasskey.slice(-4)}` : "",
+          darajaTransactionType: settings?.daraja_transaction_type === "CustomerBuyGoodsOnline" ? "CustomerBuyGoodsOnline" : "CustomerPayBillOnline",
+          darajaAccountReferencePrefix: settings?.daraja_account_reference_prefix || "ORDUVA",
+          darajaCallbackUrl: settings?.daraja_callback_url || "https://www.orduva.com/api/storefront/daraja/callback",
+          darajaAccountLabel: settings?.daraja_account_label || "",
+          darajaSetupNotes: settings?.daraja_setup_notes || "",
+          darajaPaymentsLive: settings?.daraja_payments_live === true,
         }}
       />
     </AdminShell>

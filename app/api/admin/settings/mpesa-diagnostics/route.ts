@@ -99,13 +99,44 @@ export async function POST(req: Request) {
       if (completed) {
         return NextResponse.json({ error: "Pesapal reports this payment as completed, so it cannot be marked failed." }, { status: 409 });
       }
-      await db
+      const { data: updatedRows, error: updateError } = await db
         .from("storefront_payment_intents")
-        .update({ status: failed ? "failed" : "checkout_pending_review", updated_at: new Date().toISOString() })
+        .update({ status: "failed", updated_at: new Date().toISOString() })
         .eq("id", intent.id)
         .eq("tenant_id", tenantLookup.tenant.id)
-        .is("order_id", null);
-      message = failed ? "Payment intent marked failed after Pesapal returned a non-completed status." : "Payment intent marked for pending review.";
+        .is("order_id", null)
+        .select("id,status,updated_at");
+
+      if (updateError) {
+        console.error("Admin M-Pesa/Pesapal diagnostics status update failed", updateError);
+        return NextResponse.json(
+          {
+            error: `Could not update payment intent status: ${updateError.message}`,
+            intent: summarizeIntent(intent),
+            pesapal,
+            safeToCreateOrder: false,
+            completed,
+            failed,
+          },
+          { status: 500 },
+        );
+      }
+
+      if (!updatedRows || updatedRows.length === 0) {
+        return NextResponse.json(
+          {
+            error: "No payment intent row was updated. It may already have an order linked, or it may no longer belong to this tenant.",
+            intent: summarizeIntent(intent),
+            pesapal,
+            safeToCreateOrder: false,
+            completed,
+            failed,
+          },
+          { status: 409 },
+        );
+      }
+
+      message = "Payment intent marked failed for admin review. No order was created because Pesapal has not returned COMPLETED.";
     }
 
     const latest = await loadPesapalIntentByCheckout({ checkoutId: String(intent.id) });
