@@ -137,8 +137,12 @@ export function assertTenantDarajaReady(settings: TenantDarajaCustomerSettings |
   if (!configured(settings.daraja_connection_status)) throw new Error("Direct M-Pesa Daraja is not marked as connected for this store.");
   if (!getString(settings.daraja_consumer_key)) throw new Error("Daraja consumer key is missing.");
   if (!getString(settings.daraja_consumer_secret)) throw new Error("Daraja consumer secret is missing.");
-  if (!getString(settings.daraja_shortcode)) throw new Error("Daraja shortcode / till / paybill is missing.");
+  const shortcode = getString(settings.daraja_shortcode);
+  if (!shortcode) throw new Error("Daraja shortcode / till / paybill is missing.");
   if (!getString(settings.daraja_passkey)) throw new Error("Daraja passkey is missing.");
+  if (String(settings.daraja_customer_mode || "").toLowerCase() === "live" && shortcode === "174379") {
+    throw new Error("Live Direct M-Pesa cannot use the Safaricom sandbox shortcode 174379. Add the tenant's live PayBill or Till number before enabling checkout.");
+  }
 }
 
 async function requestDarajaToken(settings: TenantDarajaCustomerSettings) {

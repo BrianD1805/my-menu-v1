@@ -575,6 +575,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const mpesaCredentialReady = Boolean(form.mpesaCustomerConsumerKey.trim() && (form.mpesaCustomerConsumerSecretSet || form.mpesaCustomerConsumerSecretInput.trim()) && form.mpesaCustomerIpnId.trim());
   const darajaCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "KES";
   const darajaCredentialReady = Boolean(form.darajaConsumerKey.trim() && (form.darajaConsumerSecretSet || form.darajaConsumerSecretInput.trim()) && form.darajaShortcode.trim() && (form.darajaPasskeySet || form.darajaPasskeyInput.trim()));
+  const darajaModeLive = form.darajaCustomerMode === "live";
+  const darajaUsesSandboxShortcode = form.darajaShortcode.trim() === "174379";
+  const darajaLiveReadinessOk = Boolean(darajaCurrencyAllowed && darajaCredentialReady && (!darajaModeLive || !darajaUsesSandboxShortcode));
   const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
   const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
@@ -844,7 +847,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         darajaPasskeyInput: "",
         darajaPasskeySet: nextDarajaPasskeySet,
         darajaPasskeyHint: nextDarajaPasskeySet ? form.darajaPasskeyHint || "saved" : "",
-        darajaPaymentsLive: form.enableDarajaCustomerPayments && form.darajaPaymentsLive && nextDarajaConsumerSecretSet && nextDarajaPasskeySet && darajaCurrencyAllowed,
+        darajaPaymentsLive: form.enableDarajaCustomerPayments && form.darajaPaymentsLive && nextDarajaConsumerSecretSet && nextDarajaPasskeySet && darajaLiveReadinessOk,
       };
       setForm(savedPayload);
       setSavedForm(savedPayload);
@@ -1680,7 +1683,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Direct M-Pesa / Safaricom Daraja foundation</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">Store the tenant's Daraja credentials and start a direct Safaricom STK Push checkout. Ver-0.217 sends the phone prompt only; order creation waits for the future callback/reconciliation build.</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Store the tenant's Daraja credentials and run direct Safaricom STK Push checkout. Ver-0.218 confirms successful callbacks, creates the order, stores the M-Pesa receipt and clears the cart.</p>
                 </div>
                 <span className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${darajaCredentialReady ? "border-emerald-200 bg-white text-emerald-800" : "border-slate-200 bg-white text-slate-500"}`}>
                   {form.darajaPaymentsLive ? "checkout live" : form.enableDarajaCustomerPayments ? form.darajaConnectionStatus : "not configured"}
@@ -1692,17 +1695,30 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               ) : null}
 
               <div className="mt-4 rounded-2xl border border-sky-100 bg-white/80 p-3 text-xs leading-5 text-sky-950">
-                <p className="font-black">Future STK Push flow</p>
-                <p className="mt-1">Customer enters phone number → Safaricom sends the M-Pesa PIN prompt → Orduva records CheckoutRequestID → future callback/reconciliation build confirms payment and creates the order.</p>
+                <p className="font-black">Live STK Push flow</p>
+                <p className="mt-1">Customer enters phone number → Safaricom sends the M-Pesa PIN prompt → Orduva records CheckoutRequestID → Safaricom callback confirms payment → Orduva creates the order and stores the M-Pesa receipt.</p>
               </div>
+
+              <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-950">
+                <p className="font-black">Live tenant checklist</p>
+                <p className="mt-1">Before switching customer checkout on, confirm the tenant has live Consumer Key, live Consumer Secret, live shortcode/till/paybill, live Lipa Na M-Pesa Online passkey, KES currency and the correct transaction type.</p>
+              </div>
+
+              {darajaModeLive && darajaUsesSandboxShortcode ? (
+                <p className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-900">Live mode cannot use the sandbox shortcode 174379. Replace it with the tenant's live PayBill or Till number before exposing Direct M-Pesa checkout.</p>
+              ) : null}
+
+              {form.darajaPaymentsLive ? (
+                <p className="mt-3 rounded-2xl border border-emerald-200 bg-white px-3 py-2 text-xs font-bold text-emerald-900">Direct M-Pesa is currently visible on customer checkout for KES stores. Keep this on only after the live credentials and shortcode have been confirmed.</p>
+              ) : null}
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <Field label="Daraja mode">
                   <select value={form.darajaCustomerMode} onChange={(e) => update("darajaCustomerMode", e.target.value as FormState["darajaCustomerMode"])} className="input">
                     <option value="sandbox">Sandbox credentials</option>
-                    <option value="live">Live credentials</option>
+                    <option value="live">Live credentials / production</option>
                   </select>
-                  <p className="mt-2 text-xs leading-5 text-slate-500">Use sandbox while collecting credentials. Use live only after the tenant has a Safaricom/Daraja merchant setup and a real shortcode/till/paybill.</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">Use sandbox for Daraja sandbox tests. Use live only after Safaricom has supplied/activated the tenant's production app, shortcode/till/paybill and Lipa Na M-Pesa Online passkey.</p>
                 </Field>
                 <Field label="Daraja account label">
                   <input value={form.darajaAccountLabel} onChange={(e) => update("darajaAccountLabel", e.target.value)} placeholder="Example: ZimZa Safaricom Daraja" className="input" />
@@ -1731,7 +1747,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 <div className="md:col-span-2">
                   <Field label="Future Daraja callback URL">
                     <input value={form.darajaCallbackUrl} onChange={(e) => update("darajaCallbackUrl", e.target.value)} placeholder="https://www.orduva.com/api/storefront/daraja/callback" className="input" />
-                    <p className="mt-2 text-xs leading-5 text-slate-500">Used as the STK Push callback URL. Ver-0.217 starts the push only; the callback/reconciliation route is planned next.</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">Used as the STK Push callback URL. For Orduva live stores this should normally be https://www.orduva.com/api/storefront/daraja/callback.</p>
                   </Field>
                 </div>
                 <div className="md:col-span-2">
@@ -1746,10 +1762,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   type="checkbox"
                   checked={form.enableDarajaCustomerPayments}
                   onChange={(e) => update("enableDarajaCustomerPayments", e.target.checked)}
-                  disabled={!darajaCurrencyAllowed || !darajaCredentialReady}
+                  disabled={!darajaLiveReadinessOk && !form.enableDarajaCustomerPayments}
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
-                <span><strong>Enable direct M-Pesa Daraja setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires KES currency, Daraja consumer key, consumer secret, shortcode and passkey. Keep this enabled before exposing the checkout option.</span></span>
+                <span><strong>Enable direct M-Pesa Daraja setup for this tenant</strong><span className="mt-1 block text-xs leading-5">Requires KES currency, Daraja consumer key, consumer secret, shortcode and passkey. Live mode also requires a real tenant shortcode/till/paybill, not the sandbox shortcode.</span></span>
               </label>
 
               <label className={`mt-3 flex items-start gap-3 rounded-2xl border p-3 text-sm ${form.enableDarajaCustomerPayments && darajaCurrencyAllowed && darajaCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-slate-100 text-slate-500"}`}>
@@ -1757,10 +1773,10 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                   type="checkbox"
                   checked={form.darajaPaymentsLive}
                   onChange={(e) => update("darajaPaymentsLive", e.target.checked)}
-                  disabled={!form.enableDarajaCustomerPayments || !darajaCurrencyAllowed || !darajaCredentialReady}
+                  disabled={!form.enableDarajaCustomerPayments || (!darajaLiveReadinessOk && !form.darajaPaymentsLive)}
                   className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
                 />
-                <span><strong>Show direct M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES customers can choose direct M-Pesa and receive a Safaricom STK Push prompt. Ver-0.217 does not create the order until the future callback/reconciliation build confirms payment.</span></span>
+                <span><strong>Show direct M-Pesa on customer checkout</strong><span className="mt-1 block text-xs leading-5">When enabled, KES customers can choose direct M-Pesa, receive a Safaricom STK Push prompt, and Orduva will create the order only after Safaricom confirms successful payment.</span></span>
               </label>
               </div>
             </PaymentGatewayCard>
