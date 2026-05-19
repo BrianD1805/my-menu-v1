@@ -1003,8 +1003,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] xl:items-start">
-      <form onSubmit={onSubmit} className="rounded-[30px] border border-black/5 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
+    <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] xl:items-start">
+      <form onSubmit={onSubmit} className="mx-auto w-full max-w-3xl rounded-[30px] border border-emerald-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6 xl:max-w-none">
         <div ref={settingsTopRef} className="mb-6 scroll-mt-28">
           <div className="mb-5 rounded-[24px] border border-orange-200/70 bg-gradient-to-br from-orange-50 via-white to-slate-50 p-4 shadow-[0_16px_38px_rgba(15,23,42,0.07)] sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1276,7 +1276,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
         <Section id="storefront-payment-options" title="Storefront payment options" dirty={paymentDirty} saving={saving}>
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
+            <div className="mx-auto w-full rounded-[22px] border border-emerald-300 bg-emerald-100/70 p-4">
               <label className="flex items-start justify-between gap-4">
                 <span>
                   <span className="block text-sm font-black text-slate-900">Cash on collection</span>
@@ -1290,7 +1290,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 />
               </label>
             </div>
-            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
+            <div className="mx-auto w-full rounded-[22px] border border-emerald-300 bg-emerald-100/70 p-4">
               <label className="flex items-start justify-between gap-4">
                 <span>
                   <span className="block text-sm font-black text-slate-900">Cash on delivery</span>
@@ -1321,7 +1321,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               badge={stripeCredentialReady ? "credentials saved" : "not configured"}
               tone={stripeCredentialReady ? "ready" : "idle"}
             >
-              <div className="rounded-[20px] border border-indigo-100 bg-white p-4 text-sm">
+              <div className="space-y-4 text-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Stripe customer payments</p>
@@ -1400,7 +1400,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               badge={form.enableYocoCustomerPayments ? form.yocoConnectionStatus : "not configured"}
               tone={yocoReadyForCheckout ? "ready" : yocoCredentialReady ? "warning" : "idle"}
             >
-              <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/60 p-4">
+              <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Yoco customer payments</p>
@@ -1510,7 +1510,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               badge={mpesaReadyForCheckout ? "checkout visible" : form.enableMpesaCustomerPayments ? form.mpesaConnectionStatus : "not configured"}
               tone={mpesaReadyForCheckout ? "ready" : form.enableMpesaCustomerPayments ? "warning" : "idle"}
             >
-              <div className="rounded-[20px] border border-emerald-100 bg-emerald-50/60 p-4 text-sm">
+              <div className="space-y-4 text-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-black text-slate-950">M-Pesa / Pesapal customer payments</p>
@@ -1679,7 +1679,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               badge={form.enableDarajaCustomerPayments ? form.darajaConnectionStatus : "not configured"}
               tone={darajaCredentialReady ? "ready" : form.enableDarajaCustomerPayments ? "warning" : "idle"}
             >
-              <div className="rounded-[20px] border border-sky-100 bg-sky-50/70 p-4">
+              <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-black text-slate-950">Direct M-Pesa / Safaricom Daraja foundation</p>
@@ -2248,19 +2248,19 @@ function PaymentGatewayCard({
       : "border-slate-200 bg-slate-50 text-slate-600";
 
   return (
-    <details className="group overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] transition open:border-orange-100">
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-4 outline-none transition hover:bg-orange-50/50 focus-visible:ring-2 focus-visible:ring-orange-300 [&::-webkit-details-marker]:hidden">
+    <details className="group mx-auto w-full overflow-hidden rounded-[22px] border border-emerald-300 bg-emerald-100/55 shadow-none transition open:border-emerald-400">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-3 text-left outline-none transition hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-300 sm:px-4 sm:py-4 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
-          <span className="mb-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Payment gateway</span>
+          <span className="mb-2 inline-flex rounded-full bg-emerald-200 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-900">Payment gateway</span>
           <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
           <span className="mt-1 block text-xs leading-5 text-slate-600">{description}</span>
         </span>
         <span className="flex shrink-0 flex-col items-end gap-2">
           <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${toneClass}`}>{badge}</span>
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-base font-black text-slate-500 transition group-open:rotate-45 group-open:border-orange-200 group-open:bg-orange-50 group-open:text-orange-800" aria-hidden="true">+</span>
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300 bg-white text-base font-black text-emerald-700 transition group-open:rotate-45 group-open:border-emerald-500 group-open:bg-emerald-50 group-open:text-emerald-900" aria-hidden="true">+</span>
         </span>
       </summary>
-      <div className="border-t border-slate-100 bg-slate-50/40 p-3 sm:p-4">
+      <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
         {children}
       </div>
     </details>
@@ -2291,9 +2291,9 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition open:border-orange-100`}
+      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-emerald-300 bg-emerald-50/60 shadow-none transition open:border-emerald-400`}
     >
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-4 outline-none transition hover:bg-orange-50/55 focus-visible:ring-2 focus-visible:ring-orange-300 sm:px-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition hover:bg-emerald-100/70 focus-visible:ring-2 focus-visible:ring-emerald-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
           <span className="mb-2 flex flex-wrap items-center gap-2">
             {meta ? <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${meta.accent}`}>{meta.group}</span> : null}
@@ -2304,9 +2304,9 @@ function Section({
           <span className="block text-base font-black text-slate-950 sm:text-lg">{title}</span>
           {meta ? <span className="mt-1.5 block text-xs leading-5 text-slate-600 sm:text-sm">{meta.help}</span> : null}
         </span>
-        <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-black text-slate-500 shadow-sm transition group-open:rotate-45 group-open:border-orange-200 group-open:bg-orange-50 group-open:text-orange-800" aria-hidden="true">+</span>
+        <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-white text-lg font-black text-emerald-700 shadow-sm transition group-open:rotate-45 group-open:border-emerald-500 group-open:bg-emerald-50 group-open:text-emerald-900" aria-hidden="true">+</span>
       </summary>
-      <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+      <div className="px-3 pb-4 sm:px-5 sm:pb-5">
         {children}
         {showSave ? (
           <div className="mt-4 flex justify-end pt-1">
