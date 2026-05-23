@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getTenantBySlug, resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { applyCustomerSession, getCustomerByEmail, normalizeCustomerEmail, verifyCustomerPassword } from "@/lib/customer-auth";
+import { getTenantSettings } from "@/lib/tenant-settings";
+import { getCustomerRewardSummary } from "@/lib/rewards";
 
 export async function POST(req: Request) {
   const tenantSlug = resolveTenantSlugFromRequest(req);
@@ -19,9 +21,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 
+  const settings = await getTenantSettings(tenant.id);
+  const rewards = await getCustomerRewardSummary({ tenantId: tenant.id, customerAccountId: user.id, settings });
+
   const response = NextResponse.json({
     ok: true,
-    customer: { id: user.id, email: user.email, fullName: user.full_name, phone: user.phone },
+    customer: { id: user.id, email: user.email, fullName: user.full_name, phone: user.phone, rewards },
   });
   return applyCustomerSession(response, user);
 }

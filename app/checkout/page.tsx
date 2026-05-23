@@ -27,6 +27,19 @@ type TenantTrialState = {
   trialDaysRemaining?: number | null;
 };
 
+type CustomerRewardSummary = {
+  enabled: boolean;
+  programName: string;
+  tier: "silver" | "gold" | "platinum";
+  tierLabel: string;
+  discountPercent: number;
+  qualifyingSpend: number;
+  nextTier: "silver" | "gold" | "platinum" | null;
+  nextTierLabel: string | null;
+  spendToNextTier: number;
+  progressPercent: number;
+};
+
 type TenantViewSettings = MoneyFormatSettings & {
   currencyCode?: string;
   currencySymbol?: string;
@@ -58,6 +71,8 @@ type TenantViewSettings = MoneyFormatSettings & {
   enableDarajaCustomerPayments?: boolean;
   darajaConnectionStatus?: string;
   darajaPaymentsLive?: boolean;
+  rewardsEnabled?: boolean;
+  rewardsProgramName?: string;
 };
 
 type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "mpesa" | "daraja";
@@ -95,6 +110,7 @@ type CustomerAccount = {
   addressLine2?: string | null;
   city?: string | null;
   postcode?: string | null;
+  rewards?: CustomerRewardSummary | null;
 };
 
 
@@ -307,6 +323,10 @@ useEffect(() => {
     () => cartRows.reduce((sum, row) => sum + row.lineTotal, 0),
     [cartRows]
   );
+  const rewardSummary = customerAccount?.rewards && customerAccount.rewards.enabled ? customerAccount.rewards : null;
+  const rewardDiscountPercent = Number(rewardSummary?.discountPercent || 0);
+  const rewardDiscountAmount = useMemo(() => Math.min(total, Math.round(total * rewardDiscountPercent) / 100), [total, rewardDiscountPercent]);
+  const totalAfterRewards = Math.max(0, Math.round((total - rewardDiscountAmount) * 100) / 100);
 
   const checkoutPrimary = tenantSettings.primaryColor || "#7B1E22";
   const checkoutAccent = tenantSettings.accentColor || "#C7922F";
@@ -500,7 +520,7 @@ useEffect(() => {
         orderType,
         customerAddress: customerAddress.trim(),
         notes: notes.trim(),
-        total,
+        total: totalAfterRewards,
         itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
         paymentMethodLabel: data.paymentMethodLabel || selectedPaymentOption.label,
         paymentStatus: data.paymentStatus || "pay_on_fulfilment",
@@ -711,6 +731,7 @@ useEffect(() => {
                 <div>
                   <p className="font-semibold">Signed in as {customerAccount.fullName || customerAccount.email}</p>
                   <p className="mt-1 text-emerald-800">Saved profile details have been prefilled where available, and this order will be linked to your account.</p>
+                  {rewardSummary ? <p className="mt-1 text-xs font-bold text-emerald-900">{rewardSummary.tierLabel} rewards: {rewardSummary.discountPercent}% off eligible orders.</p> : null}
                 </div>
                 <button
                   type="button"
@@ -868,9 +889,23 @@ useEffect(() => {
                 </div>
               ))}
 
-              <div className="flex items-center justify-between border-t pt-4 font-semibold">
-                <span>Total</span>
-                <span>{formatMoney(total, tenantSettings)}</span>
+              <div className="space-y-2 border-t pt-4 text-sm">
+                <div className="flex items-center justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatMoney(total, tenantSettings)}</span>
+                </div>
+                {rewardSummary && rewardDiscountAmount > 0 ? (
+                  <div className="flex items-center justify-between text-emerald-700">
+                    <span>{rewardSummary.tierLabel} rewards discount</span>
+                    <span>-{formatMoney(rewardDiscountAmount, tenantSettings)}</span>
+                  </div>
+                ) : rewardSummary ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">{rewardSummary.tierLabel} rewards member. Keep ordering to unlock higher tier discounts.</div>
+                ) : null}
+                <div className="flex items-center justify-between pt-2 text-base font-semibold">
+                  <span>Total</span>
+                  <span>{formatMoney(totalAfterRewards, tenantSettings)}</span>
+                </div>
               </div>
             </div>
           )}

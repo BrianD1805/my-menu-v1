@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getTenantBySlug, resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { applyCustomerSession, getCustomerByEmail, hashCustomerPassword, normalizeCustomerEmail } from "@/lib/customer-auth";
+import { getTenantSettings } from "@/lib/tenant-settings";
+import { getCustomerRewardSummary } from "@/lib/rewards";
 
 export async function POST(req: Request) {
   const tenantSlug = resolveTenantSlugFromRequest(req);
@@ -39,6 +41,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error?.message || "Could not create customer account." }, { status: 500 });
   }
 
-  const response = NextResponse.json({ ok: true, customer: { id: data.id, email: data.email, fullName: data.full_name } });
+  const settings = await getTenantSettings(tenant.id);
+  const rewards = await getCustomerRewardSummary({ tenantId: tenant.id, customerAccountId: data.id, settings });
+  const response = NextResponse.json({ ok: true, customer: { id: data.id, email: data.email, fullName: data.full_name, rewards } });
   return applyCustomerSession(response, data);
 }

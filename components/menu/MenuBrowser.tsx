@@ -130,6 +130,19 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
   );
 }
 
+type CustomerRewardSummary = {
+  enabled: boolean;
+  programName: string;
+  tier: "silver" | "gold" | "platinum";
+  tierLabel: string;
+  discountPercent: number;
+  qualifyingSpend: number;
+  nextTier: "silver" | "gold" | "platinum" | null;
+  nextTierLabel: string | null;
+  spendToNextTier: number;
+  progressPercent: number;
+};
+
 type FlyingCartItem = {
   id: string;
   name: string;
@@ -205,6 +218,18 @@ function WebsiteIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a13.7 13.7 0 0 1 0 18" /><path d="M12 3a13.7 13.7 0 0 0 0 18" /></svg>;
 }
 
+function RewardInfoRow({ name, spend, discount }: { name: string; spend: string; discount: number }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+      <span>
+        <span className="block font-black text-slate-950">{name}</span>
+        <span className="mt-0.5 block text-xs text-slate-500">{spend}</span>
+      </span>
+      <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-black text-white">{discount}% off</span>
+    </div>
+  );
+}
+
 export default function MenuBrowser({
   tenantSlug,
   tenantId,
@@ -245,6 +270,13 @@ export default function MenuBrowser({
   currencySuffix,
   storefrontTheme,
   trialState,
+  rewardsEnabled,
+  rewardsProgramName,
+  rewardsSilverDiscountPercent,
+  rewardsGoldMinSpend,
+  rewardsGoldDiscountPercent,
+  rewardsPlatinumMinSpend,
+  rewardsPlatinumDiscountPercent,
   initialProductId,
 }: {
   tenantSlug: string;
@@ -286,6 +318,13 @@ export default function MenuBrowser({
   currencySuffix?: string | null;
   storefrontTheme?: StorefrontTheme | null;
   trialState?: { checkoutBlocked?: boolean; isTrialExpired?: boolean; customerMessage?: string | null } | null;
+  rewardsEnabled?: boolean | null;
+  rewardsProgramName?: string | null;
+  rewardsSilverDiscountPercent?: number | null;
+  rewardsGoldMinSpend?: number | null;
+  rewardsGoldDiscountPercent?: number | null;
+  rewardsPlatinumMinSpend?: number | null;
+  rewardsPlatinumDiscountPercent?: number | null;
   initialProductId?: string | null;
 }) {
   const moneySettings = buildMoneySettings({
@@ -320,6 +359,8 @@ export default function MenuBrowser({
   const [cartPulseKey, setCartPulseKey] = useState(0);
   const [flyingItems, setFlyingItems] = useState<FlyingCartItem[]>([]);
   const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(null);
+  const [customerRewards, setCustomerRewards] = useState<CustomerRewardSummary | null>(null);
+  const [rewardsModalOpen, setRewardsModalOpen] = useState(false);
   const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
   const [favouritesReady, setFavouritesReady] = useState(false);
   const [favouritesSignedIn, setFavouritesSignedIn] = useState(false);
@@ -371,6 +412,13 @@ export default function MenuBrowser({
   ].filter((item) => Boolean(item.href)).slice(0, 8);
   const referralSignupHref = `https://www.orduva.com/?ref_tenant=${encodeURIComponent(tenantSlug)}&ref=${encodeURIComponent(`tenant_${tenantSlug}`)}&ref_source=storefront_footer`;
   const affiliateApplicationHref = `https://www.orduva.com/affiliate/apply?ref_tenant=${encodeURIComponent(tenantSlug)}&ref_source=storefront_footer_affiliate`;
+  const storefrontRewardsEnabled = rewardsEnabled === true;
+  const rewardProgrammeName = String(rewardsProgramName || "Rewards Club").trim() || "Rewards Club";
+  const rewardTier = customerRewards?.tierLabel || "Silver";
+  const rewardDiscount = Number(customerRewards?.discountPercent || (rewardTier === "Platinum" ? rewardsPlatinumDiscountPercent : rewardTier === "Gold" ? rewardsGoldDiscountPercent : rewardsSilverDiscountPercent) || 0);
+  const rewardSpendToNext = Number(customerRewards?.spendToNextTier || 0);
+  const rewardNextTier = customerRewards?.nextTierLabel || null;
+  const rewardProgress = Math.max(0, Math.min(100, Number(customerRewards?.progressPercent || 0)));
 
   const refreshCustomerSession = useCallback(async (options?: { initial?: boolean }) => {
     const fetchCustomer = async (timeoutMs: number) => {
@@ -392,6 +440,7 @@ export default function MenuBrowser({
 
     const applySignedOut = () => {
       setWelcomeCustomerName(null);
+      setCustomerRewards(null);
       setCustomerAuthStatus("signedOut");
       setFavouritesSignedIn(false);
       setFavouriteIds([]);
@@ -416,6 +465,7 @@ export default function MenuBrowser({
         const email = String(data.customer.email || "").trim();
         const firstName = fullName.split(/\s+/).filter(Boolean)[0] || email.split("@")[0] || null;
         setWelcomeCustomerName(firstName);
+        setCustomerRewards(data.customer.rewards || null);
         setCustomerAuthStatus("signedIn");
         setFavouritesSignedIn(true);
       } else {
@@ -864,6 +914,20 @@ export default function MenuBrowser({
         <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7 lg:mx-auto" style={{ color: welcomeBody }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
+        {storefrontRewardsEnabled ? (
+          <div className="mt-3 flex justify-start lg:justify-center">
+            <button
+              type="button"
+              onClick={() => setRewardsModalOpen(true)}
+              className="inline-flex max-w-full items-center gap-2 rounded-full border bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+              style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm text-white shadow-sm" style={{ backgroundColor: brandAccent }} aria-hidden="true">✦</span>
+              <span>{customerAuthStatus === "signedIn" ? `${rewardTier} rewards` : rewardProgrammeName}</span>
+              {customerAuthStatus === "signedIn" && rewardDiscount > 0 ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-800">{rewardDiscount}% off</span> : null}
+            </button>
+          </div>
+        ) : null}
         <div className="mt-3 flex flex-col items-start gap-2 lg:items-center">
           {showFavouriteLoadingNote ? (
             <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
@@ -915,6 +979,44 @@ export default function MenuBrowser({
           ) : null}
         </div>
       </section>
+
+      {rewardsModalOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-end bg-slate-950/55 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6" onClick={() => setRewardsModalOpen(false)}>
+          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]" onClick={(event) => event.stopPropagation()}>
+            <div className="relative overflow-hidden px-5 py-5 text-white" style={{ background: `linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%)` }}>
+              <button type="button" onClick={() => setRewardsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close rewards">×</button>
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">✦</div>
+              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">{rewardProgrammeName}</p>
+              <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
+              <p className="mt-2 text-sm leading-6 text-white/88">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
+            </div>
+            <div className="overflow-y-auto px-5 pb-6 pt-5">
+              {customerAuthStatus === "signedIn" && customerRewards ? (
+                <>
+                  <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+                    <div className="flex items-center justify-between gap-4">
+                      <span>Qualifying spend</span>
+                      <strong>{formatMoney(customerRewards.qualifyingSpend, moneySettings)}</strong>
+                    </div>
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+                      <div className="h-full rounded-full" style={{ width: `${rewardProgress}%`, backgroundColor: brandAccent }} />
+                    </div>
+                    <p className="mt-3 text-xs leading-5">{rewardNextTier ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.` : "You have reached the top tier. Very civilised indeed."}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">Sign in or create an account to track your spend, unlock tier discounts, and keep favourites and buy-again items handy.</div>
+              )}
+              <div className="mt-4 grid gap-3">
+                <RewardInfoRow name="Silver" spend="Automatic" discount={Number(rewardsSilverDiscountPercent || 0)} />
+                <RewardInfoRow name="Gold" spend={`${formatMoney(Number(rewardsGoldMinSpend || 1000), moneySettings)} spend`} discount={Number(rewardsGoldDiscountPercent || 5)} />
+                <RewardInfoRow name="Platinum" spend={`${formatMoney(Number(rewardsPlatinumMinSpend || 2500), moneySettings)} spend`} discount={Number(rewardsPlatinumDiscountPercent || 10)} />
+              </div>
+              <button type="button" onClick={() => setRewardsModalOpen(false)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white">Close</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {shouldRenderFavouritesArea ? (
         <section id="customer-favourites-section" className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Favourite products">

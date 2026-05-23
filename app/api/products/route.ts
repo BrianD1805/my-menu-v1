@@ -134,6 +134,13 @@ export async function GET(req: Request) {
       enableDarajaCustomerPayments: settings?.enable_daraja_customer_payments === true,
       darajaConnectionStatus: settings?.daraja_connection_status || "not_configured",
       darajaPaymentsLive: settings?.daraja_payments_live === true,
+      rewardsEnabled: settings?.rewards_enabled === true,
+      rewardsProgramName: settings?.rewards_program_name || "Rewards Club",
+      rewardsSilverDiscountPercent: Number(settings?.rewards_silver_discount_percent || 0),
+      rewardsGoldMinSpend: Number(settings?.rewards_gold_min_spend || 1000),
+      rewardsGoldDiscountPercent: Number(settings?.rewards_gold_discount_percent || 5),
+      rewardsPlatinumMinSpend: Number(settings?.rewards_platinum_min_spend || 2500),
+      rewardsPlatinumDiscountPercent: Number(settings?.rewards_platinum_discount_percent || 10),
     },
   };
 

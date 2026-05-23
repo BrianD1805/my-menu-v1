@@ -18,6 +18,15 @@ export type TenantYocoCustomerSettings = {
   yoco_customer_payments_live: boolean | null;
 };
 
+type RewardOrderMetadata = {
+  reward_tier: string | null;
+  reward_discount_percent: number;
+  reward_discount_amount: number;
+  subtotal_total: number;
+  rewards_spend_before: number | null;
+  rewards_spend_after: number | null;
+};
+
 type PendingOrderPayload = {
   tenantSlug: string;
   tenantName: string;
@@ -31,6 +40,7 @@ type PendingOrderPayload = {
   currencyCode: string;
   paymentProvider: "yoco";
   paymentMethodLabel: string;
+  rewards?: RewardOrderMetadata | null;
   items: Array<{
     product_id: string;
     product_name: string;
@@ -129,6 +139,7 @@ export async function createTenantYocoOrderCheckoutIntent(input: {
   total: number;
   currencyCode: string;
   paymentMethodLabel: string;
+  rewards?: RewardOrderMetadata | null;
 }) {
   const currencyCode = String(input.currencyCode || "ZAR").toUpperCase();
   const yocoSettings = await loadTenantYocoCustomerSettings(input.tenantId);
@@ -147,6 +158,7 @@ export async function createTenantYocoOrderCheckoutIntent(input: {
     currencyCode,
     paymentProvider: "yoco",
     paymentMethodLabel: input.paymentMethodLabel,
+    rewards: input.rewards || null,
     items: input.items,
   };
 
@@ -331,6 +343,12 @@ export async function createPaidOrderFromYocoIntent(input: {
       order_type: payload.orderType,
       status: "new",
       total: payload.total,
+      subtotal_total: payload.rewards?.subtotal_total ?? payload.total,
+      reward_tier: payload.rewards?.reward_tier ?? null,
+      reward_discount_percent: payload.rewards?.reward_discount_percent ?? 0,
+      reward_discount_amount: payload.rewards?.reward_discount_amount ?? 0,
+      rewards_spend_before: payload.rewards?.rewards_spend_before ?? null,
+      rewards_spend_after: payload.rewards?.rewards_spend_after ?? null,
       notes: payload.notes || null,
       payment_provider: "yoco",
       payment_method_label: payload.paymentMethodLabel || "Yoco card payment",

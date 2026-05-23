@@ -166,6 +166,13 @@ export default async function AdminSettingsPage() {
           darajaAccountLabel: settings?.daraja_account_label || "",
           darajaSetupNotes: settings?.daraja_setup_notes || "",
           darajaPaymentsLive: settings?.daraja_payments_live === true,
+          rewardsEnabled: settings?.rewards_enabled === true,
+          rewardsProgramName: settings?.rewards_program_name || "Rewards Club",
+          rewardsSilverDiscountPercent: String(settings?.rewards_silver_discount_percent ?? 0),
+          rewardsGoldMinSpend: String(settings?.rewards_gold_min_spend ?? 1000),
+          rewardsGoldDiscountPercent: String(settings?.rewards_gold_discount_percent ?? 5),
+          rewardsPlatinumMinSpend: String(settings?.rewards_platinum_min_spend ?? 2500),
+          rewardsPlatinumDiscountPercent: String(settings?.rewards_platinum_discount_percent ?? 10),
         }}
       />
     </AdminShell>

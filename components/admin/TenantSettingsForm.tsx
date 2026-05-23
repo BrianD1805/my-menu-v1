@@ -99,6 +99,13 @@ type FormState = {
   darajaAccountLabel: string;
   darajaSetupNotes: string;
   darajaPaymentsLive: boolean;
+  rewardsEnabled: boolean;
+  rewardsProgramName: string;
+  rewardsSilverDiscountPercent: string;
+  rewardsGoldMinSpend: string;
+  rewardsGoldDiscountPercent: string;
+  rewardsPlatinumMinSpend: string;
+  rewardsPlatinumDiscountPercent: string;
 };
 
 
@@ -561,6 +568,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const contactDirty = formValueChanged(["contactPhone", "contactWhatsApp", "contactEmail", "contactAddress", "footerBlurb", "footerNotice", "showOrduvaReferralAd", "socialFacebookUrl", "socialInstagramUrl", "socialTikTokUrl", "socialXUrl", "socialWebsiteUrl"]);
   const adminWorkspaceDirty = formValueChanged(["showAdminLaunchChecklist"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
+  const rewardsDirty = formValueChanged(["rewardsEnabled", "rewardsProgramName", "rewardsSilverDiscountPercent", "rewardsGoldMinSpend", "rewardsGoldDiscountPercent", "rewardsPlatinumMinSpend", "rewardsPlatinumDiscountPercent"]);
   const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive", "enableDarajaCustomerPayments", "darajaConnectionStatus", "darajaCustomerMode", "darajaConsumerKey", "darajaConsumerSecretInput", "darajaShortcode", "darajaPasskeyInput", "darajaTransactionType", "darajaAccountReferencePrefix", "darajaCallbackUrl", "darajaAccountLabel", "darajaSetupNotes", "darajaPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
@@ -579,7 +587,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const darajaUsesSandboxShortcode = form.darajaShortcode.trim() === "174379";
   const darajaLiveReadinessOk = Boolean(darajaCurrencyAllowed && darajaCredentialReady && (!darajaModeLive || !darajaUsesSandboxShortcode));
   const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || adminWorkspaceDirty;
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -1270,6 +1278,41 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <div className="md:col-span-2"><Field label="Website URL"><input value={form.socialWebsiteUrl} onChange={(e) => update("socialWebsiteUrl", e.target.value)} className="input" placeholder="https://example.com" /></Field></div>
             </div>
           </div>
+        </Section>
+
+
+        <Section id="customer-rewards-program" title="Customer rewards programme" dirty={rewardsDirty} saving={saving}>
+          <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-950">
+            <p className="font-black text-slate-950">Premium loyalty tiers for signed-in customers</p>
+            <p className="mt-1 text-xs leading-5 text-emerald-900">Every customer account is automatically enrolled when this is switched on. Their tier is calculated from their previous qualifying spend with this store. The tier discount is applied before future discount codes are added in a later build.</p>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2 rounded-[22px] border border-slate-200 bg-white p-4">
+              <label className="flex items-start justify-between gap-4">
+                <span>
+                  <span className="block text-sm font-black text-slate-900">Enable rewards programme</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">Shows a compact rewards icon on the customer welcome panel and applies the customer tier discount at checkout when signed in.</span>
+                </span>
+                <input type="checkbox" checked={form.rewardsEnabled} onChange={(e) => update("rewardsEnabled", e.target.checked)} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" />
+              </label>
+            </div>
+
+            <Field label="Programme name"><input value={form.rewardsProgramName} onChange={(e) => update("rewardsProgramName", e.target.value)} className="input" placeholder="Rewards Club" /></Field>
+            <Field label="Silver discount %"><input type="number" min={0} max={95} step="0.1" value={form.rewardsSilverDiscountPercent} onChange={(e) => update("rewardsSilverDiscountPercent", e.target.value)} className="input" /></Field>
+            <Field label="Gold spend requirement"><input type="number" min={0} step="1" value={form.rewardsGoldMinSpend} onChange={(e) => update("rewardsGoldMinSpend", e.target.value)} className="input" /></Field>
+            <Field label="Gold discount %"><input type="number" min={0} max={95} step="0.1" value={form.rewardsGoldDiscountPercent} onChange={(e) => update("rewardsGoldDiscountPercent", e.target.value)} className="input" /></Field>
+            <Field label="Platinum spend requirement"><input type="number" min={0} step="1" value={form.rewardsPlatinumMinSpend} onChange={(e) => update("rewardsPlatinumMinSpend", e.target.value)} className="input" /></Field>
+            <Field label="Platinum discount %"><input type="number" min={0} max={95} step="0.1" value={form.rewardsPlatinumDiscountPercent} onChange={(e) => update("rewardsPlatinumDiscountPercent", e.target.value)} className="input" /></Field>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <RewardTierPreview name="Silver" spend="Automatic" discount={form.rewardsSilverDiscountPercent || "0"} tone="silver" />
+            <RewardTierPreview name="Gold" spend={`${form.rewardsGoldMinSpend || "0"}+`} discount={form.rewardsGoldDiscountPercent || "0"} tone="gold" />
+            <RewardTierPreview name="Platinum" spend={`${form.rewardsPlatinumMinSpend || "0"}+`} discount={form.rewardsPlatinumDiscountPercent || "0"} tone="platinum" />
+          </div>
+
+          <p className="mt-4 text-xs leading-5 text-slate-500">Discount codes will be added in a later build. This rewards discount is kept separate so future promo codes can be applied cleanly on top of, or after, the tier calculation.</p>
         </Section>
 
 
@@ -2051,6 +2094,7 @@ const SETTINGS_MENU_ITEMS = [
   { id: "theme-presets", group: "Theme", title: "Theme presets", help: "Choose a ready-made colour starting point." },
   { id: "per-item-storefront-colours", group: "Theme", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
   { id: "business-contact-details", group: "Contact", title: "Business contact details", help: "Phone, email, address, footer and social links." },
+  { id: "customer-rewards-program", group: "Rewards", title: "Customer rewards programme", help: "Silver, Gold and Platinum spend tiers with percentage discounts." },
   { id: "storefront-payment-options", group: "Payments", title: "Storefront payment options", help: "Cash, COD, Stripe, Yoco and future provider setup." },
   { id: "advanced-currency-display", group: "Payments", title: "Advanced currency display", help: "Currency name, symbol, suffix, separators and sample pricing." },
 ];
@@ -2062,6 +2106,7 @@ const SETTINGS_SECTION_META: Record<string, { group: string; help: string; accen
   "theme-presets": { group: "Theme", help: "Start with a palette before fine-tuning individual storefront areas.", accent: "bg-indigo-100 text-indigo-800" },
   "per-item-storefront-colours": { group: "Theme", help: "Detailed colour controls are tucked away until needed, especially on mobile.", accent: "bg-indigo-100 text-indigo-800" },
   "business-contact-details": { group: "Contact", help: "Footer wording, contact details, referral advert and social links.", accent: "bg-emerald-100 text-emerald-800" },
+  "customer-rewards-program": { group: "Rewards", help: "Customer loyalty tiers, thresholds and percentage discounts.", accent: "bg-purple-100 text-purple-900" },
   "storefront-payment-options": { group: "Payments", help: "Cash, COD, Stripe and Yoco controls. Payment behaviour is unchanged.", accent: "bg-amber-100 text-amber-900" },
   "advanced-currency-display": { group: "Payments", help: "Currency display formatting, including optional tenant-specific suffix.", accent: "bg-amber-100 text-amber-900" },
 };
@@ -2227,6 +2272,25 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+
+
+function RewardTierPreview({ name, spend, discount, tone }: { name: string; spend: string; discount: string; tone: "silver" | "gold" | "platinum" }) {
+  const toneClass = tone === "platinum"
+    ? "border-slate-300 bg-slate-950 text-white"
+    : tone === "gold"
+      ? "border-amber-300 bg-amber-50 text-amber-950"
+      : "border-slate-200 bg-slate-50 text-slate-900";
+  return (
+    <div className={`rounded-[22px] border p-4 ${toneClass}`}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-lg" aria-hidden="true">{tone === "platinum" ? "✦" : tone === "gold" ? "★" : "◇"}</span>
+        <span className="rounded-full border border-white/40 bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em]">{discount || "0"}% off</span>
+      </div>
+      <p className="mt-3 text-base font-black">{name}</p>
+      <p className="mt-1 text-xs leading-5 opacity-80">Spend {spend} to qualify.</p>
+    </div>
+  );
+}
 
 function PaymentGatewayCard({
   title,

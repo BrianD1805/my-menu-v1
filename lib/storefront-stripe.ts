@@ -24,6 +24,15 @@ type StripeEvent = {
   data?: { object?: Record<string, any> };
 };
 
+type RewardOrderMetadata = {
+  reward_tier: string | null;
+  reward_discount_percent: number;
+  reward_discount_amount: number;
+  subtotal_total: number;
+  rewards_spend_before: number | null;
+  rewards_spend_after: number | null;
+};
+
 type PendingOrderPayload = {
   tenantSlug: string;
   tenantName: string;
@@ -37,6 +46,7 @@ type PendingOrderPayload = {
   currencyCode: string;
   paymentProvider: "stripe";
   paymentMethodLabel: string;
+  rewards?: RewardOrderMetadata | null;
   items: Array<{
     product_id: string;
     product_name: string;
@@ -106,6 +116,7 @@ export async function createTenantStripeOrderCheckoutIntent(input: {
   total: number;
   currencyCode: string;
   paymentMethodLabel: string;
+  rewards?: RewardOrderMetadata | null;
 }) {
   const stripeSettings = await loadTenantStripeCustomerSettings(input.tenantId);
   assertTenantStripeReady(stripeSettings);
@@ -123,6 +134,7 @@ export async function createTenantStripeOrderCheckoutIntent(input: {
     currencyCode: input.currencyCode,
     paymentProvider: "stripe",
     paymentMethodLabel: input.paymentMethodLabel,
+    rewards: input.rewards || null,
     items: input.items,
   };
 
@@ -385,6 +397,12 @@ async function createPaidOrderFromIntent(input: {
       order_type: payload.orderType,
       status: "new",
       total: payload.total,
+      subtotal_total: payload.rewards?.subtotal_total ?? payload.total,
+      reward_tier: payload.rewards?.reward_tier ?? null,
+      reward_discount_percent: payload.rewards?.reward_discount_percent ?? 0,
+      reward_discount_amount: payload.rewards?.reward_discount_amount ?? 0,
+      rewards_spend_before: payload.rewards?.rewards_spend_before ?? null,
+      rewards_spend_after: payload.rewards?.rewards_spend_after ?? null,
       notes: payload.notes || null,
       payment_provider: "stripe",
       payment_method_label: payload.paymentMethodLabel || "Stripe card payment",

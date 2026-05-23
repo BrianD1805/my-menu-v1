@@ -113,4 +113,12 @@ export type TenantSettings = {
   daraja_account_label?: string | null;
   daraja_setup_notes?: string | null;
   daraja_payments_live?: boolean | null;
+  rewards_enabled?: boolean | null;
+  rewards_program_name?: string | null;
+  rewards_silver_min_spend?: number | null;
+  rewards_silver_discount_percent?: number | null;
+  rewards_gold_min_spend?: number | null;
+  rewards_gold_discount_percent?: number | null;
+  rewards_platinum_min_spend?: number | null;
+  rewards_platinum_discount_percent?: number | null;
 };

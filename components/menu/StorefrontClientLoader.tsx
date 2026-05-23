@@ -41,6 +41,13 @@ type StorefrontSettings = {
   currencySuffix: string;
   storefrontTheme: StorefrontTheme | null;
   trialState?: { checkoutBlocked?: boolean; isTrialExpired?: boolean; customerMessage?: string | null; trialEndsAt?: string | null } | null;
+  rewardsEnabled?: boolean | null;
+  rewardsProgramName?: string | null;
+  rewardsSilverDiscountPercent?: number | null;
+  rewardsGoldMinSpend?: number | null;
+  rewardsGoldDiscountPercent?: number | null;
+  rewardsPlatinumMinSpend?: number | null;
+  rewardsPlatinumDiscountPercent?: number | null;
 };
 
 type StorefrontPayload = {
@@ -54,7 +61,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-209";
+const STOREFRONT_CACHE_VERSION = "ver-0-219";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -257,6 +264,13 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
         currencySuffix={settings.currencySuffix}
         storefrontTheme={settings.storefrontTheme}
         trialState={settings.trialState}
+        rewardsEnabled={settings.rewardsEnabled === true}
+        rewardsProgramName={settings.rewardsProgramName}
+        rewardsSilverDiscountPercent={settings.rewardsSilverDiscountPercent}
+        rewardsGoldMinSpend={settings.rewardsGoldMinSpend}
+        rewardsGoldDiscountPercent={settings.rewardsGoldDiscountPercent}
+        rewardsPlatinumMinSpend={settings.rewardsPlatinumMinSpend}
+        rewardsPlatinumDiscountPercent={settings.rewardsPlatinumDiscountPercent}
         initialProductId={initialProductId}
       />
     </main>

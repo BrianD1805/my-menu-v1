@@ -12,6 +12,7 @@ import { createTenantStripeOrderCheckoutIntent } from "@/lib/storefront-stripe";
 import { createTenantYocoOrderCheckoutIntent } from "@/lib/storefront-yoco";
 import { createTenantPesapalOrderCheckoutIntent } from "@/lib/storefront-pesapal";
 import { createTenantDarajaStkPushIntent } from "@/lib/storefront-daraja";
+import { calculateRewardDiscount, getCustomerRewardSummary } from "@/lib/rewards";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
       }
     }
 
-    let total = 0;
+    let subtotal = 0;
 
     const orderItems = body.items.map((item) => {
       const product = products.find((p) => p.id === item.productId);
@@ -122,7 +123,7 @@ export async function POST(req: Request) {
 
       const unitPrice = Number(product.price);
       const lineTotal = unitPrice * item.quantity;
-      total += lineTotal;
+      subtotal += lineTotal;
 
       return {
         product_id: product.id,
@@ -134,6 +135,27 @@ export async function POST(req: Request) {
     });
 
     const settings = await getTenantSettings(tenant.id);
+    const customerAccountId = body.customerAccountId?.trim() || null;
+    const rewardSummary = await getCustomerRewardSummary({ tenantId: tenant.id, customerAccountId, settings });
+    const rewardDiscount = rewardSummary.enabled && customerAccountId ? calculateRewardDiscount(subtotal, rewardSummary.discountPercent) : calculateRewardDiscount(subtotal, 0);
+    const total = rewardDiscount.totalAfterDiscount;
+    const rewardMetadata = rewardSummary.enabled && customerAccountId
+      ? {
+          reward_tier: rewardSummary.tier,
+          reward_discount_percent: rewardDiscount.discountPercent,
+          reward_discount_amount: rewardDiscount.discountAmount,
+          subtotal_total: rewardDiscount.subtotal,
+          rewards_spend_before: rewardSummary.qualifyingSpend,
+          rewards_spend_after: Math.round((rewardSummary.qualifyingSpend + total) * 100) / 100,
+        }
+      : {
+          reward_tier: null,
+          reward_discount_percent: 0,
+          reward_discount_amount: 0,
+          subtotal_total: rewardDiscount.subtotal,
+          rewards_spend_before: null,
+          rewards_spend_after: null,
+        };
     const selectedPayment = getStorefrontPaymentOption(settings, body.orderType, body.paymentProvider);
 
     if (!selectedPayment) {
@@ -160,7 +182,7 @@ export async function POST(req: Request) {
           tenantName: branding.displayName,
           customerName: body.customerName.trim(),
           customerPhone: body.customerPhone.trim(),
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
@@ -168,13 +190,14 @@ export async function POST(req: Request) {
           total,
           currencyCode: branding.currencyCode || settings?.currency_code || "GBP",
           paymentMethodLabel: selectedPayment.label,
+          rewards: rewardMetadata,
         });
 
         return NextResponse.json({
           ok: true,
           orderId: null,
           checkoutId: checkoutIntent.checkoutId,
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
           paymentStatus: "checkout_started",
@@ -198,7 +221,7 @@ export async function POST(req: Request) {
           tenantName: branding.displayName,
           customerName: body.customerName.trim(),
           customerPhone: body.customerPhone.trim(),
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
@@ -206,13 +229,14 @@ export async function POST(req: Request) {
           total,
           currencyCode: branding.currencyCode || settings?.currency_code || "ZAR",
           paymentMethodLabel: selectedPayment.label,
+          rewards: rewardMetadata,
         });
 
         return NextResponse.json({
           ok: true,
           orderId: null,
           checkoutId: checkoutIntent.checkoutId,
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
           paymentStatus: "checkout_started",
@@ -237,7 +261,7 @@ export async function POST(req: Request) {
           tenantName: branding.displayName,
           customerName: body.customerName.trim(),
           customerPhone: body.customerPhone.trim(),
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
@@ -245,13 +269,14 @@ export async function POST(req: Request) {
           total,
           currencyCode: branding.currencyCode || settings?.currency_code || "KES",
           paymentMethodLabel: selectedPayment.label,
+          rewards: rewardMetadata,
         });
 
         return NextResponse.json({
           ok: true,
           orderId: null,
           checkoutId: checkoutIntent.checkoutId,
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
           paymentStatus: "checkout_started",
@@ -279,7 +304,7 @@ export async function POST(req: Request) {
           tenantName: branding.displayName,
           customerName: body.customerName.trim(),
           customerPhone: body.customerPhone.trim(),
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
@@ -287,13 +312,14 @@ export async function POST(req: Request) {
           total,
           currencyCode: branding.currencyCode || settings?.currency_code || "KES",
           paymentMethodLabel: selectedPayment.label,
+          rewards: rewardMetadata,
         });
 
         return NextResponse.json({
           ok: true,
           orderId: null,
           checkoutId: checkoutIntent.checkoutId,
-          customerAccountId: body.customerAccountId?.trim() || null,
+          customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
           paymentStatus: "checkout_started",
@@ -313,12 +339,18 @@ export async function POST(req: Request) {
         tenant_id: tenant.id,
         customer_name: body.customerName.trim(),
         customer_phone: body.customerPhone.trim(),
-        customer_account_id: body.customerAccountId?.trim() || null,
+        customer_account_id: customerAccountId,
         customer_address:
           body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
         order_type: body.orderType,
         status: "new",
         total,
+        subtotal_total: rewardMetadata.subtotal_total,
+        reward_tier: rewardMetadata.reward_tier,
+        reward_discount_percent: rewardMetadata.reward_discount_percent,
+        reward_discount_amount: rewardMetadata.reward_discount_amount,
+        rewards_spend_before: rewardMetadata.rewards_spend_before,
+        rewards_spend_after: rewardMetadata.rewards_spend_after,
         notes: body.notes?.trim() || null,
         payment_provider: selectedPayment.id,
         payment_method_label: selectedPayment.label,
@@ -350,8 +382,8 @@ export async function POST(req: Request) {
       host: req.headers.get("x-forwarded-host") || req.headers.get("host") || null,
       page_path: "/checkout",
       order_id: order.id,
-      anonymous_session_id: body.customerAccountId?.trim() || null,
-      metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, total },
+      anonymous_session_id: customerAccountId,
+      metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, subtotal, total, rewardTier: rewardMetadata.reward_tier, rewardDiscountAmount: rewardMetadata.reward_discount_amount },
     }).then(undefined, () => undefined);
 
     for (const item of body.items) {
@@ -421,10 +453,12 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       orderId: order.id,
-      customerAccountId: body.customerAccountId?.trim() || null,
+      customerAccountId,
       paymentProvider: selectedPayment.id,
       paymentMethodLabel: selectedPayment.label,
       paymentStatus: selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
+      total,
+      reward: rewardMetadata,
       stripeCheckoutUrl,
       stripeCheckoutSessionId,
     });
