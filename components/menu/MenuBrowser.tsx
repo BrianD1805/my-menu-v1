@@ -981,16 +981,16 @@ export default function MenuBrowser({
       </section>
 
       {rewardsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-end bg-slate-950/55 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6" onClick={() => setRewardsModalOpen(false)}>
-          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]" onClick={(event) => event.stopPropagation()}>
-            <div className="relative overflow-hidden px-5 py-5 text-white" style={{ background: `linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%)` }}>
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setRewardsModalOpen(false)}>
+          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%)` }}>
               <button type="button" onClick={() => setRewardsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close rewards">×</button>
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">✦</div>
               <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">{rewardProgrammeName}</p>
               <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
-              <p className="mt-2 text-sm leading-6 text-white/88">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
+              <p className="mt-2 rounded-2xl bg-white/10 px-3 py-2 text-sm leading-6 text-white/88 ring-1 ring-white/15 sm:bg-transparent sm:px-0 sm:py-0 sm:ring-0">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
             </div>
-            <div className="overflow-y-auto px-5 pb-6 pt-5">
+            <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
               {customerAuthStatus === "signedIn" && customerRewards ? (
                 <>
                   <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
