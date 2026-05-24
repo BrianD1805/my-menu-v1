@@ -219,15 +219,93 @@ function WebsiteIcon() {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a13.7 13.7 0 0 1 0 18" /><path d="M12 3a13.7 13.7 0 0 0 0 18" /></svg>;
 }
 
+function getRewardTierPalette(name: string) {
+  const key = String(name || "").toLowerCase();
+  if (key.includes("platinum")) {
+    return {
+      label: "Platinum",
+      background: "#F8FAFC",
+      border: "#CBD5E1",
+      text: "#0F172A",
+      badgeBackground: "#334155",
+      badgeText: "#F8FAFC",
+      gradientFrom: "#E2E8F0",
+      gradientTo: "#64748B",
+    };
+  }
+  if (key.includes("gold")) {
+    return {
+      label: "Gold",
+      background: "#FFFBEB",
+      border: "#F59E0B",
+      text: "#78350F",
+      badgeBackground: "#B45309",
+      badgeText: "#FFF7ED",
+      gradientFrom: "#FDE68A",
+      gradientTo: "#B45309",
+    };
+  }
+  return {
+    label: "Silver",
+    background: "#F8FAFC",
+    border: "#94A3B8",
+    text: "#334155",
+    badgeBackground: "#64748B",
+    badgeText: "#F8FAFC",
+    gradientFrom: "#F1F5F9",
+    gradientTo: "#94A3B8",
+  };
+}
+
 function RewardInfoRow({ name, spend, discount }: { name: string; spend: string; discount: number }) {
+  const palette = getRewardTierPalette(name);
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm" style={{ backgroundColor: palette.background, borderColor: palette.border, color: palette.text }}>
       <span>
-        <span className="block font-black text-slate-950">{name}</span>
-        <span className="mt-0.5 block text-xs text-slate-500">{spend}</span>
+        <span className="block font-black">{name}</span>
+        <span className="mt-0.5 block text-xs opacity-75">{spend}</span>
       </span>
-      <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-black text-white">{discount}% off</span>
+      <span className="rounded-full px-3 py-1 text-xs font-black" style={{ backgroundColor: palette.badgeBackground, color: palette.badgeText }}>{discount}% off</span>
     </div>
+  );
+}
+
+function StorefrontQuickActionButton({
+  label,
+  actionLabel,
+  icon,
+  onClick,
+  expanded,
+  controls,
+  borderColor,
+  textColor,
+  iconBackground,
+}: {
+  label: string;
+  actionLabel: string;
+  icon: ReactNode;
+  onClick: () => void;
+  expanded?: boolean;
+  controls?: string;
+  borderColor: string;
+  textColor: string;
+  iconBackground: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex min-w-[4.25rem] flex-1 flex-col items-center justify-center gap-1 rounded-[20px] border bg-white/82 px-2 py-2.5 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none sm:min-w-[5.25rem] sm:flex-none sm:px-3"
+      style={{ borderColor, color: textColor }}
+      aria-expanded={expanded}
+      aria-controls={controls}
+    >
+      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-sm transition group-hover:scale-[1.03]" style={{ backgroundColor: iconBackground }} aria-hidden="true">
+        {icon}
+      </span>
+      <span className="text-[10px] font-black uppercase leading-none tracking-[0.14em] sm:text-[11px]">{label}</span>
+      <span className="text-[9px] font-bold uppercase leading-none tracking-[0.12em] opacity-65">{actionLabel}</span>
+    </button>
   );
 }
 
@@ -441,6 +519,7 @@ export default function MenuBrowser({
     return () => window.clearTimeout(timer);
   }, [storefrontDiscountsEnabled, discountPopupEnabled, discountPopupSeen, popupDiscountRules.length]);
   const rewardTier = customerRewards?.tierLabel || "Silver";
+  const rewardTierPalette = getRewardTierPalette(rewardTier);
   const rewardDiscount = Number(customerRewards?.discountPercent || (rewardTier === "Platinum" ? rewardsPlatinumDiscountPercent : rewardTier === "Gold" ? rewardsGoldDiscountPercent : rewardsSilverDiscountPercent) || 0);
   const rewardSpendToNext = Number(customerRewards?.spendToNextTier || 0);
   const rewardNextTier = customerRewards?.nextTierLabel || null;
@@ -940,34 +1019,7 @@ export default function MenuBrowser({
         <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7 lg:mx-auto" style={{ color: welcomeBody }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
-        {storefrontRewardsEnabled ? (
-          <div className="mt-3 flex justify-start lg:justify-center">
-            <button
-              type="button"
-              onClick={() => setRewardsModalOpen(true)}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
-              style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
-            >
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm text-white shadow-sm" style={{ backgroundColor: brandAccent }} aria-hidden="true">✦</span>
-              <span>{customerAuthStatus === "signedIn" ? `${rewardTier} rewards` : rewardProgrammeName}</span>
-              {customerAuthStatus === "signedIn" && rewardDiscount > 0 ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-800">{rewardDiscount}% off</span> : null}
-            </button>
-          </div>
-        ) : null}
-        {storefrontDiscountsEnabled && visibleDiscountRules.length ? (
-          <div className="mt-3 flex justify-start lg:justify-center">
-            <button
-              type="button"
-              onClick={() => setDiscountsModalOpen(true)}
-              className="inline-flex max-w-full items-center gap-2 rounded-full border bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
-              style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
-            >
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm text-white shadow-sm" style={{ backgroundColor: brandPrimary }} aria-hidden="true">%</span>
-              <span>Offers available</span>
-            </button>
-          </div>
-        ) : null}
-        <div className="mt-3 flex flex-col items-start gap-2 lg:items-center">
+        <div className="mt-4 flex flex-col items-start gap-2 lg:items-center">
           {showFavouriteLoadingNote ? (
             <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -977,36 +1029,62 @@ export default function MenuBrowser({
             </p>
           ) : null}
 
-          {(canToggleFavourites || canToggleBuyAgain) ? (
-            <div className="flex flex-wrap items-center gap-2 lg:justify-center">
+          {(storefrontRewardsEnabled || (storefrontDiscountsEnabled && visibleDiscountRules.length) || canToggleFavourites || canToggleBuyAgain) ? (
+            <div className="flex w-full items-stretch gap-2 overflow-x-auto pb-1 sm:w-auto sm:flex-wrap sm:items-center sm:justify-center sm:overflow-visible sm:pb-0">
+              {storefrontRewardsEnabled ? (
+                <StorefrontQuickActionButton
+                  label="Rewards"
+                  actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
+                  icon={<span className="text-lg leading-none">✦</span>}
+                  onClick={() => setRewardsModalOpen(true)}
+                  borderColor={welcomeBorder}
+                  textColor={welcomeHeadingColor}
+                  iconBackground={rewardTierPalette.badgeBackground}
+                />
+              ) : null}
+
+              {storefrontDiscountsEnabled && visibleDiscountRules.length ? (
+                <StorefrontQuickActionButton
+                  label="Offers"
+                  actionLabel="View"
+                  icon={<span className="text-base font-black leading-none">%</span>}
+                  onClick={() => setDiscountsModalOpen(true)}
+                  borderColor={welcomeBorder}
+                  textColor={welcomeHeadingColor}
+                  iconBackground={brandPrimary}
+                />
+              ) : null}
+
               {canToggleFavourites ? (
-                <button
-                  type="button"
+                <StorefrontQuickActionButton
+                  label="Favourites"
+                  actionLabel={favouritesVisible ? "Hide" : "View"}
+                  icon={
+                    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
+                    </svg>
+                  }
                   onClick={() => setFavouritesVisible((visible) => !visible)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
-                  style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
-                  aria-expanded={favouritesVisible}
-                  aria-controls="customer-favourites-section"
-                >
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
-                  </svg>
-                  {favouritesVisible ? "Hide favourites" : "View favourites"}
-                </button>
+                  expanded={favouritesVisible}
+                  controls="customer-favourites-section"
+                  borderColor={welcomeBorder}
+                  textColor={welcomeHeadingColor}
+                  iconBackground={brandAccent}
+                />
               ) : null}
 
               {canToggleBuyAgain ? (
-                <button
-                  type="button"
+                <StorefrontQuickActionButton
+                  label="Buy again"
+                  actionLabel={buyAgainVisible ? "Hide" : "View"}
+                  icon={<span className="text-lg leading-none">↻</span>}
                   onClick={() => setBuyAgainVisible((visible) => !visible)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full border bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
-                  style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
-                  aria-expanded={buyAgainVisible}
-                  aria-controls="customer-buy-again-section"
-                >
-                  <span className="text-sm leading-none" aria-hidden="true">↻</span>
-                  {buyAgainVisible ? "Hide buy again" : "Buy again"}
-                </button>
+                  expanded={buyAgainVisible}
+                  controls="customer-buy-again-section"
+                  borderColor={welcomeBorder}
+                  textColor={welcomeHeadingColor}
+                  iconBackground={brandPrimary}
+                />
               ) : null}
             </div>
           ) : null}
@@ -1033,20 +1111,20 @@ export default function MenuBrowser({
             <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
               <div className="grid gap-3">
                 {visibleDiscountRules.map((rule) => (
-                  <div key={rule.id} className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+                  <div key={rule.id} className="rounded-[22px] border p-4 text-sm" style={{ borderColor: brandAccentBorder, backgroundColor: brandSurface, color: brandText }}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-black text-slate-950">{rule.name}</p>
-                        <p className="mt-1 text-xs leading-5 text-emerald-900">{rule.scope === "combo" ? "Bundle offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"}{rule.code ? ` · Code ${rule.code}` : " · Applies automatically when eligible"}</p>
+                        <p className="mt-1 text-xs leading-5" style={{ color: brandSoftText }}>{rule.scope === "combo" ? "Bundle offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"}{rule.code ? ` · Code ${rule.code}` : " · Applies automatically when eligible"}</p>
                       </div>
-                      <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-800">{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
+                      <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: "#FFFFFF", color: brandPrimary }}>{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
                     </div>
-                    {rule.popupMessage ? <p className="mt-3 text-xs leading-5 text-slate-600">{rule.popupMessage}</p> : null}
+                    {rule.popupMessage ? <p className="mt-3 text-xs leading-5" style={{ color: brandSoftText }}>{rule.popupMessage}</p> : null}
                   </div>
                 ))}
               </div>
-              <a href="/checkout" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white">Go to checkout</a>
-              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700">Keep browsing</button>
+              <a href="/checkout" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black text-white" style={{ backgroundColor: brandPrimary }}>Go to checkout</a>
+              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border bg-white px-5 py-3 text-sm font-black" style={{ borderColor: brandAccentBorder, color: brandPrimary }}>Keep browsing</button>
             </div>
           </div>
         </div>
@@ -1055,9 +1133,9 @@ export default function MenuBrowser({
       {rewardsModalOpen ? (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setRewardsModalOpen(false)}>
           <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandPrimary} 0%, ${brandAccent} 100%)` }}>
+            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${rewardTierPalette.gradientFrom} 0%, ${rewardTierPalette.gradientTo} 100%)` }}>
               <button type="button" onClick={() => setRewardsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close rewards">×</button>
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">✦</div>
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/22 text-3xl ring-1 ring-white/35" style={{ color: rewardTierPalette.badgeText }}>✦</div>
               <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">{rewardProgrammeName}</p>
               <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
               <p className="mt-2 rounded-2xl bg-white/10 px-3 py-2 text-sm leading-6 text-white/88 ring-1 ring-white/15 sm:bg-transparent sm:px-0 sm:py-0 sm:ring-0">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
@@ -1065,13 +1143,13 @@ export default function MenuBrowser({
             <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
               {customerAuthStatus === "signedIn" && customerRewards ? (
                 <>
-                  <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+                  <div className="rounded-[22px] border p-4 text-sm" style={{ borderColor: rewardTierPalette.border, backgroundColor: rewardTierPalette.background, color: rewardTierPalette.text }}>
                     <div className="flex items-center justify-between gap-4">
                       <span>Qualifying spend</span>
                       <strong>{formatMoney(customerRewards.qualifyingSpend, moneySettings)}</strong>
                     </div>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
-                      <div className="h-full rounded-full" style={{ width: `${rewardProgress}%`, backgroundColor: brandAccent }} />
+                      <div className="h-full rounded-full" style={{ width: `${rewardProgress}%`, background: `linear-gradient(90deg, ${rewardTierPalette.gradientFrom}, ${rewardTierPalette.gradientTo})` }} />
                     </div>
                     <p className="mt-3 text-xs leading-5">{rewardNextTier ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.` : "You have reached the top tier. Very civilised indeed."}</p>
                   </div>
@@ -1084,7 +1162,7 @@ export default function MenuBrowser({
                 <RewardInfoRow name="Gold" spend={`${formatMoney(Number(rewardsGoldMinSpend || 1000), moneySettings)} spend`} discount={Number(rewardsGoldDiscountPercent || 5)} />
                 <RewardInfoRow name="Platinum" spend={`${formatMoney(Number(rewardsPlatinumMinSpend || 2500), moneySettings)} spend`} discount={Number(rewardsPlatinumDiscountPercent || 10)} />
               </div>
-              <button type="button" onClick={() => setRewardsModalOpen(false)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white">Close</button>
+              <button type="button" onClick={() => setRewardsModalOpen(false)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black" style={{ backgroundColor: rewardTierPalette.badgeBackground, color: rewardTierPalette.badgeText }}>Close</button>
             </div>
           </div>
         </div>
