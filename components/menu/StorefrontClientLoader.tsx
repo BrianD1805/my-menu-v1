@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MenuBrowser from "@/components/menu/MenuBrowser";
 import type { Category, Product } from "@/lib/types";
 import type { StorefrontTheme } from "@/lib/storefront-theme";
@@ -66,7 +66,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-220";
+const STOREFRONT_CACHE_VERSION = "ver-0-220d";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -114,6 +114,7 @@ function StorefrontPreparingShell({ backgroundColor }: { backgroundColor: string
         </div>
         <p className="mt-5 text-[11px] font-black uppercase tracking-[0.24em] text-orange-700">Orduva</p>
         <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950">We&apos;re getting things ready.</h1>
+        <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Loading the menu, rewards and offers so the store opens smoothly.</p>
         <div className="mt-4 flex items-center justify-center gap-1.5" aria-label="Loading">
           <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.24s]" />
           <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.12s]" />
@@ -145,18 +146,19 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
   const [retryKey, setRetryKey] = useState(0);
   const trackedVisitKeyRef = useRef("");
 
-  useEffect(() => {
+  const hideEarlyPreloader = useCallback(() => {
     if (typeof window === "undefined") return;
-    if (!payload && !error) return;
-
-    const hideEarlyPreloader = (window as Window & { __ORDUVA_HIDE_EARLY_PRELOADER__?: () => void }).__ORDUVA_HIDE_EARLY_PRELOADER__;
-    if (typeof hideEarlyPreloader === "function") {
-      hideEarlyPreloader();
+    const hide = (window as Window & { __ORDUVA_HIDE_EARLY_PRELOADER__?: () => void }).__ORDUVA_HIDE_EARLY_PRELOADER__;
+    if (typeof hide === "function") {
+      hide();
       return;
     }
-
     document.documentElement.classList.add("orduva-early-preloader-done");
-  }, [payload, error]);
+  }, []);
+
+  useEffect(() => {
+    if (error) hideEarlyPreloader();
+  }, [error, hideEarlyPreloader]);
 
   useEffect(() => {
     const cached = readCachedPayload(tenantSlug);
@@ -282,6 +284,7 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
         discountPopupMessage={settings.discountPopupMessage}
         discountRules={settings.discountRules || []}
         initialProductId={initialProductId}
+        onFirstMeaningfulPaintReady={hideEarlyPreloader}
       />
     </main>
   );

@@ -117,6 +117,7 @@ export default function EarlyStorefrontPreloader() {
           <div className="orduva-early-mark" aria-hidden="true"><span className="orduva-early-dot" /></div>
           <p className="orduva-early-brand">Orduva</p>
           <h1 className="orduva-early-title">We&apos;re getting things ready.</h1>
+          <p className="orduva-early-copy">Loading the menu, rewards and offers so everything opens neatly.</p>
           <div className="orduva-early-dots" aria-hidden="true"><span /><span /><span /></div>
         </div>
       </div>

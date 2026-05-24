@@ -26,6 +26,41 @@ type Product = {
   low_stock_threshold?: number | null;
 };
 
+function hexToRgb(hex: string) {
+  const clean = hex.replace("#", "");
+  return { r: parseInt(clean.slice(0, 2), 16), g: parseInt(clean.slice(2, 4), 16), b: parseInt(clean.slice(4, 6), 16) };
+}
+
+function rgbToHex(r: number, g: number, b: number) {
+  return `#${[r, g, b].map((value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, "0")).join("")}`.toUpperCase();
+}
+
+function blendHex(from: string, to = "#FFFFFF", amount = 0.7) {
+  const start = hexToRgb(normalizeThemeColor(from, "#FFFFFF"));
+  const end = hexToRgb(normalizeThemeColor(to, "#FFFFFF"));
+  return rgbToHex(start.r + (end.r - start.r) * amount, start.g + (end.g - start.g) * amount, start.b + (end.b - start.b) * amount);
+}
+
+function relativeLuminance(hex: string) {
+  const { r, g, b } = hexToRgb(normalizeThemeColor(hex, "#FFFFFF"));
+  const transform = (value: number) => {
+    const channel = value / 255;
+    return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * transform(r) + 0.7152 * transform(g) + 0.0722 * transform(b);
+}
+
+function readableTextFor(background: string, preferred: string, darkFallback = "#0F172A", lightFallback = "#FFFFFF") {
+  const bgLum = relativeLuminance(background);
+  const preferredLum = relativeLuminance(preferred);
+  const ratio = (Math.max(bgLum, preferredLum) + 0.05) / (Math.min(bgLum, preferredLum) + 0.05);
+  if (ratio >= 4.2) return preferred;
+  return bgLum > 0.55 ? darkFallback : lightFallback;
+}
+
+function softerPanelColor(value: unknown, fallback: string, blendAmount = 0.76) {
+  return blendHex(normalizeThemeColor(value, fallback), "#FFFFFF", blendAmount);
+}
 
 type FavouriteProductStripCardProps = {
   product: Product;
@@ -303,7 +338,7 @@ function StorefrontQuickActionButton({
       onClick={onClick}
       className={
         isWide
-          ? "group flex min-h-14 w-full max-w-[18.5rem] items-center justify-center gap-3 rounded-[22px] border bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+          ? "group flex min-h-[4.9rem] w-full max-w-[21rem] items-center justify-start gap-3 rounded-[24px] border bg-white/92 px-4 py-3.5 text-left shadow-[0_14px_32px_rgba(15,23,42,0.09)] ring-1 ring-white/70 backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
           : isHeader
             ? "group flex min-w-[4.3rem] flex-col items-center justify-center gap-1 rounded-[18px] bg-white/82 px-2.5 py-2 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
             : "group flex w-full min-w-0 shrink-0 flex-col items-center justify-center gap-1 rounded-[18px] bg-white/86 px-1.5 py-2.5 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
@@ -313,15 +348,15 @@ function StorefrontQuickActionButton({
       aria-controls={controls}
     >
       <span
-        className={isWide ? "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-[1.03]" : "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-[1.03]"}
+        className={isWide ? "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] shadow-sm transition group-hover:scale-[1.03]" : "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-[1.03]"}
         style={{ backgroundColor: iconBackground, color: iconTextColor }}
         aria-hidden="true"
       >
         {icon}
       </span>
       <span className={isWide ? "min-w-0 text-left" : "min-w-0 text-center"}>
-        <span className={isWide ? "block text-[12px] font-black uppercase leading-tight tracking-[0.14em]" : "block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em]"}>{label}</span>
-        <span className={isWide ? "mt-0.5 block text-[10px] font-bold uppercase leading-tight tracking-[0.12em] opacity-65" : "mt-1 block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em] opacity-70"}>{actionLabel}</span>
+        <span className={isWide ? "block text-[13px] font-black uppercase leading-tight tracking-[0.12em]" : "block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em]"}>{label}</span>
+        <span className={isWide ? "mt-1 block text-[11px] font-semibold leading-snug normal-case tracking-normal opacity-72" : "mt-1 block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em] opacity-70"}>{actionLabel}</span>
       </span>
     </button>
   );
@@ -380,6 +415,7 @@ export default function MenuBrowser({
   discountPopupMessage,
   discountRules,
   initialProductId,
+  onFirstMeaningfulPaintReady,
 }: {
   tenantSlug: string;
   tenantId: string;
@@ -433,6 +469,7 @@ export default function MenuBrowser({
   discountPopupMessage?: string | null;
   discountRules?: DiscountRule[] | null;
   initialProductId?: string | null;
+  onFirstMeaningfulPaintReady?: () => void;
 }) {
   const moneySettings = buildMoneySettings({
     currencyName,
@@ -469,6 +506,7 @@ export default function MenuBrowser({
   const [customerRewards, setCustomerRewards] = useState<CustomerRewardSummary | null>(null);
   const [rewardsModalOpen, setRewardsModalOpen] = useState(false);
   const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
+  const [welcomeActionsStage, setWelcomeActionsStage] = useState(0);
   const [discountPopupSeen, setDiscountPopupSeen] = useState(false);
   const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
   const [favouritesReady, setFavouritesReady] = useState(false);
@@ -502,22 +540,22 @@ export default function MenuBrowser({
   const welcomeActionIconText = normalizeThemeColor(storefrontTheme?.welcomeActionIconText, "#FFFFFF");
   const welcomeActionIconBackground = normalizeThemeColor(storefrontTheme?.welcomeActionIconBackground, brandAccent);
   const welcomeActionBorder = normalizeThemeColor(storefrontTheme?.welcomeActionBorder, "#FFFFFF");
-  const rewardsPopupBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupBackground, "#FFFFFF");
-  const rewardsPopupHeaderBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderBackground, "#334155");
-  const rewardsPopupHeaderText = normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderText, "#FFFFFF");
-  const rewardsPopupBodyText = normalizeThemeColor(storefrontTheme?.rewardsPopupBodyText, brandText);
-  const rewardsPopupCardBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupCardBackground, "#F8FAFC");
-  const rewardsPopupCardBorder = normalizeThemeColor(storefrontTheme?.rewardsPopupCardBorder, "#64748B");
-  const rewardsPopupPillBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupPillBackground, "#334155");
-  const rewardsPopupPillText = normalizeThemeColor(storefrontTheme?.rewardsPopupPillText, "#F8FAFC");
-  const offersPopupBackground = normalizeThemeColor(storefrontTheme?.offersPopupBackground, "#FFFFFF");
-  const offersPopupHeaderBackground = normalizeThemeColor(storefrontTheme?.offersPopupHeaderBackground, brandPrimary);
-  const offersPopupHeaderText = normalizeThemeColor(storefrontTheme?.offersPopupHeaderText, "#FFFFFF");
-  const offersPopupBodyText = normalizeThemeColor(storefrontTheme?.offersPopupBodyText, brandText);
-  const offersPopupCardBackground = normalizeThemeColor(storefrontTheme?.offersPopupCardBackground, brandSurface);
-  const offersPopupCardBorder = normalizeThemeColor(storefrontTheme?.offersPopupCardBorder, brandBorder);
-  const offersPopupPillBackground = normalizeThemeColor(storefrontTheme?.offersPopupPillBackground, brandPrimary);
-  const offersPopupPillText = normalizeThemeColor(storefrontTheme?.offersPopupPillText, "#FFFFFF");
+  const rewardsPopupBackground = softerPanelColor(storefrontTheme?.rewardsPopupBackground, "#FFFDF8", 0.55);
+  const rewardsPopupHeaderBackground = softerPanelColor(storefrontTheme?.rewardsPopupHeaderBackground, brandAccent, 0.78);
+  const rewardsPopupHeaderText = readableTextFor(rewardsPopupHeaderBackground, normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderText, brandPrimary), brandPrimary);
+  const rewardsPopupBodyText = readableTextFor(rewardsPopupBackground, normalizeThemeColor(storefrontTheme?.rewardsPopupBodyText, brandText), brandText);
+  const rewardsPopupCardBackground = softerPanelColor(storefrontTheme?.rewardsPopupCardBackground, brandSurface, 0.42);
+  const rewardsPopupCardBorder = blendHex(normalizeThemeColor(storefrontTheme?.rewardsPopupCardBorder, brandBorder), "#FFFFFF", 0.28);
+  const rewardsPopupPillBackground = blendHex(normalizeThemeColor(storefrontTheme?.rewardsPopupPillBackground, brandAccent), "#FFFFFF", 0.18);
+  const rewardsPopupPillText = readableTextFor(rewardsPopupPillBackground, normalizeThemeColor(storefrontTheme?.rewardsPopupPillText, "#FFFFFF"), brandPrimary);
+  const offersPopupBackground = softerPanelColor(storefrontTheme?.offersPopupBackground, "#FFFDF8", 0.55);
+  const offersPopupHeaderBackground = softerPanelColor(storefrontTheme?.offersPopupHeaderBackground, brandAccent, 0.78);
+  const offersPopupHeaderText = readableTextFor(offersPopupHeaderBackground, normalizeThemeColor(storefrontTheme?.offersPopupHeaderText, brandPrimary), brandPrimary);
+  const offersPopupBodyText = readableTextFor(offersPopupBackground, normalizeThemeColor(storefrontTheme?.offersPopupBodyText, brandText), brandText);
+  const offersPopupCardBackground = softerPanelColor(storefrontTheme?.offersPopupCardBackground, brandSurface, 0.42);
+  const offersPopupCardBorder = blendHex(normalizeThemeColor(storefrontTheme?.offersPopupCardBorder, brandBorder), "#FFFFFF", 0.28);
+  const offersPopupPillBackground = blendHex(normalizeThemeColor(storefrontTheme?.offersPopupPillBackground, brandAccent), "#FFFFFF", 0.18);
+  const offersPopupPillText = readableTextFor(offersPopupPillBackground, normalizeThemeColor(storefrontTheme?.offersPopupPillText, "#FFFFFF"), brandPrimary);
   const footerBackground = normalizeThemeColor(storefrontTheme?.footerBackground, "#FFFFFF");
   const footerText = normalizeThemeColor(storefrontTheme?.footerText, brandText);
   const footerBadgeBackground = normalizeThemeColor(storefrontTheme?.footerBadgeBackground, brandAccent);
@@ -771,6 +809,34 @@ export default function MenuBrowser({
   const showNoFavouritesNote = customerAuthStatus === "signedIn" && favouritesReady && !favouritesMessage && favouriteProducts.length === 0;
   const shouldRenderFavouritesArea = customerAuthStatus === "signedIn" && favouritesVisible;
   const shouldRenderBuyAgainArea = customerAuthStatus === "signedIn" && buyAgainVisible;
+  const customerPersonalChromeReady = customerAuthStatus !== "checking" && (customerAuthStatus !== "signedIn" || (favouritesReady && buyAgainReady));
+  const hasWelcomeActions = storefrontRewardsEnabled || storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain;
+  const rewardsActionVisible = welcomeActionsStage >= 1 && storefrontRewardsEnabled;
+  const compactActionsVisible = welcomeActionsStage >= 2 && (storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain);
+  const rewardPanelTitle = customerAuthStatus === "signedIn" ? `Rewards - ${rewardTier}` : "Rewards";
+  const rewardPanelHelper = customerAuthStatus === "signedIn"
+    ? rewardNextTier
+      ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more for ${rewardNextTier}`
+      : "Top tier unlocked"
+    : "Sign in to unlock rewards";
+
+  useEffect(() => {
+    setWelcomeActionsStage(0);
+    if (!customerPersonalChromeReady) return;
+    const rewardsTimer = window.setTimeout(() => setWelcomeActionsStage(1), hasWelcomeActions ? 100 : 0);
+    const compactTimer = window.setTimeout(() => setWelcomeActionsStage(2), hasWelcomeActions ? 340 : 0);
+    return () => {
+      window.clearTimeout(rewardsTimer);
+      window.clearTimeout(compactTimer);
+    };
+  }, [customerPersonalChromeReady, hasWelcomeActions, storefrontRewardsEnabled, storefrontDiscountsEnabled, canToggleFavourites, canToggleBuyAgain]);
+
+  useEffect(() => {
+    if (!customerPersonalChromeReady) return;
+    if (hasWelcomeActions && welcomeActionsStage < 2) return;
+    const frame = window.requestAnimationFrame(() => onFirstMeaningfulPaintReady?.());
+    return () => window.cancelAnimationFrame(frame);
+  }, [customerPersonalChromeReady, hasWelcomeActions, welcomeActionsStage, onFirstMeaningfulPaintReady]);
 
   const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
 
@@ -1029,7 +1095,7 @@ export default function MenuBrowser({
               </div>
 
               <div className="absolute left-0 top-1/2 hidden -translate-y-1/2 items-center gap-2 lg:flex">
-                {storefrontRewardsEnabled ? (
+                {rewardsActionVisible ? (
                   <StorefrontQuickActionButton
                     label="Rewards"
                     actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
@@ -1042,7 +1108,7 @@ export default function MenuBrowser({
                     variant="header"
                   />
                 ) : null}
-                {storefrontDiscountsEnabled ? (
+                {compactActionsVisible && storefrontDiscountsEnabled ? (
                   <StorefrontQuickActionButton
                     label="Offers"
                     actionLabel={visibleDiscountRules.length ? "View" : "Info"}
@@ -1055,7 +1121,7 @@ export default function MenuBrowser({
                     variant="header"
                   />
                 ) : null}
-                {canToggleFavourites ? (
+                {compactActionsVisible && canToggleFavourites ? (
                   <StorefrontQuickActionButton
                     label="Favourites"
                     actionLabel={favouritesVisible ? "Hide" : "View"}
@@ -1070,7 +1136,7 @@ export default function MenuBrowser({
                     variant="header"
                   />
                 ) : null}
-                {canToggleBuyAgain ? (
+                {compactActionsVisible && canToggleBuyAgain ? (
                   <StorefrontQuickActionButton
                     label="Buy again"
                     actionLabel={buyAgainVisible ? "Hide" : "View"}
@@ -1127,10 +1193,10 @@ export default function MenuBrowser({
             </p>
           ) : null}
 
-          {storefrontRewardsEnabled ? (
+          {rewardsActionVisible ? (
             <StorefrontQuickActionButton
-              label="Rewards"
-              actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
+              label={rewardPanelTitle}
+              actionLabel={rewardPanelHelper}
               icon={<span className="text-xl leading-none">✦</span>}
               onClick={() => setRewardsModalOpen(true)}
               borderColor={welcomeActionBorder}
@@ -1141,7 +1207,7 @@ export default function MenuBrowser({
             />
           ) : null}
 
-          {(storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain) ? (
+          {compactActionsVisible ? (
             <div className="grid w-full max-w-[20rem] grid-cols-3 items-stretch justify-items-center gap-2">
               {storefrontDiscountsEnabled ? (
                 <StorefrontQuickActionButton
@@ -1202,7 +1268,7 @@ export default function MenuBrowser({
 
 
       {discountsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
+        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/38 px-3 py-5 backdrop-blur-[4px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
           <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" style={{ backgroundColor: offersPopupBackground, color: offersPopupBodyText }} onClick={(event) => event.stopPropagation()}>
             <div className="relative overflow-hidden px-5 py-5 sm:px-7 sm:py-6" style={{ backgroundColor: offersPopupHeaderBackground, color: offersPopupHeaderText }}>
               <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
@@ -1239,7 +1305,7 @@ export default function MenuBrowser({
       ) : null}
 
       {rewardsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
+        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/38 px-3 py-5 backdrop-blur-[4px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
           <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" style={{ backgroundColor: rewardsPopupBackground, color: rewardsPopupBodyText }} onClick={(event) => event.stopPropagation()}>
             <div className="relative overflow-hidden px-5 py-5 sm:px-7 sm:py-6" style={{ backgroundColor: rewardsPopupHeaderBackground, color: rewardsPopupHeaderText }}>
               <button type="button" onClick={() => setRewardsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close rewards">×</button>
