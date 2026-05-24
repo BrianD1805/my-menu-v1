@@ -2550,16 +2550,16 @@ function PaymentGatewayCard({
       : "border-slate-200 bg-slate-50 text-slate-600";
 
   return (
-    <details className="group mx-auto w-full overflow-hidden rounded-[22px] border border-emerald-300 bg-emerald-100/55 shadow-none transition open:border-emerald-400">
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-3 text-left outline-none transition hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-300 sm:px-4 sm:py-4 [&::-webkit-details-marker]:hidden">
+    <details className="group mx-auto w-full overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-none transition open:border-slate-300 md:hover:border-orange-300 md:hover:ring-2 md:hover:ring-orange-100">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-orange-200 sm:px-4 sm:py-4 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
-          <span className="mb-2 inline-flex rounded-full bg-emerald-200 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-900">Payment gateway</span>
+          <span className="mb-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Payment gateway</span>
           <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
           <span className="mt-1 block text-xs leading-5 text-slate-600">{description}</span>
         </span>
         <span className="flex shrink-0 flex-col items-end gap-2">
           <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${toneClass}`}>{badge}</span>
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-300 bg-white text-base font-black text-emerald-700 transition group-open:rotate-45 group-open:border-emerald-500 group-open:bg-emerald-50 group-open:text-emerald-900" aria-hidden="true">+</span>
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-base font-black text-slate-700 transition group-open:rotate-45 group-open:border-orange-300 group-open:text-orange-800" aria-hidden="true">+</span>
         </span>
       </summary>
       <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
@@ -2593,9 +2593,9 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-emerald-300 bg-emerald-50/60 shadow-none transition open:border-emerald-400`}
+      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-none transition open:border-slate-300 md:hover:border-orange-300 md:hover:ring-2 md:hover:ring-orange-100`}
     >
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition hover:bg-emerald-100/70 focus-visible:ring-2 focus-visible:ring-emerald-300 sm:px-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-orange-200 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
           <span className="mb-2 flex flex-wrap items-center gap-2">
             {meta ? <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${meta.accent}`}>{meta.group}</span> : null}
@@ -2606,7 +2606,7 @@ function Section({
           <span className="block text-base font-black text-slate-950 sm:text-lg">{title}</span>
           {meta ? <span className="mt-1.5 block text-xs leading-5 text-slate-600 sm:text-sm">{meta.help}</span> : null}
         </span>
-        <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-300 bg-white text-lg font-black text-emerald-700 shadow-sm transition group-open:rotate-45 group-open:border-emerald-500 group-open:bg-emerald-50 group-open:text-emerald-900" aria-hidden="true">+</span>
+        <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-black text-slate-700 shadow-sm transition group-open:rotate-45 group-open:border-orange-300 group-open:text-orange-800" aria-hidden="true">+</span>
       </summary>
       <div className="px-3 pb-4 sm:px-5 sm:pb-5">
         {children}
