@@ -965,16 +965,16 @@ useEffect(() => {
       </div>
 
       {discountsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setDiscountsModalOpen(false)}>
-          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${checkoutAccent} 0%, ${checkoutPrimary} 100%)` }}>
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 p-[35px] backdrop-blur-[3px]" onClick={() => setDiscountsModalOpen(false)}>
+          <div className="flex max-h-[calc(100dvh-70px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="sticky top-0 z-10 overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${checkoutAccent} 0%, ${checkoutPrimary} 100%)` }}>
               <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">%</div>
               <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">Discounts</p>
               <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{tenantSettings.discountPopupTitle || "Available offers"}</h3>
               <p className="mt-2 text-sm leading-6 text-white/88">{tenantSettings.discountPopupMessage || "Choose an eligible discount for this basket."}</p>
             </div>
-            <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
+            <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-10 pt-7 sm:px-7 sm:pb-12">
               <div className="grid gap-3">
                 {visibleDiscounts.length ? visibleDiscounts.map(({ rule, amount }) => (
                   <button key={rule.id} type="button" onClick={() => { setDiscountCode(rule.code || ""); setDiscountsModalOpen(false); }} className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-left text-sm text-rose-950 transition hover:bg-rose-100">
