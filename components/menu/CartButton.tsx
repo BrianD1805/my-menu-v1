@@ -256,14 +256,14 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
 
       {trialBlockedOpen && typeof document !== "undefined" ? createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-slate-950/60 p-[35px] backdrop-blur-[2px]"
+          className="fixed inset-0 z-[9999] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]"
           style={{ position: "fixed", inset: 0, width: "100vw", minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem 1rem" }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="checkout-paused-title"
         >
-          <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.26)]" style={{ width: "min(calc(100vw - 70px), 28rem)", maxWidth: "28rem", maxHeight: "calc(100dvh - 70px)", margin: "0 auto" }}>
-            <div className="modal-scroll relative max-h-[calc(100dvh-70px)] overflow-y-auto px-5 pb-8 pt-6 sm:px-6 sm:pb-9">
+          <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.26)]" style={{ width: "min(calc(100vw - 70px), 28rem)", maxWidth: "28rem", maxHeight: "calc(100dvh - 150px)", margin: "0 auto" }}>
+            <div className="modal-scroll relative max-h-[calc(100dvh-150px)] overflow-y-auto px-5 pb-8 pt-6 sm:px-6 sm:pb-9">
               <button type="button" onClick={() => setTrialBlockedOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-900" aria-label="Close checkout paused message">×</button>
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)]" style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandAccent})` }}>
                 <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 7V5a4 4 0 0 1 8 0v2" /><rect x="5" y="7" width="14" height="14" rx="2" /><path d="M12 12v4" /></svg>
@@ -284,7 +284,7 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
 
       {reminderOpen && typeof document !== "undefined" ? createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-slate-950/60 p-[35px] backdrop-blur-[2px]"
+          className="fixed inset-0 z-[9999] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]"
           style={{
             position: "fixed",
             inset: 0,
@@ -293,7 +293,7 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "35px",
+            padding: "75px 35px",
           }}
           role="dialog"
           aria-modal="true"
@@ -301,9 +301,9 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
         >
           <div
             className="overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.26)]"
-            style={{ width: "min(calc(100vw - 70px), 28rem)", maxWidth: "28rem", maxHeight: "calc(100dvh - 70px)", margin: "0 auto" }}
+            style={{ width: "min(calc(100vw - 70px), 28rem)", maxWidth: "28rem", maxHeight: "calc(100dvh - 150px)", margin: "0 auto" }}
           >
-            <div className="modal-scroll relative max-h-[calc(100dvh-70px)] overflow-y-auto px-5 pb-8 pt-6 sm:px-6 sm:pb-9">
+            <div className="modal-scroll relative max-h-[calc(100dvh-150px)] overflow-y-auto px-5 pb-8 pt-6 sm:px-6 sm:pb-9">
               <button
                 type="button"
                 onClick={() => setReminderOpen(false)}

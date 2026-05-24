@@ -1268,10 +1268,10 @@ export default function MenuBrowser({
 
 
       {discountsModalOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 p-[35px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-70px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
@@ -1320,9 +1320,8 @@ export default function MenuBrowser({
               </div>
 
               <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <button type="button" onClick={() => setDiscountsModalOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
-                  <a href="/checkout" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8">Go to checkout</a>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+                  <button type="button" onClick={() => setDiscountsModalOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8">Back to menu</button>
                 </div>
               </div>
             </div>
@@ -1331,10 +1330,10 @@ export default function MenuBrowser({
       ) : null}
 
       {rewardsModalOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 p-[35px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-70px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
@@ -1637,7 +1636,7 @@ export default function MenuBrowser({
 
       {favouriteLoginPromptOpen ? (
         <div
-          className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-950/62 p-[35px] backdrop-blur-[3px]"
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-950/62 px-[35px] py-[75px] backdrop-blur-[3px]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="favourite-login-title"
@@ -1645,7 +1644,7 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full w-full items-center justify-center">
             <div
-              className="relative mx-auto flex max-h-[calc(100dvh-70px)] w-full max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.30)] ring-1 ring-slate-900/5"
+              className="relative mx-auto flex max-h-[calc(100dvh-150px)] w-full max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.30)] ring-1 ring-slate-900/5"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-20 blur-3xl" style={{ backgroundColor: brandAccent }} />
@@ -1703,10 +1702,10 @@ export default function MenuBrowser({
       ) : null}
 
       {searchOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 p-[35px] backdrop-blur-[2px] overscroll-none" onClick={() => setSearchOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" onClick={() => setSearchOpen(false)}>
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-70px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">

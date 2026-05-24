@@ -336,9 +336,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       </div>
 
       {detailsOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 p-[35px] backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]">
           <div className="flex min-h-full items-center justify-center">
-            <div className="flex max-h-[calc(100dvh-70px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]">
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">

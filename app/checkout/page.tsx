@@ -965,8 +965,8 @@ useEffect(() => {
       </div>
 
       {discountsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 p-[35px] backdrop-blur-[3px]" onClick={() => setDiscountsModalOpen(false)}>
-          <div className="flex max-h-[calc(100dvh-70px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]" onClick={() => setDiscountsModalOpen(false)}>
+          <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="sticky top-0 z-10 overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${checkoutAccent} 0%, ${checkoutPrimary} 100%)` }}>
               <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">%</div>
