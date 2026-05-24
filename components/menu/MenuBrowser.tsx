@@ -225,35 +225,35 @@ function getRewardTierPalette(name: string) {
     return {
       label: "Platinum",
       background: "#F8FAFC",
-      border: "#CBD5E1",
+      border: "#64748B",
       text: "#0F172A",
-      badgeBackground: "#334155",
+      badgeBackground: "#0F172A",
       badgeText: "#F8FAFC",
-      gradientFrom: "#E2E8F0",
-      gradientTo: "#64748B",
+      gradientFrom: "#64748B",
+      gradientTo: "#0F172A",
     };
   }
   if (key.includes("gold")) {
     return {
       label: "Gold",
       background: "#FFFBEB",
-      border: "#F59E0B",
+      border: "#D97706",
       text: "#78350F",
-      badgeBackground: "#B45309",
+      badgeBackground: "#92400E",
       badgeText: "#FFF7ED",
-      gradientFrom: "#FDE68A",
-      gradientTo: "#B45309",
+      gradientFrom: "#F59E0B",
+      gradientTo: "#92400E",
     };
   }
   return {
     label: "Silver",
     background: "#F8FAFC",
-    border: "#94A3B8",
-    text: "#334155",
-    badgeBackground: "#64748B",
+    border: "#64748B",
+    text: "#0F172A",
+    badgeBackground: "#334155",
     badgeText: "#F8FAFC",
-    gradientFrom: "#F1F5F9",
-    gradientTo: "#94A3B8",
+    gradientFrom: "#64748B",
+    gradientTo: "#334155",
   };
 }
 
@@ -295,7 +295,7 @@ function StorefrontQuickActionButton({
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-w-[4.25rem] flex-1 flex-col items-center justify-center gap-1 rounded-[20px] border bg-white/82 px-2 py-2.5 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none sm:min-w-[5.25rem] sm:flex-none sm:px-3"
+      className="group flex w-[5.1rem] shrink-0 flex-col items-center justify-center gap-1 rounded-[20px] border bg-white/88 px-2 py-2.5 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none sm:w-[5.7rem] sm:px-3"
       style={{ borderColor, color: textColor }}
       aria-expanded={expanded}
       aria-controls={controls}
@@ -811,7 +811,8 @@ export default function MenuBrowser({
   }, [tenantSlug]);
 
   useEffect(() => {
-    if (!searchOpen) return;
+    const hasBlockingOverlay = searchOpen || rewardsModalOpen || discountsModalOpen || favouriteLoginPromptOpen;
+    if (!hasBlockingOverlay) return;
 
     const previousHtmlOverflow = document.documentElement.style.overflow;
     const previousBodyOverflow = document.body.style.overflow;
@@ -826,7 +827,7 @@ export default function MenuBrowser({
       document.body.style.overflow = previousBodyOverflow;
       document.body.style.touchAction = previousBodyTouchAction;
     };
-  }, [searchOpen]);
+  }, [searchOpen, rewardsModalOpen, discountsModalOpen, favouriteLoginPromptOpen]);
 
   const triggerCartPulse = useCallback(() => {
     setCartPulseKey((current) => current + 1);
@@ -1013,13 +1014,13 @@ export default function MenuBrowser({
         </div>
       </div>
 
-      <section className="rounded-[28px] border px-5 py-5 ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7 lg:text-center" style={{ backgroundColor: welcomeBackground, borderColor: brandAccentBorder, boxShadow: `0 16px 36px ${welcomeShadow}22` }}>
+      <section className="rounded-[28px] border px-5 py-5 text-center ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ backgroundColor: welcomeBackground, borderColor: brandAccentBorder, boxShadow: `0 16px 36px ${welcomeShadow}22` }}>
         <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: welcomeLabel }}>{welcomeCustomerName ? `Welcome, ${welcomeCustomerName}` : "Welcome"}</p>
         <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight sm:text-[2.35rem] lg:text-[2.65rem]" style={{ color: welcomeHeadingColor }}>{welcomeHeading || "Browse the menu"}</h2>
-        <p className="mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7 lg:mx-auto" style={{ color: welcomeBody }}>
+        <p className="mx-auto mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7" style={{ color: welcomeBody }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
-        <div className="mt-4 flex flex-col items-start gap-2 lg:items-center">
+        <div className="mt-4 flex flex-col items-center gap-2">
           {showFavouriteLoadingNote ? (
             <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1029,24 +1030,26 @@ export default function MenuBrowser({
             </p>
           ) : null}
 
-          {(storefrontRewardsEnabled || (storefrontDiscountsEnabled && visibleDiscountRules.length) || canToggleFavourites || canToggleBuyAgain) ? (
-            <div className="flex w-full items-stretch gap-2 overflow-x-auto pb-1 sm:w-auto sm:flex-wrap sm:items-center sm:justify-center sm:overflow-visible sm:pb-0">
-              {storefrontRewardsEnabled ? (
-                <StorefrontQuickActionButton
-                  label="Rewards"
-                  actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
-                  icon={<span className="text-lg leading-none">✦</span>}
-                  onClick={() => setRewardsModalOpen(true)}
-                  borderColor={welcomeBorder}
-                  textColor={welcomeHeadingColor}
-                  iconBackground={rewardTierPalette.badgeBackground}
-                />
-              ) : null}
+          {storefrontRewardsEnabled ? (
+            <div className="flex w-full items-center justify-center">
+              <StorefrontQuickActionButton
+                label="Rewards"
+                actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
+                icon={<span className="text-lg leading-none">✦</span>}
+                onClick={() => setRewardsModalOpen(true)}
+                borderColor={welcomeBorder}
+                textColor={welcomeHeadingColor}
+                iconBackground={rewardTierPalette.badgeBackground}
+              />
+            </div>
+          ) : null}
 
-              {storefrontDiscountsEnabled && visibleDiscountRules.length ? (
+          {(storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain) ? (
+            <div className="flex w-full flex-wrap items-stretch justify-center gap-2">
+              {storefrontDiscountsEnabled ? (
                 <StorefrontQuickActionButton
                   label="Offers"
-                  actionLabel="View"
+                  actionLabel={visibleDiscountRules.length ? "View" : "Info"}
                   icon={<span className="text-base font-black leading-none">%</span>}
                   onClick={() => setDiscountsModalOpen(true)}
                   borderColor={welcomeBorder}
@@ -1099,7 +1102,7 @@ export default function MenuBrowser({
 
 
       {discountsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setDiscountsModalOpen(false)}>
+        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
           <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandAccent} 0%, ${brandPrimary} 100%)` }}>
               <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
@@ -1110,6 +1113,11 @@ export default function MenuBrowser({
             </div>
             <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
               <div className="grid gap-3">
+                {!visibleDiscountRules.length ? (
+                  <div className="rounded-[22px] border p-4 text-center text-sm leading-6" style={{ borderColor: brandAccentBorder, backgroundColor: brandSurface, color: brandSoftText }}>
+                    No offers are currently available. Please check again soon.
+                  </div>
+                ) : null}
                 {visibleDiscountRules.map((rule) => (
                   <div key={rule.id} className="rounded-[22px] border p-4 text-sm" style={{ borderColor: brandAccentBorder, backgroundColor: brandSurface, color: brandText }}>
                     <div className="flex items-start justify-between gap-3">
@@ -1131,11 +1139,11 @@ export default function MenuBrowser({
       ) : null}
 
       {rewardsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setRewardsModalOpen(false)}>
+        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
           <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${rewardTierPalette.gradientFrom} 0%, ${rewardTierPalette.gradientTo} 100%)` }}>
               <button type="button" onClick={() => setRewardsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close rewards">×</button>
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/22 text-3xl ring-1 ring-white/35" style={{ color: rewardTierPalette.badgeText }}>✦</div>
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/22 text-3xl ring-1 ring-white/35" style={{ color: "#FFFFFF" }}>✦</div>
               <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">{rewardProgrammeName}</p>
               <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
               <p className="mt-2 rounded-2xl bg-white/10 px-3 py-2 text-sm leading-6 text-white/88 ring-1 ring-white/15 sm:bg-transparent sm:px-0 sm:py-0 sm:ring-0">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
