@@ -1117,8 +1117,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-7xl gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)] xl:items-start">
-      <form onSubmit={onSubmit} className="mx-auto w-full max-w-3xl rounded-[30px] border border-emerald-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6 xl:max-w-none">
+    <div className="mx-auto w-full max-w-7xl">
+      <form onSubmit={onSubmit} className="mx-auto w-full max-w-6xl rounded-[30px] border border-emerald-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6">
         <div ref={settingsTopRef} className="mb-6 scroll-mt-28">
           <div className="mb-5 rounded-[24px] border border-orange-200/70 bg-gradient-to-br from-orange-50 via-white to-slate-50 p-4 shadow-[0_16px_38px_rgba(15,23,42,0.07)] sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1142,10 +1142,20 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
 
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Tenant settings</p>
           <div className="mt-2">
-            <h2 className="text-2xl font-bold text-slate-900">Storefront branding and theme editor</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Store settings workspace</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Choose a preset as a starting point, then fine-tune each visible storefront section. Draft colours update the preview automatically.
+              Desktop settings now use the full working width. The live preview only appears inside the theme editor area, where it helps with colour and storefront styling decisions.
             </p>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              <div className="rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
+                <p className="text-sm font-black text-slate-950">Theme editor with preview</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">Logo, wording, presets and per-item colours keep a local preview where it is useful.</p>
+              </div>
+              <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
+                <p className="text-sm font-black text-slate-950">Operational settings full width</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">Payments, rewards, discounts, contact and currency settings now get the full page width instead of being squeezed beside a preview.</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1264,7 +1274,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </Section>
 
         <Section id="per-item-storefront-colours" title="Per-item storefront colours" showSave={false}>
-          <div className="space-y-4">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] xl:items-start">
+            <div className="space-y-4">
             {THEME_GROUPS.map((group) => {
               const isOpen = openThemeGroup === group.id;
               return (
@@ -1347,6 +1358,40 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
                 </div>
               );
             })}
+            </div>
+            <div ref={previewPanelRef} className="hidden space-y-3 xl:block">
+              <div className="rounded-[24px] border border-orange-100 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Theme editor preview</p>
+                    <h3 className="mt-1 text-lg font-bold text-slate-900">{labelForPreview(previewTarget)}</h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">Preview stays with the colour editor only, so operational settings can use the full desktop width.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {THEME_GROUPS.map((group) => (
+                      <button key={group.id} type="button" onClick={() => setPreviewTarget(group.id)} className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${previewTarget === group.id ? "border-orange-300 bg-orange-50 text-orange-900" : "border-slate-200 bg-white text-slate-600"}`}>{group.title}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <PreviewPanel
+                  target={previewTarget}
+                  theme={theme}
+                  previewName={previewName}
+                  previewHeading={previewHeading}
+                  previewSubheading={previewSubheading}
+                  footerBlurb={footerBlurb}
+                  footerNotice={footerNotice}
+                  money={formatMoney(295, moneySettings)}
+                  logoUrl={form.logoUrl}
+                  faviconUrl={form.faviconUrl}
+                />
+              </div>
+
+              <div ref={suggestedColoursRef}>
+                {renderSuggestedColoursPanel()}
+              </div>
+            </div>
           </div>
         </Section>
 
@@ -2046,45 +2091,13 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         {message ? <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">Preview updates from the current draft colours before saving. On desktop, the preview stays sticky on the right while you edit colours on the left.</p>
+          <p className="text-sm text-slate-500">Use the settings menu to jump between sections. Theme previews now live inside the colour editor only, and operational settings use the full desktop width.</p>
           <button type="submit" disabled={saving || !hasUnsavedChanges} className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100">
             {saving ? "Saving..." : hasUnsavedChanges ? "Save settings" : "Nothing to save"}
           </button>
         </div>
       </form>
 
-      <div ref={previewPanelRef} className="hidden space-y-3 xl:sticky xl:top-5 xl:block xl:self-start">
-        <div className="rounded-[24px] border border-black/5 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] sm:p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Live section preview</p>
-              <h3 className="mt-1 text-lg font-bold text-slate-900">{labelForPreview(previewTarget)}</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {THEME_GROUPS.map((group) => (
-                <button key={group.id} type="button" onClick={() => setPreviewTarget(group.id)} className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${previewTarget === group.id ? "border-orange-300 bg-orange-50 text-orange-900" : "border-slate-200 bg-white text-slate-600"}`}>{group.title}</button>
-              ))}
-            </div>
-          </div>
-
-          <PreviewPanel
-            target={previewTarget}
-            theme={theme}
-            previewName={previewName}
-            previewHeading={previewHeading}
-            previewSubheading={previewSubheading}
-            footerBlurb={footerBlurb}
-            footerNotice={footerNotice}
-            money={formatMoney(295, moneySettings)}
-            logoUrl={form.logoUrl}
-            faviconUrl={form.faviconUrl}
-          />
-        </div>
-
-        <div ref={suggestedColoursRef}>
-          {renderSuggestedColoursPanel()}
-        </div>
-      </div>
 
       <button
         type="button"
