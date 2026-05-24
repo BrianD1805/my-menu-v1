@@ -26,6 +26,19 @@ type RewardOrderMetadata = {
   rewards_spend_after: number | null;
 };
 
+type DiscountOrderMetadata = {
+  discount_rule_id: string | null;
+  discount_code: string | null;
+  discount_name: string | null;
+  discount_scope: string | null;
+  discount_type: string | null;
+  discount_value: number;
+  discount_base_amount: number;
+  discount_amount: number;
+  discount_allow_with_rewards: boolean;
+  discount_only_this_discount: boolean;
+};
+
 type PendingOrderPayload = {
   tenantSlug: string;
   tenantName: string;
@@ -40,6 +53,7 @@ type PendingOrderPayload = {
   paymentProvider: "mpesa";
   paymentMethodLabel: string;
   rewards?: RewardOrderMetadata | null;
+  discounts?: DiscountOrderMetadata | null;
   items: Array<{
     product_id: string;
     product_name: string;
@@ -191,6 +205,7 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
   currencyCode: string;
   paymentMethodLabel: string;
   rewards?: RewardOrderMetadata | null;
+  discounts?: DiscountOrderMetadata | null;
 }) {
   const currencyCode = String(input.currencyCode || "KES").toUpperCase();
   const pesapalSettings = await loadTenantPesapalCustomerSettings(input.tenantId);
@@ -210,6 +225,7 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
     paymentProvider: "mpesa",
     paymentMethodLabel: input.paymentMethodLabel,
     rewards: input.rewards || null,
+    discounts: input.discounts || null,
     items: input.items,
   };
 
@@ -419,6 +435,16 @@ export async function createPaidOrderFromPesapalIntent(input: { intent: Record<s
       reward_tier: payload.rewards?.reward_tier ?? null,
       reward_discount_percent: payload.rewards?.reward_discount_percent ?? 0,
       reward_discount_amount: payload.rewards?.reward_discount_amount ?? 0,
+      discount_rule_id: payload.discounts?.discount_rule_id ?? null,
+      discount_code: payload.discounts?.discount_code ?? null,
+      discount_name: payload.discounts?.discount_name ?? null,
+      discount_scope: payload.discounts?.discount_scope ?? null,
+      discount_type: payload.discounts?.discount_type ?? null,
+      discount_value: payload.discounts?.discount_value ?? 0,
+      discount_base_amount: payload.discounts?.discount_base_amount ?? 0,
+      discount_amount: payload.discounts?.discount_amount ?? 0,
+      discount_allow_with_rewards: payload.discounts?.discount_allow_with_rewards ?? true,
+      discount_only_this_discount: payload.discounts?.discount_only_this_discount ?? false,
       rewards_spend_before: payload.rewards?.rewards_spend_before ?? null,
       rewards_spend_after: payload.rewards?.rewards_spend_after ?? null,
       notes: payload.notes || null,

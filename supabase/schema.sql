@@ -367,3 +367,6 @@ create index if not exists orders_customer_rewards_idx
 comment on column public.tenant_settings.rewards_enabled is 'Enables the Silver/Gold/Platinum rewards programme for signed-in storefront customers.';
 comment on column public.orders.reward_tier is 'Reward tier applied to this order, if the customer was signed in and the programme was enabled.';
 comment on column public.orders.reward_discount_amount is 'Tier reward discount deducted from the order subtotal before future discount-code logic.';
+
+-- Ver-0.220 discount settings/order audit fields are added by:
+-- supabase/migrations/2026-05-24_ver_0_220_discounts_and_codes_foundation.sql

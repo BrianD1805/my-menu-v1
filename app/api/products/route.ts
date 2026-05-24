@@ -141,6 +141,11 @@ export async function GET(req: Request) {
       rewardsGoldDiscountPercent: Number(settings?.rewards_gold_discount_percent || 5),
       rewardsPlatinumMinSpend: Number(settings?.rewards_platinum_min_spend || 2500),
       rewardsPlatinumDiscountPercent: Number(settings?.rewards_platinum_discount_percent || 10),
+      discountsEnabled: settings?.discounts_enabled === true,
+      discountPopupEnabled: settings?.discount_popup_enabled === true,
+      discountPopupTitle: settings?.discount_popup_title || "Today's offers",
+      discountPopupMessage: settings?.discount_popup_message || "Tap an offer at checkout to apply it to your order.",
+      discountRules: Array.isArray(settings?.discount_rules) ? settings.discount_rules : [],
     },
   };
 

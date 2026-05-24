@@ -48,6 +48,11 @@ type StorefrontSettings = {
   rewardsGoldDiscountPercent?: number | null;
   rewardsPlatinumMinSpend?: number | null;
   rewardsPlatinumDiscountPercent?: number | null;
+discountsEnabled?: boolean | null;
+  discountPopupEnabled?: boolean | null;
+  discountPopupTitle?: string | null;
+  discountPopupMessage?: string | null;
+  discountRules?: any[] | null;
 };
 
 type StorefrontPayload = {
@@ -61,7 +66,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-219";
+const STOREFRONT_CACHE_VERSION = "ver-0-220";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -271,6 +276,11 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
         rewardsGoldDiscountPercent={settings.rewardsGoldDiscountPercent}
         rewardsPlatinumMinSpend={settings.rewardsPlatinumMinSpend}
         rewardsPlatinumDiscountPercent={settings.rewardsPlatinumDiscountPercent}
+        discountsEnabled={settings.discountsEnabled === true}
+        discountPopupEnabled={settings.discountPopupEnabled === true}
+        discountPopupTitle={settings.discountPopupTitle}
+        discountPopupMessage={settings.discountPopupMessage}
+        discountRules={settings.discountRules || []}
         initialProductId={initialProductId}
       />
     </main>

@@ -5,6 +5,7 @@ import { clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
 import { DEFAULT_MONEY_SETTINGS, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import CustomerPushNotificationsCard from "@/components/checkout/CustomerPushNotificationsCard";
+import { calculateBestDiscount, getApplicableDiscounts, normalizeDiscountRules, type DiscountRule } from "@/lib/discounts";
 
 type CartItem = {
   productId: string;
@@ -73,6 +74,10 @@ type TenantViewSettings = MoneyFormatSettings & {
   darajaPaymentsLive?: boolean;
   rewardsEnabled?: boolean;
   rewardsProgramName?: string;
+  discountsEnabled?: boolean;
+  discountPopupTitle?: string;
+  discountPopupMessage?: string;
+  discountRules?: DiscountRule[];
 };
 
 type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "mpesa" | "daraja";
@@ -214,6 +219,8 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
   const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({ ...DEFAULT_MONEY_SETTINGS });
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadCustomerAccount() {
@@ -327,6 +334,12 @@ useEffect(() => {
   const rewardDiscountPercent = Number(rewardSummary?.discountPercent || 0);
   const rewardDiscountAmount = useMemo(() => Math.min(total, Math.round(total * rewardDiscountPercent) / 100), [total, rewardDiscountPercent]);
   const totalAfterRewards = Math.max(0, Math.round((total - rewardDiscountAmount) * 100) / 100);
+  const discountRules = useMemo(() => normalizeDiscountRules(tenantSettings.discountRules || []), [tenantSettings.discountRules]);
+  const discountCartLines = useMemo(() => cartRows.map((row) => ({ productId: row.productId, quantity: row.quantity, lineTotal: row.lineTotal })), [cartRows]);
+  const visibleDiscounts = useMemo(() => getApplicableDiscounts({ settings: tenantSettings, cartLines: discountCartLines, subtotal: total, includeVisibleAutomatic: true }).filter((item) => item.rule.showOnCheckout !== false), [tenantSettings, discountCartLines, total]);
+  const discountResult = useMemo(() => calculateBestDiscount({ settings: tenantSettings, cartLines: discountCartLines, subtotal: total, code: discountCode, rewardDiscountAmount }), [tenantSettings, discountCartLines, total, discountCode, rewardDiscountAmount]);
+  const effectiveRewardDiscountAmount = discountResult.applied && !discountResult.rewardAllowed ? 0 : rewardDiscountAmount;
+  const totalAfterDiscounts = discountResult.applied ? discountResult.totalAfterDiscount : totalAfterRewards;
 
   const checkoutPrimary = tenantSettings.primaryColor || "#7B1E22";
   const checkoutAccent = tenantSettings.accentColor || "#C7922F";
@@ -491,6 +504,7 @@ useEffect(() => {
           orderType,
           notes,
           paymentProvider: selectedPaymentOption.id,
+          discountCode: discountCode.trim(),
           items
         })
       });
@@ -520,7 +534,7 @@ useEffect(() => {
         orderType,
         customerAddress: customerAddress.trim(),
         notes: notes.trim(),
-        total: totalAfterRewards,
+        total: totalAfterDiscounts,
         itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
         paymentMethodLabel: data.paymentMethodLabel || selectedPaymentOption.label,
         paymentStatus: data.paymentStatus || "pay_on_fulfilment",
@@ -794,6 +808,36 @@ useEffect(() => {
             <option value="collection">Collection</option>
           </select>
 
+          {tenantSettings.discountsEnabled && (visibleDiscounts.length || discountRules.length) ? (
+            <div className="rounded-2xl border bg-white p-4 shadow-sm" style={{ borderColor: checkoutBorder }}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">Offers & discount codes</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Apply one eligible offer. Some offers can be combined with rewards, others replace the reward discount.</p>
+                </div>
+                <button type="button" onClick={() => setDiscountsModalOpen(true)} className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-sm font-black text-rose-700" aria-label="View discounts">%</button>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <input className="min-w-0 flex-1 rounded-xl border p-3 text-sm" style={{ borderColor: checkoutBorder, color: checkoutText, backgroundColor: "white" }} placeholder="Discount code" value={discountCode} onChange={(e) => setDiscountCode(e.target.value.toUpperCase())} />
+                <button type="button" onClick={() => setDiscountsModalOpen(true)} className="rounded-xl bg-slate-950 px-4 py-2 text-xs font-black text-white">View</button>
+              </div>
+              {discountResult.applied ? (
+                <p className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900">Applied: {discountResult.name}{discountResult.code ? ` (${discountResult.code})` : ""}. You save {formatMoney(discountResult.amount, tenantSettings)}.</p>
+              ) : discountCode.trim() ? (
+                <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">This code is not eligible for the current basket.</p>
+              ) : null}
+              {visibleDiscounts.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {visibleDiscounts.slice(0, 4).map(({ rule }) => (
+                    <button key={rule.id} type="button" onClick={() => setDiscountCode(rule.code || "")} className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-rose-800">
+                      <span aria-hidden="true">%</span>{rule.code || rule.name}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="rounded-2xl border bg-slate-50 p-4" style={{ borderColor: checkoutBorder }}>
             <p className="text-sm font-semibold text-slate-950">Payment method</p>
             <p className="mt-1 text-xs leading-5 text-slate-600">Choose how you would like to pay this store. Online providers only appear when the store owner has connected their own account.</p>
@@ -894,23 +938,62 @@ useEffect(() => {
                   <span>Subtotal</span>
                   <span>{formatMoney(total, tenantSettings)}</span>
                 </div>
-                {rewardSummary && rewardDiscountAmount > 0 ? (
+                {rewardSummary && effectiveRewardDiscountAmount > 0 ? (
                   <div className="flex items-center justify-between text-emerald-700">
                     <span>{rewardSummary.tierLabel} rewards discount</span>
-                    <span>-{formatMoney(rewardDiscountAmount, tenantSettings)}</span>
+                    <span>-{formatMoney(effectiveRewardDiscountAmount, tenantSettings)}</span>
                   </div>
+                ) : rewardSummary && discountResult.applied && !discountResult.rewardAllowed ? (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Reward discount paused because this offer cannot be combined with rewards.</div>
                 ) : rewardSummary ? (
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">{rewardSummary.tierLabel} rewards member. Keep ordering to unlock higher tier discounts.</div>
                 ) : null}
+                {discountResult.applied ? (
+                  <div className="flex items-center justify-between text-rose-700">
+                    <span>{discountResult.name || "Discount"}{discountResult.code ? ` (${discountResult.code})` : ""}</span>
+                    <span>-{formatMoney(discountResult.amount, tenantSettings)}</span>
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between pt-2 text-base font-semibold">
                   <span>Total</span>
-                  <span>{formatMoney(totalAfterRewards, tenantSettings)}</span>
+                  <span>{formatMoney(totalAfterDiscounts, tenantSettings)}</span>
                 </div>
               </div>
             </div>
           )}
         </aside>
       </div>
+
+      {discountsModalOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setDiscountsModalOpen(false)}>
+          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${checkoutAccent} 0%, ${checkoutPrimary} 100%)` }}>
+              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">%</div>
+              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">Discounts</p>
+              <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{tenantSettings.discountPopupTitle || "Available offers"}</h3>
+              <p className="mt-2 text-sm leading-6 text-white/88">{tenantSettings.discountPopupMessage || "Choose an eligible discount for this basket."}</p>
+            </div>
+            <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
+              <div className="grid gap-3">
+                {visibleDiscounts.length ? visibleDiscounts.map(({ rule, amount }) => (
+                  <button key={rule.id} type="button" onClick={() => { setDiscountCode(rule.code || ""); setDiscountsModalOpen(false); }} className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-left text-sm text-rose-950 transition hover:bg-rose-100">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-black text-slate-950">{rule.name}</p>
+                        <p className="mt-1 text-xs leading-5 text-rose-900">{rule.scope === "combo" ? "Combination discount" : rule.scope === "product" ? "Product discount" : "Site-wide discount"}{rule.code ? ` · Code ${rule.code}` : " · automatic"}</p>
+                        {rule.allowWithRewards === false || rule.onlyThisDiscount ? <p className="mt-1 text-[11px] font-bold text-amber-700">Cannot be combined with rewards.</p> : <p className="mt-1 text-[11px] font-bold text-emerald-700">Can be used with rewards.</p>}
+                      </div>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-rose-800">Save {formatMoney(amount, tenantSettings)}</span>
+                    </div>
+                  </button>
+                )) : <p className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">No discounts currently apply to this basket. Try adding the eligible product or combination.</p>}
+              </div>
+              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white">Close</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="mt-6 rounded-[28px] border bg-white p-5 text-sm shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6" style={{ borderColor: checkoutBorder, color: checkoutText }}>
         <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: checkoutAccent }}>Business details</p>

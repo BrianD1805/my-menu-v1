@@ -42,6 +42,7 @@ export type CreateOrderInput = {
   orderType: "delivery" | "collection";
   notes?: string | null;
   paymentProvider?: string | null;
+  discountCode?: string | null;
   items: Array<{
     productId: string;
     quantity: number;
@@ -121,4 +122,9 @@ export type TenantSettings = {
   rewards_gold_discount_percent?: number | null;
   rewards_platinum_min_spend?: number | null;
   rewards_platinum_discount_percent?: number | null;
+  discounts_enabled?: boolean | null;
+  discount_popup_enabled?: boolean | null;
+  discount_popup_title?: string | null;
+  discount_popup_message?: string | null;
+  discount_rules?: unknown;
 };

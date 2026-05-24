@@ -7,6 +7,7 @@ import ProductCard from "@/components/menu/ProductCard";
 import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
+import { getApplicableDiscounts, normalizeDiscountRules, type DiscountRule } from "@/lib/discounts";
 
 type Category = {
   id: string;
@@ -277,6 +278,11 @@ export default function MenuBrowser({
   rewardsGoldDiscountPercent,
   rewardsPlatinumMinSpend,
   rewardsPlatinumDiscountPercent,
+  discountsEnabled,
+  discountPopupEnabled,
+  discountPopupTitle,
+  discountPopupMessage,
+  discountRules,
   initialProductId,
 }: {
   tenantSlug: string;
@@ -325,6 +331,11 @@ export default function MenuBrowser({
   rewardsGoldDiscountPercent?: number | null;
   rewardsPlatinumMinSpend?: number | null;
   rewardsPlatinumDiscountPercent?: number | null;
+  discountsEnabled?: boolean | null;
+  discountPopupEnabled?: boolean | null;
+  discountPopupTitle?: string | null;
+  discountPopupMessage?: string | null;
+  discountRules?: DiscountRule[] | null;
   initialProductId?: string | null;
 }) {
   const moneySettings = buildMoneySettings({
@@ -361,6 +372,8 @@ export default function MenuBrowser({
   const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(null);
   const [customerRewards, setCustomerRewards] = useState<CustomerRewardSummary | null>(null);
   const [rewardsModalOpen, setRewardsModalOpen] = useState(false);
+  const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
+  const [discountPopupSeen, setDiscountPopupSeen] = useState(false);
   const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
   const [favouritesReady, setFavouritesReady] = useState(false);
   const [favouritesSignedIn, setFavouritesSignedIn] = useState(false);
@@ -414,6 +427,19 @@ export default function MenuBrowser({
   const affiliateApplicationHref = `https://www.orduva.com/affiliate/apply?ref_tenant=${encodeURIComponent(tenantSlug)}&ref_source=storefront_footer_affiliate`;
   const storefrontRewardsEnabled = rewardsEnabled === true;
   const rewardProgrammeName = String(rewardsProgramName || "Rewards Club").trim() || "Rewards Club";
+  const storefrontDiscountRules = useMemo(() => normalizeDiscountRules(discountRules || []), [discountRules]);
+  const storefrontDiscountsEnabled = discountsEnabled === true;
+  const visibleDiscountRules = useMemo(() => storefrontDiscountRules.filter((rule) => rule.isActive !== false && rule.showOnCheckout !== false), [storefrontDiscountRules]);
+  const popupDiscountRules = useMemo(() => visibleDiscountRules.filter((rule) => rule.popupEnabled === true).slice(0, 4), [visibleDiscountRules]);
+
+  useEffect(() => {
+    if (!storefrontDiscountsEnabled || !discountPopupEnabled || discountPopupSeen || !popupDiscountRules.length) return;
+    const timer = window.setTimeout(() => {
+      setDiscountsModalOpen(true);
+      setDiscountPopupSeen(true);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [storefrontDiscountsEnabled, discountPopupEnabled, discountPopupSeen, popupDiscountRules.length]);
   const rewardTier = customerRewards?.tierLabel || "Silver";
   const rewardDiscount = Number(customerRewards?.discountPercent || (rewardTier === "Platinum" ? rewardsPlatinumDiscountPercent : rewardTier === "Gold" ? rewardsGoldDiscountPercent : rewardsSilverDiscountPercent) || 0);
   const rewardSpendToNext = Number(customerRewards?.spendToNextTier || 0);
@@ -928,6 +954,19 @@ export default function MenuBrowser({
             </button>
           </div>
         ) : null}
+        {storefrontDiscountsEnabled && visibleDiscountRules.length ? (
+          <div className="mt-3 flex justify-start lg:justify-center">
+            <button
+              type="button"
+              onClick={() => setDiscountsModalOpen(true)}
+              className="inline-flex max-w-full items-center gap-2 rounded-full border bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+              style={{ borderColor: welcomeBorder, color: welcomeHeadingColor }}
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm text-white shadow-sm" style={{ backgroundColor: brandPrimary }} aria-hidden="true">%</span>
+              <span>Offers available</span>
+            </button>
+          </div>
+        ) : null}
         <div className="mt-3 flex flex-col items-start gap-2 lg:items-center">
           {showFavouriteLoadingNote ? (
             <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
@@ -979,6 +1018,39 @@ export default function MenuBrowser({
           ) : null}
         </div>
       </section>
+
+
+      {discountsModalOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setDiscountsModalOpen(false)}>
+          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandAccent} 0%, ${brandPrimary} 100%)` }}>
+              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">%</div>
+              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">Offers & discount codes</p>
+              <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{discountPopupTitle || "Today’s offers"}</h3>
+              <p className="mt-2 text-sm leading-6 text-white/88">{discountPopupMessage || "Apply an available offer at checkout."}</p>
+            </div>
+            <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
+              <div className="grid gap-3">
+                {visibleDiscountRules.map((rule) => (
+                  <div key={rule.id} className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-black text-slate-950">{rule.name}</p>
+                        <p className="mt-1 text-xs leading-5 text-emerald-900">{rule.scope === "combo" ? "Bundle offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"}{rule.code ? ` · Code ${rule.code}` : " · Applies automatically when eligible"}</p>
+                      </div>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-800">{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
+                    </div>
+                    {rule.popupMessage ? <p className="mt-3 text-xs leading-5 text-slate-600">{rule.popupMessage}</p> : null}
+                  </div>
+                ))}
+              </div>
+              <a href="/checkout" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white">Go to checkout</a>
+              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700">Keep browsing</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {rewardsModalOpen ? (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" onClick={() => setRewardsModalOpen(false)}>

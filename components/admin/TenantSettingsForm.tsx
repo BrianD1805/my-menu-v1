@@ -1,9 +1,30 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Fragment, FormEvent, useMemo, useRef, useState } from "react";
+import { Fragment, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_MONEY_SETTINGS, formatMoney } from "@/lib/money";
 import { buildThemeFromCore, normalizeThemeColor, type StorefrontTheme, type StorefrontThemeKey } from "@/lib/storefront-theme";
+
+type DiscountRuleForm = {
+  id: string;
+  name: string;
+  code: string;
+  type: "percentage" | "fixed";
+  value: string;
+  scope: "sitewide" | "product" | "combo";
+  productIds: string[];
+  startsAt: string;
+  endsAt: string;
+  isActive: boolean;
+  allowWithRewards: boolean;
+  onlyThisDiscount: boolean;
+  showOnCheckout: boolean;
+  popupEnabled: boolean;
+  popupTitle: string;
+  popupMessage: string;
+};
+
+type AdminProductOption = { id: string; name: string; price?: number | null };
 
 type FormState = {
   businessDisplayName: string;
@@ -106,6 +127,11 @@ type FormState = {
   rewardsGoldDiscountPercent: string;
   rewardsPlatinumMinSpend: string;
   rewardsPlatinumDiscountPercent: string;
+  discountsEnabled: boolean;
+  discountPopupEnabled: boolean;
+  discountPopupTitle: string;
+  discountPopupMessage: string;
+  discountRules: DiscountRuleForm[];
 };
 
 
@@ -539,6 +565,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [mpesaDiagnosticAction, setMpesaDiagnosticAction] = useState<"check" | "create_order" | "mark_failed" | null>(null);
   const [mpesaDiagnosticResult, setMpesaDiagnosticResult] = useState<MpesaDiagnosticsResult | null>(null);
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+  const [discountProductOptions, setDiscountProductOptions] = useState<AdminProductOption[]>([]);
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(null);
   const settingsTopRef = useRef<HTMLDivElement | null>(null);
 
@@ -569,6 +596,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const adminWorkspaceDirty = formValueChanged(["showAdminLaunchChecklist"]);
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
   const rewardsDirty = formValueChanged(["rewardsEnabled", "rewardsProgramName", "rewardsSilverDiscountPercent", "rewardsGoldMinSpend", "rewardsGoldDiscountPercent", "rewardsPlatinumMinSpend", "rewardsPlatinumDiscountPercent"]);
+  const discountsDirty = formValueChanged(["discountsEnabled", "discountPopupEnabled", "discountPopupTitle", "discountPopupMessage", "discountRules"]);
   const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive", "enableDarajaCustomerPayments", "darajaConnectionStatus", "darajaCustomerMode", "darajaConsumerKey", "darajaConsumerSecretInput", "darajaShortcode", "darajaPasskeyInput", "darajaTransactionType", "darajaAccountReferencePrefix", "darajaCallbackUrl", "darajaAccountLabel", "darajaSetupNotes", "darajaPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
@@ -587,7 +615,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const darajaUsesSandboxShortcode = form.darajaShortcode.trim() === "174379";
   const darajaLiveReadinessOk = Boolean(darajaCurrencyAllowed && darajaCredentialReady && (!darajaModeLive || !darajaUsesSandboxShortcode));
   const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || adminWorkspaceDirty;
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || discountsDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -635,8 +663,66 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     return "hidden";
   }, [tone]);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function loadDiscountProducts() {
+      try {
+        const res = await fetch("/api/admin/products", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok && Array.isArray(data.products)) {
+          setDiscountProductOptions(data.products.map((product: any) => ({ id: String(product.id), name: String(product.name || "Unnamed product"), price: Number(product.price || 0) })));
+        }
+      } catch {
+        if (!cancelled) setDiscountProductOptions([]);
+      }
+    }
+    void loadDiscountProducts();
+    return () => { cancelled = true; };
+  }, []);
+
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function addDiscountRule() {
+    const next: DiscountRuleForm = {
+      id: `discount-${Date.now()}`,
+      name: "New discount",
+      code: `SAVE${Math.floor(Math.random() * 900 + 100)}`,
+      type: "percentage",
+      value: "10",
+      scope: "sitewide",
+      productIds: [],
+      startsAt: "",
+      endsAt: "",
+      isActive: true,
+      allowWithRewards: true,
+      onlyThisDiscount: false,
+      showOnCheckout: true,
+      popupEnabled: false,
+      popupTitle: "Special offer",
+      popupMessage: "Apply this discount at checkout.",
+    };
+    setForm((current) => ({ ...current, discountRules: [...(current.discountRules || []), next] }));
+  }
+
+  function updateDiscountRule(index: number, patch: Partial<DiscountRuleForm>) {
+    setForm((current) => ({
+      ...current,
+      discountRules: (current.discountRules || []).map((rule, ruleIndex) => ruleIndex === index ? { ...rule, ...patch } : rule),
+    }));
+  }
+
+  function removeDiscountRule(index: number) {
+    setForm((current) => ({ ...current, discountRules: (current.discountRules || []).filter((_, ruleIndex) => ruleIndex !== index) }));
+  }
+
+  function toggleDiscountProduct(index: number, productId: string, checked: boolean) {
+    const rule = form.discountRules[index];
+    if (!rule) return;
+    const current = Array.isArray(rule.productIds) ? rule.productIds : [];
+    const next = checked ? Array.from(new Set([...current, productId])).slice(0, 3) : current.filter((id) => id !== productId);
+    updateDiscountRule(index, { productIds: next });
   }
 
   function updateThemeColor(key: StorefrontThemeKey, value: string) {
@@ -1312,7 +1398,93 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             <RewardTierPreview name="Platinum" spend={`${form.rewardsPlatinumMinSpend || "0"}+`} discount={form.rewardsPlatinumDiscountPercent || "0"} tone="platinum" />
           </div>
 
-          <p className="mt-4 text-xs leading-5 text-slate-500">Discount codes will be added in a later build. This rewards discount is kept separate so future promo codes can be applied cleanly on top of, or after, the tier calculation.</p>
+          <p className="mt-4 text-xs leading-5 text-slate-500">Discounts are managed in the next section. Each discount can decide whether it stacks with this rewards discount or replaces it.</p>
+        </Section>
+
+
+        <Section id="discounts-and-codes" title="Discounts & discount codes" dirty={discountsDirty} saving={saving}>
+          <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-950">
+            <p className="font-black text-slate-950">Premium offers for products, bundles and site-wide campaigns</p>
+            <p className="mt-1 text-xs leading-5 text-emerald-900">Create a code to share with a customer, attach an offer to one product, require a combination of up to three products, or run a site-wide campaign with a date range. Each discount can decide whether it stacks with rewards.</p>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <label className="flex items-start justify-between gap-4 rounded-[22px] border border-slate-200 bg-white p-4">
+              <span>
+                <span className="block text-sm font-black text-slate-900">Enable discounts</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-600">Allows active discounts to appear at checkout and be applied to the order total.</span>
+              </span>
+              <input type="checkbox" checked={form.discountsEnabled} onChange={(e) => update("discountsEnabled", e.target.checked)} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" />
+            </label>
+            <label className="flex items-start justify-between gap-4 rounded-[22px] border border-slate-200 bg-white p-4">
+              <span>
+                <span className="block text-sm font-black text-slate-900">Show discount popup on loading</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-600">Shows a tasteful offers popup when the storefront loads, if there are active visible offers.</span>
+              </span>
+              <input type="checkbox" checked={form.discountPopupEnabled} onChange={(e) => update("discountPopupEnabled", e.target.checked)} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" />
+            </label>
+            <Field label="Popup title"><input value={form.discountPopupTitle} onChange={(e) => update("discountPopupTitle", e.target.value)} className="input" placeholder="Today’s offers" /></Field>
+            <Field label="Popup message"><input value={form.discountPopupMessage} onChange={(e) => update("discountPopupMessage", e.target.value)} className="input" placeholder="Tap an offer at checkout to apply it." /></Field>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 rounded-[22px] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-black text-slate-950">Discount rules</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">Use product rules for one product, combo rules for up to three products, or site-wide rules for the full basket. Leave code blank for an automatic visible offer.</p>
+            </div>
+            <button type="button" onClick={addDiscountRule} className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-slate-950 px-4 py-2 text-xs font-black text-white shadow-sm">Add discount</button>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            {(form.discountRules || []).length ? form.discountRules.map((rule, index) => (
+              <div key={rule.id || index} className="rounded-[24px] border border-emerald-300 bg-emerald-100/70 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black text-slate-950">{rule.name || `Discount ${index + 1}`}</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">{rule.scope === "combo" ? "Combination offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"} · {rule.type === "percentage" ? `${rule.value || 0}%` : `${form.currencySymbol || ""}${rule.value || 0}`}</p>
+                  </div>
+                  <button type="button" onClick={() => removeDiscountRule(index)} className="inline-flex min-h-9 items-center justify-center rounded-full border border-rose-200 bg-white px-3 py-2 text-[11px] font-black text-rose-700">Remove</button>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <Field label="Discount name"><input value={rule.name} onChange={(e) => updateDiscountRule(index, { name: e.target.value })} className="input" placeholder="Lunch special" /></Field>
+                  <Field label="Code to copy/paste"><input value={rule.code} onChange={(e) => updateDiscountRule(index, { code: e.target.value.toUpperCase() })} className="input" placeholder="SAVE10" /></Field>
+                  <Field label="Discount type"><select value={rule.type} onChange={(e) => updateDiscountRule(index, { type: e.target.value as DiscountRuleForm["type"] })} className="input"><option value="percentage">Percentage</option><option value="fixed">Fixed amount</option></select></Field>
+                  <Field label={rule.type === "percentage" ? "Discount %" : "Fixed amount"}><input type="number" min={0} max={rule.type === "percentage" ? 95 : undefined} step="0.1" value={rule.value} onChange={(e) => updateDiscountRule(index, { value: e.target.value })} className="input" /></Field>
+                  <Field label="Applies to"><select value={rule.scope} onChange={(e) => updateDiscountRule(index, { scope: e.target.value as DiscountRuleForm["scope"], productIds: e.target.value === "sitewide" ? [] : rule.productIds })} className="input"><option value="sitewide">Site-wide basket</option><option value="product">Specific product</option><option value="combo">Combination of products</option></select></Field>
+                  <Field label="Start date"><input type="datetime-local" value={rule.startsAt} onChange={(e) => updateDiscountRule(index, { startsAt: e.target.value })} className="input" /></Field>
+                  <Field label="End date"><input type="datetime-local" value={rule.endsAt} onChange={(e) => updateDiscountRule(index, { endsAt: e.target.value })} className="input" /></Field>
+                </div>
+                {rule.scope !== "sitewide" ? (
+                  <div className="mt-4 rounded-[22px] border border-emerald-200 bg-white/75 p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-900">Choose products {rule.scope === "combo" ? "for this bundle, up to 3" : "for this offer"}</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {discountProductOptions.length ? discountProductOptions.map((product) => (
+                        <label key={product.id} className="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
+                          <input type="checkbox" checked={(rule.productIds || []).includes(product.id)} onChange={(e) => toggleDiscountProduct(index, product.id, e.target.checked)} disabled={!(rule.productIds || []).includes(product.id) && (rule.productIds || []).length >= 3} className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" />
+                          <span><strong className="block text-slate-950">{product.name}</strong><span>{formatMoney(Number(product.price || 0), moneySettings)}</span></span>
+                        </label>
+                      )) : <p className="text-xs text-slate-500">Products will appear here after the menu has products.</p>}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700"><input type="checkbox" checked={rule.isActive} onChange={(e) => updateDiscountRule(index, { isActive: e.target.checked })} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" /><span><strong className="text-slate-900">Active</strong><span className="block text-xs">Inactive discounts are saved but ignored.</span></span></label>
+                  <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700"><input type="checkbox" checked={rule.showOnCheckout} onChange={(e) => updateDiscountRule(index, { showOnCheckout: e.target.checked })} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" /><span><strong className="text-slate-900">Show on checkout</strong><span className="block text-xs">Customers can tap Apply instead of typing the code.</span></span></label>
+                  <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700"><input type="checkbox" checked={rule.allowWithRewards} onChange={(e) => updateDiscountRule(index, { allowWithRewards: e.target.checked })} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" /><span><strong className="text-slate-900">Can be used with rewards</strong><span className="block text-xs">Turn off if this discount replaces the customer tier reward.</span></span></label>
+                  <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700"><input type="checkbox" checked={rule.onlyThisDiscount} onChange={(e) => updateDiscountRule(index, { onlyThisDiscount: e.target.checked, allowWithRewards: e.target.checked ? false : rule.allowWithRewards })} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" /><span><strong className="text-slate-900">Only this discount applies</strong><span className="block text-xs">Blocks reward stacking and future promo stacking.</span></span></label>
+                  <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700 md:col-span-2"><input type="checkbox" checked={rule.popupEnabled} onChange={(e) => updateDiscountRule(index, { popupEnabled: e.target.checked })} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" /><span><strong className="text-slate-900">Feature in loading popup</strong><span className="block text-xs">Best for site-wide campaigns or limited-time bundles.</span></span></label>
+                </div>
+                {rule.popupEnabled ? (
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <Field label="Offer popup title"><input value={rule.popupTitle} onChange={(e) => updateDiscountRule(index, { popupTitle: e.target.value })} className="input" placeholder="Limited-time offer" /></Field>
+                    <Field label="Offer popup message"><input value={rule.popupMessage} onChange={(e) => updateDiscountRule(index, { popupMessage: e.target.value })} className="input" placeholder="Add your favourites and apply this at checkout." /></Field>
+                  </div>
+                ) : null}
+              </div>
+            )) : (
+              <div className="rounded-[22px] border border-dashed border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-600">No discounts yet. Add your first product, combo or site-wide offer when you are ready.</div>
+            )}
+          </div>
         </Section>
 
 
@@ -2095,6 +2267,7 @@ const SETTINGS_MENU_ITEMS = [
   { id: "per-item-storefront-colours", group: "Theme", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
   { id: "business-contact-details", group: "Contact", title: "Business contact details", help: "Phone, email, address, footer and social links." },
   { id: "customer-rewards-program", group: "Rewards", title: "Customer rewards programme", help: "Silver, Gold and Platinum spend tiers with percentage discounts." },
+  { id: "discounts-and-codes", group: "Discounts", title: "Discounts & codes", help: "Product, combo and site-wide promotional offers." },
   { id: "storefront-payment-options", group: "Payments", title: "Storefront payment options", help: "Cash, COD, Stripe, Yoco and future provider setup." },
   { id: "advanced-currency-display", group: "Payments", title: "Advanced currency display", help: "Currency name, symbol, suffix, separators and sample pricing." },
 ];
@@ -2107,6 +2280,7 @@ const SETTINGS_SECTION_META: Record<string, { group: string; help: string; accen
   "per-item-storefront-colours": { group: "Theme", help: "Detailed colour controls are tucked away until needed, especially on mobile.", accent: "bg-indigo-100 text-indigo-800" },
   "business-contact-details": { group: "Contact", help: "Footer wording, contact details, referral advert and social links.", accent: "bg-emerald-100 text-emerald-800" },
   "customer-rewards-program": { group: "Rewards", help: "Customer loyalty tiers, thresholds and percentage discounts.", accent: "bg-purple-100 text-purple-900" },
+  "discounts-and-codes": { group: "Discounts", help: "Product, combo and site-wide discount codes and visible offers.", accent: "bg-rose-100 text-rose-900" },
   "storefront-payment-options": { group: "Payments", help: "Cash, COD, Stripe and Yoco controls. Payment behaviour is unchanged.", accent: "bg-amber-100 text-amber-900" },
   "advanced-currency-display": { group: "Payments", help: "Currency display formatting, including optional tenant-specific suffix.", accent: "bg-amber-100 text-amber-900" },
 };

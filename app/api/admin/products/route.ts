@@ -46,6 +46,30 @@ function normalizeStockEnabled(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1;
 }
 
+
+export async function GET(req: Request) {
+  try {
+    const tenantLookup = await resolveAdminTenant(req);
+    if (!tenantLookup.ok) return tenantLookup.error;
+    const tenant = tenantLookup.tenant!;
+
+    const { data: products, error } = await db
+      .from("products")
+      .select("id, name, price, is_active, category_id")
+      .eq("tenant_id", tenant.id)
+      .order("name", { ascending: true });
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to load products" }, { status: 500 });
+    }
+
+    return NextResponse.json({ products: products || [] });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to load products";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();

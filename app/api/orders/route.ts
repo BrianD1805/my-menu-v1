@@ -13,6 +13,7 @@ import { createTenantYocoOrderCheckoutIntent } from "@/lib/storefront-yoco";
 import { createTenantPesapalOrderCheckoutIntent } from "@/lib/storefront-pesapal";
 import { createTenantDarajaStkPushIntent } from "@/lib/storefront-daraja";
 import { calculateRewardDiscount, getCustomerRewardSummary } from "@/lib/rewards";
+import { calculateBestDiscount } from "@/lib/discounts";
 
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
@@ -137,9 +138,18 @@ export async function POST(req: Request) {
     const settings = await getTenantSettings(tenant.id);
     const customerAccountId = body.customerAccountId?.trim() || null;
     const rewardSummary = await getCustomerRewardSummary({ tenantId: tenant.id, customerAccountId, settings });
-    const rewardDiscount = rewardSummary.enabled && customerAccountId ? calculateRewardDiscount(subtotal, rewardSummary.discountPercent) : calculateRewardDiscount(subtotal, 0);
-    const total = rewardDiscount.totalAfterDiscount;
-    const rewardMetadata = rewardSummary.enabled && customerAccountId
+    const initialRewardDiscount = rewardSummary.enabled && customerAccountId ? calculateRewardDiscount(subtotal, rewardSummary.discountPercent) : calculateRewardDiscount(subtotal, 0);
+    const discountCalculation = calculateBestDiscount({
+      settings,
+      cartLines: orderItems.map((item) => ({ productId: item.product_id, quantity: item.quantity, lineTotal: item.line_total })),
+      subtotal,
+      code: (body as any).discountCode,
+      rewardDiscountAmount: initialRewardDiscount.discountAmount,
+    });
+    const rewardDiscount = discountCalculation.applied && !discountCalculation.rewardAllowed ? calculateRewardDiscount(subtotal, 0) : initialRewardDiscount;
+    const totalAfterRewards = Math.max(0, Math.round((subtotal - rewardDiscount.discountAmount) * 100) / 100);
+    const total = discountCalculation.applied ? discountCalculation.totalAfterDiscount : totalAfterRewards;
+    const rewardMetadata = rewardSummary.enabled && customerAccountId && rewardDiscount.discountAmount > 0
       ? {
           reward_tier: rewardSummary.tier,
           reward_discount_percent: rewardDiscount.discountPercent,
@@ -153,8 +163,33 @@ export async function POST(req: Request) {
           reward_discount_percent: 0,
           reward_discount_amount: 0,
           subtotal_total: rewardDiscount.subtotal,
-          rewards_spend_before: null,
-          rewards_spend_after: null,
+          rewards_spend_before: rewardSummary.enabled && customerAccountId ? rewardSummary.qualifyingSpend : null,
+          rewards_spend_after: rewardSummary.enabled && customerAccountId ? Math.round((rewardSummary.qualifyingSpend + total) * 100) / 100 : null,
+        };
+    const discountMetadata = discountCalculation.applied
+      ? {
+          discount_rule_id: discountCalculation.ruleId,
+          discount_code: discountCalculation.code,
+          discount_name: discountCalculation.name,
+          discount_scope: discountCalculation.scope,
+          discount_type: discountCalculation.type,
+          discount_value: discountCalculation.value,
+          discount_base_amount: discountCalculation.baseAmount,
+          discount_amount: discountCalculation.amount,
+          discount_allow_with_rewards: discountCalculation.allowWithRewards,
+          discount_only_this_discount: discountCalculation.onlyThisDiscount,
+        }
+      : {
+          discount_rule_id: null,
+          discount_code: null,
+          discount_name: null,
+          discount_scope: null,
+          discount_type: null,
+          discount_value: 0,
+          discount_base_amount: 0,
+          discount_amount: 0,
+          discount_allow_with_rewards: true,
+          discount_only_this_discount: false,
         };
     const selectedPayment = getStorefrontPaymentOption(settings, body.orderType, body.paymentProvider);
 
@@ -191,6 +226,7 @@ export async function POST(req: Request) {
           currencyCode: branding.currencyCode || settings?.currency_code || "GBP",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
+          discounts: discountMetadata,
         });
 
         return NextResponse.json({
@@ -230,6 +266,7 @@ export async function POST(req: Request) {
           currencyCode: branding.currencyCode || settings?.currency_code || "ZAR",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
+          discounts: discountMetadata,
         });
 
         return NextResponse.json({
@@ -270,6 +307,7 @@ export async function POST(req: Request) {
           currencyCode: branding.currencyCode || settings?.currency_code || "KES",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
+          discounts: discountMetadata,
         });
 
         return NextResponse.json({
@@ -313,6 +351,7 @@ export async function POST(req: Request) {
           currencyCode: branding.currencyCode || settings?.currency_code || "KES",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
+          discounts: discountMetadata,
         });
 
         return NextResponse.json({
@@ -349,6 +388,16 @@ export async function POST(req: Request) {
         reward_tier: rewardMetadata.reward_tier,
         reward_discount_percent: rewardMetadata.reward_discount_percent,
         reward_discount_amount: rewardMetadata.reward_discount_amount,
+        discount_rule_id: discountMetadata.discount_rule_id,
+        discount_code: discountMetadata.discount_code,
+        discount_name: discountMetadata.discount_name,
+        discount_scope: discountMetadata.discount_scope,
+        discount_type: discountMetadata.discount_type,
+        discount_value: discountMetadata.discount_value,
+        discount_base_amount: discountMetadata.discount_base_amount,
+        discount_amount: discountMetadata.discount_amount,
+        discount_allow_with_rewards: discountMetadata.discount_allow_with_rewards,
+        discount_only_this_discount: discountMetadata.discount_only_this_discount,
         rewards_spend_before: rewardMetadata.rewards_spend_before,
         rewards_spend_after: rewardMetadata.rewards_spend_after,
         notes: body.notes?.trim() || null,
@@ -383,7 +432,7 @@ export async function POST(req: Request) {
       page_path: "/checkout",
       order_id: order.id,
       anonymous_session_id: customerAccountId,
-      metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, subtotal, total, rewardTier: rewardMetadata.reward_tier, rewardDiscountAmount: rewardMetadata.reward_discount_amount },
+      metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, subtotal, total, rewardTier: rewardMetadata.reward_tier, rewardDiscountAmount: rewardMetadata.reward_discount_amount, discountCode: discountMetadata.discount_code, discountAmount: discountMetadata.discount_amount },
     }).then(undefined, () => undefined);
 
     for (const item of body.items) {
@@ -459,6 +508,7 @@ export async function POST(req: Request) {
       paymentStatus: selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
       total,
       reward: rewardMetadata,
+      discount: discountMetadata,
       stripeCheckoutUrl,
       stripeCheckoutSessionId,
     });
