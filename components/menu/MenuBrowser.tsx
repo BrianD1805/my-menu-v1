@@ -279,7 +279,9 @@ function StorefrontQuickActionButton({
   controls,
   borderColor,
   textColor,
+  iconTextColor = "#FFFFFF",
   iconBackground,
+  variant = "compact",
 }: {
   label: string;
   actionLabel: string;
@@ -289,22 +291,38 @@ function StorefrontQuickActionButton({
   controls?: string;
   borderColor: string;
   textColor: string;
+  iconTextColor?: string;
   iconBackground: string;
+  variant?: "compact" | "wide" | "header";
 }) {
+  const isWide = variant === "wide";
+  const isHeader = variant === "header";
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-[5.1rem] shrink-0 flex-col items-center justify-center gap-1 rounded-[20px] border bg-white/88 px-2 py-2.5 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none sm:w-[5.7rem] sm:px-3"
+      className={
+        isWide
+          ? "group flex min-h-14 w-full max-w-[18.5rem] items-center justify-center gap-3 rounded-[22px] border bg-white/90 px-4 py-3 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+          : isHeader
+            ? "group flex min-w-[4.3rem] flex-col items-center justify-center gap-1 rounded-[18px] bg-white/82 px-2.5 py-2 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+            : "group flex w-full min-w-0 shrink-0 flex-col items-center justify-center gap-1 rounded-[18px] bg-white/86 px-1.5 py-2.5 text-center shadow-sm backdrop-blur transition hover:-translate-y-[1px] hover:bg-white focus:outline-none"
+      }
       style={{ borderColor, color: textColor }}
       aria-expanded={expanded}
       aria-controls={controls}
     >
-      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-sm transition group-hover:scale-[1.03]" style={{ backgroundColor: iconBackground }} aria-hidden="true">
+      <span
+        className={isWide ? "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-[1.03]" : "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-[1.03]"}
+        style={{ backgroundColor: iconBackground, color: iconTextColor }}
+        aria-hidden="true"
+      >
         {icon}
       </span>
-      <span className="text-[10px] font-black uppercase leading-none tracking-[0.14em] sm:text-[11px]">{label}</span>
-      <span className="text-[9px] font-bold uppercase leading-none tracking-[0.12em] opacity-65">{actionLabel}</span>
+      <span className={isWide ? "min-w-0 text-left" : "min-w-0 text-center"}>
+        <span className={isWide ? "block text-[12px] font-black uppercase leading-tight tracking-[0.14em]" : "block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em]"}>{label}</span>
+        <span className={isWide ? "mt-0.5 block text-[10px] font-bold uppercase leading-tight tracking-[0.12em] opacity-65" : "mt-1 block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em] opacity-70"}>{actionLabel}</span>
+      </span>
     </button>
   );
 }
@@ -480,6 +498,26 @@ export default function MenuBrowser({
   const welcomeBody = normalizeThemeColor(storefrontTheme?.welcomeBody, brandText);
   const welcomeBorder = normalizeThemeColor(storefrontTheme?.welcomeBorder, brandBorder);
   const welcomeShadow = normalizeThemeColor(storefrontTheme?.welcomeShadow, brandAccent);
+  const welcomeActionText = normalizeThemeColor(storefrontTheme?.welcomeActionText, welcomeHeadingColor);
+  const welcomeActionIconText = normalizeThemeColor(storefrontTheme?.welcomeActionIconText, "#FFFFFF");
+  const welcomeActionIconBackground = normalizeThemeColor(storefrontTheme?.welcomeActionIconBackground, brandAccent);
+  const welcomeActionBorder = normalizeThemeColor(storefrontTheme?.welcomeActionBorder, "#FFFFFF");
+  const rewardsPopupBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupBackground, "#FFFFFF");
+  const rewardsPopupHeaderBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderBackground, "#334155");
+  const rewardsPopupHeaderText = normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderText, "#FFFFFF");
+  const rewardsPopupBodyText = normalizeThemeColor(storefrontTheme?.rewardsPopupBodyText, brandText);
+  const rewardsPopupCardBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupCardBackground, "#F8FAFC");
+  const rewardsPopupCardBorder = normalizeThemeColor(storefrontTheme?.rewardsPopupCardBorder, "#64748B");
+  const rewardsPopupPillBackground = normalizeThemeColor(storefrontTheme?.rewardsPopupPillBackground, "#334155");
+  const rewardsPopupPillText = normalizeThemeColor(storefrontTheme?.rewardsPopupPillText, "#F8FAFC");
+  const offersPopupBackground = normalizeThemeColor(storefrontTheme?.offersPopupBackground, "#FFFFFF");
+  const offersPopupHeaderBackground = normalizeThemeColor(storefrontTheme?.offersPopupHeaderBackground, brandPrimary);
+  const offersPopupHeaderText = normalizeThemeColor(storefrontTheme?.offersPopupHeaderText, "#FFFFFF");
+  const offersPopupBodyText = normalizeThemeColor(storefrontTheme?.offersPopupBodyText, brandText);
+  const offersPopupCardBackground = normalizeThemeColor(storefrontTheme?.offersPopupCardBackground, brandSurface);
+  const offersPopupCardBorder = normalizeThemeColor(storefrontTheme?.offersPopupCardBorder, brandBorder);
+  const offersPopupPillBackground = normalizeThemeColor(storefrontTheme?.offersPopupPillBackground, brandPrimary);
+  const offersPopupPillText = normalizeThemeColor(storefrontTheme?.offersPopupPillText, "#FFFFFF");
   const footerBackground = normalizeThemeColor(storefrontTheme?.footerBackground, "#FFFFFF");
   const footerText = normalizeThemeColor(storefrontTheme?.footerText, brandText);
   const footerBadgeBackground = normalizeThemeColor(storefrontTheme?.footerBadgeBackground, brandAccent);
@@ -990,6 +1028,65 @@ export default function MenuBrowser({
                 <CustomerAccountHeaderActions />
               </div>
 
+              <div className="absolute left-0 top-1/2 hidden -translate-y-1/2 items-center gap-2 lg:flex">
+                {storefrontRewardsEnabled ? (
+                  <StorefrontQuickActionButton
+                    label="Rewards"
+                    actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
+                    icon={<span className="text-lg leading-none">✦</span>}
+                    onClick={() => setRewardsModalOpen(true)}
+                    borderColor="transparent"
+                    textColor={welcomeActionText}
+                    iconTextColor={welcomeActionIconText}
+                    iconBackground={welcomeActionIconBackground}
+                    variant="header"
+                  />
+                ) : null}
+                {storefrontDiscountsEnabled ? (
+                  <StorefrontQuickActionButton
+                    label="Offers"
+                    actionLabel={visibleDiscountRules.length ? "View" : "Info"}
+                    icon={<span className="text-base font-black leading-none">%</span>}
+                    onClick={() => setDiscountsModalOpen(true)}
+                    borderColor="transparent"
+                    textColor={welcomeActionText}
+                    iconTextColor={welcomeActionIconText}
+                    iconBackground={welcomeActionIconBackground}
+                    variant="header"
+                  />
+                ) : null}
+                {canToggleFavourites ? (
+                  <StorefrontQuickActionButton
+                    label="Favourites"
+                    actionLabel={favouritesVisible ? "Hide" : "View"}
+                    icon={<svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>}
+                    onClick={() => setFavouritesVisible((visible) => !visible)}
+                    expanded={favouritesVisible}
+                    controls="customer-favourites-section"
+                    borderColor="transparent"
+                    textColor={welcomeActionText}
+                    iconTextColor={welcomeActionIconText}
+                    iconBackground={welcomeActionIconBackground}
+                    variant="header"
+                  />
+                ) : null}
+                {canToggleBuyAgain ? (
+                  <StorefrontQuickActionButton
+                    label="Buy again"
+                    actionLabel={buyAgainVisible ? "Hide" : "View"}
+                    icon={<span className="text-lg leading-none">↻</span>}
+                    onClick={() => setBuyAgainVisible((visible) => !visible)}
+                    expanded={buyAgainVisible}
+                    controls="customer-buy-again-section"
+                    borderColor="transparent"
+                    textColor={welcomeActionText}
+                    iconTextColor={welcomeActionIconText}
+                    iconBackground={welcomeActionIconBackground}
+                    variant="header"
+                  />
+                ) : null}
+              </div>
+
               <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-2 sm:gap-2.5">
                 <div className="hidden sm:flex sm:items-center sm:gap-2.5">
                   <CustomerAccountHeaderActions />
@@ -1020,9 +1117,9 @@ export default function MenuBrowser({
         <p className="mx-auto mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7" style={{ color: welcomeBody }}>
           {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
         </p>
-        <div className="mt-4 flex flex-col items-center gap-2">
+        <div className="mt-4 flex flex-col items-center justify-center gap-2 text-center sm:hidden">
           {showFavouriteLoadingNote ? (
-            <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
+            <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-center text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
               </svg>
@@ -1031,32 +1128,33 @@ export default function MenuBrowser({
           ) : null}
 
           {storefrontRewardsEnabled ? (
-            <div className="flex w-full items-center justify-center">
-              <StorefrontQuickActionButton
-                label="Rewards"
-                actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
-                icon={<span className="text-lg leading-none">✦</span>}
-                onClick={() => setRewardsModalOpen(true)}
-                borderColor={welcomeBorder}
-                textColor={welcomeHeadingColor}
-                iconBackground={rewardTierPalette.badgeBackground}
-              />
-            </div>
+            <StorefrontQuickActionButton
+              label="Rewards"
+              actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
+              icon={<span className="text-xl leading-none">✦</span>}
+              onClick={() => setRewardsModalOpen(true)}
+              borderColor={welcomeActionBorder}
+              textColor={welcomeActionText}
+              iconTextColor={welcomeActionIconText}
+              iconBackground={welcomeActionIconBackground}
+              variant="wide"
+            />
           ) : null}
 
           {(storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain) ? (
-            <div className="flex w-full flex-wrap items-stretch justify-center gap-2">
+            <div className="grid w-full max-w-[20rem] grid-cols-3 items-stretch justify-items-center gap-2">
               {storefrontDiscountsEnabled ? (
                 <StorefrontQuickActionButton
                   label="Offers"
                   actionLabel={visibleDiscountRules.length ? "View" : "Info"}
                   icon={<span className="text-base font-black leading-none">%</span>}
                   onClick={() => setDiscountsModalOpen(true)}
-                  borderColor={welcomeBorder}
-                  textColor={welcomeHeadingColor}
-                  iconBackground={brandPrimary}
+                  borderColor="transparent"
+                  textColor={welcomeActionText}
+                  iconTextColor={welcomeActionIconText}
+                  iconBackground={welcomeActionIconBackground}
                 />
-              ) : null}
+              ) : <span aria-hidden="true" />}
 
               {canToggleFavourites ? (
                 <StorefrontQuickActionButton
@@ -1070,11 +1168,12 @@ export default function MenuBrowser({
                   onClick={() => setFavouritesVisible((visible) => !visible)}
                   expanded={favouritesVisible}
                   controls="customer-favourites-section"
-                  borderColor={welcomeBorder}
-                  textColor={welcomeHeadingColor}
-                  iconBackground={brandAccent}
+                  borderColor="transparent"
+                  textColor={welcomeActionText}
+                  iconTextColor={welcomeActionIconText}
+                  iconBackground={welcomeActionIconBackground}
                 />
-              ) : null}
+              ) : <span aria-hidden="true" />}
 
               {canToggleBuyAgain ? (
                 <StorefrontQuickActionButton
@@ -1084,16 +1183,17 @@ export default function MenuBrowser({
                   onClick={() => setBuyAgainVisible((visible) => !visible)}
                   expanded={buyAgainVisible}
                   controls="customer-buy-again-section"
-                  borderColor={welcomeBorder}
-                  textColor={welcomeHeadingColor}
-                  iconBackground={brandPrimary}
+                  borderColor="transparent"
+                  textColor={welcomeActionText}
+                  iconTextColor={welcomeActionIconText}
+                  iconBackground={welcomeActionIconBackground}
                 />
-              ) : null}
+              ) : <span aria-hidden="true" />}
             </div>
           ) : null}
 
           {showNoFavouritesNote ? (
-            <p className="text-[11px] font-semibold" style={{ color: welcomeBody }}>
+            <p className="text-center text-[11px] font-semibold" style={{ color: welcomeBody }}>
               Tap the heart on any product to save it here.
             </p>
           ) : null}
@@ -1103,36 +1203,36 @@ export default function MenuBrowser({
 
       {discountsModalOpen ? (
         <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
-          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandAccent} 0%, ${brandPrimary} 100%)` }}>
+          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" style={{ backgroundColor: offersPopupBackground, color: offersPopupBodyText }} onClick={(event) => event.stopPropagation()}>
+            <div className="relative overflow-hidden px-5 py-5 sm:px-7 sm:py-6" style={{ backgroundColor: offersPopupHeaderBackground, color: offersPopupHeaderText }}>
               <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">%</div>
-              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">Offers & discount codes</p>
+              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] opacity-80">Offers & discount codes</p>
               <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{discountPopupTitle || "Today’s offers"}</h3>
-              <p className="mt-2 text-sm leading-6 text-white/88">{discountPopupMessage || "Apply an available offer at checkout."}</p>
+              <p className="mt-2 text-sm leading-6 opacity-[0.88]">{discountPopupMessage || "Apply an available offer at checkout."}</p>
             </div>
             <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
               <div className="grid gap-3">
                 {!visibleDiscountRules.length ? (
-                  <div className="rounded-[22px] border p-4 text-center text-sm leading-6" style={{ borderColor: brandAccentBorder, backgroundColor: brandSurface, color: brandSoftText }}>
+                  <div className="rounded-[22px] border p-4 text-center text-sm leading-6" style={{ borderColor: offersPopupCardBorder, backgroundColor: offersPopupCardBackground, color: offersPopupBodyText }}>
                     No offers are currently available. Please check again soon.
                   </div>
                 ) : null}
                 {visibleDiscountRules.map((rule) => (
-                  <div key={rule.id} className="rounded-[22px] border p-4 text-sm" style={{ borderColor: brandAccentBorder, backgroundColor: brandSurface, color: brandText }}>
+                  <div key={rule.id} className="rounded-[22px] border p-4 text-sm" style={{ borderColor: offersPopupCardBorder, backgroundColor: offersPopupCardBackground, color: offersPopupBodyText }}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-black text-slate-950">{rule.name}</p>
+                        <p className="font-black" style={{ color: offersPopupBodyText }}>{rule.name}</p>
                         <p className="mt-1 text-xs leading-5" style={{ color: brandSoftText }}>{rule.scope === "combo" ? "Bundle offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"}{rule.code ? ` · Code ${rule.code}` : " · Applies automatically when eligible"}</p>
                       </div>
-                      <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: "#FFFFFF", color: brandPrimary }}>{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
+                      <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: offersPopupPillBackground, color: offersPopupPillText }}>{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
                     </div>
                     {rule.popupMessage ? <p className="mt-3 text-xs leading-5" style={{ color: brandSoftText }}>{rule.popupMessage}</p> : null}
                   </div>
                 ))}
               </div>
-              <a href="/checkout" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black text-white" style={{ backgroundColor: brandPrimary }}>Go to checkout</a>
-              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border bg-white px-5 py-3 text-sm font-black" style={{ borderColor: brandAccentBorder, color: brandPrimary }}>Keep browsing</button>
+              <a href="/checkout" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black text-white" style={{ backgroundColor: offersPopupPillBackground, color: offersPopupPillText }}>Go to checkout</a>
+              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border bg-white px-5 py-3 text-sm font-black" style={{ borderColor: offersPopupCardBorder, color: offersPopupBodyText }}>Keep browsing</button>
             </div>
           </div>
         </div>
@@ -1140,18 +1240,18 @@ export default function MenuBrowser({
 
       {rewardsModalOpen ? (
         <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/55 px-3 py-5 backdrop-blur-[3px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
-          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" onClick={(event) => event.stopPropagation()}>
-            <div className="relative overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${rewardTierPalette.gradientFrom} 0%, ${rewardTierPalette.gradientTo} 100%)` }}>
+          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" style={{ backgroundColor: rewardsPopupBackground, color: rewardsPopupBodyText }} onClick={(event) => event.stopPropagation()}>
+            <div className="relative overflow-hidden px-5 py-5 sm:px-7 sm:py-6" style={{ backgroundColor: rewardsPopupHeaderBackground, color: rewardsPopupHeaderText }}>
               <button type="button" onClick={() => setRewardsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close rewards">×</button>
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/22 text-3xl ring-1 ring-white/35" style={{ color: "#FFFFFF" }}>✦</div>
-              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">{rewardProgrammeName}</p>
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl text-3xl ring-1 ring-white/35" style={{ backgroundColor: rewardsPopupPillBackground, color: rewardsPopupPillText }}>✦</div>
+              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] opacity-80">{rewardProgrammeName}</p>
               <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
-              <p className="mt-2 rounded-2xl bg-white/10 px-3 py-2 text-sm leading-6 text-white/88 ring-1 ring-white/15 sm:bg-transparent sm:px-0 sm:py-0 sm:ring-0">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
+              <p className="mt-2 rounded-2xl bg-white/10 px-3 py-2 text-sm leading-6 opacity-[0.88] ring-1 ring-white/15 sm:bg-transparent sm:px-0 sm:py-0 sm:ring-0">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
             </div>
             <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
               {customerAuthStatus === "signedIn" && customerRewards ? (
                 <>
-                  <div className="rounded-[22px] border p-4 text-sm" style={{ borderColor: rewardTierPalette.border, backgroundColor: rewardTierPalette.background, color: rewardTierPalette.text }}>
+                  <div className="rounded-[22px] border p-4 text-sm" style={{ borderColor: rewardsPopupCardBorder, backgroundColor: rewardsPopupCardBackground, color: rewardsPopupBodyText }}>
                     <div className="flex items-center justify-between gap-4">
                       <span>Qualifying spend</span>
                       <strong>{formatMoney(customerRewards.qualifyingSpend, moneySettings)}</strong>
@@ -1170,7 +1270,7 @@ export default function MenuBrowser({
                 <RewardInfoRow name="Gold" spend={`${formatMoney(Number(rewardsGoldMinSpend || 1000), moneySettings)} spend`} discount={Number(rewardsGoldDiscountPercent || 5)} />
                 <RewardInfoRow name="Platinum" spend={`${formatMoney(Number(rewardsPlatinumMinSpend || 2500), moneySettings)} spend`} discount={Number(rewardsPlatinumDiscountPercent || 10)} />
               </div>
-              <button type="button" onClick={() => setRewardsModalOpen(false)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black" style={{ backgroundColor: rewardTierPalette.badgeBackground, color: rewardTierPalette.badgeText }}>Close</button>
+              <button type="button" onClick={() => setRewardsModalOpen(false)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black" style={{ backgroundColor: rewardsPopupPillBackground, color: rewardsPopupPillText }}>Close</button>
             </div>
           </div>
         </div>
