@@ -1268,75 +1268,137 @@ export default function MenuBrowser({
 
 
       {discountsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/38 px-3 py-5 backdrop-blur-[4px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
-          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" style={{ backgroundColor: offersPopupBackground, color: offersPopupBodyText }} onClick={(event) => event.stopPropagation()}>
-            <div className="relative overflow-hidden px-5 py-5 sm:px-7 sm:py-6" style={{ backgroundColor: offersPopupHeaderBackground, color: offersPopupHeaderText }}>
-              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close discounts">×</button>
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">%</div>
-              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] opacity-80">Offers & discount codes</p>
-              <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{discountPopupTitle || "Today’s offers"}</h3>
-              <p className="mt-2 text-sm leading-6 opacity-[0.88]">{discountPopupMessage || "Apply an available offer at checkout."}</p>
-            </div>
-            <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
-              <div className="grid gap-3">
-                {!visibleDiscountRules.length ? (
-                  <div className="rounded-[22px] border p-4 text-center text-sm leading-6" style={{ borderColor: offersPopupCardBorder, backgroundColor: offersPopupCardBackground, color: offersPopupBodyText }}>
-                    No offers are currently available. Please check again soon.
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
+          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
+            <div
+              className="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Offers & discount codes</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{discountPopupTitle || "Today’s offers"}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{discountPopupMessage || "Apply an available offer at checkout."}</p>
                   </div>
-                ) : null}
-                {visibleDiscountRules.map((rule) => (
-                  <div key={rule.id} className="rounded-[22px] border p-4 text-sm" style={{ borderColor: offersPopupCardBorder, backgroundColor: offersPopupCardBackground, color: offersPopupBodyText }}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-black" style={{ color: offersPopupBodyText }}>{rule.name}</p>
-                        <p className="mt-1 text-xs leading-5" style={{ color: brandSoftText }}>{rule.scope === "combo" ? "Bundle offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"}{rule.code ? ` · Code ${rule.code}` : " · Applies automatically when eligible"}</p>
-                      </div>
-                      <span className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: offersPopupPillBackground, color: offersPopupPillText }}>{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
-                    </div>
-                    {rule.popupMessage ? <p className="mt-3 text-xs leading-5" style={{ color: brandSoftText }}>{rule.popupMessage}</p> : null}
-                  </div>
-                ))}
+                  <button type="button" onClick={() => setDiscountsModalOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close discounts">×</button>
+                </div>
               </div>
-              <a href="/checkout" className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black text-white" style={{ backgroundColor: offersPopupPillBackground, color: offersPopupPillText }}>Go to checkout</a>
-              <button type="button" onClick={() => setDiscountsModalOpen(false)} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border bg-white px-5 py-3 text-sm font-black" style={{ borderColor: offersPopupCardBorder, color: offersPopupBodyText }}>Keep browsing</button>
+
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4 sm:px-6 sm:pb-7 sm:pt-5 lg:px-7 lg:pb-8 lg:pt-6 xl:px-8 xl:pb-10 xl:pt-7">
+                <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:items-start xl:gap-7">
+                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">How offers work</p>
+                    <div className="mt-3 text-[15px] leading-7 text-slate-700">
+                      <p>Use a discount code at checkout, or tap an available offer where the store allows quick apply.</p>
+                      <p className="mt-3">Some offers can be used with rewards, while others are set as the only discount for that order.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 xl:space-y-5">
+                    {!visibleDiscountRules.length ? (
+                      <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 text-center text-sm leading-6 text-slate-600 sm:p-5 lg:p-6">
+                        No offers are currently available. Please check again soon.
+                      </div>
+                    ) : null}
+                    {visibleDiscountRules.map((rule) => (
+                      <div key={rule.id} className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">{rule.scope === "combo" ? "Bundle offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"}</p>
+                            <h4 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">{rule.name}</h4>
+                            <p className="mt-2 text-sm leading-6 text-slate-600">{rule.code ? `Use code ${rule.code} at checkout.` : "Applies automatically when eligible."}</p>
+                          </div>
+                          <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
+                        </div>
+                        {rule.popupMessage ? <p className="mt-3 text-sm leading-6 text-slate-600">{rule.popupMessage}</p> : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <button type="button" onClick={() => setDiscountsModalOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
+                  <a href="/checkout" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8">Go to checkout</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       ) : null}
 
       {rewardsModalOpen ? (
-        <div className="fixed inset-0 z-[120] flex overscroll-none items-center justify-center bg-slate-950/38 px-3 py-5 backdrop-blur-[4px] sm:p-6" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
-          <div className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-[30px] shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl" style={{ backgroundColor: rewardsPopupBackground, color: rewardsPopupBodyText }} onClick={(event) => event.stopPropagation()}>
-            <div className="relative overflow-hidden px-5 py-5 sm:px-7 sm:py-6" style={{ backgroundColor: rewardsPopupHeaderBackground, color: rewardsPopupHeaderText }}>
-              <button type="button" onClick={() => setRewardsModalOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close rewards">×</button>
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl text-3xl ring-1 ring-white/35" style={{ backgroundColor: rewardsPopupPillBackground, color: rewardsPopupPillText }}>✦</div>
-              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] opacity-80">{rewardProgrammeName}</p>
-              <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
-              <p className="mt-2 rounded-2xl bg-white/10 px-3 py-2 text-sm leading-6 opacity-[0.88] ring-1 ring-white/15 sm:bg-transparent sm:px-0 sm:py-0 sm:ring-0">{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
-            </div>
-            <div className="overflow-y-auto px-5 pb-6 pt-5 sm:px-7 sm:pb-7">
-              {customerAuthStatus === "signedIn" && customerRewards ? (
-                <>
-                  <div className="rounded-[22px] border p-4 text-sm" style={{ borderColor: rewardsPopupCardBorder, backgroundColor: rewardsPopupCardBackground, color: rewardsPopupBodyText }}>
-                    <div className="flex items-center justify-between gap-4">
-                      <span>Qualifying spend</span>
-                      <strong>{formatMoney(customerRewards.qualifyingSpend, moneySettings)}</strong>
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
+          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
+            <div
+              className="flex max-h-[calc(100dvh-2.5rem)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:max-h-[calc(100dvh-2.5rem)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{rewardProgrammeName}</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
+                    <div className="mt-4">
+                      <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                        {customerAuthStatus === "signedIn" ? `${rewardDiscount}% reward discount` : "Automatic enrolment"}
+                      </span>
                     </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
-                      <div className="h-full rounded-full" style={{ width: `${rewardProgress}%`, background: `linear-gradient(90deg, ${rewardTierPalette.gradientFrom}, ${rewardTierPalette.gradientTo})` }} />
-                    </div>
-                    <p className="mt-3 text-xs leading-5">{rewardNextTier ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.` : "You have reached the top tier. Very civilised indeed."}</p>
                   </div>
-                </>
-              ) : (
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">Sign in or create an account to track your spend, unlock tier discounts, and keep favourites and buy-again items handy.</div>
-              )}
-              <div className="mt-4 grid gap-3">
-                <RewardInfoRow name="Silver" spend="Automatic" discount={Number(rewardsSilverDiscountPercent || 0)} />
-                <RewardInfoRow name="Gold" spend={`${formatMoney(Number(rewardsGoldMinSpend || 1000), moneySettings)} spend`} discount={Number(rewardsGoldDiscountPercent || 5)} />
-                <RewardInfoRow name="Platinum" spend={`${formatMoney(Number(rewardsPlatinumMinSpend || 2500), moneySettings)} spend`} discount={Number(rewardsPlatinumDiscountPercent || 10)} />
+                  <button type="button" onClick={() => setRewardsModalOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close rewards">×</button>
+                </div>
               </div>
-              <button type="button" onClick={() => setRewardsModalOpen(false)} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-black" style={{ backgroundColor: rewardsPopupPillBackground, color: rewardsPopupPillText }}>Close</button>
+
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4 sm:px-6 sm:pb-7 sm:pt-5 lg:px-7 lg:pb-8 lg:pt-6 xl:px-8 xl:pb-10 xl:pt-7">
+                <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start xl:gap-7">
+                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Reward status</p>
+                    <div className="mt-3 text-[15px] leading-7 text-slate-700">
+                      <p>{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
+                      {customerAuthStatus === "signedIn" && customerRewards ? (
+                        <p className="mt-3">{rewardNextTier ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.` : "You have reached the top tier. Very civilised indeed."}</p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 xl:space-y-5">
+                    {customerAuthStatus === "signedIn" && customerRewards ? (
+                      <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Qualifying spend</p>
+                        <div className="mt-3 flex items-center justify-between gap-4 text-sm text-slate-700">
+                          <span>Total qualifying spend</span>
+                          <strong className="text-slate-900">{formatMoney(customerRewards.qualifyingSpend, moneySettings)}</strong>
+                        </div>
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${rewardProgress}%` }} />
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-slate-600">{rewardNextTier ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.` : "You have reached the top tier. Very civilised indeed."}</p>
+                      </div>
+                    ) : (
+                      <div className="rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm sm:p-5 lg:p-6">Sign in or create an account to track your spend, unlock tier discounts, and keep favourites and buy-again items handy.</div>
+                    )}
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Reward tiers</p>
+                      <div className="mt-4 grid gap-3">
+                        <RewardInfoRow name="Silver" spend="Automatic" discount={Number(rewardsSilverDiscountPercent || 0)} />
+                        <RewardInfoRow name="Gold" spend={`${formatMoney(Number(rewardsGoldMinSpend || 1000), moneySettings)} spend`} discount={Number(rewardsGoldDiscountPercent || 5)} />
+                        <RewardInfoRow name="Platinum" spend={`${formatMoney(Number(rewardsPlatinumMinSpend || 2500), moneySettings)} spend`} discount={Number(rewardsPlatinumDiscountPercent || 10)} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <button type="button" onClick={() => setRewardsModalOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
+                  <a href={customerAuthStatus === "signedIn" ? "/checkout" : "/account/signup"} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8">{customerAuthStatus === "signedIn" ? "Go to checkout" : "Create account"}</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
