@@ -110,6 +110,32 @@ export default function CustomerAccountPage() {
     void loadOrdersAfterProfile();
   }, [customer?.id]);
 
+
+  async function handleShareReceipt(order: AccountOrder) {
+    if (!order.receiptUrl || typeof window === "undefined") return;
+
+    const receiptUrl = new URL(order.receiptUrl, window.location.origin).toString();
+    const title = `Receipt ${order.receiptNumber || order.id.slice(0, 8).toUpperCase()}`;
+    const text = `Your receipt for order ${order.id.slice(0, 8).toUpperCase()}.`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url: receiptUrl });
+        return;
+      }
+
+      await navigator.clipboard?.writeText(receiptUrl);
+      setMessage("Receipt link copied. You can now paste it into a message.");
+    } catch {
+      try {
+        await navigator.clipboard?.writeText(receiptUrl);
+        setMessage("Receipt link copied. You can now paste it into a message.");
+      } catch {
+        setMessage("Receipt link could not be shared automatically. Open the receipt and copy the page link.");
+      }
+    }
+  }
+
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
@@ -216,14 +242,25 @@ export default function CustomerAccountPage() {
                 {order.total.toFixed(2)}
               </span>
               {order.receiptUrl ? (
-                <a
-                  href={order.receiptUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-full bg-slate-900 px-3 py-1 text-xs font-black text-white shadow-sm transition hover:bg-slate-800"
-                >
-                  Download receipt
-                </a>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <a
+                    href={order.receiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-full bg-slate-900 px-3 py-1 text-xs font-black text-white shadow-sm transition hover:bg-slate-800"
+                  >
+                    View Receipt
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => void handleShareReceipt(order)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                    aria-label="Share receipt"
+                    title="Share receipt"
+                  >
+                    ↗
+                  </button>
+                </div>
               ) : null}
             </div>
           </div>
