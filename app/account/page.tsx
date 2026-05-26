@@ -60,6 +60,18 @@ function buildSavedAddress(customer: Customer | null) {
     .join(", ");
 }
 
+function ShareIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="m8.6 10.6 6.8-4.2" />
+      <path d="m8.6 13.4 6.8 4.2" />
+    </svg>
+  );
+}
+
 export default function CustomerAccountPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,23 +127,34 @@ export default function CustomerAccountPage() {
     if (!order.receiptUrl || typeof window === "undefined") return;
 
     const receiptUrl = new URL(order.receiptUrl, window.location.origin).toString();
+    const pdfUrl = new URL(receiptUrl);
+    pdfUrl.searchParams.set("format", "pdf");
     const title = `Receipt ${order.receiptNumber || order.id.slice(0, 8).toUpperCase()}`;
-    const text = `Your receipt for order ${order.id.slice(0, 8).toUpperCase()}.`;
+    const text = `Receipt for order ${order.id.slice(0, 8).toUpperCase()}.`;
 
     try {
+      const receiptResponse = await fetch(pdfUrl.toString(), { cache: "no-store" });
+      const receiptPdf = await receiptResponse.blob();
+      const receiptFile = new File([receiptPdf], `${title.replace(/[^a-z0-9-]+/gi, "-")}.pdf`, { type: "application/pdf" });
+
+      if (navigator.share && typeof navigator.canShare === "function" && navigator.canShare({ files: [receiptFile] })) {
+        await navigator.share({ title, text, files: [receiptFile] });
+        return;
+      }
+
       if (navigator.share) {
         await navigator.share({ title, text, url: receiptUrl });
         return;
       }
 
       await navigator.clipboard?.writeText(receiptUrl);
-      setMessage("Receipt link copied. You can now paste it into a message.");
+      setMessage("Receipt link copied. Open the receipt to print or save it as PDF.");
     } catch {
       try {
         await navigator.clipboard?.writeText(receiptUrl);
-        setMessage("Receipt link copied. You can now paste it into a message.");
+        setMessage("Receipt link copied. Open the receipt to print or save it as PDF.");
       } catch {
-        setMessage("Receipt link could not be shared automatically. Open the receipt and copy the page link.");
+        setMessage("Receipt could not be shared automatically. Open the receipt and use Print / save as PDF.");
       }
     }
   }
@@ -241,27 +264,6 @@ export default function CustomerAccountPage() {
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
                 {order.total.toFixed(2)}
               </span>
-              {order.receiptUrl ? (
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <a
-                    href={order.receiptUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center rounded-full bg-slate-900 px-3 py-1 text-xs font-black text-white shadow-sm transition hover:bg-slate-800"
-                  >
-                    View Receipt
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => void handleShareReceipt(order)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-                    aria-label="Share receipt"
-                    title="Share receipt"
-                  >
-                    ↗
-                  </button>
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -274,7 +276,7 @@ export default function CustomerAccountPage() {
 
           {(order.paymentMethodLabel || order.paymentReference || order.rewardDiscountAmount || order.discountAmount || order.receiptNumber) ? (
             <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/45 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Premium receipt</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Receipt</p>
               <div className="mt-2 grid gap-2 text-sm leading-6 text-slate-700 sm:grid-cols-2">
                 <p><span className="font-semibold text-slate-900">Receipt:</span> {order.receiptNumber || `ORD-${order.id.slice(0, 8).toUpperCase()}`}</p>
                 {order.paymentMethodLabel ? <p><span className="font-semibold text-slate-900">Payment:</span> {order.paymentMethodLabel}</p> : null}
@@ -300,6 +302,29 @@ export default function CustomerAccountPage() {
                   <p className="mt-2 text-sm leading-6 text-slate-700">{order.notes}</p>
                 </div>
               ) : null}
+            </div>
+          ) : null}
+
+          {order.receiptUrl ? (
+            <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4">
+              <a
+                href={order.receiptUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
+              >
+                View Receipt
+              </a>
+              <button
+                type="button"
+                onClick={() => void handleShareReceipt(order)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-slate-50 px-4 py-2.5 text-sm font-black text-emerald-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+                aria-label="Share receipt"
+                title="Share receipt"
+              >
+                <ShareIcon />
+                <span>Share</span>
+              </button>
             </div>
           ) : null}
         </div>
