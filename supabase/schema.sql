@@ -370,3 +370,13 @@ comment on column public.orders.reward_discount_amount is 'Tier reward discount 
 
 -- Ver-0.220 discount settings/order audit fields are added by:
 -- supabase/migrations/2026-05-24_ver_0_220_discounts_and_codes_foundation.sql
+
+-- Ver-0.222 premium customer receipts foundation
+alter table public.orders
+  add column if not exists customer_receipt_number text,
+  add column if not exists customer_receipt_last_downloaded_at timestamptz,
+  add column if not exists customer_receipt_download_count integer not null default 0;
+
+create index if not exists orders_customer_receipt_idx
+  on public.orders (tenant_id, customer_account_id, customer_receipt_number)
+  where customer_account_id is not null;

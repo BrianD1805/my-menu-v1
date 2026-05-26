@@ -6,12 +6,25 @@ type AccountOrder = {
   id: string;
   createdAt: string;
   total: number;
+  subtotal?: number;
   status: string;
   orderType: string | null;
   customerName: string | null;
   customerPhone: string | null;
   notes: string | null;
   address: string | null;
+  paymentMethodLabel?: string | null;
+  paymentStatus?: string | null;
+  paymentReference?: string | null;
+  paidAt?: string | null;
+  rewardTier?: string | null;
+  rewardDiscountAmount?: number;
+  discountCode?: string | null;
+  discountName?: string | null;
+  discountAmount?: number;
+  receiptNumber?: string | null;
+  receiptDownloadCount?: number;
+  receiptUrl?: string;
   itemsSummary: string[];
 };
 
@@ -195,13 +208,23 @@ export default function CustomerAccountPage() {
                 {order.orderType ? order.orderType.charAt(0).toUpperCase() + order.orderType.slice(1) : "Order"} · {order.id.slice(0, 8)}
               </h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                 {order.status}
               </span>
               <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
                 {order.total.toFixed(2)}
               </span>
+              {order.receiptUrl ? (
+                <a
+                  href={order.receiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-full bg-slate-900 px-3 py-1 text-xs font-black text-white shadow-sm transition hover:bg-slate-800"
+                >
+                  Download receipt
+                </a>
+              ) : null}
             </div>
           </div>
 
@@ -209,6 +232,20 @@ export default function CustomerAccountPage() {
             <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Items</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">{order.itemsSummary.join(", ")}</p>
+            </div>
+          ) : null}
+
+          {(order.paymentMethodLabel || order.paymentReference || order.rewardDiscountAmount || order.discountAmount || order.receiptNumber) ? (
+            <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/45 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Premium receipt</p>
+              <div className="mt-2 grid gap-2 text-sm leading-6 text-slate-700 sm:grid-cols-2">
+                <p><span className="font-semibold text-slate-900">Receipt:</span> {order.receiptNumber || `ORD-${order.id.slice(0, 8).toUpperCase()}`}</p>
+                {order.paymentMethodLabel ? <p><span className="font-semibold text-slate-900">Payment:</span> {order.paymentMethodLabel}</p> : null}
+                {order.paymentReference ? <p><span className="font-semibold text-slate-900">Reference:</span> {order.paymentReference}</p> : null}
+                {order.paidAt ? <p><span className="font-semibold text-slate-900">Paid:</span> {new Date(order.paidAt).toLocaleDateString()}</p> : null}
+                {order.rewardDiscountAmount ? <p><span className="font-semibold text-slate-900">Rewards saved:</span> {order.rewardDiscountAmount.toFixed(2)}</p> : null}
+                {order.discountAmount ? <p><span className="font-semibold text-slate-900">Discount saved:</span> {order.discountAmount.toFixed(2)}</p> : null}
+              </div>
             </div>
           ) : null}
 
