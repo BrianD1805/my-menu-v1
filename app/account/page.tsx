@@ -142,20 +142,17 @@ export default function CustomerAccountPage() {
         return;
       }
 
-      if (navigator.share) {
-        await navigator.share({ title, text, url: receiptUrl });
-        return;
-      }
-
-      await navigator.clipboard?.writeText(receiptUrl);
-      setMessage("Receipt link copied. Open the receipt to print or save it as PDF.");
+      const objectUrl = URL.createObjectURL(receiptFile);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = receiptFile.name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+      setMessage("PDF receipt downloaded. Open your downloads and share the PDF file.");
     } catch {
-      try {
-        await navigator.clipboard?.writeText(receiptUrl);
-        setMessage("Receipt link copied. Open the receipt to print or save it as PDF.");
-      } catch {
-        setMessage("Receipt could not be shared automatically. Open the receipt and use Print / save as PDF.");
-      }
+      setMessage("Receipt could not be shared automatically. Open the receipt and use Print / save as PDF.");
     }
   }
 
