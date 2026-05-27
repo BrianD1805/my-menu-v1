@@ -1532,9 +1532,12 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <input value={form.seoKeywords} onChange={(e) => update("seoKeywords", e.target.value)} className="input" placeholder="restaurant, takeaway, groceries, Nairobi" />
             </Field>
 
-            <Field label="Canonical URL">
-              <input value={form.seoCanonicalUrl} onChange={(e) => update("seoCanonicalUrl", e.target.value)} className="input" placeholder="https://store.orduva.com/" />
-            </Field>
+            <div>
+              <Field label="Canonical URL">
+                <input value={form.seoCanonicalUrl} onChange={(e) => update("seoCanonicalUrl", e.target.value)} className="input" placeholder="https://store.orduva.com/" />
+              </Field>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Leave this blank unless you use your own custom domain. If you do, enter the main website address customers should find on Google.</p>
+            </div>
 
             <div className="md:col-span-2 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
               <label className="flex items-start justify-between gap-4">
