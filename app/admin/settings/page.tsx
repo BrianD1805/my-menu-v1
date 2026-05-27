@@ -190,6 +190,13 @@ export default async function AdminSettingsPage() {
           receiptExtraField2Value: settings?.receipt_extra_field_2_value || "",
           receiptFooterMessage: settings?.receipt_footer_message || "",
           receiptBrandImageMode: settings?.receipt_brand_image_mode === "favicon" ? "favicon" : "logo",
+          seoPageName: settings?.seo_page_name || "",
+          seoMetaDescription: settings?.seo_meta_description || "",
+          seoKeywords: settings?.seo_keywords || "",
+          seoCanonicalUrl: settings?.seo_canonical_url || "",
+          seoStructuredDataEnabled: settings?.seo_structured_data_enabled !== false,
+          googleTrackingId: settings?.google_tracking_id || "",
+          googleTagManagerId: settings?.google_tag_manager_id || "",
         }}
       />
     </AdminShell>

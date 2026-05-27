@@ -144,6 +144,13 @@ type FormState = {
   receiptExtraField2Value: string;
   receiptFooterMessage: string;
   receiptBrandImageMode: "logo" | "favicon";
+  seoPageName: string;
+  seoMetaDescription: string;
+  seoKeywords: string;
+  seoCanonicalUrl: string;
+  seoStructuredDataEnabled: boolean;
+  googleTrackingId: string;
+  googleTagManagerId: string;
 };
 
 
@@ -630,6 +637,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const rewardsDirty = formValueChanged(["rewardsEnabled", "rewardsProgramName", "rewardsSilverDiscountPercent", "rewardsGoldMinSpend", "rewardsGoldDiscountPercent", "rewardsPlatinumMinSpend", "rewardsPlatinumDiscountPercent"]);
   const discountsDirty = formValueChanged(["discountsEnabled", "discountPopupEnabled", "discountPopupTitle", "discountPopupMessage", "discountRules"]);
   const receiptInfoDirty = formValueChanged(["receiptDocumentName", "receiptTaxLabel", "receiptTaxNumber", "receiptTaxRatePercent", "receiptExtraField1Enabled", "receiptExtraField1Label", "receiptExtraField1Value", "receiptExtraField2Enabled", "receiptExtraField2Label", "receiptExtraField2Value", "receiptFooterMessage", "receiptBrandImageMode"]);
+  const seoDirty = formValueChanged(["seoPageName", "seoMetaDescription", "seoKeywords", "seoCanonicalUrl", "seoStructuredDataEnabled", "googleTrackingId", "googleTagManagerId"]);
   const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive", "enableDarajaCustomerPayments", "darajaConnectionStatus", "darajaCustomerMode", "darajaConsumerKey", "darajaConsumerSecretInput", "darajaShortcode", "darajaPasskeyInput", "darajaTransactionType", "darajaAccountReferencePrefix", "darajaCallbackUrl", "darajaAccountLabel", "darajaSetupNotes", "darajaPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
@@ -648,7 +656,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const darajaUsesSandboxShortcode = form.darajaShortcode.trim() === "174379";
   const darajaLiveReadinessOk = Boolean(darajaCurrencyAllowed && darajaCredentialReady && (!darajaModeLive || !darajaUsesSandboxShortcode));
   const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || discountsDirty || receiptInfoDirty || adminWorkspaceDirty;
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || discountsDirty || receiptInfoDirty || seoDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -1495,6 +1503,67 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <Field label="Receipt footer message">
                 <textarea value={form.receiptFooterMessage} onChange={(e) => update("receiptFooterMessage", e.target.value)} className="input min-h-28 resize-y" placeholder="Thank you for your order. Add returns, tax, contact or business wording here." />
               </Field>
+            </div>
+          </div>
+        </Section>
+
+        <Section id="storefront-seo" title="Storefront SEO" dirty={seoDirty} saving={saving}>
+          <div className="rounded-[22px] border border-blue-200 bg-blue-50/80 p-4 text-sm leading-6 text-blue-950">
+            <p className="font-black text-slate-950">Search, social and tracking basics</p>
+            <p className="mt-1 text-xs leading-5 text-blue-900">These settings improve the public storefront page title, description, browser favicon, structured data, and optional Google tracking. They do not change checkout, prices or payment behaviour.</p>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <Field label={`Page name (${form.seoPageName.length}/55)`}>
+                <input maxLength={55} value={form.seoPageName} onChange={(e) => update("seoPageName", e.target.value.slice(0, 55))} className="input" placeholder={`${previewName} | Online Ordering`} />
+              </Field>
+              <p className="mt-1 text-xs text-slate-500">Shown as the storefront browser title and search result title. Maximum 55 characters including spaces and punctuation.</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <Field label={`Page meta description (${form.seoMetaDescription.length}/160)`}>
+                <textarea maxLength={160} value={form.seoMetaDescription} onChange={(e) => update("seoMetaDescription", e.target.value.slice(0, 160))} className="input min-h-24 resize-y" placeholder="Describe what customers can order, where you serve, and why they should choose you." />
+              </Field>
+              <p className="mt-1 text-xs text-slate-500">Recommended maximum 160 characters including spaces and punctuation.</p>
+            </div>
+
+            <Field label="SEO keywords / phrases">
+              <input value={form.seoKeywords} onChange={(e) => update("seoKeywords", e.target.value)} className="input" placeholder="restaurant, takeaway, groceries, Nairobi" />
+            </Field>
+
+            <Field label="Canonical URL">
+              <input value={form.seoCanonicalUrl} onChange={(e) => update("seoCanonicalUrl", e.target.value)} className="input" placeholder="https://store.orduva.com/" />
+            </Field>
+
+            <div className="md:col-span-2 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <label className="flex items-start justify-between gap-4">
+                <span>
+                  <span className="block text-sm font-black text-slate-900">Add Schema.org structured data</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">Adds JSON-LD to the storefront so search engines and AI systems can identify the business name, contact details, logo, icon, address and ordering website.</span>
+                </span>
+                <input type="checkbox" checked={form.seoStructuredDataEnabled} onChange={(e) => update("seoStructuredDataEnabled", e.target.checked)} className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" />
+              </label>
+            </div>
+
+            <div className="md:col-span-2 rounded-[22px] border border-slate-200 bg-white p-4">
+              <p className="text-sm font-black text-slate-900">Google Analytics / Google Ads</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">To enable Google Analytics or Google Ads on your site, enter your Google tracking ID below. This will automatically send page views and basic order conversion events to Google where available.</p>
+              <div className="mt-4">
+                <Field label="Google tracking ID">
+                  <input value={form.googleTrackingId} onChange={(e) => update("googleTrackingId", e.target.value)} className="input" placeholder="UA-XXXX-XX, G-XXXXXX or AW-XXXXXX" />
+                </Field>
+              </div>
+            </div>
+
+            <div className="md:col-span-2 rounded-[22px] border border-slate-200 bg-white p-4">
+              <p className="text-sm font-black text-slate-900">Google Tag Manager</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">This allows you to install and manage different marketing tags without any use of code. Enter your container ID to enable Google Tag Manager on your site.</p>
+              <div className="mt-4">
+                <Field label="Google Tag Manager container ID">
+                  <input value={form.googleTagManagerId} onChange={(e) => update("googleTagManagerId", e.target.value)} className="input" placeholder="GTM-XXXXXXX" />
+                </Field>
+              </div>
             </div>
           </div>
         </Section>
@@ -2399,6 +2468,7 @@ const SETTINGS_MENU_ITEMS = [
   { id: "per-item-storefront-colours", group: "Theme", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
   { id: "business-contact-details", group: "Contact", title: "Business contact details", help: "Phone, email, address, footer and social links." },
   { id: "receipt-information", group: "Receipts", title: "Receipt information", help: "Document name, tax details, optional fields, receipt image and footer wording." },
+  { id: "storefront-seo", group: "SEO", title: "Storefront SEO", help: "Page title, meta description, schema, favicon and Google tracking." },
   { id: "customer-rewards-program", group: "Rewards", title: "Customer rewards programme", help: "Silver, Gold and Platinum spend tiers with percentage discounts." },
   { id: "discounts-and-codes", group: "Discounts", title: "Discounts & codes", help: "Product, combo and site-wide promotional offers." },
   { id: "storefront-payment-options", group: "Payments", title: "Storefront payment options", help: "Cash, COD, Stripe, Yoco and future provider setup." },
@@ -2413,6 +2483,7 @@ const SETTINGS_SECTION_META: Record<string, { group: string; help: string; accen
   "per-item-storefront-colours": { group: "Theme", help: "Detailed colour controls are tucked away until needed, especially on mobile.", accent: "bg-indigo-100 text-indigo-800" },
   "business-contact-details": { group: "Contact", help: "Footer wording, contact details, referral advert and social links.", accent: "bg-emerald-100 text-emerald-800" },
   "receipt-information": { group: "Receipts", help: "Customer receipt wording, tax details, optional business fields and footer note.", accent: "bg-cyan-100 text-cyan-900" },
+  "storefront-seo": { group: "SEO", help: "Search title, meta description, structured data, favicon and Google tracking.", accent: "bg-blue-100 text-blue-900" },
   "customer-rewards-program": { group: "Rewards", help: "Customer loyalty tiers, thresholds and percentage discounts.", accent: "bg-purple-100 text-purple-900" },
   "discounts-and-codes": { group: "Discounts", help: "Product, combo and site-wide discount codes and visible offers.", accent: "bg-rose-100 text-rose-900" },
   "storefront-payment-options": { group: "Payments", help: "Cash, COD, Stripe and Yoco controls. Payment behaviour is unchanged.", accent: "bg-amber-100 text-amber-900" },

@@ -125,6 +125,13 @@ export type TenantSettings = {
   receipt_extra_field_2_value?: string | null;
   receipt_footer_message?: string | null;
   receipt_brand_image_mode?: string | null;
+  seo_page_name?: string | null;
+  seo_meta_description?: string | null;
+  seo_keywords?: string | null;
+  seo_canonical_url?: string | null;
+  seo_structured_data_enabled?: boolean | null;
+  google_tracking_id?: string | null;
+  google_tag_manager_id?: string | null;
 };
 
 export const DEFAULT_PRIMARY_COLOR = "#0f172a";
@@ -200,7 +207,7 @@ export function normalizeSeparator(value: unknown) {
   return text.slice(0, 1);
 }
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_shortcode, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_tax_rate_percent, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_shortcode, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_tax_rate_percent, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode, seo_page_name, seo_meta_description, seo_keywords, seo_canonical_url, seo_structured_data_enabled, google_tracking_id, google_tag_manager_id";
 
 export async function getTenantSettings(tenantId: string): Promise<TenantSettings | null> {
   const { data, error } = await db
@@ -314,6 +321,13 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     receipt_extra_field_2_value: asStringOrNull((data as Record<string, unknown>).receipt_extra_field_2_value),
     receipt_footer_message: asStringOrNull((data as Record<string, unknown>).receipt_footer_message),
     receipt_brand_image_mode: asStringOrNull((data as Record<string, unknown>).receipt_brand_image_mode),
+    seo_page_name: asStringOrNull((data as Record<string, unknown>).seo_page_name),
+    seo_meta_description: asStringOrNull((data as Record<string, unknown>).seo_meta_description),
+    seo_keywords: asStringOrNull((data as Record<string, unknown>).seo_keywords),
+    seo_canonical_url: asStringOrNull((data as Record<string, unknown>).seo_canonical_url),
+    seo_structured_data_enabled: asBooleanOrNull((data as Record<string, unknown>).seo_structured_data_enabled),
+    google_tracking_id: asStringOrNull((data as Record<string, unknown>).google_tracking_id),
+    google_tag_manager_id: asStringOrNull((data as Record<string, unknown>).google_tag_manager_id),
   };
 }
 

@@ -50,8 +50,30 @@ function safeSessionId() {
   }
 }
 
+function forwardToGoogle(detail: AnalyticsEventDetail) {
+  if (typeof window === "undefined") return;
+  const eventName = detail.eventType || "page_view";
+  const payload = {
+    event_category: detail.scope || inferScope(window.location.hostname, window.location.pathname),
+    event_label: detail.productName || detail.orderId || detail.tenantSlug || window.location.pathname,
+    tenant_slug: detail.tenantSlug || undefined,
+    product_id: detail.productId || undefined,
+    order_id: detail.orderId || undefined,
+    page_path: window.location.pathname,
+  };
+
+  const w = window as typeof window & { gtag?: (...args: unknown[]) => void; dataLayer?: unknown[] };
+  if (typeof w.gtag === "function") {
+    w.gtag("event", eventName, payload);
+  }
+  if (Array.isArray(w.dataLayer)) {
+    w.dataLayer.push({ event: `orduva_${eventName}`, ...payload });
+  }
+}
+
 function postAnalyticsEvent(detail: AnalyticsEventDetail) {
   if (typeof window === "undefined") return;
+  forwardToGoogle(detail);
   const url = "/api/analytics/track";
   const payload = JSON.stringify({
     eventType: detail.eventType || "page_view",

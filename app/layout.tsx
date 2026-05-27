@@ -1,10 +1,13 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import Script from "next/script";
 import type { ReactNode } from "react";
 import OrduvaAnalyticsTracker from "@/components/analytics/OrduvaAnalyticsTracker";
 import { headers } from "next/headers";
 import { isRootPlatformHost } from "@/lib/tenant";
+import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
+import { buildTenantBranding, getTenantSettings, type TenantSettings } from "@/lib/tenant-settings";
 
 function buildRootPlatformMetadata(): Metadata {
   return {
@@ -72,6 +75,128 @@ function buildAdminMetadata(): Metadata {
   };
 }
 
+type StorefrontSeoContext = {
+  tenant: any;
+  settings: TenantSettings | null;
+  branding: ReturnType<typeof buildTenantBranding>;
+  url: string;
+};
+
+function trimTo(value: string | null | undefined, max: number) {
+  return String(value || "").trim().slice(0, max);
+}
+
+function splitKeywords(value: string | null | undefined) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 16);
+}
+
+function normalizeTrackingId(value: string | null | undefined) {
+  const text = String(value || "").trim().toUpperCase();
+  return /^(G|UA|AW)-[A-Z0-9-]{4,40}$/.test(text) ? text : "";
+}
+
+function normalizeGtmId(value: string | null | undefined) {
+  const text = String(value || "").trim().toUpperCase();
+  return /^GTM-[A-Z0-9]{4,20}$/.test(text) ? text : "";
+}
+
+async function loadStorefrontSeoContext(): Promise<StorefrontSeoContext | null> {
+  try {
+    const h = await headers();
+    const host = normalizeHostname(h.get("x-forwarded-host") || h.get("host") || "");
+    const proto = h.get("x-forwarded-proto") || "https";
+    const slug = await resolveTenantSlug();
+    const tenant = await getTenantBySlug(slug);
+    const settings = await getTenantSettings(tenant.id);
+    const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+    return { tenant, settings, branding, url: `${proto}://${host || "www.orduva.com"}/` };
+  } catch {
+    return null;
+  }
+}
+
+function buildStorefrontMetadata(context: StorefrontSeoContext): Metadata {
+  const { tenant, settings, branding, url } = context;
+  const title = trimTo(settings?.seo_page_name, 55) || trimTo(`${branding.displayName} | Online Ordering`, 55);
+  const description = trimTo(settings?.seo_meta_description, 160) || trimTo(branding.storefrontSubheading || "Online ordering", 160);
+  const canonical = trimTo(settings?.seo_canonical_url, 500) || url;
+  const favicon = branding.faviconUrl || "/orduva-storefront-icon-192.png";
+  const logo = branding.logoUrl || favicon;
+
+  return {
+    title,
+    description,
+    keywords: splitKeywords(settings?.seo_keywords),
+    manifest: "/manifest.webmanifest",
+    themeColor: branding.primaryColor || "#0E0E10",
+    applicationName: branding.displayName,
+    alternates: { canonical },
+    icons: {
+      icon: [
+        { url: favicon },
+        { url: favicon, sizes: "32x32" },
+        { url: favicon, sizes: "192x192" },
+      ],
+      shortcut: favicon,
+      apple: favicon,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      siteName: branding.displayName,
+      type: "website",
+      images: logo ? [{ url: logo, alt: branding.displayName }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: logo ? [logo] : undefined,
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-title": branding.displayName,
+      "orduva-tenant-slug": String(tenant.slug || ""),
+    },
+  };
+}
+
+function buildStorefrontJsonLd(context: StorefrontSeoContext) {
+  const { branding, settings, url } = context;
+  const sameAs = [
+    branding.socialWebsiteUrl,
+    branding.socialFacebookUrl,
+    branding.socialInstagramUrl,
+    branding.socialTikTokUrl,
+    branding.socialXUrl,
+  ].filter(Boolean);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: branding.displayName,
+    url: trimTo(settings?.seo_canonical_url, 500) || url,
+    description: trimTo(settings?.seo_meta_description, 160) || branding.storefrontSubheading,
+    logo: branding.logoUrl || undefined,
+    image: branding.logoUrl || undefined,
+    email: branding.contactEmail || undefined,
+    telephone: branding.contactPhone || branding.contactWhatsApp || undefined,
+    address: branding.contactAddress ? { "@type": "PostalAddress", streetAddress: branding.contactAddress } : undefined,
+    sameAs: sameAs.length ? sameAs : undefined,
+    potentialAction: {
+      "@type": "OrderAction",
+      target: trimTo(settings?.seo_canonical_url, 500) || url,
+      name: "Place an online order",
+    },
+  };
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const h = await headers();
   const routeKind = h.get("x-orduva-route-kind");
@@ -85,11 +210,9 @@ export async function generateMetadata(): Promise<Metadata> {
     return buildRootPlatformMetadata();
   }
 
-  // Ver-0.174: keep storefront metadata deliberately lightweight.
-  // The previous version resolved the tenant and settings from Supabase here,
-  // which delayed the first HTML response and kept the native mobile PWA splash
-  // on screen before our own Orduva preloader could paint. Tenant-specific
-  // branding still loads inside the storefront payload.
+  const context = await loadStorefrontSeoContext();
+  if (context) return buildStorefrontMetadata(context);
+
   return {
     title: "Orduva Online",
     description: "Online ordering",
@@ -108,10 +231,32 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const h = await headers();
+  const routeKind = h.get("x-orduva-route-kind");
+  const host = normalizeHostname(h.get("x-forwarded-host") || h.get("host") || "");
+  const isTenantStorefront = routeKind !== "admin" && !isSharedAdminHost(host) && !isRootPlatformHost(host);
+  const context = isTenantStorefront ? await loadStorefrontSeoContext() : null;
+  const settings = context?.settings || null;
+  const trackingId = normalizeTrackingId(settings?.google_tracking_id);
+  const gtmId = normalizeGtmId(settings?.google_tag_manager_id);
+  const showJsonLd = context && settings?.seo_structured_data_enabled !== false;
+
   return (
     <html lang="en">
-      <body><OrduvaAnalyticsTracker />{children}</body>
+      <body>
+        {gtmId ? (
+          <noscript>
+            <iframe src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} />
+          </noscript>
+        ) : null}
+        {gtmId ? <Script id="orduva-google-tag-manager" strategy="afterInteractive">{`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${gtmId}');`}</Script> : null}
+        {trackingId ? <Script src={`https://www.googletagmanager.com/gtag/js?id=${trackingId}`} strategy="afterInteractive" /> : null}
+        {trackingId ? <Script id="orduva-google-analytics" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${trackingId}');`}</Script> : null}
+        {context && showJsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildStorefrontJsonLd(context)) }} /> : null}
+        <OrduvaAnalyticsTracker />
+        {children}
+      </body>
     </html>
   );
 }
