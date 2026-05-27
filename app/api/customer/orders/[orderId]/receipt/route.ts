@@ -154,8 +154,13 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
   const pageWidth = 595;
   const pageHeight = 842;
   const margin = 42;
-  let y = 800;
-  const stream: string[] = [];
+  const contentX = margin + 20;
+  const contentW = pageWidth - margin * 2 - 40;
+  const contentRight = contentX + contentW;
+  const contentBottom = 92;
+  const pages: string[][] = [];
+  let stream: string[] = [];
+  let y = 0;
 
   function setFill(hex: string) {
     const clean = hex.replace("#", "");
@@ -200,97 +205,117 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
     const safe = String(value ?? "");
     text(safe, rightX - approxPdfTextWidth(safe, size), yy, size, colour, font);
   }
+  function textCentered(value: unknown, centreX: number, yy: number, size = 8.5, colour = "#64748b", font = "F1") {
+    const safe = String(value ?? "");
+    text(safe, centreX - approxPdfTextWidth(safe, size) / 2, yy, size, colour, font);
+  }
   function money(value: unknown) {
     return asMoney(value, currencyCode);
   }
-
-  // Page background and premium receipt shell.
-  rect(0, 0, pageWidth, pageHeight, "#f8f4f0");
-  rect(margin, 44, pageWidth - margin * 2, pageHeight - 88, "#ffffff", "#e2e8f0", 1);
-  rect(margin, pageHeight - 50, pageWidth - margin * 2, 6, "#059669");
-  rect(margin + 155, pageHeight - 50, pageWidth - margin * 2 - 310, 6, "#334155");
-
-  // Compact header.
-  rect(margin, 724, pageWidth - margin * 2, 74, "#f8fafc", "#e2e8f0", 1);
-  if (logo) {
-    const box = 42;
-    const ratio = Math.min(box / logo.width, box / logo.height);
-    const w = Math.max(1, Math.round(logo.width * ratio));
-    const h = Math.max(1, Math.round(logo.height * ratio));
-    const x = margin + 18 + (box - w) / 2;
-    const yy = 740 + (box - h) / 2;
-    rect(margin + 18, 740, box, box, "#ffffff", "#e2e8f0", 1);
-    stream.push(`q ${w} 0 0 ${h} ${x.toFixed(2)} ${yy.toFixed(2)} cm /ImLogo Do Q`);
-  } else {
-    rect(margin + 18, 740, 42, 42, "#ecfdf5", "#bbf7d0", 1);
-    text(String(tenantName || "S").slice(0, 1).toUpperCase(), margin + 34, 755, 18, "#047857", "F2");
+  function drawPageShell() {
+    rect(0, 0, pageWidth, pageHeight, "#f8f4f0");
+    rect(margin, 44, pageWidth - margin * 2, pageHeight - 88, "#ffffff", "#e2e8f0", 1);
+    rect(margin, pageHeight - 50, pageWidth - margin * 2, 6, "#059669");
+    rect(margin + 155, pageHeight - 50, pageWidth - margin * 2 - 310, 6, "#334155");
   }
-  text(documentName.toUpperCase(), margin + 74, 771, 8, "#047857", "F2");
-  text(tenantName, margin + 74, 748, 21, "#0f172a", "F2");
-  text("Thank you for your order.", margin + 74, 734, 9, "#64748b");
-  const metaX = pageWidth - margin - 174;
-  const metaY = 740;
-  rect(metaX, metaY, 152, 42, "#ffffff", "#dbeafe", 1);
-  topMeta.slice(0, 4).forEach(([label, value], index) => {
-    const rowY = metaY + 30 - index * 9;
-    text(label, metaX + 8, rowY, 6.3, "#64748b", "F2");
-    textRight(value, metaX + 144, rowY, 6.8, index === 0 ? "#065f46" : "#0f172a", index === 0 ? "F2" : "F1");
-  });
-
-  // Detail cards.
-  const contentX = margin + 20;
-  const contentW = pageWidth - margin * 2 - 40;
-  const contentRight = contentX + contentW;
-  const cardY = 656;
-  const cardGap = 12;
-  const cardH = 48;
-  const cardW = (contentW - cardGap) / 2;
-  const cards = [
-    ["ORDER DATE", asDate(order?.created_at)],
-    ["PAYMENT", `${order?.payment_method_label || order?.payment_provider || "Order payment"}${order?.payment_reference ? ` · ${order.payment_reference}` : ""}`],
-    ["CUSTOMER", `${order?.customer_name || "Customer"}${order?.customer_phone ? ` · ${order.customer_phone}` : ""}`],
-    ["FULFILMENT", `${order?.order_type || "Order"}${order?.customer_address ? ` · ${order.customer_address}` : ""}`],
-  ];
-  cards.forEach(([label, value], index) => {
-    const col = index % 2;
-    const row = Math.floor(index / 2);
-    const x = contentX + col * (cardW + cardGap);
-    const yy = cardY - row * 58;
-    rect(x, yy, cardW, cardH, "#f8fafc", "#e2e8f0", 1);
-    text(label, x + 10, yy + 31, 7, "#64748b", "F2");
-    wrapPdfText(value, 38).slice(0, 2).forEach((lineText, lineIndex) => {
-      text(lineText, x + 10, yy + 18 - lineIndex * 10, 8.5, "#0f172a", lineIndex === 0 ? "F2" : "F1");
+  function drawCompactContinuationHeader() {
+    rect(margin, 724, pageWidth - margin * 2, 52, "#f8fafc", "#e2e8f0", 1);
+    text(documentName.toUpperCase(), margin + 20, 756, 7.5, "#047857", "F2");
+    text(tenantName, margin + 20, 737, 15, "#0f172a", "F2");
+    textRight(receiptRef, pageWidth - margin - 20, 744, 9, "#065f46", "F2");
+    textRight("continued", pageWidth - margin - 20, 758, 7.5, "#64748b", "F2");
+  }
+  function drawFirstPageHeader() {
+    rect(margin, 724, pageWidth - margin * 2, 74, "#f8fafc", "#e2e8f0", 1);
+    if (logo) {
+      const box = 42;
+      const ratio = Math.min(box / logo.width, box / logo.height);
+      const w = Math.max(1, Math.round(logo.width * ratio));
+      const h = Math.max(1, Math.round(logo.height * ratio));
+      const x = margin + 18 + (box - w) / 2;
+      const yy = 740 + (box - h) / 2;
+      rect(margin + 18, 740, box, box, "#ffffff", "#e2e8f0", 1);
+      stream.push(`q ${w} 0 0 ${h} ${x.toFixed(2)} ${yy.toFixed(2)} cm /ImLogo Do Q`);
+    } else {
+      rect(margin + 18, 740, 42, 42, "#ecfdf5", "#bbf7d0", 1);
+      text(String(tenantName || "S").slice(0, 1).toUpperCase(), margin + 34, 755, 18, "#047857", "F2");
+    }
+    text(documentName.toUpperCase(), margin + 74, 771, 8, "#047857", "F2");
+    text(tenantName, margin + 74, 748, 21, "#0f172a", "F2");
+    text("Thank you for your order.", margin + 74, 734, 9, "#64748b");
+    const metaX = pageWidth - margin - 174;
+    const metaY = 740;
+    rect(metaX, metaY, 152, 42, "#ffffff", "#dbeafe", 1);
+    topMeta.slice(0, 4).forEach(([label, value], index) => {
+      const rowY = metaY + 30 - index * 9;
+      text(label, metaX + 8, rowY, 6.3, "#64748b", "F2");
+      textRight(value, metaX + 144, rowY, 6.8, index === 0 ? "#065f46" : "#0f172a", index === 0 ? "F2" : "F1");
     });
-  });
 
-  // Items table.
-  y = 540;
-  rect(contentX, y, contentW, 30, "#f1f5f9", "#e2e8f0", 1);
-  text("ITEM", contentX + 14, y + 11, 8.5, "#334155", "F2");
-  textRight("TOTAL", contentRight - 24, y + 11, 8.5, "#334155", "F2");
-  y -= 2;
+    const cardY = 656;
+    const cardGap = 12;
+    const cardH = 50;
+    const cardW = (contentW - cardGap) / 2;
+    const cards = [
+      ["ORDER DATE", asDate(order?.created_at)],
+      ["PAYMENT", `${order?.payment_method_label || order?.payment_provider || "Order payment"}${order?.payment_reference ? ` · ${order.payment_reference}` : ""}`],
+      ["CUSTOMER", `${order?.customer_name || "Customer"}${order?.customer_phone ? ` · ${order.customer_phone}` : ""}`],
+      ["FULFILMENT", `${order?.order_type || "Order"}${order?.customer_address ? ` · ${order.customer_address}` : ""}`],
+    ];
+    cards.forEach(([label, value], index) => {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
+      const x = contentX + col * (cardW + cardGap);
+      const yy = cardY - row * 60;
+      rect(x, yy, cardW, cardH, "#f8fafc", "#e2e8f0", 1);
+      text(label, x + 10, yy + 33, 7, "#64748b", "F2");
+      wrapPdfText(value, 38).slice(0, 2).forEach((lineText, lineIndex) => {
+        text(lineText, x + 10, yy + 20 - lineIndex * 10, 8.5, "#0f172a", lineIndex === 0 ? "F2" : "F1");
+      });
+    });
+  }
+  function drawItemsHeader(headerY: number) {
+    rect(contentX, headerY, contentW, 30, "#f1f5f9", "#e2e8f0", 1);
+    text("ITEM", contentX + 14, headerY + 11, 8.5, "#334155", "F2");
+    textRight("TOTAL", contentRight - 24, headerY + 11, 8.5, "#334155", "F2");
+    y = headerY - 2;
+  }
+  function newPage(firstPage = false, withItemsHeader = true) {
+    stream = [];
+    pages.push(stream);
+    drawPageShell();
+    if (firstPage) {
+      drawFirstPageHeader();
+      if (withItemsHeader) drawItemsHeader(540);
+      else y = 540;
+    } else {
+      drawCompactContinuationHeader();
+      if (withItemsHeader) drawItemsHeader(688);
+      else y = 688;
+    }
+  }
+  function ensureSpace(requiredHeight: number, withItemsHeader = false) {
+    if (y - requiredHeight < contentBottom) {
+      newPage(false, withItemsHeader);
+    }
+  }
 
-  const maxRows = 11;
-  items.slice(0, maxRows).forEach((item: any) => {
-    const rowH = 42;
+  newPage(true, true);
+
+  items.forEach((item: any) => {
+    const itemName = item?.product_name || "Item";
+    const nameLines = wrapPdfText(itemName, 54).slice(0, 2);
+    const rowH = nameLines.length > 1 ? 48 : 42;
+    ensureSpace(rowH, true);
     y -= rowH;
     rect(contentX, y, contentW, rowH, "#ffffff", "#e2e8f0", 1);
-    const itemName = item?.product_name || "Item";
-    wrapPdfText(itemName, 54).slice(0, 2).forEach((lineText, lineIndex) => {
-      text(lineText, contentX + 14, y + 24 - lineIndex * 11, 9.2, "#0f172a", lineIndex === 0 ? "F2" : "F1");
+    nameLines.forEach((lineText, lineIndex) => {
+      text(lineText, contentX + 14, y + rowH - 18 - lineIndex * 11, 9.2, "#0f172a", lineIndex === 0 ? "F2" : "F1");
     });
     text(`${Number(item?.quantity || 0)} x ${money(item?.unit_price)}`, contentX + 14, y + 8, 8.5, "#64748b");
-    textRight(money(item?.line_total), contentRight - 24, y + 18, 9.5, "#0f172a", "F2");
+    textRight(money(item?.line_total), contentRight - 24, y + Math.max(17, rowH / 2 - 3), 9.5, "#0f172a", "F2");
   });
-  if (items.length > maxRows) {
-    y -= 18;
-    text(`+ ${items.length - maxRows} more item(s) shown on the online receipt`, contentX + 14, y, 8.5, "#64748b");
-  }
 
-  // Totals.
-  const totalsW = 230;
-  const totalsX = contentRight - totalsW;
-  const totalsRight = contentRight - 24;
   const adjustmentRows = hasAdjustments
     ? [
         ["Subtotal", money(subtotal), "#334155", "#0f172a"] as const,
@@ -299,8 +324,12 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
         ...(discountAmount > 0 ? [[order?.discount_name || order?.discount_code || "Discount", `-${money(discountAmount)}`, "#047857", "#047857"] as const] : []),
       ]
     : [];
+  const totalsW = 230;
+  const totalsX = contentRight - totalsW;
+  const totalsRight = contentRight - 24;
   const totalsH = hasAdjustments ? 72 + adjustmentRows.length * 20 : showGstRate ? 80 : 62;
-  let totalsY = Math.max(140, y - totalsH);
+  ensureSpace(totalsH + 26, false);
+  const totalsY = y - totalsH - 18;
   rect(totalsX, totalsY, totalsW, totalsH, "#ffffff", "#e2e8f0", 1);
   let ty = totalsY + totalsH - 24;
   if (hasAdjustments) {
@@ -317,28 +346,54 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
     text(`${receiptInfo.taxLabel} rate`, totalsX + 14, totalsY + 14, 8.5, "#64748b");
     textRight(`${asPercent(taxRatePercent)}%`, totalsRight, totalsY + 14, 8.5, "#64748b", "F2");
   }
+  y = totalsY;
 
-  // Footer note.
   const footerCopy = receiptInfo.footerMessage || `Generated by ${tenantName}. Please quote ${documentName.toLowerCase()} ${receiptRef} if you contact the store.`;
-  rect(contentX, 66, contentW, 58, "#f8fafc", "#e2e8f0", 1);
-  wrapPdfText(footerCopy, 86).slice(0, 3).forEach((lineText, index) => {
-    text(lineText, contentX + 18, 104 - index * 11, 8.5, "#64748b");
+  const footerLines = wrapPdfText(footerCopy, 86).slice(0, 4);
+  const footerH = Math.max(62, 30 + footerLines.length * 11);
+  ensureSpace(footerH + 18, false);
+  const footerY = y - footerH - 16;
+  rect(contentX, footerY, contentW, footerH, "#f8fafc", "#e2e8f0", 1);
+  footerLines.forEach((lineText, index) => {
+    text(lineText, contentX + 18, footerY + footerH - 26 - index * 11, 8.5, "#64748b");
   });
 
-  const content = stream.join("\n");
-  const resources = logo ? "/Font << /F1 4 0 R /F2 5 0 R >> /XObject << /ImLogo 6 0 R >>" : "/Font << /F1 4 0 R /F2 5 0 R >>";
+  if (pages.length > 1) {
+    pages.forEach((pageStream, index) => {
+      stream = pageStream;
+      textCentered(`Page ${index + 1} of ${pages.length}`, pageWidth / 2, 24, 8.2, "#64748b", "F1");
+    });
+  }
+
+  const pageCount = pages.length;
+  const pageObjectStart = 3;
+  const fontRegularObject = pageObjectStart + pageCount;
+  const fontBoldObject = fontRegularObject + 1;
+  const logoObject = logo ? fontBoldObject + 1 : null;
+  const contentObjectStart = logo ? fontBoldObject + 2 : fontBoldObject + 1;
+  const pageKids = Array.from({ length: pageCount }, (_, index) => `${pageObjectStart + index} 0 R`).join(" ");
+  const resources = logo
+    ? `/Font << /F1 ${fontRegularObject} 0 R /F2 ${fontBoldObject} 0 R >> /XObject << /ImLogo ${logoObject} 0 R >>`
+    : `/Font << /F1 ${fontRegularObject} 0 R /F2 ${fontBoldObject} 0 R >>`;
+
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << ${resources} >> /Contents ${logo ? 7 : 6} 0 R >>`,
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
+    `<< /Type /Pages /Kids [${pageKids}] /Count ${pageCount} >>`,
   ];
+
+  pages.forEach((_, index) => {
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << ${resources} >> /Contents ${contentObjectStart + index} 0 R >>`);
+  });
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  objects.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>");
 
   if (logo) {
     objects.push(`<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logo.buffer.length} >>\nstream\n${logo.buffer.toString("binary")}\nendstream`);
   }
-  objects.push(`<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n${content}\nendstream`);
+  pages.forEach((pageStream) => {
+    const content = pageStream.join("\n");
+    objects.push(`<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n${content}\nendstream`);
+  });
 
   let pdf = "%PDF-1.4\n";
   const offsets = [0];
