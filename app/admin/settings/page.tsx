@@ -181,6 +181,7 @@ export default async function AdminSettingsPage() {
           receiptDocumentName: settings?.receipt_document_name || "Receipt",
           receiptTaxLabel: settings?.receipt_tax_label === "GST" ? "GST" : "VAT",
           receiptTaxNumber: settings?.receipt_tax_number || "",
+          receiptTaxRatePercent: String(settings?.receipt_tax_rate_percent ?? 0),
           receiptExtraField1Enabled: settings?.receipt_extra_field_1_enabled === true,
           receiptExtraField1Label: settings?.receipt_extra_field_1_label || "",
           receiptExtraField1Value: settings?.receipt_extra_field_1_value || "",

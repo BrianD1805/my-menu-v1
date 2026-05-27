@@ -10,6 +10,7 @@ type ReceiptInfo = {
   documentName: string;
   taxLabel: "VAT" | "GST";
   taxNumber: string;
+  taxRatePercent: number;
   extraFields: Array<{ label: string; value: string }>;
   footerMessage: string;
   brandImageMode: "logo" | "favicon";
@@ -19,13 +20,15 @@ function buildReceiptInfo(settings: any): ReceiptInfo {
   const documentName = String(settings?.receipt_document_name || "Receipt").trim().slice(0, 80) || "Receipt";
   const taxLabel = String(settings?.receipt_tax_label || "VAT").trim().toUpperCase() === "GST" ? "GST" : "VAT";
   const taxNumber = String(settings?.receipt_tax_number || "").trim().slice(0, 80);
+  const taxRatePercentRaw = Number(settings?.receipt_tax_rate_percent || 0);
+  const taxRatePercent = Number.isFinite(taxRatePercentRaw) ? Math.min(100, Math.max(0, Math.round(taxRatePercentRaw * 100) / 100)) : 0;
   const extraFields = [
     settings?.receipt_extra_field_1_enabled ? { label: String(settings?.receipt_extra_field_1_label || "").trim(), value: String(settings?.receipt_extra_field_1_value || "").trim() } : null,
     settings?.receipt_extra_field_2_enabled ? { label: String(settings?.receipt_extra_field_2_label || "").trim(), value: String(settings?.receipt_extra_field_2_value || "").trim() } : null,
   ].filter((field): field is { label: string; value: string } => Boolean(field?.label && field?.value));
   const footerMessage = String(settings?.receipt_footer_message || "").trim().slice(0, 700);
   const brandImageMode = String(settings?.receipt_brand_image_mode || "logo").trim().toLowerCase() === "favicon" ? "favicon" : "logo";
-  return { documentName, taxLabel, taxNumber, extraFields, footerMessage, brandImageMode };
+  return { documentName, taxLabel, taxNumber, taxRatePercent, extraFields, footerMessage, brandImageMode };
 }
 
 function escapeHtml(value: unknown) {
@@ -40,6 +43,16 @@ function escapeHtml(value: unknown) {
 function asMoney(value: unknown, currencyCode: string) {
   const amount = Number(value || 0);
   return `${currencyCode} ${amount.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function asPercent(value: unknown) {
+  const amount = Number(value || 0);
+  return amount.toLocaleString("en-GB", { minimumFractionDigits: amount % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
+}
+
+function includedTaxAmount(total: number, ratePercent: number) {
+  if (!Number.isFinite(total) || !Number.isFinite(ratePercent) || ratePercent <= 0) return 0;
+  return Math.max(0, total * (ratePercent / (100 + ratePercent)));
 }
 
 function asDate(value: unknown) {
@@ -134,7 +147,10 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
   const rewardDiscount = Number(order?.reward_discount_amount || 0);
   const discountAmount = Number(order?.discount_amount || 0);
   const total = Number(order?.total || 0);
-  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total;
+  const taxRatePercent = Number(receiptInfo.taxRatePercent || 0);
+  const vatIncludedAmount = receiptInfo.taxLabel === "VAT" && taxRatePercent > 0 ? includedTaxAmount(total, taxRatePercent) : 0;
+  const showGstRate = receiptInfo.taxLabel === "GST" && taxRatePercent > 0;
+  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total || vatIncludedAmount > 0;
   const pageWidth = 595;
   const pageHeight = 842;
   const margin = 42;
@@ -225,8 +241,9 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
   const contentX = margin + 20;
   const contentW = pageWidth - margin * 2 - 40;
   const contentRight = contentX + contentW;
-  const cardY = 654;
+  const cardY = 656;
   const cardGap = 12;
+  const cardH = 48;
   const cardW = (contentW - cardGap) / 2;
   const cards = [
     ["ORDER DATE", asDate(order?.created_at)],
@@ -238,11 +255,11 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
     const col = index % 2;
     const row = Math.floor(index / 2);
     const x = contentX + col * (cardW + cardGap);
-    const yy = cardY - row * 52;
-    rect(x, yy, cardW, 42, "#f8fafc", "#e2e8f0", 1);
-    text(label, x + 10, yy + 27, 7, "#64748b", "F2");
-    wrapPdfText(value, 40).slice(0, 2).forEach((lineText, lineIndex) => {
-      text(lineText, x + 10, yy + 14 - lineIndex * 9.5, 8.5, "#0f172a", lineIndex === 0 ? "F2" : "F1");
+    const yy = cardY - row * 58;
+    rect(x, yy, cardW, cardH, "#f8fafc", "#e2e8f0", 1);
+    text(label, x + 10, yy + 31, 7, "#64748b", "F2");
+    wrapPdfText(value, 38).slice(0, 2).forEach((lineText, lineIndex) => {
+      text(lineText, x + 10, yy + 18 - lineIndex * 10, 8.5, "#0f172a", lineIndex === 0 ? "F2" : "F1");
     });
   });
 
@@ -250,7 +267,7 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
   y = 540;
   rect(contentX, y, contentW, 30, "#f1f5f9", "#e2e8f0", 1);
   text("ITEM", contentX + 14, y + 11, 8.5, "#334155", "F2");
-  textRight("TOTAL", contentRight - 34, y + 11, 8.5, "#334155", "F2");
+  textRight("TOTAL", contentRight - 24, y + 11, 8.5, "#334155", "F2");
   y -= 2;
 
   const maxRows = 11;
@@ -263,7 +280,7 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
       text(lineText, contentX + 14, y + 24 - lineIndex * 11, 9.2, "#0f172a", lineIndex === 0 ? "F2" : "F1");
     });
     text(`${Number(item?.quantity || 0)} x ${money(item?.unit_price)}`, contentX + 14, y + 8, 8.5, "#64748b");
-    textRight(money(item?.line_total), contentRight - 34, y + 18, 9.5, "#0f172a", "F2");
+    textRight(money(item?.line_total), contentRight - 24, y + 18, 9.5, "#0f172a", "F2");
   });
   if (items.length > maxRows) {
     y -= 18;
@@ -273,35 +290,39 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
   // Totals.
   const totalsW = 230;
   const totalsX = contentRight - totalsW;
-  const totalsRight = totalsX + totalsW - 24;
-  let totalsY = Math.max(140, y - 108);
-  rect(totalsX, totalsY, totalsW, hasAdjustments ? 108 : 62, "#ffffff", "#e2e8f0", 1);
-  let ty = totalsY + (hasAdjustments ? 84 : 38);
+  const totalsRight = contentRight - 24;
+  const adjustmentRows = hasAdjustments
+    ? [
+        ["Subtotal", money(subtotal), "#334155", "#0f172a"] as const,
+        ...(vatIncludedAmount > 0 ? [[`${receiptInfo.taxLabel} included (${asPercent(taxRatePercent)}%)`, money(vatIncludedAmount), "#334155", "#0f172a"] as const] : []),
+        ...(rewardDiscount > 0 ? [[`Rewards discount${order?.reward_tier ? ` · ${order.reward_tier}` : ""}`, `-${money(rewardDiscount)}`, "#047857", "#047857"] as const] : []),
+        ...(discountAmount > 0 ? [[order?.discount_name || order?.discount_code || "Discount", `-${money(discountAmount)}`, "#047857", "#047857"] as const] : []),
+      ]
+    : [];
+  const totalsH = hasAdjustments ? 72 + adjustmentRows.length * 20 : showGstRate ? 80 : 62;
+  let totalsY = Math.max(140, y - totalsH);
+  rect(totalsX, totalsY, totalsW, totalsH, "#ffffff", "#e2e8f0", 1);
+  let ty = totalsY + totalsH - 24;
   if (hasAdjustments) {
-    text("Subtotal", totalsX + 14, ty, 9.5, "#334155");
-    textRight(money(subtotal), totalsRight, ty, 9.5, "#0f172a", "F2");
-    ty -= 22;
-    if (rewardDiscount > 0) {
-      text(`Rewards discount${order?.reward_tier ? ` · ${order.reward_tier}` : ""}`, totalsX + 14, ty, 9.2, "#047857");
-      textRight(`-${money(rewardDiscount)}`, totalsRight, ty, 9.2, "#047857", "F2");
-      ty -= 20;
-    }
-    if (discountAmount > 0) {
-      text(order?.discount_name || order?.discount_code || "Discount", totalsX + 14, ty, 9.2, "#047857");
-      textRight(`-${money(discountAmount)}`, totalsRight, ty, 9.2, "#047857", "F2");
-      ty -= 20;
-    }
-    line(totalsX + 14, ty + 9, totalsX + totalsW - 14, ty + 9);
+    adjustmentRows.forEach(([label, value, labelColour, valueColour]) => {
+      text(label, totalsX + 14, ty, 8.8, labelColour);
+      textRight(value, totalsRight, ty, 8.8, valueColour, "F2");
+      ty -= 19;
+    });
+    line(totalsX + 14, ty + 8, totalsX + totalsW - 14, ty + 8);
   }
-  text("Total paid", totalsX + 14, totalsY + 15, 12, "#0f172a", "F2");
-  textRight(money(total), totalsRight, totalsY + 15, 12, "#0f172a", "F2");
+  text("Total paid", totalsX + 14, totalsY + (showGstRate ? 30 : 15), 12, "#0f172a", "F2");
+  textRight(money(total), totalsRight, totalsY + (showGstRate ? 30 : 15), 12, "#0f172a", "F2");
+  if (showGstRate) {
+    text(`${receiptInfo.taxLabel} rate`, totalsX + 14, totalsY + 14, 8.5, "#64748b");
+    textRight(`${asPercent(taxRatePercent)}%`, totalsRight, totalsY + 14, 8.5, "#64748b", "F2");
+  }
 
   // Footer note.
   const footerCopy = receiptInfo.footerMessage || `Generated by ${tenantName}. Please quote ${documentName.toLowerCase()} ${receiptRef} if you contact the store.`;
-  rect(contentX, 72, contentW, 46, "#f8fafc", "#e2e8f0", 1);
-  text(`${documentName} note`, contentX + 14, 96, 8, "#047857", "F2");
-  wrapPdfText(footerCopy, 88).slice(0, 2).forEach((lineText, index) => {
-    text(lineText, contentX + 14, 82 - index * 11, 8.5, "#64748b");
+  rect(contentX, 66, contentW, 58, "#f8fafc", "#e2e8f0", 1);
+  wrapPdfText(footerCopy, 86).slice(0, 3).forEach((lineText, index) => {
+    text(lineText, contentX + 18, 104 - index * 11, 8.5, "#64748b");
   });
 
   const content = stream.join("\n");
@@ -358,7 +379,10 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
   const rewardDiscount = Number(order?.reward_discount_amount || 0);
   const discountAmount = Number(order?.discount_amount || 0);
   const total = Number(order?.total || 0);
-  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total;
+  const taxRatePercent = Number(receiptInfo.taxRatePercent || 0);
+  const vatIncludedAmount = receiptInfo.taxLabel === "VAT" && taxRatePercent > 0 ? includedTaxAmount(total, taxRatePercent) : 0;
+  const showGstRate = receiptInfo.taxLabel === "GST" && taxRatePercent > 0;
+  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total || vatIncludedAmount > 0;
   const safeLogoUrl = String(logoUrl || "").trim();
 
   const itemRows = items
@@ -381,6 +405,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
   const discountRows = hasAdjustments
     ? `
       <div class="totals-row subtle"><span>Subtotal</span><strong>${asMoney(subtotal, currencyCode)}</strong></div>
+      ${vatIncludedAmount > 0 ? `<div class="totals-row subtle"><span>${escapeHtml(receiptInfo.taxLabel)} included (${asPercent(taxRatePercent)}%)</span><strong>${asMoney(vatIncludedAmount, currencyCode)}</strong></div>` : ""}
       ${rewardDiscount > 0 ? `<div class="totals-row success"><span>Rewards discount${order?.reward_tier ? ` · ${escapeHtml(order.reward_tier)}` : ""}</span><strong>-${asMoney(rewardDiscount, currencyCode)}</strong></div>` : ""}
       ${discountAmount > 0 ? `<div class="totals-row success"><span>${escapeHtml(order?.discount_name || order?.discount_code || "Discount")}</span><strong>-${asMoney(discountAmount, currencyCode)}</strong></div>` : ""}
     `
@@ -492,7 +517,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
       border: 1px solid #e2e8f0;
       background: #f8fafc;
       border-radius: 16px;
-      padding: 11px 13px;
+      padding: 12px 14px 15px;
     }
     .label {
       margin: 0;
@@ -566,8 +591,10 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
     }
     .footer {
       margin-top: 26px;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 18px;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      background: #f8fafc;
+      padding: 18px 20px 20px;
       color: #64748b;
       font-size: 12px;
       line-height: 1.7;
@@ -640,10 +667,11 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
       <section class="totals" aria-label="Receipt totals">
         ${discountRows}
         <div class="totals-row grand"><span>Total paid</span><strong>${asMoney(total, currencyCode)}</strong></div>
+        ${showGstRate ? `<div class="totals-row subtle"><span>${escapeHtml(receiptInfo.taxLabel)} rate</span><strong>${asPercent(taxRatePercent)}%</strong></div>` : ""}
       </section>
 
       <section class="footer">
-        <strong>${escapeHtml(documentName)} note:</strong> ${escapeHtml(receiptFooterCopy)}
+        ${escapeHtml(receiptFooterCopy)}
       </section>
     </main>
   </article>
@@ -770,7 +798,7 @@ export async function GET(req: Request, context: ReceiptParams) {
 
   const { data: receiptSettings } = await db
     .from("tenant_settings")
-    .select("currency_code, logo_url, favicon_url, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode")
+    .select("currency_code, logo_url, favicon_url, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_tax_rate_percent, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode")
     .eq("tenant_id", session.tenant.id)
     .maybeSingle();
 

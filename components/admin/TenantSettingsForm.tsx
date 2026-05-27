@@ -135,6 +135,7 @@ type FormState = {
   receiptDocumentName: string;
   receiptTaxLabel: "VAT" | "GST";
   receiptTaxNumber: string;
+  receiptTaxRatePercent: string;
   receiptExtraField1Enabled: boolean;
   receiptExtraField1Label: string;
   receiptExtraField1Value: string;
@@ -628,7 +629,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
   const rewardsDirty = formValueChanged(["rewardsEnabled", "rewardsProgramName", "rewardsSilverDiscountPercent", "rewardsGoldMinSpend", "rewardsGoldDiscountPercent", "rewardsPlatinumMinSpend", "rewardsPlatinumDiscountPercent"]);
   const discountsDirty = formValueChanged(["discountsEnabled", "discountPopupEnabled", "discountPopupTitle", "discountPopupMessage", "discountRules"]);
-  const receiptInfoDirty = formValueChanged(["receiptDocumentName", "receiptTaxLabel", "receiptTaxNumber", "receiptExtraField1Enabled", "receiptExtraField1Label", "receiptExtraField1Value", "receiptExtraField2Enabled", "receiptExtraField2Label", "receiptExtraField2Value", "receiptFooterMessage", "receiptBrandImageMode"]);
+  const receiptInfoDirty = formValueChanged(["receiptDocumentName", "receiptTaxLabel", "receiptTaxNumber", "receiptTaxRatePercent", "receiptExtraField1Enabled", "receiptExtraField1Label", "receiptExtraField1Value", "receiptExtraField2Enabled", "receiptExtraField2Label", "receiptExtraField2Value", "receiptFooterMessage", "receiptBrandImageMode"]);
   const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive", "enableDarajaCustomerPayments", "darajaConnectionStatus", "darajaCustomerMode", "darajaConsumerKey", "darajaConsumerSecretInput", "darajaShortcode", "darajaPasskeyInput", "darajaTransactionType", "darajaAccountReferencePrefix", "darajaCallbackUrl", "darajaAccountLabel", "darajaSetupNotes", "darajaPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
@@ -1461,6 +1462,9 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
             </Field>
             <Field label="Tax number">
               <input value={form.receiptTaxNumber} onChange={(e) => update("receiptTaxNumber", e.target.value)} className="input" placeholder="VAT / GST number" />
+            </Field>
+            <Field label="VAT / GST rate %">
+              <input value={form.receiptTaxRatePercent} onChange={(e) => update("receiptTaxRatePercent", e.target.value)} className="input" inputMode="decimal" placeholder="0" />
             </Field>
             <Field label="Receipt image">
               <select value={form.receiptBrandImageMode} onChange={(e) => update("receiptBrandImageMode", e.target.value as FormState["receiptBrandImageMode"])} className="input">
@@ -2394,7 +2398,7 @@ const SETTINGS_MENU_ITEMS = [
   { id: "theme-presets", group: "Theme", title: "Theme presets", help: "Choose a ready-made colour starting point." },
   { id: "per-item-storefront-colours", group: "Theme", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
   { id: "business-contact-details", group: "Contact", title: "Business contact details", help: "Phone, email, address, footer and social links." },
-  { id: "receipt-information", group: "Receipts", title: "Receipt information", help: "Document name, tax details, optional fields, receipt image and footer note." },
+  { id: "receipt-information", group: "Receipts", title: "Receipt information", help: "Document name, tax details, optional fields, receipt image and footer wording." },
   { id: "customer-rewards-program", group: "Rewards", title: "Customer rewards programme", help: "Silver, Gold and Platinum spend tiers with percentage discounts." },
   { id: "discounts-and-codes", group: "Discounts", title: "Discounts & codes", help: "Product, combo and site-wide promotional offers." },
   { id: "storefront-payment-options", group: "Payments", title: "Storefront payment options", help: "Cash, COD, Stripe, Yoco and future provider setup." },
