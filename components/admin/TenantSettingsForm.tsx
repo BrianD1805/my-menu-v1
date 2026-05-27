@@ -187,6 +187,8 @@ type MpesaDiagnosticsResult = {
 };
 
 type PreviewTarget = "global" | "header" | "welcome" | "products" | "favourites" | "footer";
+type ToastTone = "success" | "error" | "info";
+type AdminToast = { id: number; message: string; tone: ToastTone };
 
 type ThemePreset = {
   name: string;
@@ -585,6 +587,8 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const [savedForm, setSavedForm] = useState<FormState>(initialForm);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"idle" | "success" | "error" | "info">("idle");
+  const [toast, setToast] = useState<AdminToast | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -719,6 +723,18 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
     }
     void loadDiscountProducts();
     return () => { cancelled = true; };
+  }, []);
+
+  function showToast(message: string, tone: ToastTone = "success") {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    setToast({ id: Date.now(), message, tone });
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 3000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
   }, []);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -909,11 +925,15 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         [kind === "logo" ? "logoUrl" : "faviconUrl"]: uploadedUrl,
       }));
       if (kind === "logo") setPreviewTarget("header");
+      const successMessage = payload.message || `${kind === "logo" ? "Logo" : "Favicon"} uploaded and saved.`;
       setTone("success");
-      setMessage(payload.message || `${kind === "logo" ? "Logo" : "Favicon"} uploaded and saved.`);
+      setMessage(successMessage);
+      showToast(successMessage, "success");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : `Failed to upload ${kind}`;
       setTone("error");
-      setMessage(error instanceof Error ? error.message : `Failed to upload ${kind}`);
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setUploading(false);
     }
@@ -988,9 +1008,12 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       setSavedForm(savedPayload);
       setTone("success");
       setMessage("Tenant settings saved.");
+      showToast("Tenant settings saved.", "success");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to save settings";
       setTone("error");
-      setMessage(error instanceof Error ? error.message : "Failed to save settings");
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setSaving(false);
     }
@@ -1029,11 +1052,15 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       };
       setForm(nextForm);
       setSavedForm({ ...savedForm, ...nextForm, yocoCustomerWebhookSecretInput: "" });
+      const successMessage = payload?.message || "Yoco webhook registered and saved.";
       setTone("success");
-      setMessage(payload?.message || "Yoco webhook registered and saved.");
+      setMessage(successMessage);
+      showToast(successMessage, "success");
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to register Yoco webhook";
       setTone("error");
-      setMessage(error instanceof Error ? error.message : "Failed to register Yoco webhook");
+      setMessage(errorMessage);
+      showToast(errorMessage, "error");
     } finally {
       setYocoWebhookRegistering(false);
     }
@@ -2238,6 +2265,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
         </div>
       </form>
 
+      <AdminToastBubble toast={toast} onClose={() => setToast(null)} />
 
       <button
         type="button"
@@ -2290,6 +2318,32 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
       {stripeGuideOpen ? (
         <StripeKeyGuideModal onClose={() => setStripeGuideOpen(false)} />
       ) : null}
+    </div>
+  );
+}
+
+function AdminToastBubble({ toast, onClose }: { toast: AdminToast | null; onClose: () => void }) {
+  if (!toast) return null;
+
+  const toneClass = toast.tone === "success"
+    ? "border-emerald-200/80 bg-white/95 text-emerald-900 shadow-[0_18px_46px_rgba(16,185,129,0.18)]"
+    : toast.tone === "error"
+      ? "border-rose-200/80 bg-white/95 text-rose-900 shadow-[0_18px_46px_rgba(244,63,94,0.18)]"
+      : "border-orange-200/80 bg-white/95 text-orange-950 shadow-[0_18px_46px_rgba(249,115,22,0.16)]";
+  const iconClass = toast.tone === "success"
+    ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+    : toast.tone === "error"
+      ? "bg-rose-50 text-rose-700 ring-rose-100"
+      : "bg-orange-50 text-orange-700 ring-orange-100";
+  const icon = toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i";
+
+  return (
+    <div className="pointer-events-none fixed right-4 top-4 z-[120] w-[calc(100vw-2rem)] max-w-sm sm:right-6 sm:top-6" role="status" aria-live="polite">
+      <div key={toast.id} className={`pointer-events-auto flex items-start gap-3 rounded-[22px] border px-4 py-3 text-sm leading-5 backdrop-blur transition ${toneClass}`}>
+        <span className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm ring-1 ${iconClass}`} aria-hidden="true">{icon}</span>
+        <p className="min-w-0 flex-1 text-sm leading-5">{toast.message}</p>
+        <button type="button" onClick={onClose} className="-mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Dismiss notification">×</button>
+      </div>
     </div>
   );
 }
