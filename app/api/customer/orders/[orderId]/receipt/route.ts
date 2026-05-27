@@ -141,6 +141,21 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order }: { ten
     setFill(colour);
     stream.push("BT", `/${font} ${size} Tf`, `${x} ${yy} Td`, `(${pdfText(value, 180)}) Tj`, "ET");
   }
+  function approxPdfTextWidth(value: unknown, size = 10) {
+    return String(value ?? "").split("").reduce((totalWidth, char) => {
+      if (char === " ") return totalWidth + size * 0.28;
+      if (char === "," || char === ".") return totalWidth + size * 0.28;
+      if (char === "1") return totalWidth + size * 0.44;
+      if (char === "-") return totalWidth + size * 0.34;
+      if (/[0-9]/.test(char)) return totalWidth + size * 0.56;
+      if (/[A-Z]/.test(char)) return totalWidth + size * 0.64;
+      return totalWidth + size * 0.52;
+    }, 0);
+  }
+  function textRight(value: unknown, rightX: number, yy: number, size = 10, colour = "#0f172a", font = "F1") {
+    const safe = String(value ?? "");
+    text(safe, rightX - approxPdfTextWidth(safe, size), yy, size, colour, font);
+  }
   function money(value: unknown) {
     return asMoney(value, currencyCode);
   }
@@ -173,8 +188,12 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order }: { ten
   text(receiptRef, pageWidth - margin - 122, 756, 10, "#065f46", "F2");
 
   // Detail cards.
+  const contentX = margin + 20;
+  const contentW = pageWidth - margin * 2 - 40;
+  const contentRight = contentX + contentW;
   const cardY = 626;
-  const cardW = (pageWidth - margin * 2 - 16) / 2;
+  const cardGap = 16;
+  const cardW = (contentW - cardGap) / 2;
   const cards = [
     ["ORDER DATE", asDate(order?.created_at)],
     ["PAYMENT", `${order?.payment_method_label || order?.payment_provider || "Order payment"}${order?.payment_reference ? ` · ${order.payment_reference}` : ""}`],
@@ -184,69 +203,70 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order }: { ten
   cards.forEach(([label, value], index) => {
     const col = index % 2;
     const row = Math.floor(index / 2);
-    const x = margin + 20 + col * (cardW + 16);
+    const x = contentX + col * (cardW + cardGap);
     const yy = cardY - row * 64;
     rect(x, yy, cardW, 50, "#f8fafc", "#e2e8f0", 1);
     text(label, x + 12, yy + 32, 7.5, "#64748b", "F2");
-    wrapPdfText(value, 44).slice(0, 2).forEach((lineText, lineIndex) => {
+    wrapPdfText(value, 38).slice(0, 2).forEach((lineText, lineIndex) => {
       text(lineText, x + 12, yy + 17 - lineIndex * 11, 9.5, "#0f172a", lineIndex === 0 ? "F2" : "F1");
     });
   });
 
   // Items table.
   y = 475;
-  rect(margin + 20, y, pageWidth - margin * 2 - 40, 30, "#f1f5f9", "#e2e8f0", 1);
-  text("ITEM", margin + 34, y + 11, 8.5, "#334155", "F2");
-  text("TOTAL", pageWidth - margin - 96, y + 11, 8.5, "#334155", "F2");
+  rect(contentX, y, contentW, 30, "#f1f5f9", "#e2e8f0", 1);
+  text("ITEM", contentX + 14, y + 11, 8.5, "#334155", "F2");
+  textRight("TOTAL", contentRight - 34, y + 11, 8.5, "#334155", "F2");
   y -= 2;
 
   const maxRows = 11;
   items.slice(0, maxRows).forEach((item: any) => {
     const rowH = 42;
     y -= rowH;
-    rect(margin + 20, y, pageWidth - margin * 2 - 40, rowH, "#ffffff", "#e2e8f0", 1);
+    rect(contentX, y, contentW, rowH, "#ffffff", "#e2e8f0", 1);
     const itemName = item?.product_name || "Item";
     wrapPdfText(itemName, 54).slice(0, 2).forEach((lineText, lineIndex) => {
-      text(lineText, margin + 34, y + 24 - lineIndex * 11, 9.2, "#0f172a", lineIndex === 0 ? "F2" : "F1");
+      text(lineText, contentX + 14, y + 24 - lineIndex * 11, 9.2, "#0f172a", lineIndex === 0 ? "F2" : "F1");
     });
-    text(`${Number(item?.quantity || 0)} x ${money(item?.unit_price)}`, margin + 34, y + 8, 8.5, "#64748b");
-    text(money(item?.line_total), pageWidth - margin - 116, y + 18, 9.5, "#0f172a", "F2");
+    text(`${Number(item?.quantity || 0)} x ${money(item?.unit_price)}`, contentX + 14, y + 8, 8.5, "#64748b");
+    textRight(money(item?.line_total), contentRight - 34, y + 18, 9.5, "#0f172a", "F2");
   });
   if (items.length > maxRows) {
     y -= 18;
-    text(`+ ${items.length - maxRows} more item(s) shown on the online receipt`, margin + 34, y, 8.5, "#64748b");
+    text(`+ ${items.length - maxRows} more item(s) shown on the online receipt`, contentX + 14, y, 8.5, "#64748b");
   }
 
   // Totals.
   const totalsW = 230;
-  const totalsX = pageWidth - margin - 20 - totalsW;
+  const totalsX = contentRight - totalsW;
+  const totalsRight = totalsX + totalsW - 24;
   let totalsY = Math.max(140, y - 108);
   rect(totalsX, totalsY, totalsW, hasAdjustments ? 108 : 62, "#ffffff", "#e2e8f0", 1);
   let ty = totalsY + (hasAdjustments ? 84 : 38);
   if (hasAdjustments) {
     text("Subtotal", totalsX + 14, ty, 9.5, "#334155");
-    text(money(subtotal), totalsX + 132, ty, 9.5, "#0f172a", "F2");
+    textRight(money(subtotal), totalsRight, ty, 9.5, "#0f172a", "F2");
     ty -= 22;
     if (rewardDiscount > 0) {
       text(`Rewards discount${order?.reward_tier ? ` · ${order.reward_tier}` : ""}`, totalsX + 14, ty, 9.2, "#047857");
-      text(`-${money(rewardDiscount)}`, totalsX + 132, ty, 9.2, "#047857", "F2");
+      textRight(`-${money(rewardDiscount)}`, totalsRight, ty, 9.2, "#047857", "F2");
       ty -= 20;
     }
     if (discountAmount > 0) {
       text(order?.discount_name || order?.discount_code || "Discount", totalsX + 14, ty, 9.2, "#047857");
-      text(`-${money(discountAmount)}`, totalsX + 132, ty, 9.2, "#047857", "F2");
+      textRight(`-${money(discountAmount)}`, totalsRight, ty, 9.2, "#047857", "F2");
       ty -= 20;
     }
     line(totalsX + 14, ty + 9, totalsX + totalsW - 14, ty + 9);
   }
   text("Total paid", totalsX + 14, totalsY + 15, 12, "#0f172a", "F2");
-  text(money(total), totalsX + 118, totalsY + 15, 12, "#0f172a", "F2");
+  textRight(money(total), totalsRight, totalsY + 15, 12, "#0f172a", "F2");
 
   // Footer note.
-  rect(margin + 20, 72, pageWidth - margin * 2 - 40, 46, "#f8fafc", "#e2e8f0", 1);
-  text("Receipt note", margin + 34, 96, 8, "#047857", "F2");
+  rect(contentX, 72, contentW, 46, "#f8fafc", "#e2e8f0", 1);
+  text("Receipt note", contentX + 14, 96, 8, "#047857", "F2");
   wrapPdfText(`Generated by ${tenantName}. Please quote receipt ${receiptRef} if you contact the store.`, 88).slice(0, 2).forEach((lineText, index) => {
-    text(lineText, margin + 34, 82 - index * 11, 8.5, "#64748b");
+    text(lineText, contentX + 14, 82 - index * 11, 8.5, "#64748b");
   });
 
   const content = stream.join("\n");
@@ -467,7 +487,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
       font-size: 14px;
     }
     td span { display: block; margin-top: 4px; color: #64748b; font-size: 13px; }
-    .amount { text-align: right; font-weight: 900; white-space: nowrap; }
+    .amount { text-align: right; font-weight: 900; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .totals {
       margin-left: auto;
       margin-top: 20px;
@@ -484,6 +504,12 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
       padding: 9px 0;
       color: #334155;
       font-size: 14px;
+    }
+    .totals-row strong {
+      min-width: 130px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
     .totals-row + .totals-row { border-top: 1px solid #e2e8f0; }
     .totals-row.success { color: #047857; }

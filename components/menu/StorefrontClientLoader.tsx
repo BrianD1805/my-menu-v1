@@ -66,7 +66,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-222";
+const STOREFRONT_CACHE_VERSION = "ver-0-222e";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -141,7 +141,10 @@ function ErrorStorefrontShell({ message, onRetry }: { message: string; onRetry: 
 }
 
 export default function StorefrontClientLoader({ tenantSlug, version, initialProductId }: { tenantSlug: string; version: string; initialProductId?: string | null }) {
-  const [payload, setPayload] = useState<StorefrontPayload | null>(() => readCachedPayload(tenantSlug));
+  // Start from the same server-safe empty state on the first client render.
+  // Cached storefront data is restored after hydration so localStorage cannot cause
+  // a server/client markup mismatch.
+  const [payload, setPayload] = useState<StorefrontPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   const trackedVisitKeyRef = useRef("");
