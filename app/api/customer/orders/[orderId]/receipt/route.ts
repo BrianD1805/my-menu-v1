@@ -6,6 +6,28 @@ type ReceiptParams = {
   params: Promise<{ orderId: string }>;
 };
 
+type ReceiptInfo = {
+  documentName: string;
+  taxLabel: "VAT" | "GST";
+  taxNumber: string;
+  extraFields: Array<{ label: string; value: string }>;
+  footerMessage: string;
+  brandImageMode: "logo" | "favicon";
+};
+
+function buildReceiptInfo(settings: any): ReceiptInfo {
+  const documentName = String(settings?.receipt_document_name || "Receipt").trim().slice(0, 80) || "Receipt";
+  const taxLabel = String(settings?.receipt_tax_label || "VAT").trim().toUpperCase() === "GST" ? "GST" : "VAT";
+  const taxNumber = String(settings?.receipt_tax_number || "").trim().slice(0, 80);
+  const extraFields = [
+    settings?.receipt_extra_field_1_enabled ? { label: String(settings?.receipt_extra_field_1_label || "").trim(), value: String(settings?.receipt_extra_field_1_value || "").trim() } : null,
+    settings?.receipt_extra_field_2_enabled ? { label: String(settings?.receipt_extra_field_2_label || "").trim(), value: String(settings?.receipt_extra_field_2_value || "").trim() } : null,
+  ].filter((field): field is { label: string; value: string } => Boolean(field?.label && field?.value));
+  const footerMessage = String(settings?.receipt_footer_message || "").trim().slice(0, 700);
+  const brandImageMode = String(settings?.receipt_brand_image_mode || "logo").trim().toLowerCase() === "favicon" ? "favicon" : "logo";
+  return { documentName, taxLabel, taxNumber, extraFields, footerMessage, brandImageMode };
+}
+
 function escapeHtml(value: unknown) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -99,9 +121,15 @@ async function loadJpegLogo(logoUrl?: string | null) {
   }
 }
 
-function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order }: { tenantName: string; currencyCode: string; logo?: { buffer: Buffer; width: number; height: number } | null; order: any }) {
+function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receiptInfo }: { tenantName: string; currencyCode: string; logo?: { buffer: Buffer; width: number; height: number } | null; order: any; receiptInfo: ReceiptInfo }) {
   const items = Array.isArray(order?.order_items) ? order.order_items : [];
   const receiptRef = receiptNumber(order);
+  const documentName = receiptInfo.documentName || "Receipt";
+  const topMeta = [
+    ["Order no.", receiptRef],
+    receiptInfo.taxNumber ? [`${receiptInfo.taxLabel} no.`, receiptInfo.taxNumber] : null,
+    ...receiptInfo.extraFields.map((field) => [field.label, field.value] as [string, string]),
+  ].filter(Boolean) as Array<[string, string]>;
   const subtotal = Number(order?.subtotal_total ?? order?.total ?? 0);
   const rewardDiscount = Number(order?.reward_discount_amount || 0);
   const discountAmount = Number(order?.discount_amount || 0);
@@ -166,33 +194,39 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order }: { ten
   rect(margin, pageHeight - 50, pageWidth - margin * 2, 6, "#059669");
   rect(margin + 155, pageHeight - 50, pageWidth - margin * 2 - 310, 6, "#334155");
 
-  // Header.
-  rect(margin, 714, pageWidth - margin * 2, 84, "#f8fafc", "#e2e8f0", 1);
+  // Compact header.
+  rect(margin, 724, pageWidth - margin * 2, 74, "#f8fafc", "#e2e8f0", 1);
   if (logo) {
-    const box = 50;
+    const box = 42;
     const ratio = Math.min(box / logo.width, box / logo.height);
     const w = Math.max(1, Math.round(logo.width * ratio));
     const h = Math.max(1, Math.round(logo.height * ratio));
-    const x = margin + 20 + (box - w) / 2;
-    const yy = 732 + (box - h) / 2;
-    rect(margin + 20, 732, box, box, "#ffffff", "#e2e8f0", 1);
+    const x = margin + 18 + (box - w) / 2;
+    const yy = 740 + (box - h) / 2;
+    rect(margin + 18, 740, box, box, "#ffffff", "#e2e8f0", 1);
     stream.push(`q ${w} 0 0 ${h} ${x.toFixed(2)} ${yy.toFixed(2)} cm /ImLogo Do Q`);
   } else {
-    rect(margin + 20, 732, 50, 50, "#ecfdf5", "#bbf7d0", 1);
-    text(String(tenantName || "S").slice(0, 1).toUpperCase(), margin + 39, 751, 22, "#047857", "F2");
+    rect(margin + 18, 740, 42, 42, "#ecfdf5", "#bbf7d0", 1);
+    text(String(tenantName || "S").slice(0, 1).toUpperCase(), margin + 34, 755, 18, "#047857", "F2");
   }
-  text("RECEIPT", margin + 86, 770, 9, "#047857", "F2");
-  text(tenantName, margin + 86, 744, 24, "#0f172a", "F2");
-  text("Thank you for your order.", margin + 86, 728, 10, "#64748b");
-  rect(pageWidth - margin - 132, 748, 112, 24, "#f0fdf4", "#bbf7d0", 1);
-  text(receiptRef, pageWidth - margin - 122, 756, 10, "#065f46", "F2");
+  text(documentName.toUpperCase(), margin + 74, 771, 8, "#047857", "F2");
+  text(tenantName, margin + 74, 748, 21, "#0f172a", "F2");
+  text("Thank you for your order.", margin + 74, 734, 9, "#64748b");
+  const metaX = pageWidth - margin - 174;
+  const metaY = 740;
+  rect(metaX, metaY, 152, 42, "#ffffff", "#dbeafe", 1);
+  topMeta.slice(0, 4).forEach(([label, value], index) => {
+    const rowY = metaY + 30 - index * 9;
+    text(label, metaX + 8, rowY, 6.3, "#64748b", "F2");
+    textRight(value, metaX + 144, rowY, 6.8, index === 0 ? "#065f46" : "#0f172a", index === 0 ? "F2" : "F1");
+  });
 
   // Detail cards.
   const contentX = margin + 20;
   const contentW = pageWidth - margin * 2 - 40;
   const contentRight = contentX + contentW;
-  const cardY = 626;
-  const cardGap = 16;
+  const cardY = 654;
+  const cardGap = 12;
   const cardW = (contentW - cardGap) / 2;
   const cards = [
     ["ORDER DATE", asDate(order?.created_at)],
@@ -204,16 +238,16 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order }: { ten
     const col = index % 2;
     const row = Math.floor(index / 2);
     const x = contentX + col * (cardW + cardGap);
-    const yy = cardY - row * 64;
-    rect(x, yy, cardW, 50, "#f8fafc", "#e2e8f0", 1);
-    text(label, x + 12, yy + 32, 7.5, "#64748b", "F2");
-    wrapPdfText(value, 38).slice(0, 2).forEach((lineText, lineIndex) => {
-      text(lineText, x + 12, yy + 17 - lineIndex * 11, 9.5, "#0f172a", lineIndex === 0 ? "F2" : "F1");
+    const yy = cardY - row * 52;
+    rect(x, yy, cardW, 42, "#f8fafc", "#e2e8f0", 1);
+    text(label, x + 10, yy + 27, 7, "#64748b", "F2");
+    wrapPdfText(value, 40).slice(0, 2).forEach((lineText, lineIndex) => {
+      text(lineText, x + 10, yy + 14 - lineIndex * 9.5, 8.5, "#0f172a", lineIndex === 0 ? "F2" : "F1");
     });
   });
 
   // Items table.
-  y = 475;
+  y = 540;
   rect(contentX, y, contentW, 30, "#f1f5f9", "#e2e8f0", 1);
   text("ITEM", contentX + 14, y + 11, 8.5, "#334155", "F2");
   textRight("TOTAL", contentRight - 34, y + 11, 8.5, "#334155", "F2");
@@ -263,9 +297,10 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order }: { ten
   textRight(money(total), totalsRight, totalsY + 15, 12, "#0f172a", "F2");
 
   // Footer note.
+  const footerCopy = receiptInfo.footerMessage || `Generated by ${tenantName}. Please quote ${documentName.toLowerCase()} ${receiptRef} if you contact the store.`;
   rect(contentX, 72, contentW, 46, "#f8fafc", "#e2e8f0", 1);
-  text("Receipt note", contentX + 14, 96, 8, "#047857", "F2");
-  wrapPdfText(`Generated by ${tenantName}. Please quote receipt ${receiptRef} if you contact the store.`, 88).slice(0, 2).forEach((lineText, index) => {
+  text(`${documentName} note`, contentX + 14, 96, 8, "#047857", "F2");
+  wrapPdfText(footerCopy, 88).slice(0, 2).forEach((lineText, index) => {
     text(lineText, contentX + 14, 82 - index * 11, 8.5, "#64748b");
   });
 
@@ -308,9 +343,17 @@ function receiptNumber(row: any) {
   return String(row?.customer_receipt_number || shortOrderRef(row?.id || ""));
 }
 
-function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenantName: string; currencyCode: string; logoUrl?: string | null; order: any }) {
+function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInfo }: { tenantName: string; currencyCode: string; logoUrl?: string | null; order: any; receiptInfo: ReceiptInfo }) {
   const items = Array.isArray(order?.order_items) ? order.order_items : [];
   const receiptRef = receiptNumber(order);
+  const documentName = receiptInfo.documentName || "Receipt";
+  const topMeta = [
+    ["Order no.", receiptRef],
+    receiptInfo.taxNumber ? [`${receiptInfo.taxLabel} no.`, receiptInfo.taxNumber] : null,
+    ...receiptInfo.extraFields.map((field) => [field.label, field.value] as [string, string]),
+  ].filter(Boolean) as Array<[string, string]>;
+  const receiptFooterCopy = receiptInfo.footerMessage || `This ${documentName.toLowerCase()} was generated from the customer account area. Please keep it for your records. If anything looks wrong, contact the store and quote ${documentName.toLowerCase()} ${receiptRef}.`;
+  const topMetaHtml = topMeta.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
   const subtotal = Number(order?.subtotal_total ?? order?.total ?? 0);
   const rewardDiscount = Number(order?.reward_discount_amount || 0);
   const discountAmount = Number(order?.discount_amount || 0);
@@ -348,7 +391,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtml(tenantName)} receipt ${escapeHtml(receiptRef)}</title>
+  <title>${escapeHtml(tenantName)} ${escapeHtml(documentName)} ${escapeHtml(receiptRef)}</title>
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
@@ -377,7 +420,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
       background: linear-gradient(90deg, rgba(16,185,129,.88), rgba(51,65,85,.74), rgba(16,185,129,.88));
     }
     .header {
-      padding: 34px 34px 24px;
+      padding: 24px 34px 18px;
       background: linear-gradient(135deg, #ffffff, #f8fafc);
       border-bottom: 1px solid #e2e8f0;
     }
@@ -387,9 +430,9 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
       gap: 16px;
     }
     .logo-wrap {
-      width: 64px;
-      height: 64px;
-      border-radius: 22px;
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
       border: 1px solid #e2e8f0;
       background: #ffffff;
       display: flex;
@@ -408,45 +451,48 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
     .kicker {
       margin: 0;
       color: #047857;
-      font-size: 11px;
+      font-size: 10px;
       letter-spacing: .22em;
       text-transform: uppercase;
       font-weight: 900;
     }
     h1 {
-      margin: 8px 0 0;
-      font-size: 32px;
+      margin: 5px 0 0;
+      font-size: 27px;
       line-height: 1.05;
       letter-spacing: -0.05em;
     }
     .header-grid {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr minmax(210px, auto);
       gap: 18px;
-      align-items: end;
+      align-items: center;
     }
-    .receipt-pill {
-      border: 1px solid #bbf7d0;
-      background: #f0fdf4;
-      color: #065f46;
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-size: 12px;
-      font-weight: 900;
-      white-space: nowrap;
+    .receipt-meta {
+      border: 1px solid #dbeafe;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 9px 12px;
+      display: grid;
+      gap: 5px;
+      min-width: 210px;
     }
-    .content { padding: 28px 34px 34px; }
+    .receipt-meta div { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
+    .receipt-meta span { color: #64748b; font-size: 9px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .receipt-meta strong { color: #0f172a; font-size: 12px; font-weight: 900; text-align: right; font-variant-numeric: tabular-nums; }
+    .receipt-meta div:first-child strong { color: #065f46; }
+    .content { padding: 20px 34px 34px; }
     .details {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 22px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
     .card {
       border: 1px solid #e2e8f0;
       background: #f8fafc;
-      border-radius: 22px;
-      padding: 16px;
+      border-radius: 16px;
+      padding: 11px 13px;
     }
     .label {
       margin: 0;
@@ -457,8 +503,8 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
       text-transform: uppercase;
     }
     .value {
-      margin: 7px 0 0;
-      font-size: 14px;
+      margin: 5px 0 0;
+      font-size: 13px;
       font-weight: 800;
       color: #0f172a;
       line-height: 1.45;
@@ -550,7 +596,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
       .header-grid, .details { grid-template-columns: 1fr; }
       .brand-row { align-items: flex-start; }
       .logo-wrap { width: 54px; height: 54px; border-radius: 18px; }
-      .receipt-pill { width: fit-content; }
+      .receipt-meta { min-width: 0; }
       h1 { font-size: 26px; }
       .amount { text-align: left; }
       .totals { max-width: none; }
@@ -569,12 +615,12 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
         <div class="brand-row">
           ${safeLogoUrl ? `<div class="logo-wrap"><img src="${escapeHtml(safeLogoUrl)}" alt="${escapeHtml(tenantName)} logo" /></div>` : ""}
           <div>
-            <p class="kicker">Receipt</p>
+            <p class="kicker">${escapeHtml(documentName)}</p>
             <h1>${escapeHtml(tenantName)}</h1>
             <p class="value">Thank you for your order.</p>
           </div>
         </div>
-        <div class="receipt-pill">${escapeHtml(receiptRef)}</div>
+        <div class="receipt-meta">${topMetaHtml}</div>
       </div>
     </header>
 
@@ -597,7 +643,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
       </section>
 
       <section class="footer">
-        <strong>Receipt note:</strong> This receipt was generated from the customer account area. Please keep it for your records. If anything looks wrong, contact the store and quote receipt ${escapeHtml(receiptRef)}.
+        <strong>${escapeHtml(documentName)} note:</strong> ${escapeHtml(receiptFooterCopy)}
       </section>
     </main>
   </article>
@@ -605,7 +651,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order }: { tenant
   <script>
     async function shareReceipt() {
       const title = document.title || "Receipt";
-      const text = "Receipt from ${escapeHtml(tenantName)}";
+      const text = "${escapeHtml(documentName)} from ${escapeHtml(tenantName)}";
       try {
         const pdfUrl = new URL(window.location.href);
         pdfUrl.searchParams.set("format", "pdf");
@@ -724,18 +770,20 @@ export async function GET(req: Request, context: ReceiptParams) {
 
   const { data: receiptSettings } = await db
     .from("tenant_settings")
-    .select("currency_code, logo_url")
+    .select("currency_code, logo_url, favicon_url, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode")
     .eq("tenant_id", session.tenant.id)
     .maybeSingle();
 
   const tenantName = session.tenant.name || "Store";
   const currencyCode = String((receiptSettings as any)?.currency_code || "KES").toUpperCase();
+  const receiptInfo = buildReceiptInfo(receiptSettings);
+  const receiptImageUrl = receiptInfo.brandImageMode === "favicon" ? (receiptSettings as any)?.favicon_url : (receiptSettings as any)?.logo_url;
   const receiptRefForFile = receiptNumber(order);
   const requestUrl = new URL(req.url);
 
   if (requestUrl.searchParams.get("format") === "pdf") {
-    const logo = await loadJpegLogo((receiptSettings as any)?.logo_url || null);
-    const pdf = buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order });
+    const logo = await loadJpegLogo(receiptImageUrl || null);
+    const pdf = buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receiptInfo });
     return new Response(pdf, {
       status: 200,
       headers: {
@@ -749,8 +797,9 @@ export async function GET(req: Request, context: ReceiptParams) {
   const html = buildReceiptHtml({
     tenantName,
     currencyCode,
-    logoUrl: (receiptSettings as any)?.logo_url || null,
+    logoUrl: receiptImageUrl || null,
     order,
+    receiptInfo,
   });
 
   return new Response(html, {

@@ -132,6 +132,17 @@ type FormState = {
   discountPopupTitle: string;
   discountPopupMessage: string;
   discountRules: DiscountRuleForm[];
+  receiptDocumentName: string;
+  receiptTaxLabel: "VAT" | "GST";
+  receiptTaxNumber: string;
+  receiptExtraField1Enabled: boolean;
+  receiptExtraField1Label: string;
+  receiptExtraField1Value: string;
+  receiptExtraField2Enabled: boolean;
+  receiptExtraField2Label: string;
+  receiptExtraField2Value: string;
+  receiptFooterMessage: string;
+  receiptBrandImageMode: "logo" | "favicon";
 };
 
 
@@ -617,6 +628,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const currencyDirty = formValueChanged(["currencyName", "currencyCode", "currencySymbol", "currencyDisplayMode", "currencySymbolPosition", "currencyDecimalPlaces", "currencyUseThousandsSeparator", "currencyDecimalSeparator", "currencyThousandsSeparator", "currencySuffix"]);
   const rewardsDirty = formValueChanged(["rewardsEnabled", "rewardsProgramName", "rewardsSilverDiscountPercent", "rewardsGoldMinSpend", "rewardsGoldDiscountPercent", "rewardsPlatinumMinSpend", "rewardsPlatinumDiscountPercent"]);
   const discountsDirty = formValueChanged(["discountsEnabled", "discountPopupEnabled", "discountPopupTitle", "discountPopupMessage", "discountRules"]);
+  const receiptInfoDirty = formValueChanged(["receiptDocumentName", "receiptTaxLabel", "receiptTaxNumber", "receiptExtraField1Enabled", "receiptExtraField1Label", "receiptExtraField1Value", "receiptExtraField2Enabled", "receiptExtraField2Label", "receiptExtraField2Value", "receiptFooterMessage", "receiptBrandImageMode"]);
   const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive", "enableDarajaCustomerPayments", "darajaConnectionStatus", "darajaCustomerMode", "darajaConsumerKey", "darajaConsumerSecretInput", "darajaShortcode", "darajaPasskeyInput", "darajaTransactionType", "darajaAccountReferencePrefix", "darajaCallbackUrl", "darajaAccountLabel", "darajaSetupNotes", "darajaPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
@@ -635,7 +647,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const darajaUsesSandboxShortcode = form.darajaShortcode.trim() === "174379";
   const darajaLiveReadinessOk = Boolean(darajaCurrencyAllowed && darajaCredentialReady && (!darajaModeLive || !darajaUsesSandboxShortcode));
   const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || discountsDirty || adminWorkspaceDirty;
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || discountsDirty || receiptInfoDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -1427,6 +1439,58 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <Field label="TikTok URL"><input value={form.socialTikTokUrl} onChange={(e) => update("socialTikTokUrl", e.target.value)} className="input" placeholder="https://tiktok.com/@..." /></Field>
               <Field label="X / Twitter URL"><input value={form.socialXUrl} onChange={(e) => update("socialXUrl", e.target.value)} className="input" placeholder="https://x.com/..." /></Field>
               <div className="md:col-span-2"><Field label="Website URL"><input value={form.socialWebsiteUrl} onChange={(e) => update("socialWebsiteUrl", e.target.value)} className="input" placeholder="https://example.com" /></Field></div>
+            </div>
+          </div>
+        </Section>
+
+        <Section id="receipt-information" title="Receipt information" dirty={receiptInfoDirty} saving={saving}>
+          <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-950">
+            <p className="font-black text-slate-950">Receipt wording and business details</p>
+            <p className="mt-1 text-xs leading-5 text-emerald-900">These details appear near the order number on the customer receipt and generated PDF. Leave optional fields blank, or unticked, to hide them.</p>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <Field label="Document name">
+              <input value={form.receiptDocumentName} onChange={(e) => update("receiptDocumentName", e.target.value)} className="input" placeholder="Receipt" />
+            </Field>
+            <Field label="Tax label">
+              <select value={form.receiptTaxLabel} onChange={(e) => update("receiptTaxLabel", e.target.value as FormState["receiptTaxLabel"])} className="input">
+                <option value="VAT">VAT</option>
+                <option value="GST">GST</option>
+              </select>
+            </Field>
+            <Field label="Tax number">
+              <input value={form.receiptTaxNumber} onChange={(e) => update("receiptTaxNumber", e.target.value)} className="input" placeholder="VAT / GST number" />
+            </Field>
+            <Field label="Receipt image">
+              <select value={form.receiptBrandImageMode} onChange={(e) => update("receiptBrandImageMode", e.target.value as FormState["receiptBrandImageMode"])} className="input">
+                <option value="logo">Use store logo</option>
+                <option value="favicon">Use favicon / app icon</option>
+              </select>
+            </Field>
+
+            <div className="md:col-span-2 grid gap-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4 md:grid-cols-[auto_1fr_1fr]">
+              <label className="flex items-center gap-3 text-sm font-bold text-slate-800">
+                <input type="checkbox" checked={form.receiptExtraField1Enabled} onChange={(e) => update("receiptExtraField1Enabled", e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" />
+                Show field 1
+              </label>
+              <Field label="Field 1 label"><input value={form.receiptExtraField1Label} onChange={(e) => update("receiptExtraField1Label", e.target.value)} className="input" placeholder="Company Reg" /></Field>
+              <Field label="Field 1 value"><input value={form.receiptExtraField1Value} onChange={(e) => update("receiptExtraField1Value", e.target.value)} className="input" placeholder="Optional receipt detail" /></Field>
+            </div>
+
+            <div className="md:col-span-2 grid gap-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4 md:grid-cols-[auto_1fr_1fr]">
+              <label className="flex items-center gap-3 text-sm font-bold text-slate-800">
+                <input type="checkbox" checked={form.receiptExtraField2Enabled} onChange={(e) => update("receiptExtraField2Enabled", e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200" />
+                Show field 2
+              </label>
+              <Field label="Field 2 label"><input value={form.receiptExtraField2Label} onChange={(e) => update("receiptExtraField2Label", e.target.value)} className="input" placeholder="Licence No." /></Field>
+              <Field label="Field 2 value"><input value={form.receiptExtraField2Value} onChange={(e) => update("receiptExtraField2Value", e.target.value)} className="input" placeholder="Optional receipt detail" /></Field>
+            </div>
+
+            <div className="md:col-span-2">
+              <Field label="Receipt footer message">
+                <textarea value={form.receiptFooterMessage} onChange={(e) => update("receiptFooterMessage", e.target.value)} className="input min-h-28 resize-y" placeholder="Thank you for your order. Add returns, tax, contact or business wording here." />
+              </Field>
             </div>
           </div>
         </Section>
@@ -2330,6 +2394,7 @@ const SETTINGS_MENU_ITEMS = [
   { id: "theme-presets", group: "Theme", title: "Theme presets", help: "Choose a ready-made colour starting point." },
   { id: "per-item-storefront-colours", group: "Theme", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
   { id: "business-contact-details", group: "Contact", title: "Business contact details", help: "Phone, email, address, footer and social links." },
+  { id: "receipt-information", group: "Receipts", title: "Receipt information", help: "Document name, tax details, optional fields, receipt image and footer note." },
   { id: "customer-rewards-program", group: "Rewards", title: "Customer rewards programme", help: "Silver, Gold and Platinum spend tiers with percentage discounts." },
   { id: "discounts-and-codes", group: "Discounts", title: "Discounts & codes", help: "Product, combo and site-wide promotional offers." },
   { id: "storefront-payment-options", group: "Payments", title: "Storefront payment options", help: "Cash, COD, Stripe, Yoco and future provider setup." },
@@ -2343,6 +2408,7 @@ const SETTINGS_SECTION_META: Record<string, { group: string; help: string; accen
   "theme-presets": { group: "Theme", help: "Start with a palette before fine-tuning individual storefront areas.", accent: "bg-indigo-100 text-indigo-800" },
   "per-item-storefront-colours": { group: "Theme", help: "Detailed colour controls are tucked away until needed, especially on mobile.", accent: "bg-indigo-100 text-indigo-800" },
   "business-contact-details": { group: "Contact", help: "Footer wording, contact details, referral advert and social links.", accent: "bg-emerald-100 text-emerald-800" },
+  "receipt-information": { group: "Receipts", help: "Customer receipt wording, tax details, optional business fields and footer note.", accent: "bg-cyan-100 text-cyan-900" },
   "customer-rewards-program": { group: "Rewards", help: "Customer loyalty tiers, thresholds and percentage discounts.", accent: "bg-purple-100 text-purple-900" },
   "discounts-and-codes": { group: "Discounts", help: "Product, combo and site-wide discount codes and visible offers.", accent: "bg-rose-100 text-rose-900" },
   "storefront-payment-options": { group: "Payments", help: "Cash, COD, Stripe and Yoco controls. Payment behaviour is unchanged.", accent: "bg-amber-100 text-amber-900" },

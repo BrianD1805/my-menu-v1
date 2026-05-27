@@ -178,6 +178,17 @@ export default async function AdminSettingsPage() {
           discountPopupTitle: settings?.discount_popup_title || "Today's offers",
           discountPopupMessage: settings?.discount_popup_message || "Tap an offer at checkout to apply it to your order.",
           discountRules: Array.isArray(settings?.discount_rules) ? settings.discount_rules : [],
+          receiptDocumentName: settings?.receipt_document_name || "Receipt",
+          receiptTaxLabel: settings?.receipt_tax_label === "GST" ? "GST" : "VAT",
+          receiptTaxNumber: settings?.receipt_tax_number || "",
+          receiptExtraField1Enabled: settings?.receipt_extra_field_1_enabled === true,
+          receiptExtraField1Label: settings?.receipt_extra_field_1_label || "",
+          receiptExtraField1Value: settings?.receipt_extra_field_1_value || "",
+          receiptExtraField2Enabled: settings?.receipt_extra_field_2_enabled === true,
+          receiptExtraField2Label: settings?.receipt_extra_field_2_label || "",
+          receiptExtraField2Value: settings?.receipt_extra_field_2_value || "",
+          receiptFooterMessage: settings?.receipt_footer_message || "",
+          receiptBrandImageMode: settings?.receipt_brand_image_mode === "favicon" ? "favicon" : "logo",
         }}
       />
     </AdminShell>

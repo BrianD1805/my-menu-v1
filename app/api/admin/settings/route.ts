@@ -14,7 +14,7 @@ import {
 import { normalizeStorefrontTheme } from "@/lib/storefront-theme";
 import { serializeDiscountRules } from "@/lib/discounts";
 
-const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, stripe_customer_secret_key, stripe_customer_webhook_secret, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, yoco_customer_secret_key, yoco_customer_webhook_secret, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_consumer_secret, daraja_shortcode, daraja_passkey, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules";
+const SETTINGS_SELECT = "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, stripe_customer_secret_key, stripe_customer_webhook_secret, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, yoco_customer_secret_key, yoco_customer_webhook_secret, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_consumer_secret, daraja_shortcode, daraja_passkey, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode";
 
 function secretHint(value: unknown) {
   const text = String(value || "").trim();
@@ -71,6 +71,16 @@ function normalizeDarajaConnectionStatus(value: unknown) {
 function normalizeDarajaTransactionType(value: unknown) {
   const txType = String(value || "CustomerPayBillOnline").trim();
   return txType === "CustomerBuyGoodsOnline" ? "CustomerBuyGoodsOnline" : "CustomerPayBillOnline";
+}
+
+function normalizeReceiptTaxLabel(value: unknown) {
+  const label = String(value || "VAT").trim().toUpperCase();
+  return label === "GST" ? "GST" : "VAT";
+}
+
+function normalizeReceiptBrandImageMode(value: unknown) {
+  const mode = String(value || "logo").trim().toLowerCase();
+  return mode === "favicon" ? "favicon" : "logo";
 }
 
 function normalizeRewardSpend(value: unknown, fallback = 0) {
@@ -325,6 +335,17 @@ export async function PATCH(req: Request) {
       discount_popup_title: normalizeOptionalText(body?.discountPopupTitle, 120) || "Today's offers",
       discount_popup_message: normalizeOptionalText(body?.discountPopupMessage, 240) || "Tap an offer at checkout to apply it to your order.",
       discount_rules: serializeDiscountRules(body?.discountRules),
+      receipt_document_name: normalizeOptionalText(body?.receiptDocumentName, 80) || "Receipt",
+      receipt_tax_label: normalizeReceiptTaxLabel(body?.receiptTaxLabel),
+      receipt_tax_number: normalizeOptionalText(body?.receiptTaxNumber, 80),
+      receipt_extra_field_1_enabled: normalizeBoolean(body?.receiptExtraField1Enabled) ?? false,
+      receipt_extra_field_1_label: normalizeOptionalText(body?.receiptExtraField1Label, 80),
+      receipt_extra_field_1_value: normalizeOptionalText(body?.receiptExtraField1Value, 160),
+      receipt_extra_field_2_enabled: normalizeBoolean(body?.receiptExtraField2Enabled) ?? false,
+      receipt_extra_field_2_label: normalizeOptionalText(body?.receiptExtraField2Label, 80),
+      receipt_extra_field_2_value: normalizeOptionalText(body?.receiptExtraField2Value, 160),
+      receipt_footer_message: normalizeOptionalText(body?.receiptFooterMessage, 700),
+      receipt_brand_image_mode: normalizeReceiptBrandImageMode(body?.receiptBrandImageMode),
     };
 
     if (stripeSecretKeyInput) payload.stripe_customer_secret_key = stripeSecretKeyInput;
