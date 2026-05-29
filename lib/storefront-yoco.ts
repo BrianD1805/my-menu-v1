@@ -296,21 +296,28 @@ export async function fetchYocoCheckoutStatus(input: { intent: Record<string, an
 }
 
 async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPayload["items"]) {
-  const productIds = items.map((item) => item.product_id);
-  const { data: products } = await db
-    .from("products")
-    .select("id, stock_enabled, stock_quantity")
-    .in("id", productIds)
-    .eq("tenant_id", tenantId);
-
+  const quantityByProductId = new Map<string, number>();
   for (const item of items) {
-    const product = (products as Array<{ id: string; stock_enabled: boolean | null; stock_quantity: number | null }> | null | undefined)?.find((p) => p.id === item.product_id);
-    if (!product?.stock_enabled) continue;
-    const nextStock = Math.max(0, Number(product.stock_quantity || 0) - item.quantity);
-    await db.from("products").update({ stock_quantity: nextStock }).eq("id", product.id).eq("tenant_id", tenantId);
+    quantityByProductId.set(item.product_id, (quantityByProductId.get(item.product_id) || 0) + Number(item.quantity || 0));
+  }
+
+  for (const [productId, quantity] of quantityByProductId.entries()) {
+    const { data: product, error } = await db
+      .from("products")
+      .select("id, stock_enabled, stock_quantity")
+      .eq("id", productId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (error || !product?.stock_enabled) continue;
+    const nextStock = Math.max(0, Number(product.stock_quantity || 0) - quantity);
+    const { error: stockError } = await db
+      .from("products")
+      .update({ stock_quantity: nextStock })
+      .eq("id", product.id)
+      .eq("tenant_id", tenantId);
+    if (stockError) console.error("Failed to reduce product stock after Yoco payment", stockError);
   }
 }
-
 export async function createPaidOrderFromYocoIntent(input: {
   intent: Record<string, any>;
   paymentReference?: string | null;

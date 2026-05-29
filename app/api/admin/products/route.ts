@@ -46,6 +46,33 @@ function normalizeStockEnabled(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1;
 }
 
+function normalizeVariantsEnabled(value: unknown) {
+  return value === true || value === "true" || value === "1" || value === 1;
+}
+
+function normalizeVariantLabel(value: unknown) {
+  const text = String(value || "").trim();
+  return text || "Choose an option";
+}
+
+function normalizeProductVariants(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => {
+      const row = item as Record<string, unknown>;
+      const name = String(row.name || "").trim();
+      if (!name) return null;
+      const priceDelta = Number(row.priceDelta);
+      return {
+        id: String(row.id || `variant-${Date.now()}-${index}`),
+        name,
+        priceDelta: Number.isFinite(priceDelta) ? Number(priceDelta.toFixed(2)) : 0,
+        isActive: row.isActive !== false,
+      };
+    })
+    .filter(Boolean);
+}
+
 
 export async function GET(req: Request) {
   try {
@@ -82,6 +109,9 @@ export async function POST(req: Request) {
     const stockEnabled = normalizeStockEnabled(body?.stockEnabled);
     const stockQuantity = normalizeStockQuantity(body?.stockQuantity);
     const lowStockThreshold = normalizeLowStockThreshold(body?.lowStockThreshold);
+    const variantsEnabled = normalizeVariantsEnabled(body?.variantsEnabled);
+    const variantLabel = normalizeVariantLabel(body?.variantLabel);
+    const productVariants = normalizeProductVariants(body?.productVariants);
 
     if (!name || !categoryId || price === null || stockQuantity === null) {
       return NextResponse.json({ error: "Missing name, categoryId, valid price, or valid stock quantity" }, { status: 400 });
@@ -107,8 +137,11 @@ export async function POST(req: Request) {
         stock_enabled: stockEnabled,
         stock_quantity: stockQuantity,
         low_stock_threshold: lowStockThreshold,
+        variants_enabled: variantsEnabled,
+        variant_label: variantLabel,
+        product_variants: productVariants,
       })
-      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold")
+      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants")
       .single();
 
     if (error || !product) {
@@ -135,6 +168,9 @@ export async function PATCH(req: Request) {
     const stockEnabled = normalizeStockEnabled(body?.stockEnabled);
     const stockQuantity = normalizeStockQuantity(body?.stockQuantity);
     const lowStockThreshold = normalizeLowStockThreshold(body?.lowStockThreshold);
+    const variantsEnabled = normalizeVariantsEnabled(body?.variantsEnabled);
+    const variantLabel = normalizeVariantLabel(body?.variantLabel);
+    const productVariants = normalizeProductVariants(body?.productVariants);
 
     if (!productId || !name || !categoryId || price === null || stockQuantity === null) {
       return NextResponse.json({ error: "Missing productId, name, categoryId, valid price, or valid stock quantity" }, { status: 400 });
@@ -162,10 +198,13 @@ export async function PATCH(req: Request) {
         stock_enabled: stockEnabled,
         stock_quantity: stockQuantity,
         low_stock_threshold: lowStockThreshold,
+        variants_enabled: variantsEnabled,
+        variant_label: variantLabel,
+        product_variants: productVariants,
       })
       .eq("id", productId)
       .eq("tenant_id", tenant.id)
-      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold")
+      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants")
       .single();
 
     if (error || !product) {

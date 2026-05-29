@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import CartButton from "@/components/menu/CartButton";
 import CustomerAccountHeaderActions from "@/components/account/CustomerAccountHeaderActions";
 import ProductCard from "@/components/menu/ProductCard";
-import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
+import { StoredCartItem, cartLineKey, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
 import { getApplicableDiscounts, normalizeDiscountRules, type DiscountRule } from "@/lib/discounts";
@@ -12,6 +12,13 @@ import { getApplicableDiscounts, normalizeDiscountRules, type DiscountRule } fro
 type Category = {
   id: string;
   name: string;
+};
+
+type ProductVariant = {
+  id: string;
+  name: string;
+  priceDelta: number;
+  isActive: boolean;
 };
 
 type Product = {
@@ -24,6 +31,9 @@ type Product = {
   stock_enabled?: boolean | null;
   stock_quantity?: number | null;
   low_stock_threshold?: number | null;
+  variants_enabled?: boolean | null;
+  variant_label?: string | null;
+  product_variants?: ProductVariant[] | null;
 };
 
 function hexToRgb(hex: string) {
@@ -500,6 +510,7 @@ export default function MenuBrowser({
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
   const [buttonStateById, setButtonStateById] = useState<Record<string, "idle" | "adding" | "added">>({});
   const [cartCount, setCartCount] = useState(0);
+  const [variantPickerProduct, setVariantPickerProduct] = useState<{ product: Product; source: string; options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" } } | null>(null);
   const [cartPulseKey, setCartPulseKey] = useState(0);
   const [flyingItems, setFlyingItems] = useState<FlyingCartItem[]>([]);
   const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(null);
@@ -990,8 +1001,13 @@ export default function MenuBrowser({
     }));
   }
 
-  async function addToCart(
+  function activeProductVariants(product: Product | undefined) {
+    return (Array.isArray(product?.product_variants) ? product!.product_variants! : []).filter((variant) => variant && variant.isActive !== false && String(variant.name || "").trim());
+  }
+
+  async function addCartLine(
     productId: string,
+    variant: ProductVariant | null,
     options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" },
   ) {
     if (buttonStateById[productId] === "adding") return;
@@ -1002,8 +1018,10 @@ export default function MenuBrowser({
     if (trackedStock && availableStock <= 0) return;
 
     const existing = readCart<StoredCartItem>(tenantSlug);
-    const found = existing.find((item) => item.productId === productId);
-    if (trackedStock && found && found.quantity >= availableStock) {
+    const lineIdentity = { productId, variantId: variant?.id || null };
+    const found = existing.find((item) => cartLineKey(item) === cartLineKey(lineIdentity));
+    const productTotalQuantity = existing.filter((item) => item.productId === productId).reduce((sum, item) => sum + Math.max(0, Number(item.quantity || 0)), 0);
+    if (trackedStock && productTotalQuantity >= availableStock) {
       setButtonStateById((current) => ({ ...current, [productId]: "added" }));
       window.setTimeout(() => {
         setButtonStateById((current) => ({ ...current, [productId]: "idle" }));
@@ -1023,9 +1041,24 @@ export default function MenuBrowser({
       });
     }
 
+    const cappedNextQuantity = trackedStock ? Math.max(0, availableStock - (productTotalQuantity - (found?.quantity || 0))) : Number.POSITIVE_INFINITY;
     const updated = found
-      ? existing.map((item) => (item.productId === productId ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, availableStock) : item.quantity + 1 } : item))
-      : [...existing, { productId, quantity: 1 }];
+      ? existing.map((item) =>
+          cartLineKey(item) === cartLineKey(lineIdentity)
+            ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, cappedNextQuantity) : item.quantity + 1 }
+            : item
+        )
+      : [
+          ...existing,
+          {
+            productId,
+            quantity: 1,
+            variantId: variant?.id || null,
+            variantName: variant?.name || null,
+            variantLabel: variant ? (product?.variant_label || "Option") : null,
+            variantPriceDelta: variant ? Number(variant.priceDelta || 0) : 0,
+          },
+        ];
 
     writeCart(tenantSlug, updated);
 
@@ -1033,6 +1066,20 @@ export default function MenuBrowser({
     window.setTimeout(() => {
       setButtonStateById((current) => ({ ...current, [productId]: "idle" }));
     }, 1200);
+  }
+
+  async function addToCart(
+    productId: string,
+    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" },
+  ) {
+    const product = products.find((item) => item.id === productId);
+    const variants = activeProductVariants(product);
+    if (product?.variants_enabled && variants.length) {
+      setVariantPickerProduct({ product, source: options?.destination === "search" ? "search_popup" : "storefront_menu", options });
+      return;
+    }
+
+    await addCartLine(productId, null, options);
   }
 
   return (
@@ -1547,6 +1594,48 @@ export default function MenuBrowser({
         </section>
       ) : null}
 
+      {variantPickerProduct ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]" onClick={() => setVariantPickerProduct(null)}>
+          <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg" onClick={(event) => event.stopPropagation()}>
+            <div className="sticky top-0 z-10 overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandAccent} 0%, ${brandPrimary} 100%)` }}>
+              <div className="absolute inset-x-0 top-0 h-1 bg-white/30" />
+              <button type="button" onClick={() => setVariantPickerProduct(null)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close variants">×</button>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">{variantPickerProduct.product.variant_label || "Choose an option"}</p>
+              <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight">{variantPickerProduct.product.name}</h3>
+              <p className="mt-2 text-sm leading-6 text-white/82">Select the option you would like, then it will be added to your cart.</p>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+              <div className="space-y-3">
+                {activeProductVariants(variantPickerProduct.product).map((variant) => {
+                  const variantPrice = Math.max(0, Number(variantPickerProduct.product.price) + Number(variant.priceDelta || 0));
+                  return (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      onClick={() => {
+                        const current = variantPickerProduct;
+                        setVariantPickerProduct(null);
+                        void addCartLine(current.product.id, variant, current.options);
+                      }}
+                      className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-emerald-50/40"
+                    >
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
+                        {Number(variant.priceDelta || 0) !== 0 ? <span className="mt-1 block text-xs text-slate-500">{Number(variant.priceDelta || 0) > 0 ? "+" : ""}{formatMoney(Number(variant.priceDelta || 0), moneySettings)}</span> : <span className="mt-1 block text-xs text-slate-500">Same price</span>}
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold text-slate-950">{formatMoney(variantPrice, moneySettings)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="sticky bottom-0 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+              <button type="button" onClick={() => setVariantPickerProduct(null)} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancel</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {categories.map((category) => {
         const categoryProducts = products.filter((product) => product.category_id === category.id);
         if (!categoryProducts.length) return null;
@@ -1572,6 +1661,9 @@ export default function MenuBrowser({
                   stockEnabled={product.stock_enabled}
                   stockQuantity={product.stock_quantity}
                   lowStockThreshold={product.low_stock_threshold}
+                  variantsEnabled={product.variants_enabled}
+                  variantLabel={product.variant_label}
+                  productVariants={product.product_variants}
                   moneySettings={moneySettings}
                   accentColor={accentColor}
                   primaryColor={primaryColor}

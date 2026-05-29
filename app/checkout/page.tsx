@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { clearCart, readCart, writeCart } from "@/lib/cart";
+import { cartLineKey, clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
 import { DEFAULT_MONEY_SETTINGS, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import CustomerPushNotificationsCard from "@/components/checkout/CustomerPushNotificationsCard";
@@ -10,6 +10,17 @@ import { calculateBestDiscount, getApplicableDiscounts, normalizeDiscountRules, 
 type CartItem = {
   productId: string;
   quantity: number;
+  variantId?: string | null;
+  variantName?: string | null;
+  variantLabel?: string | null;
+  variantPriceDelta?: number | null;
+};
+
+type ProductVariant = {
+  id: string;
+  name: string;
+  priceDelta: number;
+  isActive: boolean;
 };
 
 type Product = {
@@ -18,6 +29,9 @@ type Product = {
   price: number;
   stock_enabled?: boolean | null;
   stock_quantity?: number | null;
+  variants_enabled?: boolean | null;
+  variant_label?: string | null;
+  product_variants?: ProductVariant[] | null;
 };
 
 type TenantTrialState = {
@@ -304,12 +318,18 @@ useEffect(() => {
         const product = products.find((p) => p.id === item.productId);
         if (!product) return null;
 
-        const lineTotal = product.price * item.quantity;
+        const variant = Array.isArray(product.product_variants) ? product.product_variants.find((option) => option.id === item.variantId && option.isActive !== false) : null;
+        const variantName = variant?.name || item.variantName || null;
+        const variantPriceDelta = variant ? Number(variant.priceDelta || 0) : Number(item.variantPriceDelta || 0);
+        const unitPrice = Math.max(0, Number(product.price) + variantPriceDelta);
+        const lineTotal = unitPrice * item.quantity;
 
         return {
           ...item,
           name: product.name,
-          unitPrice: product.price,
+          variantName,
+          variantLabel: product.variant_label || item.variantLabel || null,
+          unitPrice,
           lineTotal,
           stockEnabled: !!product.stock_enabled,
           stockQuantity: Math.max(0, Number(product.stock_quantity || 0)),
@@ -318,6 +338,9 @@ useEffect(() => {
       .filter(Boolean) as Array<{
       productId: string;
       quantity: number;
+      variantId?: string | null;
+      variantName?: string | null;
+      variantLabel?: string | null;
       name: string;
       unitPrice: number;
       lineTotal: number;
@@ -390,14 +413,18 @@ useEffect(() => {
   }
 
 
-  function updateQuantity(productId: string, nextQuantity: number) {
-    const product = products.find((p) => p.id === productId);
-    const cappedQuantity = product?.stock_enabled ? Math.min(nextQuantity, Math.max(0, Number(product.stock_quantity || 0))) : nextQuantity;
+  function updateQuantity(targetItem: CartItem, nextQuantity: number) {
+    const product = products.find((p) => p.id === targetItem.productId);
+    const otherProductQuantity = items
+      .filter((x) => x.productId === targetItem.productId && cartLineKey(x) !== cartLineKey(targetItem))
+      .reduce((sum, x) => sum + Math.max(0, Number(x.quantity || 0)), 0);
+    const maxForLine = product?.stock_enabled ? Math.max(0, Number(product.stock_quantity || 0)) - otherProductQuantity : nextQuantity;
+    const cappedQuantity = product?.stock_enabled ? Math.min(nextQuantity, maxForLine) : nextQuantity;
     const nextItems =
       cappedQuantity <= 0
-        ? items.filter((x) => x.productId !== productId)
+        ? items.filter((x) => cartLineKey(x) !== cartLineKey(targetItem))
         : items.map((x) =>
-            x.productId === productId ? { ...x, quantity: cappedQuantity } : x
+            cartLineKey(x) === cartLineKey(targetItem) ? { ...x, quantity: cappedQuantity } : x
           );
 
     setItems(nextItems);
@@ -480,7 +507,13 @@ useEffect(() => {
       return;
     }
 
-    const overStock = cartRows.find((row) => row.stockEnabled && row.quantity > row.stockQuantity);
+    const overStock = cartRows.find((row) => {
+      if (!row.stockEnabled) return false;
+      const totalForProduct = cartRows
+        .filter((line) => line.productId === row.productId)
+        .reduce((sum, line) => sum + line.quantity, 0);
+      return totalForProduct > row.stockQuantity;
+    });
     if (overStock) {
       setErrorMessage(`${overStock.name} only has ${overStock.stockQuantity} in stock. Please adjust your cart.`);
       return;
@@ -900,10 +933,11 @@ useEffect(() => {
           ) : (
             <div className="space-y-3">
               {cartRows.map((row) => (
-                <div key={row.productId} className="rounded-xl border p-3" style={{ borderColor: checkoutBorder }}>
+                <div key={cartLineKey(row)} className="rounded-xl border p-3" style={{ borderColor: checkoutBorder }}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-medium">{row.name}</p>
+                      {row.variantName ? <p className="mt-1 text-xs font-semibold text-slate-500">{row.variantLabel || "Option"}: {row.variantName}</p> : null}
                       <p className="text-sm text-gray-600">{formatMoney(row.unitPrice, tenantSettings)} each</p>
                       {row.stockEnabled ? (
                         <p className={`mt-1 text-xs font-semibold ${row.stockQuantity <= 0 ? "text-red-600" : row.quantity >= row.stockQuantity ? "text-orange-600" : "text-emerald-700"}`}>
@@ -917,14 +951,14 @@ useEffect(() => {
                   <div className="mt-3 flex items-center gap-2">
                     <button
                       className="rounded border px-3 py-1" style={{ borderColor: checkoutBorder }}
-                      onClick={() => updateQuantity(row.productId, row.quantity - 1)}
+                      onClick={() => updateQuantity(row, row.quantity - 1)}
                     >
                       -
                     </button>
                     <span>{row.quantity}</span>
                     <button
                       className="rounded border px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: checkoutBorder }}
-                      onClick={() => updateQuantity(row.productId, row.quantity + 1)}
+                      onClick={() => updateQuantity(row, row.quantity + 1)}
                       disabled={row.stockEnabled && row.quantity >= row.stockQuantity}
                     >
                       +

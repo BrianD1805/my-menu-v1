@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { StoredCartItem, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
+import { StoredCartItem, cartLineKey, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
 import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
+
+type ProductVariant = {
+  id: string;
+  name: string;
+  priceDelta: number;
+  isActive: boolean;
+};
 
 type Props = {
   id: string;
@@ -15,6 +22,9 @@ type Props = {
   stockEnabled?: boolean | null;
   stockQuantity?: number | null;
   lowStockThreshold?: number | null;
+  variantsEnabled?: boolean | null;
+  variantLabel?: string | null;
+  productVariants?: ProductVariant[] | null;
   moneySettings?: MoneyFormatSettings;
   accentColor?: string | null;
   primaryColor?: string | null;
@@ -36,9 +46,11 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, variantsEnabled = false, variantLabel = "Choose an option", productVariants = [], moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [variantPickerOpen, setVariantPickerOpen] = useState(false);
+  const [pendingAddSource, setPendingAddSource] = useState<"card" | "modal">("card");
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
   const [cartCount, setCartCount] = useState(0);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +64,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const isOutOfStock = trackedStock && availableStock <= 0;
   const isLowStock = trackedStock && availableStock > 0 && availableStock <= Math.max(0, Number(lowStockThreshold || 5));
   const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
+  const activeVariants = (Array.isArray(productVariants) ? productVariants : []).filter((variant) => variant && variant.isActive !== false && String(variant.name || "").trim());
+  const shouldPickVariant = Boolean(variantsEnabled && activeVariants.length);
 
   useEffect(() => {
     if (!initiallyOpen) return;
@@ -155,28 +169,54 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     }
   }
 
-  async function addToCart(source: "card" | "modal" = "card") {
+  async function addToCart(source: "card" | "modal" = "card", variant?: ProductVariant | null) {
     if (buttonState === "adding" || isOutOfStock) return;
 
+    if (shouldPickVariant && !variant) {
+      setPendingAddSource(source);
+      setVariantPickerOpen(true);
+      return;
+    }
+
     const existing = readCart<StoredCartItem>(tenantSlug);
-    const found = existing.find((item) => item.productId === id);
-    if (trackedStock && found && found.quantity >= availableStock) {
+    const lineIdentity = { productId: id, variantId: variant?.id || null };
+    const found = existing.find((item) => cartLineKey(item) === cartLineKey(lineIdentity));
+    const productTotalQuantity = existing
+      .filter((item) => item.productId === id)
+      .reduce((sum, item) => sum + Math.max(0, Number(item.quantity || 0)), 0);
+    if (trackedStock && productTotalQuantity >= availableStock) {
       setButtonState("added");
       setTimeout(() => setButtonState("idle"), 1200);
       return;
     }
 
     setButtonState("adding");
-    trackStorefrontEvent("add_to_cart", { source });
+    trackStorefrontEvent("add_to_cart", { source, variantId: variant?.id || null, variantName: variant?.name || null });
 
     const sourceRect = (source === "modal" ? modalImageFrameRef.current : imageFrameRef.current)?.getBoundingClientRect() || null;
     const targetRect = source === "modal" ? modalCartButtonRef.current?.getBoundingClientRect() || null : null;
     onAddToCartAnimation?.({ imageUrl, name, sourceRect, targetRect });
 
+    const cappedNextQuantity = trackedStock ? Math.max(0, availableStock - (productTotalQuantity - (found?.quantity || 0))) : Number.POSITIVE_INFINITY;
     const updated = found
-      ? existing.map((item) => (item.productId === id ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, availableStock) : item.quantity + 1 } : item))
-      : [...existing, { productId: id, quantity: 1 }];
+      ? existing.map((item) =>
+          cartLineKey(item) === cartLineKey(lineIdentity)
+            ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, cappedNextQuantity) : item.quantity + 1 }
+            : item
+        )
+      : [
+          ...existing,
+          {
+            productId: id,
+            quantity: 1,
+            variantId: variant?.id || null,
+            variantName: variant?.name || null,
+            variantLabel: variant ? (variantLabel || "Option") : null,
+            variantPriceDelta: variant ? Number(variant.priceDelta || 0) : 0,
+          },
+        ];
     writeCart(tenantSlug, updated);
+    setVariantPickerOpen(false);
     setButtonState("added");
     setTimeout(() => setButtonState("idle"), 1200);
   }
@@ -334,6 +374,44 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
           </div>
         </div>
       </div>
+
+      {variantPickerOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]" onClick={() => setVariantPickerOpen(false)}>
+          <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg" onClick={(event) => event.stopPropagation()}>
+            <div className="sticky top-0 z-10 overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandAccent} 0%, ${brandPrimary} 100%)` }}>
+              <div className="absolute inset-x-0 top-0 h-1 bg-white/30" />
+              <button type="button" onClick={() => setVariantPickerOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close variants">×</button>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">{variantLabel || "Choose an option"}</p>
+              <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight">{name}</h3>
+              <p className="mt-2 text-sm leading-6 text-white/82">Select the option you would like, then it will be added to your cart.</p>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
+              <div className="space-y-3">
+                {activeVariants.map((variant) => {
+                  const variantPrice = Math.max(0, Number(price) + Number(variant.priceDelta || 0));
+                  return (
+                    <button
+                      key={variant.id}
+                      type="button"
+                      onClick={() => void addToCart(pendingAddSource, variant)}
+                      className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-emerald-50/40"
+                    >
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
+                        {Number(variant.priceDelta || 0) !== 0 ? <span className="mt-1 block text-xs text-slate-500">{Number(variant.priceDelta || 0) > 0 ? "+" : ""}{formatMoney(Number(variant.priceDelta || 0), money)}</span> : <span className="mt-1 block text-xs text-slate-500">Same price</span>}
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold text-slate-950">{formatMoney(variantPrice, money)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="sticky bottom-0 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+              <button type="button" onClick={() => setVariantPickerOpen(false)} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancel</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {detailsOpen ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]">

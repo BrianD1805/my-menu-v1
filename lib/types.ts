@@ -13,6 +13,13 @@ export type Category = {
   sort_order: number;
 };
 
+export type ProductVariant = {
+  id: string;
+  name: string;
+  priceDelta: number;
+  isActive: boolean;
+};
+
 export type Product = {
   id: string;
   tenant_id: string;
@@ -25,6 +32,9 @@ export type Product = {
   stock_enabled?: boolean | null;
   stock_quantity?: number | null;
   low_stock_threshold?: number | null;
+  variants_enabled?: boolean | null;
+  variant_label?: string | null;
+  product_variants?: ProductVariant[] | null;
 };
 
 export type CartItemInput = {
@@ -46,6 +56,7 @@ export type CreateOrderInput = {
   items: Array<{
     productId: string;
     quantity: number;
+    variantId?: string | null;
   }>;
 };
 

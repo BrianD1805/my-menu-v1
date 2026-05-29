@@ -8,6 +8,20 @@ type CategoryOption = {
   name: string;
 };
 
+type ProductVariantDraft = {
+  id: string;
+  name: string;
+  priceDelta: string;
+  isActive: boolean;
+};
+
+type ProductVariantRow = {
+  id: string;
+  name: string;
+  priceDelta: number;
+  isActive: boolean;
+};
+
 type ProductRow = {
   id: string;
   name: string;
@@ -20,6 +34,9 @@ type ProductRow = {
   stock_enabled: boolean | null;
   stock_quantity: number | null;
   low_stock_threshold: number | null;
+  variants_enabled?: boolean | null;
+  variant_label?: string | null;
+  product_variants?: ProductVariantRow[] | null;
 };
 
 type DraftState = {
@@ -32,6 +49,9 @@ type DraftState = {
   stockEnabled: boolean;
   stockQuantity: string;
   lowStockThreshold: string;
+  variantsEnabled: boolean;
+  variantLabel: string;
+  variants: ProductVariantDraft[];
 };
 
 function emptyDraft(defaultCategoryId: string): DraftState {
@@ -45,11 +65,42 @@ function emptyDraft(defaultCategoryId: string): DraftState {
     stockEnabled: false,
     stockQuantity: "0",
     lowStockThreshold: "5",
+    variantsEnabled: false,
+    variantLabel: "Choose an option",
+    variants: [],
   };
 }
 
 function modalShellClassName() {
   return "flex w-full max-w-[1180px] flex-col overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]";
+}
+
+function normalizeVariantRows(value: unknown): ProductVariantDraft[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item, index) => {
+      const raw = item as Partial<ProductVariantRow>;
+      const name = String(raw.name || "").trim();
+      if (!name) return null;
+      return {
+        id: String(raw.id || `variant-${Date.now()}-${index}`),
+        name,
+        priceDelta: String(Number(raw.priceDelta || 0)),
+        isActive: raw.isActive !== false,
+      };
+    })
+    .filter(Boolean) as ProductVariantDraft[];
+}
+
+function cleanVariantRows(value: ProductVariantDraft[]) {
+  return value
+    .map((variant) => ({
+      id: String(variant.id || `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+      name: variant.name.trim(),
+      priceDelta: Number.isFinite(Number(variant.priceDelta)) ? Number(Number(variant.priceDelta).toFixed(2)) : 0,
+      isActive: variant.isActive !== false,
+    }))
+    .filter((variant) => variant.name);
 }
 
 function FieldLabel({ children }: { children: ReactNode }) {
@@ -217,6 +268,9 @@ export default function ProductManager({
       stockEnabled: !!product.stock_enabled,
       stockQuantity: String(product.stock_quantity ?? 0),
       lowStockThreshold: String(product.low_stock_threshold ?? 5),
+      variantsEnabled: product.variants_enabled === true,
+      variantLabel: product.variant_label || "Choose an option",
+      variants: normalizeVariantRows(product.product_variants),
     });
     setGlobalMessage("");
   }
@@ -259,6 +313,9 @@ export default function ProductManager({
           stockEnabled: newDraft.stockEnabled,
           stockQuantity: newDraft.stockQuantity,
           lowStockThreshold: newDraft.lowStockThreshold,
+          variantsEnabled: newDraft.variantsEnabled,
+          variantLabel: newDraft.variantLabel,
+          productVariants: cleanVariantRows(newDraft.variants),
         }),
       });
       const payload = await response.json();
@@ -289,6 +346,9 @@ export default function ProductManager({
         stockEnabled: !!product.stock_enabled,
         stockQuantity: String(product.stock_quantity ?? 0),
         lowStockThreshold: String(product.low_stock_threshold ?? 5),
+        variantsEnabled: product.variants_enabled === true,
+        variantLabel: product.variant_label || "Choose an option",
+        variants: normalizeVariantRows(product.product_variants),
       });
       clearCreateImageSelection();
       setGlobalMessage(newImageFile ? "Product created with image" : "Product created");
@@ -320,6 +380,9 @@ export default function ProductManager({
           stockEnabled: editingDraft.stockEnabled,
           stockQuantity: editingDraft.stockQuantity,
           lowStockThreshold: editingDraft.lowStockThreshold,
+          variantsEnabled: editingDraft.variantsEnabled,
+          variantLabel: editingDraft.variantLabel,
+          productVariants: cleanVariantRows(editingDraft.variants),
         }),
       });
       const payload = await response.json();
@@ -471,6 +534,9 @@ export default function ProductManager({
                         ) : (
                           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">Stock off</span>
                         )}
+                        {product.variants_enabled && Array.isArray(product.product_variants) && product.product_variants.length ? (
+                          <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700">{product.product_variants.length} variants</span>
+                        ) : null}
                       </div>
                       <p className="mt-2 text-sm font-medium text-gray-900">{formatMoney(Number(product.price), moneySettings)}</p>
                     </div>
@@ -790,6 +856,105 @@ export default function ProductManager({
                         </div>
                       </div>
                       <p className="mt-3 text-xs leading-5 text-slate-500">When enabled, checkout reduces stock automatically when an order is saved. Set stock to 0 to show the item as out of stock.</p>
+                    </div>
+
+                    <div className="rounded-[24px] border border-indigo-100 bg-indigo-50/60 p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <FieldLabel>Product variants</FieldLabel>
+                          <p className="text-xs leading-5 text-slate-600">Use this for sizes, weights, colours, flavours, bottle sizes, pack sizes, or any customer choice before the item is added to the cart.</p>
+                        </div>
+                        <label className="flex min-h-[44px] items-center gap-3 rounded-2xl border border-indigo-200 bg-white px-4 py-2.5 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={activeDraft.variantsEnabled}
+                            onChange={(event) =>
+                              creating
+                                ? setNewDraft((current) => ({ ...current, variantsEnabled: event.target.checked }))
+                                : setEditingDraft((current) => (current ? { ...current, variantsEnabled: event.target.checked } : current))
+                            }
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          Enable variants
+                        </label>
+                      </div>
+
+                      <div className="mt-4">
+                        <FieldLabel>Popup label</FieldLabel>
+                        <input
+                          type="text"
+                          value={activeDraft.variantLabel}
+                          onChange={(event) =>
+                            creating
+                              ? setNewDraft((current) => ({ ...current, variantLabel: event.target.value }))
+                              : setEditingDraft((current) => (current ? { ...current, variantLabel: event.target.value } : current))
+                          }
+                          placeholder="e.g. Choose size, Choose weight, Choose flavour"
+                          className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                        />
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {activeDraft.variants.map((variant, index) => (
+                          <div key={variant.id} className="grid gap-3 rounded-2xl border border-indigo-100 bg-white p-3 sm:grid-cols-[1fr_150px_auto_auto] sm:items-center">
+                            <input
+                              type="text"
+                              value={variant.name}
+                              onChange={(event) => {
+                                const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item);
+                                creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                              }}
+                              placeholder="e.g. 500g, Large, Blue"
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            />
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={variant.priceDelta}
+                              onChange={(event) => {
+                                const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, priceDelta: event.target.value } : item);
+                                creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                              }}
+                              placeholder="+/- price"
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            />
+                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                              <input
+                                type="checkbox"
+                                checked={variant.isActive}
+                                onChange={(event) => {
+                                  const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, isActive: event.target.checked } : item);
+                                  creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                                }}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              Show
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = activeDraft.variants.filter((_, itemIndex) => itemIndex !== index);
+                                creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                              }}
+                              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = [...activeDraft.variants, { id: `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: "", priceDelta: "0", isActive: true }];
+                          creating ? setNewDraft((current) => ({ ...current, variants: next, variantsEnabled: true })) : setEditingDraft((current) => (current ? { ...current, variants: next, variantsEnabled: true } : current));
+                        }}
+                        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-indigo-200 bg-white px-5 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
+                      >
+                        Add variant option
+                      </button>
+                      <p className="mt-3 text-xs leading-5 text-slate-500">Price adjustment is added to the base product price for that option. Use 0 when all variants have the same price.</p>
                     </div>
 
                     <div>

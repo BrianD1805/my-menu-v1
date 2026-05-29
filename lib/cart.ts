@@ -1,12 +1,20 @@
 export type StoredCartItem = {
   productId: string;
   quantity: number;
+  variantId?: string | null;
+  variantName?: string | null;
+  variantLabel?: string | null;
+  variantPriceDelta?: number | null;
 };
 
 const CART_UPDATED_EVENT = "orduva:cart-updated";
 
 export function getCartStorageKey(tenantSlug: string) {
   return `cart:${tenantSlug || "orduva"}`;
+}
+
+export function cartLineKey(item: Pick<StoredCartItem, "productId" | "variantId">) {
+  return `${item.productId || ""}::${item.variantId || "base"}`;
 }
 
 function emitCartUpdate<T>(tenantSlug: string, items: T[]) {

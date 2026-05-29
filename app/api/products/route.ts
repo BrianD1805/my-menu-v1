@@ -50,7 +50,7 @@ export async function GET(req: Request) {
   const [productsResult, categoriesResult, settings] = await Promise.all([
     db
       .from("products")
-      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold")
+      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants")
       .eq("tenant_id", tenant.id)
       .eq("is_active", true)
       .order("name", { ascending: true }),

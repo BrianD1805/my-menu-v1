@@ -21,7 +21,7 @@ export default async function AdminProductsPage() {
 
   const { data: products } = await db
     .from("products")
-    .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold")
+    .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants")
     .eq("tenant_id", tenant.id)
     .order("name", { ascending: true });
 

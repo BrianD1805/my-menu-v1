@@ -314,15 +314,20 @@ async function loadIntentByCheckout(input: { checkoutId?: string | null; session
 }
 
 async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPayload["items"]) {
+  const quantityByProductId = new Map<string, number>();
   for (const item of items) {
+    quantityByProductId.set(item.product_id, (quantityByProductId.get(item.product_id) || 0) + Number(item.quantity || 0));
+  }
+
+  for (const [productId, quantity] of quantityByProductId.entries()) {
     const { data: product, error } = await db
       .from("products")
       .select("id, stock_enabled, stock_quantity")
-      .eq("id", item.product_id)
+      .eq("id", productId)
       .eq("tenant_id", tenantId)
       .maybeSingle();
     if (error || !product?.stock_enabled) continue;
-    const nextStock = Math.max(0, Number(product.stock_quantity || 0) - Number(item.quantity || 0));
+    const nextStock = Math.max(0, Number(product.stock_quantity || 0) - quantity);
     const { error: stockError } = await db
       .from("products")
       .update({ stock_quantity: nextStock })
@@ -331,7 +336,6 @@ async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPa
     if (stockError) console.error("Failed to reduce product stock after Stripe payment", stockError);
   }
 }
-
 async function createPaidOrderFromIntent(input: {
   intent: Record<string, any>;
   sessionId?: string | null;

@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const productIds = body.items.map((i) => i.productId);
+    const productIds = Array.from(new Set(body.items.map((i) => i.productId)));
 
     const { data: products, error: productsError } = await db
       .from("products")
@@ -101,11 +101,16 @@ export async function POST(req: Request) {
       );
     }
 
+    const requestedQuantityByProductId = new Map<string, number>();
     for (const item of body.items) {
-      const product = products.find((p) => p.id === item.productId);
+      requestedQuantityByProductId.set(item.productId, (requestedQuantityByProductId.get(item.productId) || 0) + item.quantity);
+    }
+
+    for (const [productId, requestedQuantity] of requestedQuantityByProductId.entries()) {
+      const product = products.find((p) => p.id === productId);
       const stockEnabled = Boolean(product?.stock_enabled);
       const stockQuantity = Math.max(0, Number(product?.stock_quantity || 0));
-      if (stockEnabled && item.quantity > stockQuantity) {
+      if (stockEnabled && requestedQuantity > stockQuantity) {
         return NextResponse.json(
           { error: `${product?.name || "This product"} only has ${stockQuantity} in stock.` },
           { status: 409 }
@@ -122,16 +127,33 @@ export async function POST(req: Request) {
         throw new Error(`Product missing: ${item.productId}`);
       }
 
-      const unitPrice = Number(product.price);
+      const variants = Array.isArray(product.product_variants) ? product.product_variants : [];
+      const selectedVariant = item.variantId
+        ? variants.find((variant: any) => variant?.id === item.variantId && variant?.isActive !== false)
+        : null;
+
+      if (product.variants_enabled && variants.some((variant: any) => variant?.isActive !== false) && item.variantId && !selectedVariant) {
+        throw new Error(`Variant missing: ${item.variantId}`);
+      }
+
+      const variantLabel = selectedVariant ? String(product.variant_label || "Option") : null;
+      const variantName = selectedVariant ? String((selectedVariant as any).name || "").trim() : null;
+      const variantPriceDelta = selectedVariant ? Number((selectedVariant as any).priceDelta || 0) : 0;
+      const unitPrice = Math.max(0, Number(product.price) + variantPriceDelta);
       const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
+      const displayName = variantName ? `${product.name} (${variantLabel}: ${variantName})` : product.name;
 
       return {
         product_id: product.id,
-        product_name: product.name,
+        product_name: displayName,
         unit_price: unitPrice,
         quantity: item.quantity,
         line_total: lineTotal,
+        variant_id: selectedVariant ? String((selectedVariant as any).id) : null,
+        variant_label: variantLabel,
+        variant_name: variantName,
+        variant_price_delta: selectedVariant ? Number(variantPriceDelta.toFixed(2)) : 0,
       };
     });
 
@@ -435,11 +457,16 @@ export async function POST(req: Request) {
       metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, subtotal, total, rewardTier: rewardMetadata.reward_tier, rewardDiscountAmount: rewardMetadata.reward_discount_amount, discountCode: discountMetadata.discount_code, discountAmount: discountMetadata.discount_amount },
     }).then(undefined, () => undefined);
 
+    const quantityByProductId = new Map<string, number>();
     for (const item of body.items) {
-      const product = products.find((p) => p.id === item.productId);
+      quantityByProductId.set(item.productId, (quantityByProductId.get(item.productId) || 0) + item.quantity);
+    }
+
+    for (const [productId, quantity] of quantityByProductId.entries()) {
+      const product = products.find((p) => p.id === productId);
       if (!product?.stock_enabled) continue;
 
-      const nextStock = Math.max(0, Number(product.stock_quantity || 0) - item.quantity);
+      const nextStock = Math.max(0, Number(product.stock_quantity || 0) - quantity);
       const { error: stockError } = await db
         .from("products")
         .update({ stock_quantity: nextStock })
