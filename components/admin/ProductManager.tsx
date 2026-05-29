@@ -81,7 +81,7 @@ function emptyDraft(defaultCategoryId: string): DraftState {
 }
 
 function modalShellClassName() {
-  return "flex w-full max-w-[1180px] flex-col overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]";
+  return "flex w-full max-w-[885px] flex-col overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]";
 }
 
 function normalizeVariantRows(value: unknown, basePrice = 0): ProductVariantDraft[] {
@@ -761,7 +761,7 @@ export default function ProductManager({
               </div>
 
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8 xl:py-7">
-                <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+                <div className="space-y-5">
                   <div className="space-y-5 rounded-[26px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
                     <div>
                       <FieldLabel>Product name</FieldLabel>
@@ -923,7 +923,7 @@ export default function ProductManager({
 
                       <div className="mt-4 space-y-3">
                         {activeDraft.variants.map((variant, index) => (
-                          <div key={variant.id} className="grid gap-3 rounded-2xl border border-indigo-100 bg-white p-3 sm:grid-cols-[1fr_160px_130px_130px_auto_auto] sm:items-center">
+                          <div key={variant.id} className="grid gap-3 rounded-2xl border border-indigo-100 bg-white p-3 sm:grid-cols-2 lg:grid-cols-[1fr_150px] lg:items-start">
                             <input
                               type="text"
                               value={variant.name}
@@ -956,7 +956,7 @@ export default function ProductManager({
                               placeholder="Optional note, e.g. smaller pack"
                               className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 sm:col-span-2"
                             />
-                            <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                            <label className="flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
                               <input
                                 type="checkbox"
                                 checked={variant.stockEnabled}
@@ -992,7 +992,7 @@ export default function ProductManager({
                               placeholder="Low stock"
                               className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                             />
-                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                            <label className="flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
                               <input
                                 type="checkbox"
                                 checked={variant.isActive}
@@ -1029,6 +1029,19 @@ export default function ProductManager({
                         Add variant option
                       </button>
                       <p className="mt-3 text-xs leading-5 text-slate-500">Enter the actual price and stock for each option. Example: T-Shirt Small, Medium and Large can each have their own price and stock level. If a variant reaches 0 stock it is shown as sold out, without hiding the other options.</p>
+                    </div>
+
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-4 sm:p-5">
+                      <FieldLabel>Formatted description</FieldLabel>
+                      <RichTextEditor
+                        value={activeDraft.description}
+                        onChange={(value) =>
+                          creating
+                            ? setNewDraft((current) => ({ ...current, description: value }))
+                            : setEditingDraft((current) => (current ? { ...current, description: value } : current))
+                        }
+                      />
+                      <p className="mt-2 text-xs text-slate-500">Use headings, bold text, spacing, and bullet points. This formatting shows in the customer product popup.</p>
                     </div>
 
                     <div>
@@ -1103,21 +1116,6 @@ export default function ProductManager({
                           <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">Image preview will appear here</div>
                         )}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 rounded-[26px] border border-slate-200 bg-white p-4 sm:p-5 lg:p-6">
-                    <div>
-                      <FieldLabel>Formatted description</FieldLabel>
-                      <RichTextEditor
-                        value={activeDraft.description}
-                        onChange={(value) =>
-                          creating
-                            ? setNewDraft((current) => ({ ...current, description: value }))
-                            : setEditingDraft((current) => (current ? { ...current, description: value } : current))
-                        }
-                      />
-                      <p className="mt-2 text-xs text-slate-500">Use headings, bold text, spacing, and bullet points. This formatting shows in the customer product popup.</p>
                     </div>
                   </div>
                 </div>

@@ -102,3 +102,11 @@ For each new Orduva patch:
 ### Earlier historical patches
 
 Detailed historical notes for earlier builds are archived in `docs/patch-notes/`.
+
+## Ver-0.225E — Product editor single column polish
+
+- Reduced Tenant Admin product editor popup desktop width by approximately 25%.
+- Removed the internal two-column split in the product editor popup.
+- Moved formatted description into the main product details flow.
+- Adjusted variant editor rows to wrap more comfortably in the narrower popup.
+- No Supabase SQL required.
