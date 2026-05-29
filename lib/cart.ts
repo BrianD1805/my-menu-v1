@@ -5,6 +5,8 @@ export type StoredCartItem = {
   variantName?: string | null;
   variantLabel?: string | null;
   variantPriceDelta?: number | null;
+  variantPrice?: number | null;
+  variantDescription?: string | null;
 };
 
 const CART_UPDATED_EVENT = "orduva:cart-updated";

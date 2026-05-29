@@ -62,11 +62,12 @@ function normalizeProductVariants(value: unknown) {
       const row = item as Record<string, unknown>;
       const name = String(row.name || "").trim();
       if (!name) return null;
-      const priceDelta = Number(row.priceDelta);
+      const price = Number(row.price);
       return {
         id: String(row.id || `variant-${Date.now()}-${index}`),
         name,
-        priceDelta: Number.isFinite(priceDelta) ? Number(priceDelta.toFixed(2)) : 0,
+        description: String(row.description || "").trim(),
+        price: Number.isFinite(price) && price >= 0 ? Number(price.toFixed(2)) : 0,
         isActive: row.isActive !== false,
       };
     })

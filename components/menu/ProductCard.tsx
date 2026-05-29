@@ -8,9 +8,18 @@ import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-them
 type ProductVariant = {
   id: string;
   name: string;
-  priceDelta: number;
+  description?: string | null;
+  price?: number | null;
+  priceDelta?: number | null;
   isActive: boolean;
 };
+
+function getVariantPrice(basePrice: number, variant: ProductVariant | null | undefined) {
+  const explicitPrice = Number(variant?.price);
+  if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
+  const legacyDelta = Number(variant?.priceDelta);
+  return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
+}
 
 type Props = {
   id: string;
@@ -212,7 +221,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             variantId: variant?.id || null,
             variantName: variant?.name || null,
             variantLabel: variant ? (variantLabel || "Option") : null,
-            variantPriceDelta: variant ? Number(variant.priceDelta || 0) : 0,
+            variantPriceDelta: variant ? Number((getVariantPrice(Number(price || 0), variant) - Number(price || 0)).toFixed(2)) : 0,
+            variantPrice: variant ? Number(getVariantPrice(Number(price || 0), variant).toFixed(2)) : null,
+            variantDescription: variant?.description || null,
           },
         ];
     writeCart(tenantSlug, updated);
@@ -388,7 +399,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
               <div className="space-y-3">
                 {activeVariants.map((variant) => {
-                  const variantPrice = Math.max(0, Number(price) + Number(variant.priceDelta || 0));
+                  const variantPrice = getVariantPrice(Number(price || 0), variant);
                   return (
                     <button
                       key={variant.id}
@@ -398,7 +409,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                     >
                       <span>
                         <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
-                        {Number(variant.priceDelta || 0) !== 0 ? <span className="mt-1 block text-xs text-slate-500">{Number(variant.priceDelta || 0) > 0 ? "+" : ""}{formatMoney(Number(variant.priceDelta || 0), money)}</span> : <span className="mt-1 block text-xs text-slate-500">Same price</span>}
+                        {variant.description ? <span className="mt-1 block text-xs leading-5 text-slate-500">{variant.description}</span> : null}
                       </span>
                       <span className="shrink-0 text-sm font-semibold text-slate-950">{formatMoney(variantPrice, money)}</span>
                     </button>

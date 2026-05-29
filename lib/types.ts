@@ -16,7 +16,9 @@ export type Category = {
 export type ProductVariant = {
   id: string;
   name: string;
-  priceDelta: number;
+  description?: string | null;
+  price?: number | null;
+  priceDelta?: number | null;
   isActive: boolean;
 };
 

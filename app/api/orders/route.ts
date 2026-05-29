@@ -15,6 +15,13 @@ import { createTenantDarajaStkPushIntent } from "@/lib/storefront-daraja";
 import { calculateRewardDiscount, getCustomerRewardSummary } from "@/lib/rewards";
 import { calculateBestDiscount } from "@/lib/discounts";
 
+function getVariantPrice(basePrice: number, variant: any) {
+  const explicitPrice = Number(variant?.price);
+  if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
+  const legacyDelta = Number(variant?.priceDelta);
+  return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
+}
+
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
   try {
@@ -138,8 +145,8 @@ export async function POST(req: Request) {
 
       const variantLabel = selectedVariant ? String(product.variant_label || "Option") : null;
       const variantName = selectedVariant ? String((selectedVariant as any).name || "").trim() : null;
-      const variantPriceDelta = selectedVariant ? Number((selectedVariant as any).priceDelta || 0) : 0;
-      const unitPrice = Math.max(0, Number(product.price) + variantPriceDelta);
+      const unitPrice = selectedVariant ? getVariantPrice(Number(product.price || 0), selectedVariant) : Number(product.price || 0);
+      const variantPriceDelta = selectedVariant ? unitPrice - Number(product.price || 0) : 0;
       const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
       const displayName = variantName ? `${product.name} (${variantLabel}: ${variantName})` : product.name;

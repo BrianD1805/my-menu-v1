@@ -14,14 +14,27 @@ type CartItem = {
   variantName?: string | null;
   variantLabel?: string | null;
   variantPriceDelta?: number | null;
+  variantPrice?: number | null;
+  variantDescription?: string | null;
 };
 
 type ProductVariant = {
   id: string;
   name: string;
-  priceDelta: number;
+  description?: string | null;
+  price?: number | null;
+  priceDelta?: number | null;
   isActive: boolean;
 };
+
+function getVariantPrice(basePrice: number, variant: ProductVariant | null | undefined, fallbackPrice?: number | null, fallbackDelta?: number | null) {
+  const explicitPrice = Number(variant?.price);
+  if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
+  const storedPrice = Number(fallbackPrice);
+  if (Number.isFinite(storedPrice) && storedPrice >= 0) return storedPrice;
+  const legacyDelta = Number(variant?.priceDelta ?? fallbackDelta);
+  return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
+}
 
 type Product = {
   id: string;
@@ -320,8 +333,7 @@ useEffect(() => {
 
         const variant = Array.isArray(product.product_variants) ? product.product_variants.find((option) => option.id === item.variantId && option.isActive !== false) : null;
         const variantName = variant?.name || item.variantName || null;
-        const variantPriceDelta = variant ? Number(variant.priceDelta || 0) : Number(item.variantPriceDelta || 0);
-        const unitPrice = Math.max(0, Number(product.price) + variantPriceDelta);
+        const unitPrice = getVariantPrice(Number(product.price || 0), variant, item.variantPrice, item.variantPriceDelta);
         const lineTotal = unitPrice * item.quantity;
 
         return {
@@ -329,6 +341,7 @@ useEffect(() => {
           name: product.name,
           variantName,
           variantLabel: product.variant_label || item.variantLabel || null,
+          variantDescription: variant?.description || item.variantDescription || null,
           unitPrice,
           lineTotal,
           stockEnabled: !!product.stock_enabled,
@@ -341,6 +354,7 @@ useEffect(() => {
       variantId?: string | null;
       variantName?: string | null;
       variantLabel?: string | null;
+      variantDescription?: string | null;
       name: string;
       unitPrice: number;
       lineTotal: number;
@@ -938,6 +952,7 @@ useEffect(() => {
                     <div>
                       <p className="font-medium">{row.name}</p>
                       {row.variantName ? <p className="mt-1 text-xs font-semibold text-slate-500">{row.variantLabel || "Option"}: {row.variantName}</p> : null}
+                      {row.variantDescription ? <p className="mt-1 text-xs leading-5 text-slate-500">{row.variantDescription}</p> : null}
                       <p className="text-sm text-gray-600">{formatMoney(row.unitPrice, tenantSettings)} each</p>
                       {row.stockEnabled ? (
                         <p className={`mt-1 text-xs font-semibold ${row.stockQuantity <= 0 ? "text-red-600" : row.quantity >= row.stockQuantity ? "text-orange-600" : "text-emerald-700"}`}>

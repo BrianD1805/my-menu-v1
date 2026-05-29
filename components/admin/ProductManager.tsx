@@ -11,14 +11,17 @@ type CategoryOption = {
 type ProductVariantDraft = {
   id: string;
   name: string;
-  priceDelta: string;
+  description: string;
+  price: string;
   isActive: boolean;
 };
 
 type ProductVariantRow = {
   id: string;
   name: string;
-  priceDelta: number;
+  description?: string | null;
+  price?: number | null;
+  priceDelta?: number | null;
   isActive: boolean;
 };
 
@@ -75,17 +78,25 @@ function modalShellClassName() {
   return "flex w-full max-w-[1180px] flex-col overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]";
 }
 
-function normalizeVariantRows(value: unknown): ProductVariantDraft[] {
+function normalizeVariantRows(value: unknown, basePrice = 0): ProductVariantDraft[] {
   if (!Array.isArray(value)) return [];
   return value
     .map((item, index) => {
       const raw = item as Partial<ProductVariantRow>;
       const name = String(raw.name || "").trim();
       if (!name) return null;
+      const explicitPrice = Number(raw.price);
+      const legacyDelta = Number(raw.priceDelta);
+      const price = Number.isFinite(explicitPrice)
+        ? explicitPrice
+        : Number.isFinite(legacyDelta)
+          ? Math.max(0, Number(basePrice || 0) + legacyDelta)
+          : 0;
       return {
         id: String(raw.id || `variant-${Date.now()}-${index}`),
         name,
-        priceDelta: String(Number(raw.priceDelta || 0)),
+        description: String(raw.description || ""),
+        price: String(Number(price.toFixed(2))),
         isActive: raw.isActive !== false,
       };
     })
@@ -94,12 +105,16 @@ function normalizeVariantRows(value: unknown): ProductVariantDraft[] {
 
 function cleanVariantRows(value: ProductVariantDraft[]) {
   return value
-    .map((variant) => ({
-      id: String(variant.id || `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
-      name: variant.name.trim(),
-      priceDelta: Number.isFinite(Number(variant.priceDelta)) ? Number(Number(variant.priceDelta).toFixed(2)) : 0,
-      isActive: variant.isActive !== false,
-    }))
+    .map((variant) => {
+      const price = Number(variant.price);
+      return {
+        id: String(variant.id || `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+        name: variant.name.trim(),
+        description: variant.description.trim(),
+        price: Number.isFinite(price) && price >= 0 ? Number(price.toFixed(2)) : 0,
+        isActive: variant.isActive !== false,
+      };
+    })
     .filter((variant) => variant.name);
 }
 
@@ -270,7 +285,7 @@ export default function ProductManager({
       lowStockThreshold: String(product.low_stock_threshold ?? 5),
       variantsEnabled: product.variants_enabled === true,
       variantLabel: product.variant_label || "Choose an option",
-      variants: normalizeVariantRows(product.product_variants),
+      variants: normalizeVariantRows(product.product_variants, Number(product.price || 0)),
     });
     setGlobalMessage("");
   }
@@ -348,7 +363,7 @@ export default function ProductManager({
         lowStockThreshold: String(product.low_stock_threshold ?? 5),
         variantsEnabled: product.variants_enabled === true,
         variantLabel: product.variant_label || "Choose an option",
-        variants: normalizeVariantRows(product.product_variants),
+        variants: normalizeVariantRows(product.product_variants, Number(product.price || 0)),
       });
       clearCreateImageSelection();
       setGlobalMessage(newImageFile ? "Product created with image" : "Product created");
@@ -862,7 +877,7 @@ export default function ProductManager({
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <FieldLabel>Product variants</FieldLabel>
-                          <p className="text-xs leading-5 text-slate-600">Use this for sizes, weights, colours, flavours, bottle sizes, pack sizes, or any customer choice before the item is added to the cart.</p>
+                          <p className="text-xs leading-5 text-slate-600">Use this for sizes, weights, colours, flavours, bottle sizes, pack sizes, or any customer choice before the item is added to the cart. Each option has its own final selling price and optional short description.</p>
                         </div>
                         <label className="flex min-h-[44px] items-center gap-3 rounded-2xl border border-indigo-200 bg-white px-4 py-2.5 text-sm text-slate-700">
                           <input
@@ -896,7 +911,7 @@ export default function ProductManager({
 
                       <div className="mt-4 space-y-3">
                         {activeDraft.variants.map((variant, index) => (
-                          <div key={variant.id} className="grid gap-3 rounded-2xl border border-indigo-100 bg-white p-3 sm:grid-cols-[1fr_150px_auto_auto] sm:items-center">
+                          <div key={variant.id} className="grid gap-3 rounded-2xl border border-indigo-100 bg-white p-3 sm:grid-cols-[1fr_170px_auto_auto] sm:items-center">
                             <input
                               type="text"
                               value={variant.name}
@@ -904,19 +919,30 @@ export default function ProductManager({
                                 const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item);
                                 creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
                               }}
-                              placeholder="e.g. 500g, Large, Blue"
+                              placeholder="e.g. 100g, 200g, Large, Blue"
                               className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                             />
                             <input
                               type="number"
+                              min="0"
                               step="0.01"
-                              value={variant.priceDelta}
+                              value={variant.price}
                               onChange={(event) => {
-                                const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, priceDelta: event.target.value } : item);
+                                const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, price: event.target.value } : item);
                                 creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
                               }}
-                              placeholder="+/- price"
+                              placeholder="Final price"
                               className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            />
+                            <input
+                              type="text"
+                              value={variant.description}
+                              onChange={(event) => {
+                                const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item);
+                                creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                              }}
+                              placeholder="Optional note, e.g. smaller pack"
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 sm:col-span-2"
                             />
                             <label className="flex items-center gap-2 text-sm text-slate-700">
                               <input
@@ -947,14 +973,14 @@ export default function ProductManager({
                       <button
                         type="button"
                         onClick={() => {
-                          const next = [...activeDraft.variants, { id: `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: "", priceDelta: "0", isActive: true }];
+                          const next = [...activeDraft.variants, { id: `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: "", description: "", price: activeDraft.price || "0", isActive: true }];
                           creating ? setNewDraft((current) => ({ ...current, variants: next, variantsEnabled: true })) : setEditingDraft((current) => (current ? { ...current, variants: next, variantsEnabled: true } : current));
                         }}
                         className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-indigo-200 bg-white px-5 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
                       >
                         Add variant option
                       </button>
-                      <p className="mt-3 text-xs leading-5 text-slate-500">Price adjustment is added to the base product price for that option. Use 0 when all variants have the same price.</p>
+                      <p className="mt-3 text-xs leading-5 text-slate-500">Enter the actual price the customer should pay for each option. Example: Coffee with options 100g at KES 600 and 200g at KES 1,000. No adding or subtracting required.</p>
                     </div>
 
                     <div>
