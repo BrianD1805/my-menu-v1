@@ -20,6 +20,9 @@ type ProductVariant = {
   description?: string | null;
   price?: number | null;
   priceDelta?: number | null;
+  stockEnabled?: boolean | null;
+  stockQuantity?: number | null;
+  lowStockThreshold?: number | null;
   isActive: boolean;
 };
 
@@ -28,6 +31,20 @@ function getVariantPrice(basePrice: number, variant: ProductVariant | null | und
   if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
   const legacyDelta = Number(variant?.priceDelta);
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
+}
+
+function variantStockState(product: Product | undefined, variant: ProductVariant | null | undefined) {
+  if (variant) {
+    const tracked = variant.stockEnabled === true;
+    const available = Math.max(0, Math.floor(Number(variant.stockQuantity || 0)));
+    const threshold = Math.max(0, Math.floor(Number(variant.lowStockThreshold ?? product?.low_stock_threshold ?? 5)));
+    return { tracked, available, threshold, outOfStock: tracked && available <= 0, lowStock: tracked && available > 0 && available <= threshold };
+  }
+
+  const tracked = !!product?.stock_enabled;
+  const available = Math.max(0, Math.floor(Number(product?.stock_quantity || 0)));
+  const threshold = Math.max(0, Math.floor(Number(product?.low_stock_threshold || 5)));
+  return { tracked, available, threshold, outOfStock: tracked && available <= 0, lowStock: tracked && available > 0 && available <= threshold };
 }
 
 type Product = {
@@ -1022,15 +1039,14 @@ export default function MenuBrowser({
     if (buttonStateById[productId] === "adding") return;
 
     const product = products.find((item) => item.id === productId);
-    const trackedStock = !!product?.stock_enabled;
-    const availableStock = Math.max(0, Number(product?.stock_quantity || 0));
-    if (trackedStock && availableStock <= 0) return;
+    const stockState = variantStockState(product, variant);
+    if (stockState.outOfStock) return;
 
     const existing = readCart<StoredCartItem>(tenantSlug);
     const lineIdentity = { productId, variantId: variant?.id || null };
     const found = existing.find((item) => cartLineKey(item) === cartLineKey(lineIdentity));
-    const productTotalQuantity = existing.filter((item) => item.productId === productId).reduce((sum, item) => sum + Math.max(0, Number(item.quantity || 0)), 0);
-    if (trackedStock && productTotalQuantity >= availableStock) {
+    const lineCurrentQuantity = found ? Math.max(0, Number(found.quantity || 0)) : 0;
+    if (stockState.tracked && lineCurrentQuantity >= stockState.available) {
       setButtonStateById((current) => ({ ...current, [productId]: "added" }));
       window.setTimeout(() => {
         setButtonStateById((current) => ({ ...current, [productId]: "idle" }));
@@ -1050,11 +1066,11 @@ export default function MenuBrowser({
       });
     }
 
-    const cappedNextQuantity = trackedStock ? Math.max(0, availableStock - (productTotalQuantity - (found?.quantity || 0))) : Number.POSITIVE_INFINITY;
+    const cappedNextQuantity = stockState.tracked ? stockState.available : Number.POSITIVE_INFINITY;
     const updated = found
       ? existing.map((item) =>
           cartLineKey(item) === cartLineKey(lineIdentity)
-            ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, cappedNextQuantity) : item.quantity + 1 }
+            ? { ...item, quantity: stockState.tracked ? Math.min(item.quantity + 1, cappedNextQuantity) : item.quantity + 1 }
             : item
         )
       : [
@@ -1068,6 +1084,7 @@ export default function MenuBrowser({
             variantPriceDelta: variant && product ? Number((getVariantPrice(Number(product.price || 0), variant) - Number(product.price || 0)).toFixed(2)) : 0,
             variantPrice: variant && product ? Number(getVariantPrice(Number(product.price || 0), variant).toFixed(2)) : null,
             variantDescription: variant?.description || null,
+            variantStockEnabled: variant ? variant.stockEnabled === true : !!product?.stock_enabled,
           },
         ];
 
@@ -1606,42 +1623,77 @@ export default function MenuBrowser({
       ) : null}
 
       {variantPickerProduct ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]" onClick={() => setVariantPickerProduct(null)}>
-          <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg" onClick={(event) => event.stopPropagation()}>
-            <div className="sticky top-0 z-10 overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandAccent} 0%, ${brandPrimary} 100%)` }}>
-              <div className="absolute inset-x-0 top-0 h-1 bg-white/30" />
-              <button type="button" onClick={() => setVariantPickerProduct(null)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close variants">×</button>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">{variantPickerProduct.product.variant_label || "Choose an option"}</p>
-              <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight">{variantPickerProduct.product.name}</h3>
-              <p className="mt-2 text-sm leading-6 text-white/82">Select the option you would like, then it will be added to your cart.</p>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
-              <div className="space-y-3">
-                {activeProductVariants(variantPickerProduct.product).map((variant) => {
-                  const variantPrice = getVariantPrice(Number(variantPickerProduct.product.price || 0), variant);
-                  return (
-                    <button
-                      key={variant.id}
-                      type="button"
-                      onClick={() => {
-                        const current = variantPickerProduct;
-                        setVariantPickerProduct(null);
-                        void addCartLine(current.product.id, variant, current.options);
-                      }}
-                      className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-emerald-50/40"
-                    >
-                      <span>
-                        <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
-                        {variant.description ? <span className="mt-1 block text-xs leading-5 text-slate-500">{variant.description}</span> : null}
-                      </span>
-                      <span className="shrink-0 text-sm font-semibold text-slate-950">{formatMoney(variantPrice, moneySettings)}</span>
-                    </button>
-                  );
-                })}
+        <div className="fixed inset-0 z-50 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" style={{ backgroundColor: "rgba(15,23,42,0.54)" }} role="dialog" aria-modal="true" onClick={() => setVariantPickerProduct(null)}>
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]" onClick={(event) => event.stopPropagation()}>
+              <div className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-7" style={{ borderColor: brandBorder, background: `linear-gradient(135deg, #ffffff 0%, ${brandSurface} 52%, ${blendHex(brandAccent, "#FFFFFF", 0.88)} 100%)` }}>
+                <div className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${brandAccent}, ${brandPrimary}, ${brandAccent})` }} />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{variantPickerProduct.product.variant_label || "Choose an option"}</p>
+                    <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{variantPickerProduct.product.name}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Choose the standard product as shown, or select another available option.</p>
+                  </div>
+                  <button type="button" onClick={() => setVariantPickerProduct(null)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-white/95 text-xl shadow-sm transition hover:bg-white" style={{ borderColor: brandBorder, color: brandPrimary }} aria-label="Close variants">×</button>
+                </div>
               </div>
-            </div>
-            <div className="sticky bottom-0 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
-              <button type="button" onClick={() => setVariantPickerProduct(null)} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancel</button>
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12">
+                <div className="space-y-3">
+                  {(() => {
+                    const baseStock = variantStockState(variantPickerProduct.product, null);
+                    return (
+                      <button
+                        type="button"
+                        disabled={baseStock.outOfStock}
+                        onClick={() => {
+                          if (baseStock.outOfStock) return;
+                          const current = variantPickerProduct;
+                          setVariantPickerProduct(null);
+                          void addCartLine(current.product.id, null, current.options);
+                        }}
+                        className="flex w-full items-center justify-between gap-4 rounded-[22px] border px-4 py-4 text-left shadow-sm transition enabled:hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60"
+                        style={{ borderColor: brandAccent, backgroundColor: blendHex(brandAccent, "#FFFFFF", 0.90) }}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-slate-950">Standard product</span>
+                          <span className="mt-1 block text-xs leading-5 text-slate-500">Add {variantPickerProduct.product.name} exactly as shown on the menu.</span>
+                          {baseStock.outOfStock ? <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">Sold out</span> : baseStock.lowStock ? <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Only {baseStock.available} left</span> : null}
+                        </span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(Number(variantPickerProduct.product.price || 0), moneySettings)}</span>
+                      </button>
+                    );
+                  })()}
+                  {activeProductVariants(variantPickerProduct.product).map((variant) => {
+                    const variantPrice = getVariantPrice(Number(variantPickerProduct.product.price || 0), variant);
+                    const stock = variantStockState(variantPickerProduct.product, variant);
+                    return (
+                      <button
+                        key={variant.id}
+                        type="button"
+                        disabled={stock.outOfStock}
+                        onClick={() => {
+                          if (stock.outOfStock) return;
+                          const current = variantPickerProduct;
+                          setVariantPickerProduct(null);
+                          void addCartLine(current.product.id, variant, current.options);
+                        }}
+                        className="flex w-full items-center justify-between gap-4 rounded-[22px] border bg-white px-4 py-4 text-left shadow-sm transition enabled:hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60"
+                        style={{ borderColor: stock.outOfStock ? "#E2E8F0" : brandBorder }}
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
+                          {variant.description ? <span className="mt-1 block text-xs leading-5 text-slate-500">{variant.description}</span> : null}
+                          {stock.outOfStock ? <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">Sold out</span> : stock.lowStock ? <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Only {stock.available} left</span> : null}
+                        </span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(variantPrice, moneySettings)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="sticky bottom-0 z-10 border-t bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7" style={{ borderColor: brandBorder }}>
+                <button type="button" onClick={() => setVariantPickerProduct(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px]" style={{ borderColor: brandAccent, backgroundColor: blendHex(brandAccent, "#FFFFFF", 0.88), color: brandPrimary }}>Back to menu</button>
+              </div>
             </div>
           </div>
         </div>

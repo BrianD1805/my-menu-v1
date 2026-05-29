@@ -22,6 +22,32 @@ function getVariantPrice(basePrice: number, variant: any) {
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
 }
 
+function getVariantStockState(product: any, variant: any | null) {
+  if (variant) {
+    const tracked = variant?.stockEnabled === true;
+    const available = Math.max(0, Math.floor(Number(variant?.stockQuantity || 0)));
+    return { tracked, available };
+  }
+
+  const tracked = Boolean(product?.stock_enabled);
+  const available = Math.max(0, Math.floor(Number(product?.stock_quantity || 0)));
+  return { tracked, available };
+}
+
+function findActiveVariant(product: any, variantId?: string | null) {
+  if (!variantId) return null;
+  const variants = Array.isArray(product?.product_variants) ? product.product_variants : [];
+  return variants.find((variant: any) => variant?.id === variantId && variant?.isActive !== false) || null;
+}
+
+function reduceVariantStock(productVariants: any[], variantId: string, quantity: number) {
+  return productVariants.map((variant: any) => {
+    if (variant?.id !== variantId || variant?.stockEnabled !== true) return variant;
+    const currentStock = Math.max(0, Math.floor(Number(variant.stockQuantity || 0)));
+    return { ...variant, stockQuantity: Math.max(0, currentStock - quantity) };
+  });
+}
+
 export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
   try {
@@ -108,18 +134,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const requestedQuantityByProductId = new Map<string, number>();
+    const requestedQuantityBySellableLine = new Map<string, number>();
     for (const item of body.items) {
-      requestedQuantityByProductId.set(item.productId, (requestedQuantityByProductId.get(item.productId) || 0) + item.quantity);
+      const lineKey = `${item.productId}::${item.variantId || "base"}`;
+      requestedQuantityBySellableLine.set(lineKey, (requestedQuantityBySellableLine.get(lineKey) || 0) + item.quantity);
     }
 
-    for (const [productId, requestedQuantity] of requestedQuantityByProductId.entries()) {
+    for (const [lineKey, requestedQuantity] of requestedQuantityBySellableLine.entries()) {
+      const [productId, variantId] = lineKey.split("::");
       const product = products.find((p) => p.id === productId);
-      const stockEnabled = Boolean(product?.stock_enabled);
-      const stockQuantity = Math.max(0, Number(product?.stock_quantity || 0));
-      if (stockEnabled && requestedQuantity > stockQuantity) {
+      const selectedVariant = variantId !== "base" ? findActiveVariant(product, variantId) : null;
+
+      if (variantId !== "base" && !selectedVariant) {
+        return NextResponse.json({ error: "Selected product option is no longer available." }, { status: 409 });
+      }
+
+      const stock = getVariantStockState(product, selectedVariant);
+      if (stock.tracked && requestedQuantity > stock.available) {
+        const optionName = selectedVariant?.name ? `${product?.name || "This product"} - ${selectedVariant.name}` : product?.name || "This product";
         return NextResponse.json(
-          { error: `${product?.name || "This product"} only has ${stockQuantity} in stock.` },
+          { error: `${optionName} only has ${stock.available} in stock.` },
           { status: 409 }
         );
       }
@@ -135,9 +169,7 @@ export async function POST(req: Request) {
       }
 
       const variants = Array.isArray(product.product_variants) ? product.product_variants : [];
-      const selectedVariant = item.variantId
-        ? variants.find((variant: any) => variant?.id === item.variantId && variant?.isActive !== false)
-        : null;
+      const selectedVariant = findActiveVariant(product, item.variantId);
 
       if (product.variants_enabled && variants.some((variant: any) => variant?.isActive !== false) && item.variantId && !selectedVariant) {
         throw new Error(`Variant missing: ${item.variantId}`);
@@ -464,14 +496,36 @@ export async function POST(req: Request) {
       metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, subtotal, total, rewardTier: rewardMetadata.reward_tier, rewardDiscountAmount: rewardMetadata.reward_discount_amount, discountCode: discountMetadata.discount_code, discountAmount: discountMetadata.discount_amount },
     }).then(undefined, () => undefined);
 
-    const quantityByProductId = new Map<string, number>();
+    const quantityBySellableLine = new Map<string, number>();
     for (const item of body.items) {
-      quantityByProductId.set(item.productId, (quantityByProductId.get(item.productId) || 0) + item.quantity);
+      const lineKey = `${item.productId}::${item.variantId || "base"}`;
+      quantityBySellableLine.set(lineKey, (quantityBySellableLine.get(lineKey) || 0) + item.quantity);
     }
 
-    for (const [productId, quantity] of quantityByProductId.entries()) {
+    for (const [lineKey, quantity] of quantityBySellableLine.entries()) {
+      const [productId, variantId] = lineKey.split("::");
       const product = products.find((p) => p.id === productId);
-      if (!product?.stock_enabled) continue;
+      if (!product) continue;
+
+      if (variantId !== "base") {
+        const variants = Array.isArray(product.product_variants) ? product.product_variants : [];
+        const selectedVariant = findActiveVariant(product, variantId);
+        if (!selectedVariant?.stockEnabled) continue;
+
+        const nextVariants = reduceVariantStock(variants, variantId, quantity);
+        const { error: stockError } = await db
+          .from("products")
+          .update({ product_variants: nextVariants })
+          .eq("id", product.id)
+          .eq("tenant_id", tenant.id);
+
+        if (stockError) {
+          console.error("Failed to reduce variant stock", stockError);
+        }
+        continue;
+      }
+
+      if (!product.stock_enabled) continue;
 
       const nextStock = Math.max(0, Number(product.stock_quantity || 0) - quantity);
       const { error: stockError } = await db

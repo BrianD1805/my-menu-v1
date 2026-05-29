@@ -7,6 +7,7 @@ export type StoredCartItem = {
   variantPriceDelta?: number | null;
   variantPrice?: number | null;
   variantDescription?: string | null;
+  variantStockEnabled?: boolean | null;
 };
 
 const CART_UPDATED_EVENT = "orduva:cart-updated";

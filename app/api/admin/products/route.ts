@@ -63,11 +63,17 @@ function normalizeProductVariants(value: unknown) {
       const name = String(row.name || "").trim();
       if (!name) return null;
       const price = Number(row.price);
+      const stockQuantity = Number(row.stockQuantity);
+      const lowStockThreshold = Number(row.lowStockThreshold);
+      const stockEnabled = row.stockEnabled === true || row.stockEnabled === "true" || row.stockEnabled === "1" || row.stockEnabled === 1;
       return {
         id: String(row.id || `variant-${Date.now()}-${index}`),
         name,
         description: String(row.description || "").trim(),
         price: Number.isFinite(price) && price >= 0 ? Number(price.toFixed(2)) : 0,
+        stockEnabled,
+        stockQuantity: Number.isFinite(stockQuantity) && stockQuantity >= 0 ? Math.floor(stockQuantity) : 0,
+        lowStockThreshold: Number.isFinite(lowStockThreshold) && lowStockThreshold >= 0 ? Math.floor(lowStockThreshold) : 5,
         isActive: row.isActive !== false,
       };
     })

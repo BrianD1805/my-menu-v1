@@ -13,6 +13,9 @@ type ProductVariantDraft = {
   name: string;
   description: string;
   price: string;
+  stockEnabled: boolean;
+  stockQuantity: string;
+  lowStockThreshold: string;
   isActive: boolean;
 };
 
@@ -22,6 +25,9 @@ type ProductVariantRow = {
   description?: string | null;
   price?: number | null;
   priceDelta?: number | null;
+  stockEnabled?: boolean | null;
+  stockQuantity?: number | null;
+  lowStockThreshold?: number | null;
   isActive: boolean;
 };
 
@@ -97,6 +103,9 @@ function normalizeVariantRows(value: unknown, basePrice = 0): ProductVariantDraf
         name,
         description: String(raw.description || ""),
         price: String(Number(price.toFixed(2))),
+        stockEnabled: raw.stockEnabled === true,
+        stockQuantity: String(Math.max(0, Math.floor(Number(raw.stockQuantity || 0)))),
+        lowStockThreshold: String(Math.max(0, Math.floor(Number(raw.lowStockThreshold ?? 5)))),
         isActive: raw.isActive !== false,
       };
     })
@@ -112,6 +121,9 @@ function cleanVariantRows(value: ProductVariantDraft[]) {
         name: variant.name.trim(),
         description: variant.description.trim(),
         price: Number.isFinite(price) && price >= 0 ? Number(price.toFixed(2)) : 0,
+        stockEnabled: variant.stockEnabled === true,
+        stockQuantity: Math.max(0, Math.floor(Number(variant.stockQuantity || 0))),
+        lowStockThreshold: Math.max(0, Math.floor(Number(variant.lowStockThreshold || 5))),
         isActive: variant.isActive !== false,
       };
     })
@@ -877,7 +889,7 @@ export default function ProductManager({
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <FieldLabel>Product variants</FieldLabel>
-                          <p className="text-xs leading-5 text-slate-600">Use this for sizes, weights, colours, flavours, bottle sizes, pack sizes, or any customer choice before the item is added to the cart. Each option has its own final selling price and optional short description.</p>
+                          <p className="text-xs leading-5 text-slate-600">Use this for sizes, weights, colours, flavours, bottle sizes, pack sizes, or any customer choice before the item is added to the cart. Each option has its own final selling price, optional short description and optional stock level.</p>
                         </div>
                         <label className="flex min-h-[44px] items-center gap-3 rounded-2xl border border-indigo-200 bg-white px-4 py-2.5 text-sm text-slate-700">
                           <input
@@ -911,7 +923,7 @@ export default function ProductManager({
 
                       <div className="mt-4 space-y-3">
                         {activeDraft.variants.map((variant, index) => (
-                          <div key={variant.id} className="grid gap-3 rounded-2xl border border-indigo-100 bg-white p-3 sm:grid-cols-[1fr_170px_auto_auto] sm:items-center">
+                          <div key={variant.id} className="grid gap-3 rounded-2xl border border-indigo-100 bg-white p-3 sm:grid-cols-[1fr_160px_130px_130px_auto_auto] sm:items-center">
                             <input
                               type="text"
                               value={variant.name}
@@ -944,6 +956,42 @@ export default function ProductManager({
                               placeholder="Optional note, e.g. smaller pack"
                               className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 sm:col-span-2"
                             />
+                            <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                              <input
+                                type="checkbox"
+                                checked={variant.stockEnabled}
+                                onChange={(event) => {
+                                  const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, stockEnabled: event.target.checked } : item);
+                                  creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                                }}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              Track stock
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={variant.stockQuantity}
+                              onChange={(event) => {
+                                const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, stockQuantity: event.target.value } : item);
+                                creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                              }}
+                              placeholder="Stock"
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={variant.lowStockThreshold}
+                              onChange={(event) => {
+                                const next = activeDraft.variants.map((item, itemIndex) => itemIndex === index ? { ...item, lowStockThreshold: event.target.value } : item);
+                                creating ? setNewDraft((current) => ({ ...current, variants: next })) : setEditingDraft((current) => (current ? { ...current, variants: next } : current));
+                              }}
+                              placeholder="Low stock"
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            />
                             <label className="flex items-center gap-2 text-sm text-slate-700">
                               <input
                                 type="checkbox"
@@ -973,14 +1021,14 @@ export default function ProductManager({
                       <button
                         type="button"
                         onClick={() => {
-                          const next = [...activeDraft.variants, { id: `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: "", description: "", price: activeDraft.price || "0", isActive: true }];
+                          const next = [...activeDraft.variants, { id: `variant-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, name: "", description: "", price: activeDraft.price || "0", stockEnabled: activeDraft.stockEnabled, stockQuantity: "0", lowStockThreshold: activeDraft.lowStockThreshold || "5", isActive: true }];
                           creating ? setNewDraft((current) => ({ ...current, variants: next, variantsEnabled: true })) : setEditingDraft((current) => (current ? { ...current, variants: next, variantsEnabled: true } : current));
                         }}
                         className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-indigo-200 bg-white px-5 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
                       >
                         Add variant option
                       </button>
-                      <p className="mt-3 text-xs leading-5 text-slate-500">Enter the actual price the customer should pay for each option. Example: Coffee with options 100g at KES 600 and 200g at KES 1,000. No adding or subtracting required.</p>
+                      <p className="mt-3 text-xs leading-5 text-slate-500">Enter the actual price and stock for each option. Example: T-Shirt Small, Medium and Large can each have their own price and stock level. If a variant reaches 0 stock it is shown as sold out, without hiding the other options.</p>
                     </div>
 
                     <div>

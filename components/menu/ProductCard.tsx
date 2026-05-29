@@ -178,10 +178,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     }
   }
 
-  async function addToCart(source: "card" | "modal" = "card", variant?: ProductVariant | null) {
+  async function addToCart(source: "card" | "modal" = "card", variant?: ProductVariant | null, allowBaseProduct = false) {
     if (buttonState === "adding" || isOutOfStock) return;
 
-    if (shouldPickVariant && !variant) {
+    if (shouldPickVariant && !variant && !allowBaseProduct) {
       setPendingAddSource(source);
       setVariantPickerOpen(true);
       return;
@@ -387,38 +387,55 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       </div>
 
       {variantPickerOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]" onClick={() => setVariantPickerOpen(false)}>
-          <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg" onClick={(event) => event.stopPropagation()}>
-            <div className="sticky top-0 z-10 overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6" style={{ background: `linear-gradient(135deg, ${brandAccent} 0%, ${brandPrimary} 100%)` }}>
-              <div className="absolute inset-x-0 top-0 h-1 bg-white/30" />
-              <button type="button" onClick={() => setVariantPickerOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25" aria-label="Close variants">×</button>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">{variantLabel || "Choose an option"}</p>
-              <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight">{name}</h3>
-              <p className="mt-2 text-sm leading-6 text-white/82">Select the option you would like, then it will be added to your cart.</p>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7">
-              <div className="space-y-3">
-                {activeVariants.map((variant) => {
-                  const variantPrice = getVariantPrice(Number(price || 0), variant);
-                  return (
-                    <button
-                      key={variant.id}
-                      type="button"
-                      onClick={() => void addToCart(pendingAddSource, variant)}
-                      className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-emerald-50/40"
-                    >
-                      <span>
-                        <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
-                        {variant.description ? <span className="mt-1 block text-xs leading-5 text-slate-500">{variant.description}</span> : null}
-                      </span>
-                      <span className="shrink-0 text-sm font-semibold text-slate-950">{formatMoney(variantPrice, money)}</span>
-                    </button>
-                  );
-                })}
+        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setVariantPickerOpen(false)}>
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]" onClick={(event) => event.stopPropagation()}>
+              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{variantLabel || "Choose an option"}</p>
+                    <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{name}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Choose the standard product as shown, or select another available option.</p>
+                  </div>
+                  <button type="button" onClick={() => setVariantPickerOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close variants">×</button>
+                </div>
               </div>
-            </div>
-            <div className="sticky bottom-0 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
-              <button type="button" onClick={() => setVariantPickerOpen(false)} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancel</button>
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12">
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => void addToCart(pendingAddSource, null, true)}
+                    className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-emerald-200 bg-emerald-50/45 px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:bg-emerald-50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-slate-950">Standard product</span>
+                      <span className="mt-1 block text-xs leading-5 text-slate-500">Add {name} exactly as shown on the menu.</span>
+                    </span>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(price, money)}</span>
+                  </button>
+                  {activeVariants.map((variant) => {
+                    const variantPrice = getVariantPrice(Number(price || 0), variant);
+                    return (
+                      <button
+                        key={variant.id}
+                        type="button"
+                        onClick={() => void addToCart(pendingAddSource, variant)}
+                        className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:border-emerald-200 hover:bg-emerald-50/40"
+                      >
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
+                          {variant.description ? <span className="mt-1 block text-xs leading-5 text-slate-500">{variant.description}</span> : null}
+                        </span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(variantPrice, money)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7">
+                <button type="button" onClick={() => setVariantPickerOpen(false)} className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100">Back to menu</button>
+              </div>
             </div>
           </div>
         </div>

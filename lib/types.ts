@@ -20,6 +20,9 @@ export type ProductVariant = {
   price?: number | null;
   priceDelta?: number | null;
   isActive: boolean;
+  stockEnabled?: boolean | null;
+  stockQuantity?: number | null;
+  lowStockThreshold?: number | null;
 };
 
 export type Product = {

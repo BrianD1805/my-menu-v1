@@ -24,6 +24,9 @@ type ProductVariant = {
   description?: string | null;
   price?: number | null;
   priceDelta?: number | null;
+  stockEnabled?: boolean | null;
+  stockQuantity?: number | null;
+  lowStockThreshold?: number | null;
   isActive: boolean;
 };
 
