@@ -151,3 +151,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Variant stock reduction is preserved because the paid order creation path now runs before the success page is allowed to clear the cart.
 - Cart clearing remains tied to a confirmed paid Orduva order, not merely a paid Stripe intent.
 - No Supabase SQL required.
+
+## Ver-0.227 — Storefront product details popup polish
+
+- Matched the desktop storefront product details popup width to the Tenant Admin edit product popup.
+- Reduced the desktop product image size so the popup looks more professional and less cramped.
+- Improved desktop spacing/layout inside the product details popup.
+- No SQL required.
