@@ -106,7 +106,28 @@ export async function GET(req: Request) {
     }
 
     if (!order && sessionId && intent?.id) {
-      const recoveredOrderId = await recoverPaidOrderFromStripeSession(sessionId, intent);
+      let recoveredOrderId: string | null = null;
+
+      try {
+        recoveredOrderId = await recoverPaidOrderFromStripeSession(sessionId, intent);
+      } catch (recoverError) {
+        console.error("Stripe checkout status recovery via Stripe session failed", recoverError);
+      }
+
+      // Fallback for the edge case where a Stripe webhook or previous status check has
+      // already marked the payment intent as paid, but the order was not linked yet.
+      // In that state we must still create the Orduva order before telling the browser
+      // to clear the cart.
+      if (!recoveredOrderId && intent.status === "paid" && !intent.order_id) {
+        recoveredOrderId = await createPaidOrderFromIntent({
+          intent,
+          sessionId,
+          paymentIntentId: intent.stripe_payment_intent_id || null,
+          paymentReference: intent.stripe_payment_intent_id || sessionId,
+          paidAt: new Date().toISOString(),
+        });
+      }
+
       if (recoveredOrderId) {
         const { data: recoveredOrder, error: recoveredOrderError } = await db
           .from("orders")

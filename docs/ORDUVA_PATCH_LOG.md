@@ -142,3 +142,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Stripe success page now clears the confirmed tenant cart and also safely clears any Orduva cart keys on the same storefront origin as a fallback.
 - Preserved Ver-0.226 paid-order recovery, variant stock reduction and paid WhatsApp wording fixes.
 - No Supabase SQL required.
+
+
+## Ver-0.226D — Stripe paid intent order recovery fix
+
+- Fixed an edge case where a Stripe payment intent could be marked `paid` before the Orduva order was created and linked.
+- Stripe checkout status now creates the missing paid order before returning a confirmed order to the success page.
+- Variant stock reduction is preserved because the paid order creation path now runs before the success page is allowed to clear the cart.
+- Cart clearing remains tied to a confirmed paid Orduva order, not merely a paid Stripe intent.
+- No Supabase SQL required.

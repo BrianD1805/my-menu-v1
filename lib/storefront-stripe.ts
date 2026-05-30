@@ -415,7 +415,7 @@ export async function createPaidOrderFromIntent(input: {
     .eq("id", input.intent.id)
     .eq("tenant_id", input.intent.tenant_id)
     .is("order_id", null)
-    .in("status", ["created", "checkout_started"])
+    .in("status", ["created", "checkout_started", "processing", "paid"])
     .select("*")
     .maybeSingle();
 
@@ -424,7 +424,11 @@ export async function createPaidOrderFromIntent(input: {
   if (!claimedIntent) {
     const latest = await loadIntentByCheckout({ checkoutId: input.intent.id, tenantId: input.intent.tenant_id });
     if (latest?.order_id) return latest.order_id as string;
-    return input.intent.order_id as string;
+
+    // If Stripe has already marked the payment intent as paid but no order has been
+    // linked yet, do not report success to the customer without creating the Orduva
+    // order. Returning an empty order id here leaves stock unreduced and the cart uncleared.
+    throw new Error("Stripe payment is paid but the Orduva order has not been created yet.");
   }
 
   input.intent = claimedIntent;
