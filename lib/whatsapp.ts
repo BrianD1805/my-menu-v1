@@ -10,6 +10,12 @@ type OrderForWhatsapp = {
   notes: string | null;
 };
 
+type PaymentForWhatsapp = {
+  label?: string | null;
+  status?: string | null;
+  reference?: string | null;
+};
+
 type OrderItemForWhatsapp = {
   product_name: string;
   quantity: number;
@@ -20,8 +26,9 @@ export function buildWhatsAppOrderMessage(args: {
   tenantName: string;
   order: OrderForWhatsapp;
   items: OrderItemForWhatsapp[];
+  payment?: PaymentForWhatsapp | null;
 } & MoneyFormatSettings) {
-  const { tenantName, order, items, ...moneySettings } = args;
+  const { tenantName, order, items, payment, ...moneySettings } = args;
   const lines: string[] = [];
   lines.push(`New order for ${tenantName}`);
   lines.push("");
@@ -38,7 +45,17 @@ export function buildWhatsAppOrderMessage(args: {
   }
   lines.push("");
   lines.push(`Total: ${formatMoney(Number(order.total), moneySettings)}`);
-  lines.push("Payment: Offline");
+  const paymentStatus = String(payment?.status || "").toLowerCase();
+  const paymentLabel = payment?.label?.trim();
+  const paymentReference = payment?.reference?.trim();
+  if (paymentStatus === "paid") {
+    lines.push(`Payment: ${paymentLabel || "Paid"}`);
+    if (paymentReference) lines.push(`Payment reference: ${paymentReference}`);
+  } else if (paymentLabel) {
+    lines.push(`Payment: ${paymentLabel}`);
+  } else {
+    lines.push("Payment: Pay on fulfilment");
+  }
   lines.push("");
   lines.push("Please confirm this order.");
   return lines.join("\n");

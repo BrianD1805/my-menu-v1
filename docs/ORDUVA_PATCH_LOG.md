@@ -110,3 +110,27 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Moved formatted description into the main product details flow.
 - Adjusted variant editor rows to wrap more comfortably in the narrower popup.
 - No Supabase SQL required.
+
+## Ver-0.226 — Stripe success recovery, paid order wording and variant payload cleanup
+
+- Stripe success page now waits for a confirmed paid order before stopping polling and clearing the cart.
+- Stripe checkout-status can recover a paid Checkout Session directly from Stripe if the webhook is delayed.
+- WhatsApp messages for paid orders now show the correct payment wording and payment reference.
+- Final-price variants no longer rely on the legacy `variant_price_delta` value for new cart/order payloads.
+- Paid provider stock reduction paths now support variant-level stock.
+- No Supabase SQL required.
+
+
+## Ver-0.226A — Stripe success timer build fix
+
+- Fixed a TypeScript build error in the Stripe success recovery client where the browser timeout handle was typed as a Node timeout.
+- Preserved the Ver-0.226 Stripe success recovery, paid order wording and variant payload cleanup behaviour.
+- No Supabase SQL required.
+
+## Ver-0.226B — Daraja paid-order reference build fix
+
+- Fixed a TypeScript build error in `lib/storefront-daraja.ts` after the Ver-0.226 paid order wording work.
+- Added the optional `paymentReference` field to the Direct M-Pesa/Daraja paid-order helper input type so the shared paid-message reference logic compiles cleanly.
+- Preserved Ver-0.226 Stripe success recovery, paid order wording, and variant payload cleanup.
+- No Supabase SQL required.
+

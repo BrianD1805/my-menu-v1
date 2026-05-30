@@ -21,6 +21,12 @@ function getVariantPrice(basePrice: number, variant: ProductVariant | null | und
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
 }
 
+function getVariantPriceDeltaForCart(basePrice: number, variant: ProductVariant | null | undefined) {
+  const explicitPrice = Number(variant?.price);
+  if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return 0;
+  return Number((getVariantPrice(basePrice, variant) - Number(basePrice || 0)).toFixed(2));
+}
+
 type Props = {
   id: string;
   name: string;
@@ -221,7 +227,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             variantId: variant?.id || null,
             variantName: variant?.name || null,
             variantLabel: variant ? (variantLabel || "Option") : null,
-            variantPriceDelta: variant ? Number((getVariantPrice(Number(price || 0), variant) - Number(price || 0)).toFixed(2)) : 0,
+            variantPriceDelta: variant ? getVariantPriceDeltaForCart(Number(price || 0), variant) : 0,
             variantPrice: variant ? Number(getVariantPrice(Number(price || 0), variant).toFixed(2)) : null,
             variantDescription: variant?.description || null,
           },

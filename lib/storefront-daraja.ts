@@ -64,6 +64,10 @@ type PendingOrderPayload = {
     unit_price: number;
     quantity: number;
     line_total: number;
+    variant_id?: string | null;
+    variant_label?: string | null;
+    variant_name?: string | null;
+    variant_price_delta?: number | null;
   }>;
 };
 
@@ -183,20 +187,49 @@ async function requestDarajaToken(settings: TenantDarajaCustomerSettings) {
 }
 
 
+function reduceVariantStock(productVariants: any[], variantId: string, quantity: number) {
+  return productVariants.map((variant: any) => {
+    if (variant?.id !== variantId || variant?.stockEnabled !== true) return variant;
+    const currentStock = Math.max(0, Math.floor(Number(variant.stockQuantity || 0)));
+    return { ...variant, stockQuantity: Math.max(0, currentStock - quantity) };
+  });
+}
+
 async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPayload["items"]) {
-  const quantityByProductId = new Map<string, number>();
+  const quantityBySellableLine = new Map<string, number>();
   for (const item of items) {
-    quantityByProductId.set(item.product_id, (quantityByProductId.get(item.product_id) || 0) + Number(item.quantity || 0));
+    const productId = String(item.product_id || "");
+    if (!productId) continue;
+    const variantId = item.variant_id ? String(item.variant_id) : "base";
+    const lineKey = `${productId}::${variantId}`;
+    quantityBySellableLine.set(lineKey, (quantityBySellableLine.get(lineKey) || 0) + Number(item.quantity || 0));
   }
 
-  for (const [productId, quantity] of quantityByProductId.entries()) {
+  for (const [lineKey, quantity] of quantityBySellableLine.entries()) {
+    const [productId, variantId] = lineKey.split("::");
     const { data: product, error } = await db
       .from("products")
-      .select("id, stock_enabled, stock_quantity")
+      .select("id, stock_enabled, stock_quantity, product_variants")
       .eq("id", productId)
       .eq("tenant_id", tenantId)
       .maybeSingle();
-    if (error || !product?.stock_enabled) continue;
+    if (error || !product) continue;
+
+    if (variantId && variantId !== "base") {
+      const variants = Array.isArray(product.product_variants) ? product.product_variants : [];
+      const selectedVariant = variants.find((variant: any) => variant?.id === variantId);
+      if (!selectedVariant?.stockEnabled) continue;
+      const nextVariants = reduceVariantStock(variants, variantId, quantity);
+      const { error: stockError } = await db
+        .from("products")
+        .update({ product_variants: nextVariants })
+        .eq("id", product.id)
+        .eq("tenant_id", tenantId);
+      if (stockError) console.error("Failed to reduce variant stock after Daraja payment", stockError);
+      continue;
+    }
+
+    if (!product.stock_enabled) continue;
     const nextStock = Math.max(0, Number(product.stock_quantity || 0) - quantity);
     const { error: stockError } = await db
       .from("products")
@@ -339,7 +372,7 @@ export async function loadDarajaIntentByCheckout(input: { checkoutId?: string | 
   return data as Record<string, any> | null;
 }
 
-export async function createPaidOrderFromDarajaIntent(input: { intent: Record<string, any>; paidAt?: string | null }) {
+export async function createPaidOrderFromDarajaIntent(input: { intent: Record<string, any>; paymentReference?: string | null; paidAt?: string | null }) {
   if (!input.intent?.id) throw new Error("Missing direct M-Pesa checkout intent.");
   if (input.intent.order_id) return input.intent.order_id as string;
 
@@ -427,6 +460,11 @@ export async function createPaidOrderFromDarajaIntent(input: { intent: Record<st
     order,
     ...branding,
     items: payload.items.map((item) => ({ product_name: item.product_name, quantity: item.quantity, line_total: item.line_total })),
+    payment: {
+      label: payload.paymentMethodLabel || "Paid by M-Pesa",
+      status: "paid",
+      reference: input.paymentReference || input.intent.daraja_mpesa_receipt_number || input.intent.daraja_checkout_request_id || null,
+    },
   });
 
   await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);

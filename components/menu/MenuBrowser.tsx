@@ -33,6 +33,12 @@ function getVariantPrice(basePrice: number, variant: ProductVariant | null | und
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
 }
 
+function getVariantPriceDeltaForCart(basePrice: number, variant: ProductVariant | null | undefined) {
+  const explicitPrice = Number(variant?.price);
+  if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return 0;
+  return Number((getVariantPrice(basePrice, variant) - Number(basePrice || 0)).toFixed(2));
+}
+
 function variantStockState(product: Product | undefined, variant: ProductVariant | null | undefined) {
   if (variant) {
     const tracked = variant.stockEnabled === true;
@@ -1081,7 +1087,7 @@ export default function MenuBrowser({
             variantId: variant?.id || null,
             variantName: variant?.name || null,
             variantLabel: variant ? (product?.variant_label || "Option") : null,
-            variantPriceDelta: variant && product ? Number((getVariantPrice(Number(product.price || 0), variant) - Number(product.price || 0)).toFixed(2)) : 0,
+            variantPriceDelta: variant && product ? getVariantPriceDeltaForCart(Number(product.price || 0), variant) : 0,
             variantPrice: variant && product ? Number(getVariantPrice(Number(product.price || 0), variant).toFixed(2)) : null,
             variantDescription: variant?.description || null,
             variantStockEnabled: variant ? variant.stockEnabled === true : !!product?.stock_enabled,

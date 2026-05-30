@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { createPaidOrderFromIntent, loadTenantStripeCustomerSettings } from "@/lib/storefront-stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,39 @@ function buildStoreUrl(tenantSlug: string, path = "/") {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   if (!tenantSlug) return cleanPath;
   return `https://${tenantSlug}.orduva.com${cleanPath}`;
+}
+
+async function recoverPaidOrderFromStripeSession(sessionId: string, intent: Record<string, any> | null) {
+  if (!sessionId || !intent?.id || !intent?.tenant_id || intent?.order_id) return null;
+
+  const stripeSettings = await loadTenantStripeCustomerSettings(String(intent.tenant_id));
+  const secretKey = stripeSettings?.stripe_customer_secret_key?.trim();
+  if (!secretKey) return null;
+
+  const response = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
+    cache: "no-store",
+  });
+  const session = await response.json().catch(() => null) as {
+    id?: string;
+    status?: string;
+    payment_status?: string;
+    payment_intent?: string | null;
+    error?: { message?: string };
+  } | null;
+
+  if (!response.ok || !session) return null;
+
+  const isPaid = session.payment_status === "paid" || session.status === "complete";
+  if (!isPaid) return null;
+
+  return createPaidOrderFromIntent({
+    intent,
+    sessionId: session.id || sessionId,
+    paymentIntentId: first(typeof session.payment_intent === "string" ? session.payment_intent : null),
+    paymentReference: first(typeof session.payment_intent === "string" ? session.payment_intent : null) || session.id || sessionId,
+    paidAt: new Date().toISOString(),
+  });
 }
 
 export async function GET(req: Request) {
@@ -56,6 +90,19 @@ export async function GET(req: Request) {
         .maybeSingle();
       if (orderError) throw orderError;
       order = orderData || null;
+    }
+
+    if (!order && sessionId && intent?.id) {
+      const recoveredOrderId = await recoverPaidOrderFromStripeSession(sessionId, intent);
+      if (recoveredOrderId) {
+        const { data: recoveredOrder, error: recoveredOrderError } = await db
+          .from("orders")
+          .select("id,total,payment_status,payment_method_label,created_at")
+          .eq("id", recoveredOrderId)
+          .maybeSingle();
+        if (recoveredOrderError) throw recoveredOrderError;
+        order = recoveredOrder || null;
+      }
     }
 
     const tenantSlug = readPayloadTenantSlug(intent?.order_payload);

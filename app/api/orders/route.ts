@@ -22,6 +22,14 @@ function getVariantPrice(basePrice: number, variant: any) {
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
 }
 
+function getVariantPriceDeltaForStorage(basePrice: number, variant: any, unitPrice: number) {
+  // Ver-0.226: variants now use final selling prices. Keep the legacy column only for old
+  // +/- variants that do not yet have an explicit final price.
+  const explicitPrice = Number(variant?.price);
+  if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return 0;
+  return Number((Number(unitPrice || 0) - Number(basePrice || 0)).toFixed(2));
+}
+
 function getVariantStockState(product: any, variant: any | null) {
   if (variant) {
     const tracked = variant?.stockEnabled === true;
@@ -177,8 +185,9 @@ export async function POST(req: Request) {
 
       const variantLabel = selectedVariant ? String(product.variant_label || "Option") : null;
       const variantName = selectedVariant ? String((selectedVariant as any).name || "").trim() : null;
-      const unitPrice = selectedVariant ? getVariantPrice(Number(product.price || 0), selectedVariant) : Number(product.price || 0);
-      const variantPriceDelta = selectedVariant ? unitPrice - Number(product.price || 0) : 0;
+      const basePrice = Number(product.price || 0);
+      const unitPrice = selectedVariant ? getVariantPrice(basePrice, selectedVariant) : basePrice;
+      const variantPriceDelta = selectedVariant ? getVariantPriceDeltaForStorage(basePrice, selectedVariant, unitPrice) : 0;
       const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
       const displayName = variantName ? `${product.name} (${variantLabel}: ${variantName})` : product.name;
@@ -550,6 +559,11 @@ export async function POST(req: Request) {
         quantity: item.quantity,
         line_total: item.line_total,
       })),
+      payment: {
+        label: selectedPayment.label,
+        status: selectedPayment.online ? "pending" : "pay_on_fulfilment",
+        reference: null,
+      },
     });
 
     const whatsappUrl = buildWhatsAppUrl(tenant.whatsapp_number, message);

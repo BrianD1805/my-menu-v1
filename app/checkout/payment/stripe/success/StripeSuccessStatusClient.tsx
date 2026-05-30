@@ -39,7 +39,7 @@ export default function StripeSuccessStatusClient({ sessionId }: { sessionId: st
         if (response.ok && data) {
           setStatus(data);
           setAttempts(nextAttempt);
-          if (data.paid && data.tenantSlug) {
+          if (data.paid && data.order && data.tenantSlug) {
             try {
               window.localStorage.removeItem(cartKey(data.tenantSlug));
               window.dispatchEvent(new CustomEvent("orduva:cart-updated", { detail: { tenantSlug: data.tenantSlug, items: [] } }));
@@ -53,8 +53,8 @@ export default function StripeSuccessStatusClient({ sessionId }: { sessionId: st
         if (!cancelled) setAttempts(nextAttempt);
       }
 
-      if (!cancelled && nextAttempt < 10) {
-        timer = window.setTimeout(() => void loadStatus(nextAttempt + 1), nextAttempt < 4 ? 1500 : 3000);
+      if (!cancelled && nextAttempt < 25) {
+        timer = window.setTimeout(() => void loadStatus(nextAttempt + 1), nextAttempt < 4 ? 1500 : nextAttempt < 12 ? 3000 : 5000);
       }
     }
 
@@ -72,9 +72,11 @@ export default function StripeSuccessStatusClient({ sessionId }: { sessionId: st
 
   const confirmationCopy = useMemo(() => {
     if (paid) return "Your paid order has been created and sent to the store.";
-    if (attempts >= 10) return "Stripe has received the payment, but Orduva is still waiting for the final confirmation event. The order should appear shortly. Please do not pay again unless the store asks you to.";
-    return "Stripe has received the payment. Orduva is creating your paid order now. This normally takes a few seconds.";
-  }, [attempts, paid]);
+    if (status?.paid && !status.order) return "Stripe has received the payment. Orduva is finishing the order confirmation now. Please do not pay again.";
+    if (attempts >= 25) return "Stripe may still be confirming this payment. Please do not pay again. If money has left your account, the store can trace it from the payment reference.";
+    if (attempts >= 10) return "This is taking longer than usual, but Orduva is still checking the paid order. Please do not refresh or pay again.";
+    return "Stripe is returning your payment result. Orduva is creating your paid order now. This normally takes a few seconds.";
+  }, [attempts, paid, status?.order, status?.paid]);
 
   return (
     <div className="px-6 py-6 sm:px-8 sm:py-8">
