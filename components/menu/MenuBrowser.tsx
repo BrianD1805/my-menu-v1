@@ -1,13 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import CartButton from "@/components/menu/CartButton";
 import CustomerAccountHeaderActions from "@/components/account/CustomerAccountHeaderActions";
 import ProductCard from "@/components/menu/ProductCard";
-import { StoredCartItem, cartLineKey, readCart, subscribeToCartUpdates, writeCart } from "@/lib/cart";
-import { buildMoneySettings, formatMoney, type MoneyFormatSettings } from "@/lib/money";
-import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
-import { getApplicableDiscounts, normalizeDiscountRules, type DiscountRule } from "@/lib/discounts";
+import {
+  StoredCartItem,
+  cartLineKey,
+  readCart,
+  subscribeToCartUpdates,
+  writeCart,
+} from "@/lib/cart";
+import {
+  buildMoneySettings,
+  formatMoney,
+  type MoneyFormatSettings,
+} from "@/lib/money";
+import {
+  normalizeThemeColor,
+  type StorefrontTheme,
+} from "@/lib/storefront-theme";
+import {
+  getApplicableDiscounts,
+  normalizeDiscountRules,
+  type DiscountRule,
+} from "@/lib/discounts";
 
 type Category = {
   id: string;
@@ -26,36 +50,78 @@ type ProductVariant = {
   isActive: boolean;
 };
 
-function getVariantPrice(basePrice: number, variant: ProductVariant | null | undefined) {
+function getVariantPrice(
+  basePrice: number,
+  variant: ProductVariant | null | undefined,
+) {
   const explicitPrice = Number(variant?.price);
-  if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
+  if (Number.isFinite(explicitPrice) && explicitPrice >= 0)
+    return explicitPrice;
   const legacyDelta = Number(variant?.priceDelta);
-  return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
+  return Math.max(
+    0,
+    Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0),
+  );
 }
 
-function getVariantPriceDeltaForCart(basePrice: number, variant: ProductVariant | null | undefined) {
+function getVariantPriceDeltaForCart(
+  basePrice: number,
+  variant: ProductVariant | null | undefined,
+) {
   const explicitPrice = Number(variant?.price);
   if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return 0;
-  return Number((getVariantPrice(basePrice, variant) - Number(basePrice || 0)).toFixed(2));
+  return Number(
+    (getVariantPrice(basePrice, variant) - Number(basePrice || 0)).toFixed(2),
+  );
 }
 
-function variantStockState(product: Product | undefined, variant: ProductVariant | null | undefined) {
+function variantStockState(
+  product: Product | undefined,
+  variant: ProductVariant | null | undefined,
+) {
   if (variant) {
     const tracked = variant.stockEnabled === true;
-    const available = Math.max(0, Math.floor(Number(variant.stockQuantity || 0)));
-    const threshold = Math.max(0, Math.floor(Number(variant.lowStockThreshold ?? product?.low_stock_threshold ?? 5)));
-    return { tracked, available, threshold, outOfStock: tracked && available <= 0, lowStock: tracked && available > 0 && available <= threshold };
+    const available = Math.max(
+      0,
+      Math.floor(Number(variant.stockQuantity || 0)),
+    );
+    const threshold = Math.max(
+      0,
+      Math.floor(
+        Number(variant.lowStockThreshold ?? product?.low_stock_threshold ?? 5),
+      ),
+    );
+    return {
+      tracked,
+      available,
+      threshold,
+      outOfStock: tracked && available <= 0,
+      lowStock: tracked && available > 0 && available <= threshold,
+    };
   }
 
   const tracked = !!product?.stock_enabled;
-  const available = Math.max(0, Math.floor(Number(product?.stock_quantity || 0)));
-  const threshold = Math.max(0, Math.floor(Number(product?.low_stock_threshold || 5)));
-  return { tracked, available, threshold, outOfStock: tracked && available <= 0, lowStock: tracked && available > 0 && available <= threshold };
+  const available = Math.max(
+    0,
+    Math.floor(Number(product?.stock_quantity || 0)),
+  );
+  const threshold = Math.max(
+    0,
+    Math.floor(Number(product?.low_stock_threshold || 5)),
+  );
+  return {
+    tracked,
+    available,
+    threshold,
+    outOfStock: tracked && available <= 0,
+    lowStock: tracked && available > 0 && available <= threshold,
+  };
 }
 
 type Product = {
   id: string;
   category_id: string;
+  secondary_category_id?: string | null;
   name: string;
   description: string | null;
   image_url: string | null;
@@ -70,37 +136,64 @@ type Product = {
 
 function hexToRgb(hex: string) {
   const clean = hex.replace("#", "");
-  return { r: parseInt(clean.slice(0, 2), 16), g: parseInt(clean.slice(2, 4), 16), b: parseInt(clean.slice(4, 6), 16) };
+  return {
+    r: parseInt(clean.slice(0, 2), 16),
+    g: parseInt(clean.slice(2, 4), 16),
+    b: parseInt(clean.slice(4, 6), 16),
+  };
 }
 
 function rgbToHex(r: number, g: number, b: number) {
-  return `#${[r, g, b].map((value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, "0")).join("")}`.toUpperCase();
+  return `#${[r, g, b]
+    .map((value) =>
+      Math.max(0, Math.min(255, Math.round(value)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`.toUpperCase();
 }
 
 function blendHex(from: string, to = "#FFFFFF", amount = 0.7) {
   const start = hexToRgb(normalizeThemeColor(from, "#FFFFFF"));
   const end = hexToRgb(normalizeThemeColor(to, "#FFFFFF"));
-  return rgbToHex(start.r + (end.r - start.r) * amount, start.g + (end.g - start.g) * amount, start.b + (end.b - start.b) * amount);
+  return rgbToHex(
+    start.r + (end.r - start.r) * amount,
+    start.g + (end.g - start.g) * amount,
+    start.b + (end.b - start.b) * amount,
+  );
 }
 
 function relativeLuminance(hex: string) {
   const { r, g, b } = hexToRgb(normalizeThemeColor(hex, "#FFFFFF"));
   const transform = (value: number) => {
     const channel = value / 255;
-    return channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+    return channel <= 0.03928
+      ? channel / 12.92
+      : Math.pow((channel + 0.055) / 1.055, 2.4);
   };
   return 0.2126 * transform(r) + 0.7152 * transform(g) + 0.0722 * transform(b);
 }
 
-function readableTextFor(background: string, preferred: string, darkFallback = "#0F172A", lightFallback = "#FFFFFF") {
+function readableTextFor(
+  background: string,
+  preferred: string,
+  darkFallback = "#0F172A",
+  lightFallback = "#FFFFFF",
+) {
   const bgLum = relativeLuminance(background);
   const preferredLum = relativeLuminance(preferred);
-  const ratio = (Math.max(bgLum, preferredLum) + 0.05) / (Math.min(bgLum, preferredLum) + 0.05);
+  const ratio =
+    (Math.max(bgLum, preferredLum) + 0.05) /
+    (Math.min(bgLum, preferredLum) + 0.05);
   if (ratio >= 4.2) return preferred;
   return bgLum > 0.55 ? darkFallback : lightFallback;
 }
 
-function softerPanelColor(value: unknown, fallback: string, blendAmount = 0.76) {
+function softerPanelColor(
+  value: unknown,
+  fallback: string,
+  blendAmount = 0.76,
+) {
   return blendHex(normalizeThemeColor(value, fallback), "#FFFFFF", blendAmount);
 }
 
@@ -112,44 +205,127 @@ type FavouriteProductStripCardProps = {
   isBusy: boolean;
   themeColors?: StorefrontTheme | null;
   stripKind?: "favourite" | "buyAgain";
-  onAddToCart: (productId: string, options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null }) => void;
+  onAddToCart: (
+    productId: string,
+    options?: {
+      sourceRect?: DOMRect | null;
+      imageUrl?: string | null;
+      name?: string;
+      targetRect?: DOMRect | null;
+    },
+  ) => void;
   onRemoveFavourite?: (productId: string) => void;
 };
 
-function FavouriteProductStripCard({ product, moneySettings, accentColor, primaryColor, isBusy, themeColors, stripKind = "favourite", onAddToCart, onRemoveFavourite }: FavouriteProductStripCardProps) {
+function FavouriteProductStripCard({
+  product,
+  moneySettings,
+  accentColor,
+  primaryColor,
+  isBusy,
+  themeColors,
+  stripKind = "favourite",
+  onAddToCart,
+  onRemoveFavourite,
+}: FavouriteProductStripCardProps) {
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
   const money = buildMoneySettings(moneySettings);
-  const favouriteCardBackground = normalizeThemeColor(themeColors?.favouritesCardBackground, "#FFFFFF");
-  const favouriteCardBorder = normalizeThemeColor(themeColors?.favouritesCardBorder, "#FCD34D");
-  const favouriteCardShadow = normalizeThemeColor(themeColors?.favouritesCardShadow, accentColor);
-  const favouriteCardShadowEnabled = themeColors?.favouritesCardShadowEnabled !== false;
-  const favouriteCardTitle = normalizeThemeColor(themeColors?.favouritesCardTitle, "#0F172A");
-  const favouritePriceBackground = normalizeThemeColor(themeColors?.favouritesPriceBackground, "#FFFFFF");
-  const favouritePriceBorder = normalizeThemeColor(themeColors?.favouritesPriceBorder, accentColor);
-  const favouritePriceText = normalizeThemeColor(themeColors?.favouritesPriceText, primaryColor);
-  const favouriteAddBackground = normalizeThemeColor(themeColors?.favouritesAddBackground, primaryColor);
-  const favouriteAddBorder = normalizeThemeColor(themeColors?.favouritesAddBorder, accentColor);
-  const favouriteAddText = normalizeThemeColor(themeColors?.favouritesAddText, "#FFFFFF");
-  const favouriteRemoveBackground = normalizeThemeColor(themeColors?.favouritesRemoveBackground, "#FFFFFF");
-  const favouriteRemoveText = normalizeThemeColor(themeColors?.favouritesRemoveText, accentColor);
-  const favouriteSwipeText = normalizeThemeColor(themeColors?.favouritesSwipeText, accentColor);
+  const favouriteCardBackground = normalizeThemeColor(
+    themeColors?.favouritesCardBackground,
+    "#FFFFFF",
+  );
+  const favouriteCardBorder = normalizeThemeColor(
+    themeColors?.favouritesCardBorder,
+    "#FCD34D",
+  );
+  const favouriteCardShadow = normalizeThemeColor(
+    themeColors?.favouritesCardShadow,
+    accentColor,
+  );
+  const favouriteCardShadowEnabled =
+    themeColors?.favouritesCardShadowEnabled !== false;
+  const favouriteCardTitle = normalizeThemeColor(
+    themeColors?.favouritesCardTitle,
+    "#0F172A",
+  );
+  const favouritePriceBackground = normalizeThemeColor(
+    themeColors?.favouritesPriceBackground,
+    "#FFFFFF",
+  );
+  const favouritePriceBorder = normalizeThemeColor(
+    themeColors?.favouritesPriceBorder,
+    accentColor,
+  );
+  const favouritePriceText = normalizeThemeColor(
+    themeColors?.favouritesPriceText,
+    primaryColor,
+  );
+  const favouriteAddBackground = normalizeThemeColor(
+    themeColors?.favouritesAddBackground,
+    primaryColor,
+  );
+  const favouriteAddBorder = normalizeThemeColor(
+    themeColors?.favouritesAddBorder,
+    accentColor,
+  );
+  const favouriteAddText = normalizeThemeColor(
+    themeColors?.favouritesAddText,
+    "#FFFFFF",
+  );
+  const favouriteRemoveBackground = normalizeThemeColor(
+    themeColors?.favouritesRemoveBackground,
+    "#FFFFFF",
+  );
+  const favouriteRemoveText = normalizeThemeColor(
+    themeColors?.favouritesRemoveText,
+    accentColor,
+  );
+  const favouriteSwipeText = normalizeThemeColor(
+    themeColors?.favouritesSwipeText,
+    accentColor,
+  );
   const stripIsBuyAgain = stripKind === "buyAgain";
   const stripPillIcon = stripIsBuyAgain ? "↻" : "♥";
   const stripPillLabel = stripIsBuyAgain ? "Buy again" : "Favourite";
-  const stripSwipeLabel = stripIsBuyAgain ? "Swipe to view previous buys" : "Swipe to view all favourites";
+  const stripSwipeLabel = stripIsBuyAgain
+    ? "Swipe to view previous buys"
+    : "Swipe to view all favourites";
   const trackedStock = !!product.stock_enabled;
   const availableStock = Math.max(0, Number(product.stock_quantity || 0));
-  const lowStockThreshold = Math.max(0, Number(product.low_stock_threshold || 5));
+  const lowStockThreshold = Math.max(
+    0,
+    Number(product.low_stock_threshold || 5),
+  );
   const isOutOfStock = trackedStock && availableStock <= 0;
-  const isLowStock = trackedStock && availableStock > 0 && availableStock <= lowStockThreshold;
-  const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
+  const isLowStock =
+    trackedStock && availableStock > 0 && availableStock <= lowStockThreshold;
+  const stockRibbonLabel = isOutOfStock
+    ? "Out of stock"
+    : isLowStock
+      ? `Only ${availableStock} left`
+      : null;
 
   return (
-    <article className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 ring-1 ring-white/80 sm:w-[248px]" style={{ backgroundColor: favouriteCardBackground, borderColor: favouriteCardBorder, boxShadow: favouriteCardShadowEnabled ? `0 8px 18px ${favouriteCardShadow}14` : "none" }}>
+    <article
+      className="relative flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border p-3 ring-1 ring-white/80 sm:w-[248px]"
+      style={{
+        backgroundColor: favouriteCardBackground,
+        borderColor: favouriteCardBorder,
+        boxShadow: favouriteCardShadowEnabled
+          ? `0 8px 18px ${favouriteCardShadow}14`
+          : "none",
+      }}
+    >
       <div className="pointer-events-none absolute -right-11 -top-11 h-24 w-24 rounded-full bg-amber-300/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-12 -left-10 h-28 w-28 rounded-full bg-rose-300/8 blur-3xl" />
       <div className="relative z-10 flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full border bg-white/85 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] shadow-sm" style={{ borderColor: favouritePriceBorder, color: favouriteSwipeText }}>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full border bg-white/85 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] shadow-sm"
+          style={{
+            borderColor: favouritePriceBorder,
+            color: favouriteSwipeText,
+          }}
+        >
           <span aria-hidden="true">{stripPillIcon}</span>
           {stripPillLabel}
         </span>
@@ -159,14 +335,30 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
             onClick={() => onRemoveFavourite(product.id)}
             disabled={isBusy}
             className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/80 shadow-[0_8px_18px_rgba(120,53,15,0.12)] transition hover:-translate-y-[1px] disabled:cursor-wait disabled:opacity-70"
-            style={{ backgroundColor: favouriteRemoveBackground, color: favouriteRemoveText }}
+            style={{
+              backgroundColor: favouriteRemoveBackground,
+              color: favouriteRemoveText,
+            }}
             aria-label={`Remove ${product.name} from favourites`}
             title="Remove favourite"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
+            </svg>
           </button>
         ) : (
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/70 bg-white/80 text-base font-black shadow-[0_8px_18px_rgba(120,53,15,0.10)]" style={{ color: favouriteSwipeText }} aria-hidden="true">↻</span>
+          <span
+            className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/70 bg-white/80 text-base font-black shadow-[0_8px_18px_rgba(120,53,15,0.10)]"
+            style={{ color: favouriteSwipeText }}
+            aria-hidden="true"
+          >
+            ↻
+          </span>
         )}
       </div>
 
@@ -174,35 +366,88 @@ function FavouriteProductStripCard({ product, moneySettings, accentColor, primar
         {stockRibbonLabel ? (
           <div
             className="pointer-events-none absolute left-[10px] top-[20px] z-20 inline-flex max-w-[102px] -rotate-[16deg] items-center justify-center whitespace-nowrap rounded-full border px-2.5 py-[5px] text-center text-[7.5px] font-semibold uppercase tracking-[0.07em] shadow-[0_10px_22px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[11px] sm:top-[21px]"
-            style={isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
+            style={
+              isOutOfStock
+                ? {
+                    backgroundColor: "rgba(255,255,255,0.94)",
+                    borderColor: "#FECACA",
+                    color: "#B91C1C",
+                  }
+                : {
+                    backgroundColor: "rgba(255,255,255,0.94)",
+                    borderColor: "#FED7AA",
+                    color: "#C2410C",
+                  }
+            }
           >
             {stockRibbonLabel}
           </div>
         ) : null}
-        <div ref={imageFrameRef} className="aspect-[1.25/1] w-full overflow-hidden rounded-[20px] border border-white/80 shadow-[0_13px_30px_rgba(15,23,42,0.10)]" style={{ backgroundColor: favouritePriceBackground }}>
+        <div
+          ref={imageFrameRef}
+          className="aspect-[1.25/1] w-full overflow-hidden rounded-[20px] border border-white/80 shadow-[0_13px_30px_rgba(15,23,42,0.10)]"
+          style={{ backgroundColor: favouritePriceBackground }}
+        >
           {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-3" loading="lazy" />
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="h-full w-full object-contain p-3"
+              loading="lazy"
+            />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 via-white to-slate-100 text-3xl">📦</div>
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber-50 via-white to-slate-100 text-3xl">
+              📦
+            </div>
           )}
         </div>
       </div>
 
       <div className="relative z-10 mt-3 flex flex-1 flex-col text-center">
-        <h3 className="mx-auto line-clamp-2 text-[0.94rem] font-semibold leading-tight tracking-tight" style={{ color: favouriteCardTitle }}>{product.name}</h3>
+        <h3
+          className="mx-auto line-clamp-2 text-[0.94rem] font-semibold leading-tight tracking-tight"
+          style={{ color: favouriteCardTitle }}
+        >
+          {product.name}
+        </h3>
         <div className="mt-3 flex items-center justify-center gap-2">
-          <span className="rounded-xl border px-2.5 py-1.5 text-xs font-semibold shadow-sm" style={{ backgroundColor: favouritePriceBackground, borderColor: favouritePriceBorder, color: favouritePriceText }}>{formatMoney(Number(product.price), money)}</span>
+          <span
+            className="rounded-xl border px-2.5 py-1.5 text-xs font-semibold shadow-sm"
+            style={{
+              backgroundColor: favouritePriceBackground,
+              borderColor: favouritePriceBorder,
+              color: favouritePriceText,
+            }}
+          >
+            {formatMoney(Number(product.price), money)}
+          </span>
           <button
             type="button"
-            onClick={() => onAddToCart(product.id, { sourceRect: imageFrameRef.current?.getBoundingClientRect() || null, imageUrl: product.image_url, name: product.name })}
+            onClick={() =>
+              onAddToCart(product.id, {
+                sourceRect:
+                  imageFrameRef.current?.getBoundingClientRect() || null,
+                imageUrl: product.image_url,
+                name: product.name,
+              })
+            }
             disabled={isOutOfStock}
             className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-65"
-            style={{ backgroundColor: favouriteAddBackground, borderColor: favouriteAddBorder, color: favouriteAddText }}
+            style={{
+              backgroundColor: favouriteAddBackground,
+              borderColor: favouriteAddBorder,
+              color: favouriteAddText,
+            }}
           >
             {isOutOfStock ? "Sold out" : "Add"}
           </button>
         </div>
-        <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: favouriteSwipeText }}>{stripSwipeLabel}</p>
+        <p
+          className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]"
+          style={{ color: favouriteSwipeText }}
+        >
+          {stripSwipeLabel}
+        </p>
       </div>
     </article>
   );
@@ -247,7 +492,9 @@ function iconLinkClass() {
 }
 
 function cleanDialString(value: string | null | undefined) {
-  return String(value || "").replace(/[^+\d]/g, "").replace(/(?!^)\+/g, "");
+  return String(value || "")
+    .replace(/[^+\d]/g, "")
+    .replace(/(?!^)\+/g, "");
 }
 
 function cleanWhatsAppNumber(value: string | null | undefined) {
@@ -261,10 +508,25 @@ function normaliseExternalUrl(value: string | null | undefined) {
   return `https://${text}`;
 }
 
-function FooterIcon({ label, href, children }: { label: string; href: string | null; children: ReactNode }) {
+function FooterIcon({
+  label,
+  href,
+  children,
+}: {
+  label: string;
+  href: string | null;
+  children: ReactNode;
+}) {
   if (!href) return null;
   return (
-    <a href={href} className={iconLinkClass()} aria-label={label} title={label} target={href.startsWith("http") ? "_blank" : undefined} rel={href.startsWith("http") ? "noopener noreferrer" : undefined}>
+    <a
+      href={href}
+      className={iconLinkClass()}
+      aria-label={label}
+      title={label}
+      target={href.startsWith("http") ? "_blank" : undefined}
+      rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+    >
       <span className="sr-only">{label}</span>
       {children}
     </a>
@@ -272,28 +534,122 @@ function FooterIcon({ label, href, children }: { label: string; href: string | n
 }
 
 function PhoneIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.1 5.18 2 2 0 0 1 5.11 3h3a2 2 0 0 1 2 1.72c.12.9.32 1.77.59 2.61a2 2 0 0 1-.45 2.11L9 10.69a16 16 0 0 0 4.31 4.31l1.25-1.25a2 2 0 0 1 2.11-.45c.84.27 1.71.47 2.61.59A2 2 0 0 1 22 16.92z" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.1 5.18 2 2 0 0 1 5.11 3h3a2 2 0 0 1 2 1.72c.12.9.32 1.77.59 2.61a2 2 0 0 1-.45 2.11L9 10.69a16 16 0 0 0 4.31 4.31l1.25-1.25a2 2 0 0 1 2.11-.45c.84.27 1.71.47 2.61.59A2 2 0 0 1 22 16.92z" />
+    </svg>
+  );
 }
 function WhatsAppIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M12.04 2a9.86 9.86 0 0 0-8.5 14.86L2.5 22l5.29-1a9.9 9.9 0 1 0 4.25-19Zm0 17.9a8.02 8.02 0 0 1-4.08-1.12l-.29-.17-3.14.6.61-3.05-.19-.31a7.98 7.98 0 1 1 7.09 4.05Zm4.39-5.99c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.19-.47-.39-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.39 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="currentColor"
+    >
+      <path d="M12.04 2a9.86 9.86 0 0 0-8.5 14.86L2.5 22l5.29-1a9.9 9.9 0 1 0 4.25-19Zm0 17.9a8.02 8.02 0 0 1-4.08-1.12l-.29-.17-3.14.6.61-3.05-.19-.31a7.98 7.98 0 1 1 7.09 4.05Zm4.39-5.99c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.19-.47-.39-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.39 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28Z" />
+    </svg>
+  );
 }
 function EmailIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
 }
 function FacebookIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M14.2 8.4V6.7c0-.8.5-1 1-1h1.6V3.1A21.6 21.6 0 0 0 14.4 3c-2.4 0-4 1.5-4 4.1v1.3H7.7v3h2.7V21h3.3v-9.6h2.7l.4-3h-3.1Z" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="currentColor"
+    >
+      <path d="M14.2 8.4V6.7c0-.8.5-1 1-1h1.6V3.1A21.6 21.6 0 0 0 14.4 3c-2.4 0-4 1.5-4 4.1v1.3H7.7v3h2.7V21h3.3v-9.6h2.7l.4-3h-3.1Z" />
+    </svg>
+  );
 }
 function InstagramIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="4" /><circle cx="12" cy="12" r="3.25" /><circle cx="17.3" cy="6.7" r=".65" fill="currentColor" stroke="none" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="4" width="16" height="16" rx="4" />
+      <circle cx="12" cy="12" r="3.25" />
+      <circle cx="17.3" cy="6.7" r=".65" fill="currentColor" stroke="none" />
+    </svg>
+  );
 }
 function TikTokIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M14.6 3h2.8c.2 1.3.8 2.4 1.7 3.2.8.8 1.8 1.3 3 1.5v2.9a8.4 8.4 0 0 1-4.6-1.5v5.9c0 3.5-2.5 6-5.9 6A5.6 5.6 0 0 1 6 15.4c0-3.3 2.5-5.7 5.7-5.7.4 0 .8 0 1.1.1v3a3.5 3.5 0 0 0-1.1-.2 2.7 2.7 0 1 0 2.8 2.7V3Z" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="currentColor"
+    >
+      <path d="M14.6 3h2.8c.2 1.3.8 2.4 1.7 3.2.8.8 1.8 1.3 3 1.5v2.9a8.4 8.4 0 0 1-4.6-1.5v5.9c0 3.5-2.5 6-5.9 6A5.6 5.6 0 0 1 6 15.4c0-3.3 2.5-5.7 5.7-5.7.4 0 .8 0 1.1.1v3a3.5 3.5 0 0 0-1.1-.2 2.7 2.7 0 1 0 2.8 2.7V3Z" />
+    </svg>
+  );
 }
 function XIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="currentColor"><path d="M13.8 10.5 21 3h-1.7l-6.2 6.4L8.1 3H2.4l7.6 9.8L2.4 21h1.7l6.6-7 5.3 7h5.7l-7.9-10.5Zm-2.4 2.4-.8-1L4.5 4.3h2.8l4.9 6.1.8 1 6.4 8.2h-2.8l-5.2-6.7Z" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="currentColor"
+    >
+      <path d="M13.8 10.5 21 3h-1.7l-6.2 6.4L8.1 3H2.4l7.6 9.8L2.4 21h1.7l6.6-7 5.3 7h5.7l-7.9-10.5Zm-2.4 2.4-.8-1L4.5 4.3h2.8l4.9 6.1.8 1 6.4 8.2h-2.8l-5.2-6.7Z" />
+    </svg>
+  );
 }
 function WebsiteIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a13.7 13.7 0 0 1 0 18" /><path d="M12 3a13.7 13.7 0 0 0 0 18" /></svg>;
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[23px] w-[23px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a13.7 13.7 0 0 1 0 18" />
+      <path d="M12 3a13.7 13.7 0 0 0 0 18" />
+    </svg>
+  );
 }
 
 function getRewardTierPalette(name: string) {
@@ -334,15 +690,38 @@ function getRewardTierPalette(name: string) {
   };
 }
 
-function RewardInfoRow({ name, spend, discount }: { name: string; spend: string; discount: number }) {
+function RewardInfoRow({
+  name,
+  spend,
+  discount,
+}: {
+  name: string;
+  spend: string;
+  discount: number;
+}) {
   const palette = getRewardTierPalette(name);
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm" style={{ backgroundColor: palette.background, borderColor: palette.border, color: palette.text }}>
+    <div
+      className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm"
+      style={{
+        backgroundColor: palette.background,
+        borderColor: palette.border,
+        color: palette.text,
+      }}
+    >
       <span>
         <span className="block font-black">{name}</span>
         <span className="mt-0.5 block text-xs opacity-75">{spend}</span>
       </span>
-      <span className="rounded-full px-3 py-1 text-xs font-black" style={{ backgroundColor: palette.badgeBackground, color: palette.badgeText }}>{discount}% off</span>
+      <span
+        className="rounded-full px-3 py-1 text-xs font-black"
+        style={{
+          backgroundColor: palette.badgeBackground,
+          color: palette.badgeText,
+        }}
+      >
+        {discount}% off
+      </span>
     </div>
   );
 }
@@ -390,15 +769,35 @@ function StorefrontQuickActionButton({
       aria-controls={controls}
     >
       <span
-        className={isWide ? "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] shadow-sm transition group-hover:scale-[1.03]" : "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-[1.03]"}
+        className={
+          isWide
+            ? "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] shadow-sm transition group-hover:scale-[1.03]"
+            : "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl shadow-sm transition group-hover:scale-[1.03]"
+        }
         style={{ backgroundColor: iconBackground, color: iconTextColor }}
         aria-hidden="true"
       >
         {icon}
       </span>
       <span className={isWide ? "min-w-0 text-left" : "min-w-0 text-center"}>
-        <span className={isWide ? "block text-[13px] font-black uppercase leading-tight tracking-[0.12em]" : "block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em]"}>{label}</span>
-        <span className={isWide ? "mt-1 block text-[11px] font-semibold leading-snug normal-case tracking-normal opacity-72" : "mt-1 block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em] opacity-70"}>{actionLabel}</span>
+        <span
+          className={
+            isWide
+              ? "block text-[13px] font-black uppercase leading-tight tracking-[0.12em]"
+              : "block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em]"
+          }
+        >
+          {label}
+        </span>
+        <span
+          className={
+            isWide
+              ? "mt-1 block text-[11px] font-semibold leading-snug normal-case tracking-normal opacity-72"
+              : "mt-1 block whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.08em] opacity-70"
+          }
+        >
+          {actionLabel}
+        </span>
       </span>
     </button>
   );
@@ -497,7 +896,11 @@ export default function MenuBrowser({
   currencyThousandsSeparator?: string | null;
   currencySuffix?: string | null;
   storefrontTheme?: StorefrontTheme | null;
-  trialState?: { checkoutBlocked?: boolean; isTrialExpired?: boolean; customerMessage?: string | null } | null;
+  trialState?: {
+    checkoutBlocked?: boolean;
+    isTrialExpired?: boolean;
+    customerMessage?: string | null;
+  } | null;
   rewardsEnabled?: boolean | null;
   rewardsProgramName?: string | null;
   rewardsSilverDiscountPercent?: number | null;
@@ -540,13 +943,28 @@ export default function MenuBrowser({
 
   const [query, setQuery] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
-  const [buttonStateById, setButtonStateById] = useState<Record<string, "idle" | "adding" | "added">>({});
+  const [buttonStateById, setButtonStateById] = useState<
+    Record<string, "idle" | "adding" | "added">
+  >({});
   const [cartCount, setCartCount] = useState(0);
-  const [variantPickerProduct, setVariantPickerProduct] = useState<{ product: Product; source: string; options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" } } | null>(null);
+  const [variantPickerProduct, setVariantPickerProduct] = useState<{
+    product: Product;
+    source: string;
+    options?: {
+      sourceRect?: DOMRect | null;
+      imageUrl?: string | null;
+      name?: string;
+      targetRect?: DOMRect | null;
+      destination?: "header" | "search";
+    };
+  } | null>(null);
   const [cartPulseKey, setCartPulseKey] = useState(0);
   const [flyingItems, setFlyingItems] = useState<FlyingCartItem[]>([]);
-  const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(null);
-  const [customerRewards, setCustomerRewards] = useState<CustomerRewardSummary | null>(null);
+  const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(
+    null,
+  );
+  const [customerRewards, setCustomerRewards] =
+    useState<CustomerRewardSummary | null>(null);
   const [rewardsModalOpen, setRewardsModalOpen] = useState(false);
   const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
   const [welcomeActionsStage, setWelcomeActionsStage] = useState(0);
@@ -554,10 +972,17 @@ export default function MenuBrowser({
   const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
   const [favouritesReady, setFavouritesReady] = useState(false);
   const [favouritesSignedIn, setFavouritesSignedIn] = useState(false);
-  const [customerAuthStatus, setCustomerAuthStatus] = useState<"checking" | "signedIn" | "signedOut">("checking");
-  const [favouriteBusyById, setFavouriteBusyById] = useState<Record<string, boolean>>({});
-  const [favouritesMessage, setFavouritesMessage] = useState<string | null>(null);
-  const [favouriteLoginPromptOpen, setFavouriteLoginPromptOpen] = useState(false);
+  const [customerAuthStatus, setCustomerAuthStatus] = useState<
+    "checking" | "signedIn" | "signedOut"
+  >("checking");
+  const [favouriteBusyById, setFavouriteBusyById] = useState<
+    Record<string, boolean>
+  >({});
+  const [favouritesMessage, setFavouritesMessage] = useState<string | null>(
+    null,
+  );
+  const [favouriteLoginPromptOpen, setFavouriteLoginPromptOpen] =
+    useState(false);
   const [favouritesVisible, setFavouritesVisible] = useState(false);
   const [buyAgainIds, setBuyAgainIds] = useState<string[]>([]);
   const [buyAgainReady, setBuyAgainReady] = useState(false);
@@ -566,143 +991,355 @@ export default function MenuBrowser({
 
   const brandPrimary = primaryColor || "#7B1E22";
   const brandAccent = accentColor || "#C7922F";
-  const brandSurface = normalizeThemeColor(storefrontTheme?.globalPageBackground || backgroundTint, "#F8F4F0");
-  const brandBorder = normalizeThemeColor(storefrontTheme?.globalBorder || borderColor, "#D9C7A3");
-  const brandText = normalizeThemeColor(storefrontTheme?.globalText || textColor, "#2B2B2B");
-  const brandSoftText = normalizeThemeColor(storefrontTheme?.globalSoftText, brandText);
-  const headerBackground = normalizeThemeColor(storefrontTheme?.headerBackground, brandSurface);
-  const headerText = normalizeThemeColor(storefrontTheme?.headerText, brandText);
-  const headerButtonBorder = normalizeThemeColor(storefrontTheme?.headerButtonBorder, brandAccent);
-  const welcomeBackground = normalizeThemeColor(storefrontTheme?.welcomeBackground, "#FFFFFF");
-  const welcomeLabel = normalizeThemeColor(storefrontTheme?.welcomeLabel, brandAccent);
-  const welcomeHeadingColor = normalizeThemeColor(storefrontTheme?.welcomeHeading, brandPrimary);
-  const welcomeBody = normalizeThemeColor(storefrontTheme?.welcomeBody, brandText);
-  const welcomeBorder = normalizeThemeColor(storefrontTheme?.welcomeBorder, brandBorder);
-  const welcomeShadow = normalizeThemeColor(storefrontTheme?.welcomeShadow, brandAccent);
-  const welcomeActionText = normalizeThemeColor(storefrontTheme?.welcomeActionText, welcomeHeadingColor);
-  const welcomeActionIconText = normalizeThemeColor(storefrontTheme?.welcomeActionIconText, "#FFFFFF");
-  const welcomeActionIconBackground = normalizeThemeColor(storefrontTheme?.welcomeActionIconBackground, brandAccent);
-  const welcomeActionBorder = normalizeThemeColor(storefrontTheme?.welcomeActionBorder, "#FFFFFF");
-  const rewardsPopupBackground = softerPanelColor(storefrontTheme?.rewardsPopupBackground, "#FFFDF8", 0.55);
-  const rewardsPopupHeaderBackground = softerPanelColor(storefrontTheme?.rewardsPopupHeaderBackground, brandAccent, 0.78);
-  const rewardsPopupHeaderText = readableTextFor(rewardsPopupHeaderBackground, normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderText, brandPrimary), brandPrimary);
-  const rewardsPopupBodyText = readableTextFor(rewardsPopupBackground, normalizeThemeColor(storefrontTheme?.rewardsPopupBodyText, brandText), brandText);
-  const rewardsPopupCardBackground = softerPanelColor(storefrontTheme?.rewardsPopupCardBackground, brandSurface, 0.42);
-  const rewardsPopupCardBorder = blendHex(normalizeThemeColor(storefrontTheme?.rewardsPopupCardBorder, brandBorder), "#FFFFFF", 0.28);
-  const rewardsPopupPillBackground = blendHex(normalizeThemeColor(storefrontTheme?.rewardsPopupPillBackground, brandAccent), "#FFFFFF", 0.18);
-  const rewardsPopupPillText = readableTextFor(rewardsPopupPillBackground, normalizeThemeColor(storefrontTheme?.rewardsPopupPillText, "#FFFFFF"), brandPrimary);
-  const offersPopupBackground = softerPanelColor(storefrontTheme?.offersPopupBackground, "#FFFDF8", 0.55);
-  const offersPopupHeaderBackground = softerPanelColor(storefrontTheme?.offersPopupHeaderBackground, brandAccent, 0.78);
-  const offersPopupHeaderText = readableTextFor(offersPopupHeaderBackground, normalizeThemeColor(storefrontTheme?.offersPopupHeaderText, brandPrimary), brandPrimary);
-  const offersPopupBodyText = readableTextFor(offersPopupBackground, normalizeThemeColor(storefrontTheme?.offersPopupBodyText, brandText), brandText);
-  const offersPopupCardBackground = softerPanelColor(storefrontTheme?.offersPopupCardBackground, brandSurface, 0.42);
-  const offersPopupCardBorder = blendHex(normalizeThemeColor(storefrontTheme?.offersPopupCardBorder, brandBorder), "#FFFFFF", 0.28);
-  const offersPopupPillBackground = blendHex(normalizeThemeColor(storefrontTheme?.offersPopupPillBackground, brandAccent), "#FFFFFF", 0.18);
-  const offersPopupPillText = readableTextFor(offersPopupPillBackground, normalizeThemeColor(storefrontTheme?.offersPopupPillText, "#FFFFFF"), brandPrimary);
-  const footerBackground = normalizeThemeColor(storefrontTheme?.footerBackground, "#FFFFFF");
-  const footerText = normalizeThemeColor(storefrontTheme?.footerText, brandText);
-  const footerBadgeBackground = normalizeThemeColor(storefrontTheme?.footerBadgeBackground, brandAccent);
-  const favouritesBackground = normalizeThemeColor(storefrontTheme?.favouritesBackground, "#451A03");
-  const favouritesBorder = normalizeThemeColor(storefrontTheme?.favouritesBorder, brandAccent);
-  const favouritesText = normalizeThemeColor(storefrontTheme?.favouritesText, "#FFFFFF");
-  const favouritesLabelText = normalizeThemeColor(storefrontTheme?.favouritesLabelText, "#FDE68A");
+  const brandSurface = normalizeThemeColor(
+    storefrontTheme?.globalPageBackground || backgroundTint,
+    "#F8F4F0",
+  );
+  const brandBorder = normalizeThemeColor(
+    storefrontTheme?.globalBorder || borderColor,
+    "#D9C7A3",
+  );
+  const brandText = normalizeThemeColor(
+    storefrontTheme?.globalText || textColor,
+    "#2B2B2B",
+  );
+  const brandSoftText = normalizeThemeColor(
+    storefrontTheme?.globalSoftText,
+    brandText,
+  );
+  const headerBackground = normalizeThemeColor(
+    storefrontTheme?.headerBackground,
+    brandSurface,
+  );
+  const headerText = normalizeThemeColor(
+    storefrontTheme?.headerText,
+    brandText,
+  );
+  const headerButtonBorder = normalizeThemeColor(
+    storefrontTheme?.headerButtonBorder,
+    brandAccent,
+  );
+  const welcomeBackground = normalizeThemeColor(
+    storefrontTheme?.welcomeBackground,
+    "#FFFFFF",
+  );
+  const welcomeLabel = normalizeThemeColor(
+    storefrontTheme?.welcomeLabel,
+    brandAccent,
+  );
+  const welcomeHeadingColor = normalizeThemeColor(
+    storefrontTheme?.welcomeHeading,
+    brandPrimary,
+  );
+  const welcomeBody = normalizeThemeColor(
+    storefrontTheme?.welcomeBody,
+    brandText,
+  );
+  const welcomeBorder = normalizeThemeColor(
+    storefrontTheme?.welcomeBorder,
+    brandBorder,
+  );
+  const welcomeShadow = normalizeThemeColor(
+    storefrontTheme?.welcomeShadow,
+    brandAccent,
+  );
+  const welcomeActionText = normalizeThemeColor(
+    storefrontTheme?.welcomeActionText,
+    welcomeHeadingColor,
+  );
+  const welcomeActionIconText = normalizeThemeColor(
+    storefrontTheme?.welcomeActionIconText,
+    "#FFFFFF",
+  );
+  const welcomeActionIconBackground = normalizeThemeColor(
+    storefrontTheme?.welcomeActionIconBackground,
+    brandAccent,
+  );
+  const welcomeActionBorder = normalizeThemeColor(
+    storefrontTheme?.welcomeActionBorder,
+    "#FFFFFF",
+  );
+  const rewardsPopupBackground = softerPanelColor(
+    storefrontTheme?.rewardsPopupBackground,
+    "#FFFDF8",
+    0.55,
+  );
+  const rewardsPopupHeaderBackground = softerPanelColor(
+    storefrontTheme?.rewardsPopupHeaderBackground,
+    brandAccent,
+    0.78,
+  );
+  const rewardsPopupHeaderText = readableTextFor(
+    rewardsPopupHeaderBackground,
+    normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderText, brandPrimary),
+    brandPrimary,
+  );
+  const rewardsPopupBodyText = readableTextFor(
+    rewardsPopupBackground,
+    normalizeThemeColor(storefrontTheme?.rewardsPopupBodyText, brandText),
+    brandText,
+  );
+  const rewardsPopupCardBackground = softerPanelColor(
+    storefrontTheme?.rewardsPopupCardBackground,
+    brandSurface,
+    0.42,
+  );
+  const rewardsPopupCardBorder = blendHex(
+    normalizeThemeColor(storefrontTheme?.rewardsPopupCardBorder, brandBorder),
+    "#FFFFFF",
+    0.28,
+  );
+  const rewardsPopupPillBackground = blendHex(
+    normalizeThemeColor(
+      storefrontTheme?.rewardsPopupPillBackground,
+      brandAccent,
+    ),
+    "#FFFFFF",
+    0.18,
+  );
+  const rewardsPopupPillText = readableTextFor(
+    rewardsPopupPillBackground,
+    normalizeThemeColor(storefrontTheme?.rewardsPopupPillText, "#FFFFFF"),
+    brandPrimary,
+  );
+  const offersPopupBackground = softerPanelColor(
+    storefrontTheme?.offersPopupBackground,
+    "#FFFDF8",
+    0.55,
+  );
+  const offersPopupHeaderBackground = softerPanelColor(
+    storefrontTheme?.offersPopupHeaderBackground,
+    brandAccent,
+    0.78,
+  );
+  const offersPopupHeaderText = readableTextFor(
+    offersPopupHeaderBackground,
+    normalizeThemeColor(storefrontTheme?.offersPopupHeaderText, brandPrimary),
+    brandPrimary,
+  );
+  const offersPopupBodyText = readableTextFor(
+    offersPopupBackground,
+    normalizeThemeColor(storefrontTheme?.offersPopupBodyText, brandText),
+    brandText,
+  );
+  const offersPopupCardBackground = softerPanelColor(
+    storefrontTheme?.offersPopupCardBackground,
+    brandSurface,
+    0.42,
+  );
+  const offersPopupCardBorder = blendHex(
+    normalizeThemeColor(storefrontTheme?.offersPopupCardBorder, brandBorder),
+    "#FFFFFF",
+    0.28,
+  );
+  const offersPopupPillBackground = blendHex(
+    normalizeThemeColor(
+      storefrontTheme?.offersPopupPillBackground,
+      brandAccent,
+    ),
+    "#FFFFFF",
+    0.18,
+  );
+  const offersPopupPillText = readableTextFor(
+    offersPopupPillBackground,
+    normalizeThemeColor(storefrontTheme?.offersPopupPillText, "#FFFFFF"),
+    brandPrimary,
+  );
+  const footerBackground = normalizeThemeColor(
+    storefrontTheme?.footerBackground,
+    "#FFFFFF",
+  );
+  const footerText = normalizeThemeColor(
+    storefrontTheme?.footerText,
+    brandText,
+  );
+  const footerBadgeBackground = normalizeThemeColor(
+    storefrontTheme?.footerBadgeBackground,
+    brandAccent,
+  );
+  const favouritesBackground = normalizeThemeColor(
+    storefrontTheme?.favouritesBackground,
+    "#451A03",
+  );
+  const favouritesBorder = normalizeThemeColor(
+    storefrontTheme?.favouritesBorder,
+    brandAccent,
+  );
+  const favouritesText = normalizeThemeColor(
+    storefrontTheme?.favouritesText,
+    "#FFFFFF",
+  );
+  const favouritesLabelText = normalizeThemeColor(
+    storefrontTheme?.favouritesLabelText,
+    "#FDE68A",
+  );
   const brandAccentBorder = welcomeBorder;
-  const phoneHref = cleanDialString(contactPhone) ? `tel:${cleanDialString(contactPhone)}` : null;
-  const whatsAppHref = cleanWhatsAppNumber(contactWhatsApp || contactPhone) ? `https://wa.me/${cleanWhatsAppNumber(contactWhatsApp || contactPhone)}` : null;
-  const emailHref = contactEmail?.trim() ? `mailto:${contactEmail.trim()}` : null;
+  const phoneHref = cleanDialString(contactPhone)
+    ? `tel:${cleanDialString(contactPhone)}`
+    : null;
+  const whatsAppHref = cleanWhatsAppNumber(contactWhatsApp || contactPhone)
+    ? `https://wa.me/${cleanWhatsAppNumber(contactWhatsApp || contactPhone)}`
+    : null;
+  const emailHref = contactEmail?.trim()
+    ? `mailto:${contactEmail.trim()}`
+    : null;
   const footerIconLinks = [
     { label: "Call store", href: phoneHref, icon: <PhoneIcon /> },
     { label: "WhatsApp store", href: whatsAppHref, icon: <WhatsAppIcon /> },
     { label: "Email store", href: emailHref, icon: <EmailIcon /> },
-    { label: "Facebook", href: normaliseExternalUrl(socialFacebookUrl), icon: <FacebookIcon /> },
-    { label: "Instagram", href: normaliseExternalUrl(socialInstagramUrl), icon: <InstagramIcon /> },
-    { label: "TikTok", href: normaliseExternalUrl(socialTikTokUrl), icon: <TikTokIcon /> },
+    {
+      label: "Facebook",
+      href: normaliseExternalUrl(socialFacebookUrl),
+      icon: <FacebookIcon />,
+    },
+    {
+      label: "Instagram",
+      href: normaliseExternalUrl(socialInstagramUrl),
+      icon: <InstagramIcon />,
+    },
+    {
+      label: "TikTok",
+      href: normaliseExternalUrl(socialTikTokUrl),
+      icon: <TikTokIcon />,
+    },
     { label: "X", href: normaliseExternalUrl(socialXUrl), icon: <XIcon /> },
-    { label: "Website", href: normaliseExternalUrl(socialWebsiteUrl), icon: <WebsiteIcon /> },
-  ].filter((item) => Boolean(item.href)).slice(0, 8);
+    {
+      label: "Website",
+      href: normaliseExternalUrl(socialWebsiteUrl),
+      icon: <WebsiteIcon />,
+    },
+  ]
+    .filter((item) => Boolean(item.href))
+    .slice(0, 8);
   const referralSignupHref = `https://www.orduva.com/?ref_tenant=${encodeURIComponent(tenantSlug)}&ref=${encodeURIComponent(`tenant_${tenantSlug}`)}&ref_source=storefront_footer`;
   const affiliateApplicationHref = `https://www.orduva.com/affiliate/apply?ref_tenant=${encodeURIComponent(tenantSlug)}&ref_source=storefront_footer_affiliate`;
   const storefrontRewardsEnabled = rewardsEnabled === true;
-  const rewardProgrammeName = String(rewardsProgramName || "Rewards Club").trim() || "Rewards Club";
-  const storefrontDiscountRules = useMemo(() => normalizeDiscountRules(discountRules || []), [discountRules]);
+  const rewardProgrammeName =
+    String(rewardsProgramName || "Rewards Club").trim() || "Rewards Club";
+  const storefrontDiscountRules = useMemo(
+    () => normalizeDiscountRules(discountRules || []),
+    [discountRules],
+  );
   const storefrontDiscountsEnabled = discountsEnabled === true;
-  const visibleDiscountRules = useMemo(() => storefrontDiscountRules.filter((rule) => rule.isActive !== false && rule.showOnCheckout !== false), [storefrontDiscountRules]);
-  const popupDiscountRules = useMemo(() => visibleDiscountRules.filter((rule) => rule.popupEnabled === true).slice(0, 4), [visibleDiscountRules]);
+  const visibleDiscountRules = useMemo(
+    () =>
+      storefrontDiscountRules.filter(
+        (rule) => rule.isActive !== false && rule.showOnCheckout !== false,
+      ),
+    [storefrontDiscountRules],
+  );
+  const popupDiscountRules = useMemo(
+    () =>
+      visibleDiscountRules
+        .filter((rule) => rule.popupEnabled === true)
+        .slice(0, 4),
+    [visibleDiscountRules],
+  );
 
   useEffect(() => {
-    if (!storefrontDiscountsEnabled || !discountPopupEnabled || discountPopupSeen || !popupDiscountRules.length) return;
+    if (
+      !storefrontDiscountsEnabled ||
+      !discountPopupEnabled ||
+      discountPopupSeen ||
+      !popupDiscountRules.length
+    )
+      return;
     const timer = window.setTimeout(() => {
       setDiscountsModalOpen(true);
       setDiscountPopupSeen(true);
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [storefrontDiscountsEnabled, discountPopupEnabled, discountPopupSeen, popupDiscountRules.length]);
+  }, [
+    storefrontDiscountsEnabled,
+    discountPopupEnabled,
+    discountPopupSeen,
+    popupDiscountRules.length,
+  ]);
   const rewardTier = customerRewards?.tierLabel || "Silver";
   const rewardTierPalette = getRewardTierPalette(rewardTier);
-  const rewardDiscount = Number(customerRewards?.discountPercent || (rewardTier === "Platinum" ? rewardsPlatinumDiscountPercent : rewardTier === "Gold" ? rewardsGoldDiscountPercent : rewardsSilverDiscountPercent) || 0);
+  const rewardDiscount = Number(
+    customerRewards?.discountPercent ||
+      (rewardTier === "Platinum"
+        ? rewardsPlatinumDiscountPercent
+        : rewardTier === "Gold"
+          ? rewardsGoldDiscountPercent
+          : rewardsSilverDiscountPercent) ||
+      0,
+  );
   const rewardSpendToNext = Number(customerRewards?.spendToNextTier || 0);
   const rewardNextTier = customerRewards?.nextTierLabel || null;
-  const rewardProgress = Math.max(0, Math.min(100, Number(customerRewards?.progressPercent || 0)));
+  const rewardProgress = Math.max(
+    0,
+    Math.min(100, Number(customerRewards?.progressPercent || 0)),
+  );
 
-  const refreshCustomerSession = useCallback(async (options?: { initial?: boolean }) => {
-    const fetchCustomer = async (timeoutMs: number) => {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  const refreshCustomerSession = useCallback(
+    async (options?: { initial?: boolean }) => {
+      const fetchCustomer = async (timeoutMs: number) => {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const res = await fetch(`/api/customer/auth/me?ts=${Date.now()}`, {
+            cache: "no-store",
+            credentials: "include",
+            headers: { "Cache-Control": "no-cache" },
+            signal: controller.signal,
+          });
+          const data = await res.json().catch(() => ({}));
+          return { res, data };
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      };
+
+      const applySignedOut = () => {
+        setWelcomeCustomerName(null);
+        setCustomerRewards(null);
+        setCustomerAuthStatus("signedOut");
+        setFavouritesSignedIn(false);
+        setFavouriteIds([]);
+        setFavouritesMessage(null);
+        setBuyAgainIds([]);
+        setBuyAgainMessage(null);
+      };
+
       try {
-        const res = await fetch(`/api/customer/auth/me?ts=${Date.now()}`, {
-          cache: "no-store",
-          credentials: "include",
-          headers: { "Cache-Control": "no-cache" },
-          signal: controller.signal,
-        });
-        const data = await res.json().catch(() => ({}));
-        return { res, data };
-      } finally {
-        window.clearTimeout(timeout);
-      }
-    };
+        if (options?.initial) setCustomerAuthStatus("checking");
+        let result;
+        try {
+          result = await fetchCustomer(5500);
+        } catch {
+          await new Promise((resolve) => window.setTimeout(resolve, 850));
+          result = await fetchCustomer(10000);
+        }
 
-    const applySignedOut = () => {
-      setWelcomeCustomerName(null);
-      setCustomerRewards(null);
-      setCustomerAuthStatus("signedOut");
-      setFavouritesSignedIn(false);
-      setFavouriteIds([]);
-      setFavouritesMessage(null);
-      setBuyAgainIds([]);
-      setBuyAgainMessage(null);
-    };
-
-    try {
-      if (options?.initial) setCustomerAuthStatus("checking");
-      let result;
-      try {
-        result = await fetchCustomer(5500);
+        const { res, data } = result;
+        if (res.ok && data?.customer) {
+          const fullName = String(data.customer.fullName || "").trim();
+          const email = String(data.customer.email || "").trim();
+          const firstName =
+            fullName.split(/\s+/).filter(Boolean)[0] ||
+            email.split("@")[0] ||
+            null;
+          setWelcomeCustomerName(firstName);
+          setCustomerRewards(data.customer.rewards || null);
+          setCustomerAuthStatus("signedIn");
+          setFavouritesSignedIn(true);
+        } else {
+          applySignedOut();
+        }
       } catch {
-        await new Promise((resolve) => window.setTimeout(resolve, 850));
-        result = await fetchCustomer(10000);
+        // Installed PWAs can resume from a cached shell before cookies/API calls are
+        // ready. Do not permanently hide customer, favourites, or Buy Again after a
+        // transient startup miss; keep any previous signed-in state and retry when
+        // the app becomes visible/focused.
+        setCustomerAuthStatus((current) =>
+          current === "checking" ? "signedOut" : current,
+        );
       }
-
-      const { res, data } = result;
-      if (res.ok && data?.customer) {
-        const fullName = String(data.customer.fullName || "").trim();
-        const email = String(data.customer.email || "").trim();
-        const firstName = fullName.split(/\s+/).filter(Boolean)[0] || email.split("@")[0] || null;
-        setWelcomeCustomerName(firstName);
-        setCustomerRewards(data.customer.rewards || null);
-        setCustomerAuthStatus("signedIn");
-        setFavouritesSignedIn(true);
-      } else {
-        applySignedOut();
-      }
-    } catch {
-      // Installed PWAs can resume from a cached shell before cookies/API calls are
-      // ready. Do not permanently hide customer, favourites, or Buy Again after a
-      // transient startup miss; keep any previous signed-in state and retry when
-      // the app becomes visible/focused.
-      setCustomerAuthStatus((current) => (current === "checking" ? "signedOut" : current));
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     void refreshCustomerSession({ initial: true });
@@ -754,11 +1391,15 @@ export default function MenuBrowser({
       setFavouritesReady(false);
       setFavouritesSignedIn(true);
       try {
-        const res = await fetch("/api/customer/favourites", { cache: "no-store" });
+        const res = await fetch("/api/customer/favourites", {
+          cache: "no-store",
+        });
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (res.ok && Array.isArray(data?.productIds)) {
-          setFavouriteIds(data.productIds.map((id: unknown) => String(id)).filter(Boolean));
+          setFavouriteIds(
+            data.productIds.map((id: unknown) => String(id)).filter(Boolean),
+          );
           setFavouritesSignedIn(true);
           setFavouritesMessage(null);
         } else if (res.status === 401) {
@@ -767,7 +1408,9 @@ export default function MenuBrowser({
           setCustomerAuthStatus("signedOut");
           setFavouritesMessage(null);
         } else {
-          setFavouritesMessage(String(data?.error || "Favourites could not be loaded."));
+          setFavouritesMessage(
+            String(data?.error || "Favourites could not be loaded."),
+          );
         }
       } catch {
         if (!cancelled) setFavouritesMessage("Favourites could not be loaded.");
@@ -806,21 +1449,28 @@ export default function MenuBrowser({
     async function loadBuyAgain() {
       setBuyAgainReady(false);
       try {
-        const res = await fetch("/api/customer/buy-again", { cache: "no-store" });
+        const res = await fetch("/api/customer/buy-again", {
+          cache: "no-store",
+        });
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (res.ok && Array.isArray(data?.productIds)) {
-          setBuyAgainIds(data.productIds.map((id: unknown) => String(id)).filter(Boolean));
+          setBuyAgainIds(
+            data.productIds.map((id: unknown) => String(id)).filter(Boolean),
+          );
           setBuyAgainMessage(null);
         } else if (res.status === 401) {
           setBuyAgainIds([]);
           setCustomerAuthStatus("signedOut");
           setBuyAgainMessage(null);
         } else {
-          setBuyAgainMessage(String(data?.error || "Previous purchases could not be loaded."));
+          setBuyAgainMessage(
+            String(data?.error || "Previous purchases could not be loaded."),
+          );
         }
       } catch {
-        if (!cancelled) setBuyAgainMessage("Previous purchases could not be loaded.");
+        if (!cancelled)
+          setBuyAgainMessage("Previous purchases could not be loaded.");
       } finally {
         if (!cancelled) setBuyAgainReady(true);
       }
@@ -846,49 +1496,100 @@ export default function MenuBrowser({
   // Ver-0.172B: keep favourites hidden by default, but let signed-in customers
   // reveal/hide them from the welcome panel. Favourite IDs still load quietly so
   // product hearts can show saved state without auto-opening the strip.
-  const showFavouriteLoadingNote = customerAuthStatus === "signedIn" && !favouritesReady;
-  const canToggleFavourites = customerAuthStatus === "signedIn" && favouritesReady && favouriteProducts.length > 0;
-  const canToggleBuyAgain = customerAuthStatus === "signedIn" && buyAgainReady && buyAgainProducts.length > 0;
-  const showNoFavouritesNote = customerAuthStatus === "signedIn" && favouritesReady && !favouritesMessage && favouriteProducts.length === 0;
-  const shouldRenderFavouritesArea = customerAuthStatus === "signedIn" && favouritesVisible;
-  const shouldRenderBuyAgainArea = customerAuthStatus === "signedIn" && buyAgainVisible;
-  const customerPersonalChromeReady = customerAuthStatus !== "checking" && (customerAuthStatus !== "signedIn" || (favouritesReady && buyAgainReady));
-  const hasWelcomeActions = storefrontRewardsEnabled || storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain;
-  const rewardsActionVisible = welcomeActionsStage >= 1 && storefrontRewardsEnabled;
-  const compactActionsVisible = welcomeActionsStage >= 2 && (storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain);
-  const rewardPanelTitle = customerAuthStatus === "signedIn" ? `Rewards - ${rewardTier}` : "Rewards";
-  const rewardPanelHelper = customerAuthStatus === "signedIn"
-    ? rewardNextTier
-      ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more for ${rewardNextTier}`
-      : "Top tier unlocked"
-    : "Sign in to unlock rewards";
+  const showFavouriteLoadingNote =
+    customerAuthStatus === "signedIn" && !favouritesReady;
+  const canToggleFavourites =
+    customerAuthStatus === "signedIn" &&
+    favouritesReady &&
+    favouriteProducts.length > 0;
+  const canToggleBuyAgain =
+    customerAuthStatus === "signedIn" &&
+    buyAgainReady &&
+    buyAgainProducts.length > 0;
+  const showNoFavouritesNote =
+    customerAuthStatus === "signedIn" &&
+    favouritesReady &&
+    !favouritesMessage &&
+    favouriteProducts.length === 0;
+  const shouldRenderFavouritesArea =
+    customerAuthStatus === "signedIn" && favouritesVisible;
+  const shouldRenderBuyAgainArea =
+    customerAuthStatus === "signedIn" && buyAgainVisible;
+  const customerPersonalChromeReady =
+    customerAuthStatus !== "checking" &&
+    (customerAuthStatus !== "signedIn" || (favouritesReady && buyAgainReady));
+  const hasWelcomeActions =
+    storefrontRewardsEnabled ||
+    storefrontDiscountsEnabled ||
+    canToggleFavourites ||
+    canToggleBuyAgain;
+  const rewardsActionVisible =
+    welcomeActionsStage >= 1 && storefrontRewardsEnabled;
+  const compactActionsVisible =
+    welcomeActionsStage >= 2 &&
+    (storefrontDiscountsEnabled || canToggleFavourites || canToggleBuyAgain);
+  const rewardPanelTitle =
+    customerAuthStatus === "signedIn" ? `Rewards - ${rewardTier}` : "Rewards";
+  const rewardPanelHelper =
+    customerAuthStatus === "signedIn"
+      ? rewardNextTier
+        ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more for ${rewardNextTier}`
+        : "Top tier unlocked"
+      : "Sign in to unlock rewards";
 
   useEffect(() => {
     setWelcomeActionsStage(0);
     if (!customerPersonalChromeReady) return;
-    const rewardsTimer = window.setTimeout(() => setWelcomeActionsStage(1), hasWelcomeActions ? 100 : 0);
-    const compactTimer = window.setTimeout(() => setWelcomeActionsStage(2), hasWelcomeActions ? 340 : 0);
+    const rewardsTimer = window.setTimeout(
+      () => setWelcomeActionsStage(1),
+      hasWelcomeActions ? 100 : 0,
+    );
+    const compactTimer = window.setTimeout(
+      () => setWelcomeActionsStage(2),
+      hasWelcomeActions ? 340 : 0,
+    );
     return () => {
       window.clearTimeout(rewardsTimer);
       window.clearTimeout(compactTimer);
     };
-  }, [customerPersonalChromeReady, hasWelcomeActions, storefrontRewardsEnabled, storefrontDiscountsEnabled, canToggleFavourites, canToggleBuyAgain]);
+  }, [
+    customerPersonalChromeReady,
+    hasWelcomeActions,
+    storefrontRewardsEnabled,
+    storefrontDiscountsEnabled,
+    canToggleFavourites,
+    canToggleBuyAgain,
+  ]);
 
   useEffect(() => {
     if (!customerPersonalChromeReady) return;
     if (hasWelcomeActions && welcomeActionsStage < 2) return;
-    const frame = window.requestAnimationFrame(() => onFirstMeaningfulPaintReady?.());
+    const frame = window.requestAnimationFrame(() =>
+      onFirstMeaningfulPaintReady?.(),
+    );
     return () => window.cancelAnimationFrame(frame);
-  }, [customerPersonalChromeReady, hasWelcomeActions, welcomeActionsStage, onFirstMeaningfulPaintReady]);
+  }, [
+    customerPersonalChromeReady,
+    hasWelcomeActions,
+    welcomeActionsStage,
+    onFirstMeaningfulPaintReady,
+  ]);
 
   const favouriteIdSet = useMemo(() => new Set(favouriteIds), [favouriteIds]);
 
-  function scrollProductStrip(stripRef: { current: HTMLDivElement | null }, direction: "left" | "right") {
+  function scrollProductStrip(
+    stripRef: { current: HTMLDivElement | null },
+    direction: "left" | "right",
+  ) {
     const strip = stripRef.current;
     if (!strip) return;
     const firstCard = strip.querySelector("article");
-    const cardWidth = firstCard instanceof HTMLElement ? firstCard.offsetWidth : 248;
-    strip.scrollBy({ left: direction === "left" ? -(cardWidth + 16) : cardWidth + 16, behavior: "smooth" });
+    const cardWidth =
+      firstCard instanceof HTMLElement ? firstCard.offsetWidth : 248;
+    strip.scrollBy({
+      left: direction === "left" ? -(cardWidth + 16) : cardWidth + 16,
+      behavior: "smooth",
+    });
   }
 
   function scrollFavourites(direction: "left" | "right") {
@@ -912,20 +1613,39 @@ export default function MenuBrowser({
     setFavouritesMessage(null);
 
     const previousIds = favouriteIds;
-    setFavouriteIds((current) => isFavourite ? current.filter((id) => id !== productId) : [productId, ...current.filter((id) => id !== productId)]);
+    setFavouriteIds((current) =>
+      isFavourite
+        ? current.filter((id) => id !== productId)
+        : [productId, ...current.filter((id) => id !== productId)],
+    );
 
     try {
-      const res = await fetch(isFavourite ? `/api/customer/favourites?productId=${encodeURIComponent(productId)}` : "/api/customer/favourites", {
-        method: isFavourite ? "DELETE" : "POST",
-        headers: isFavourite ? undefined : { "Content-Type": "application/json" },
-        body: isFavourite ? undefined : JSON.stringify({ productId }),
-      });
+      const res = await fetch(
+        isFavourite
+          ? `/api/customer/favourites?productId=${encodeURIComponent(productId)}`
+          : "/api/customer/favourites",
+        {
+          method: isFavourite ? "DELETE" : "POST",
+          headers: isFavourite
+            ? undefined
+            : { "Content-Type": "application/json" },
+          body: isFavourite ? undefined : JSON.stringify({ productId }),
+        },
+      );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setFavouriteIds(previousIds);
         if (res.status === 401) setFavouritesSignedIn(false);
-        const detail = [data?.error, data?.details, data?.code ? `Code: ${data.code}` : null].filter(Boolean).join(" · ");
-        setFavouritesMessage(String(detail || "Favourite could not be updated."));
+        const detail = [
+          data?.error,
+          data?.details,
+          data?.code ? `Code: ${data.code}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ");
+        setFavouritesMessage(
+          String(detail || "Favourite could not be updated."),
+        );
         window.setTimeout(() => setFavouritesMessage(null), 4500);
       }
     } catch {
@@ -940,17 +1660,29 @@ export default function MenuBrowser({
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return products.filter((product) => {
-      const categoryName = categories.find((category) => category.id === product.category_id)?.name || "";
-      const matchesCategory = activeCategoryId === "all" || product.category_id === activeCategoryId;
+      const categoryName =
+        categories.find((category) => category.id === product.category_id)
+          ?.name || "";
+      const matchesCategory =
+        activeCategoryId === "all" ||
+        product.category_id === activeCategoryId ||
+        product.secondary_category_id === activeCategoryId;
       if (!matchesCategory) return false;
       if (!normalizedQuery) return true;
-      const haystack = [product.name, stripHtml(product.description), categoryName].join(" ").toLowerCase();
+      const haystack = [
+        product.name,
+        stripHtml(product.description),
+        categoryName,
+      ]
+        .join(" ")
+        .toLowerCase();
       return haystack.includes(normalizedQuery);
     });
   }, [products, categories, query, activeCategoryId]);
 
   useEffect(() => {
-    const getCount = (items: StoredCartItem[]) => items.reduce((total, item) => total + Math.max(0, item.quantity || 0), 0);
+    const getCount = (items: StoredCartItem[]) =>
+      items.reduce((total, item) => total + Math.max(0, item.quantity || 0), 0);
     const update = (items: StoredCartItem[]) => setCartCount(getCount(items));
 
     update(readCart<StoredCartItem>(tenantSlug));
@@ -958,7 +1690,11 @@ export default function MenuBrowser({
   }, [tenantSlug]);
 
   useEffect(() => {
-    const hasBlockingOverlay = searchOpen || rewardsModalOpen || discountsModalOpen || favouriteLoginPromptOpen;
+    const hasBlockingOverlay =
+      searchOpen ||
+      rewardsModalOpen ||
+      discountsModalOpen ||
+      favouriteLoginPromptOpen;
     if (!hasBlockingOverlay) return;
 
     const previousHtmlOverflow = document.documentElement.style.overflow;
@@ -974,16 +1710,37 @@ export default function MenuBrowser({
       document.body.style.overflow = previousBodyOverflow;
       document.body.style.touchAction = previousBodyTouchAction;
     };
-  }, [searchOpen, rewardsModalOpen, discountsModalOpen, favouriteLoginPromptOpen]);
+  }, [
+    searchOpen,
+    rewardsModalOpen,
+    discountsModalOpen,
+    favouriteLoginPromptOpen,
+  ]);
 
   const triggerCartPulse = useCallback(() => {
     setCartPulseKey((current) => current + 1);
   }, []);
 
   const launchAddToCartAnimation = useCallback(
-    ({ imageUrl, name, sourceRect, targetRect, destination = "header" }: { imageUrl: string | null; name: string; sourceRect: DOMRect | null; targetRect?: DOMRect | null; destination?: "header" | "search" }) => {
-      const targetElement = destination === "search" && searchCartIndicatorRef.current ? searchCartIndicatorRef.current : cartButtonRef.current;
-      const resolvedTargetRect = targetRect ?? targetElement?.getBoundingClientRect() ?? null;
+    ({
+      imageUrl,
+      name,
+      sourceRect,
+      targetRect,
+      destination = "header",
+    }: {
+      imageUrl: string | null;
+      name: string;
+      sourceRect: DOMRect | null;
+      targetRect?: DOMRect | null;
+      destination?: "header" | "search";
+    }) => {
+      const targetElement =
+        destination === "search" && searchCartIndicatorRef.current
+          ? searchCartIndicatorRef.current
+          : cartButtonRef.current;
+      const resolvedTargetRect =
+        targetRect ?? targetElement?.getBoundingClientRect() ?? null;
       if (!sourceRect || !resolvedTargetRect) {
         triggerCartPulse();
         return;
@@ -1006,7 +1763,11 @@ export default function MenuBrowser({
 
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => {
-          setFlyingItems((current) => current.map((item) => (item.id === id ? { ...item, started: true } : item)));
+          setFlyingItems((current) =>
+            current.map((item) =>
+              item.id === id ? { ...item, started: true } : item,
+            ),
+          );
         });
       });
 
@@ -1018,29 +1779,48 @@ export default function MenuBrowser({
     [triggerCartPulse],
   );
 
-  function trackStorefrontProductEvent(eventType: string, product: Product | undefined, source: string) {
+  function trackStorefrontProductEvent(
+    eventType: string,
+    product: Product | undefined,
+    source: string,
+  ) {
     if (typeof window === "undefined" || !product) return;
-    window.dispatchEvent(new CustomEvent("orduva:analytics", {
-      detail: {
-        eventType,
-        scope: "tenant_storefront",
-        tenantId,
-        tenantSlug,
-        productId: product.id,
-        productName: product.name,
-        metadata: { source },
-      },
-    }));
+    window.dispatchEvent(
+      new CustomEvent("orduva:analytics", {
+        detail: {
+          eventType,
+          scope: "tenant_storefront",
+          tenantId,
+          tenantSlug,
+          productId: product.id,
+          productName: product.name,
+          metadata: { source },
+        },
+      }),
+    );
   }
 
   function activeProductVariants(product: Product | undefined) {
-    return (Array.isArray(product?.product_variants) ? product!.product_variants! : []).filter((variant) => variant && variant.isActive !== false && String(variant.name || "").trim());
+    return (
+      Array.isArray(product?.product_variants) ? product!.product_variants! : []
+    ).filter(
+      (variant) =>
+        variant &&
+        variant.isActive !== false &&
+        String(variant.name || "").trim(),
+    );
   }
 
   async function addCartLine(
     productId: string,
     variant: ProductVariant | null,
-    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" },
+    options?: {
+      sourceRect?: DOMRect | null;
+      imageUrl?: string | null;
+      name?: string;
+      targetRect?: DOMRect | null;
+      destination?: "header" | "search";
+    },
   ) {
     if (buttonStateById[productId] === "adding") return;
 
@@ -1050,8 +1830,12 @@ export default function MenuBrowser({
 
     const existing = readCart<StoredCartItem>(tenantSlug);
     const lineIdentity = { productId, variantId: variant?.id || null };
-    const found = existing.find((item) => cartLineKey(item) === cartLineKey(lineIdentity));
-    const lineCurrentQuantity = found ? Math.max(0, Number(found.quantity || 0)) : 0;
+    const found = existing.find(
+      (item) => cartLineKey(item) === cartLineKey(lineIdentity),
+    );
+    const lineCurrentQuantity = found
+      ? Math.max(0, Number(found.quantity || 0))
+      : 0;
     if (stockState.tracked && lineCurrentQuantity >= stockState.available) {
       setButtonStateById((current) => ({ ...current, [productId]: "added" }));
       window.setTimeout(() => {
@@ -1061,7 +1845,11 @@ export default function MenuBrowser({
     }
 
     setButtonStateById((current) => ({ ...current, [productId]: "adding" }));
-    trackStorefrontProductEvent("add_to_cart", product, options?.destination === "search" ? "search_popup" : "storefront_menu");
+    trackStorefrontProductEvent(
+      "add_to_cart",
+      product,
+      options?.destination === "search" ? "search_popup" : "storefront_menu",
+    );
     if (options?.sourceRect || options?.imageUrl || options?.name) {
       launchAddToCartAnimation({
         imageUrl: options?.imageUrl ?? product?.image_url ?? null,
@@ -1072,12 +1860,19 @@ export default function MenuBrowser({
       });
     }
 
-    const cappedNextQuantity = stockState.tracked ? stockState.available : Number.POSITIVE_INFINITY;
+    const cappedNextQuantity = stockState.tracked
+      ? stockState.available
+      : Number.POSITIVE_INFINITY;
     const updated = found
       ? existing.map((item) =>
           cartLineKey(item) === cartLineKey(lineIdentity)
-            ? { ...item, quantity: stockState.tracked ? Math.min(item.quantity + 1, cappedNextQuantity) : item.quantity + 1 }
-            : item
+            ? {
+                ...item,
+                quantity: stockState.tracked
+                  ? Math.min(item.quantity + 1, cappedNextQuantity)
+                  : item.quantity + 1,
+              }
+            : item,
         )
       : [
           ...existing,
@@ -1086,11 +1881,27 @@ export default function MenuBrowser({
             quantity: 1,
             variantId: variant?.id || null,
             variantName: variant?.name || null,
-            variantLabel: variant ? (product?.variant_label || "Option") : null,
-            variantPriceDelta: variant && product ? getVariantPriceDeltaForCart(Number(product.price || 0), variant) : 0,
-            variantPrice: variant && product ? Number(getVariantPrice(Number(product.price || 0), variant).toFixed(2)) : null,
+            variantLabel: variant ? product?.variant_label || "Option" : null,
+            variantPriceDelta:
+              variant && product
+                ? getVariantPriceDeltaForCart(
+                    Number(product.price || 0),
+                    variant,
+                  )
+                : 0,
+            variantPrice:
+              variant && product
+                ? Number(
+                    getVariantPrice(
+                      Number(product.price || 0),
+                      variant,
+                    ).toFixed(2),
+                  )
+                : null,
             variantDescription: variant?.description || null,
-            variantStockEnabled: variant ? variant.stockEnabled === true : !!product?.stock_enabled,
+            variantStockEnabled: variant
+              ? variant.stockEnabled === true
+              : !!product?.stock_enabled,
           },
         ];
 
@@ -1104,12 +1915,25 @@ export default function MenuBrowser({
 
   async function addToCart(
     productId: string,
-    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" },
+    options?: {
+      sourceRect?: DOMRect | null;
+      imageUrl?: string | null;
+      name?: string;
+      targetRect?: DOMRect | null;
+      destination?: "header" | "search";
+    },
   ) {
     const product = products.find((item) => item.id === productId);
     const variants = activeProductVariants(product);
     if (product?.variants_enabled && variants.length) {
-      setVariantPickerProduct({ product, source: options?.destination === "search" ? "search_popup" : "storefront_menu", options });
+      setVariantPickerProduct({
+        product,
+        source:
+          options?.destination === "search"
+            ? "search_popup"
+            : "storefront_menu",
+        options,
+      });
       return;
     }
 
@@ -1118,10 +1942,15 @@ export default function MenuBrowser({
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <div className="pointer-events-none fixed inset-0 z-[80] overflow-hidden" aria-hidden="true">
+      <div
+        className="pointer-events-none fixed inset-0 z-[80] overflow-hidden"
+        aria-hidden="true"
+      >
         {flyingItems.map((item) => {
-          const targetX = item.endCenterX - (item.startLeft + item.startWidth / 2);
-          const targetY = item.endCenterY - (item.startTop + item.startHeight / 2);
+          const targetX =
+            item.endCenterX - (item.startLeft + item.startWidth / 2);
+          const targetY =
+            item.endCenterY - (item.startTop + item.startHeight / 2);
           return (
             <div
               key={item.id}
@@ -1144,9 +1973,15 @@ export default function MenuBrowser({
               <div className="relative h-full w-full overflow-hidden rounded-[28px] border border-white/90 bg-white/98 shadow-[0_28px_70px_rgba(15,23,42,0.18)]">
                 <div className="absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.52),transparent_58%)]" />
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="h-full w-full object-contain bg-white p-3" />
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="h-full w-full object-contain bg-white p-3"
+                  />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-white to-slate-200 text-4xl">📦</div>
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 via-white to-slate-200 text-4xl">
+                    📦
+                  </div>
                 )}
               </div>
             </div>
@@ -1154,8 +1989,14 @@ export default function MenuBrowser({
         })}
       </div>
 
-      <div className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:content-['']" style={{ backgroundColor: brandSurface }}>
-        <div className="border-b shadow-[0_22px_60px_rgba(15,23,42,0.10)]" style={{ borderColor: brandBorder, background: headerBackground }}>
+      <div
+        className="sticky top-0 z-40 -mx-4 sm:-mx-5 lg:-mx-6 before:absolute before:inset-x-0 before:bottom-full before:h-16 before:content-['']"
+        style={{ backgroundColor: brandSurface }}
+      >
+        <div
+          className="border-b shadow-[0_22px_60px_rgba(15,23,42,0.10)]"
+          style={{ borderColor: brandBorder, background: headerBackground }}
+        >
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-5.5 lg:px-6 lg:py-6">
             <div className="relative flex min-h-[78px] items-center justify-center sm:min-h-[86px] lg:min-h-[94px]">
               <div className="flex min-w-0 items-center justify-center px-[58px] sm:px-0">
@@ -1167,7 +2008,12 @@ export default function MenuBrowser({
                     loading="lazy"
                   />
                 ) : (
-                  <h1 className="max-w-[min(42vw,150px)] truncate text-center text-[1.35rem] font-semibold tracking-tight sm:max-w-none sm:text-[1.95rem] lg:text-[2.35rem]" style={{ color: headerText }}>{tenantName}</h1>
+                  <h1
+                    className="max-w-[min(42vw,150px)] truncate text-center text-[1.35rem] font-semibold tracking-tight sm:max-w-none sm:text-[1.95rem] lg:text-[2.35rem]"
+                    style={{ color: headerText }}
+                  >
+                    {tenantName}
+                  </h1>
                 )}
               </div>
 
@@ -1179,7 +2025,9 @@ export default function MenuBrowser({
                 {rewardsActionVisible ? (
                   <StorefrontQuickActionButton
                     label="Rewards"
-                    actionLabel={customerAuthStatus === "signedIn" ? rewardTier : "View"}
+                    actionLabel={
+                      customerAuthStatus === "signedIn" ? rewardTier : "View"
+                    }
                     icon={<span className="text-lg leading-none">✦</span>}
                     onClick={() => setRewardsModalOpen(true)}
                     borderColor="transparent"
@@ -1193,7 +2041,11 @@ export default function MenuBrowser({
                   <StorefrontQuickActionButton
                     label="Offers"
                     actionLabel={visibleDiscountRules.length ? "View" : "Info"}
-                    icon={<span className="text-base font-black leading-none">%</span>}
+                    icon={
+                      <span className="text-base font-black leading-none">
+                        %
+                      </span>
+                    }
                     onClick={() => setDiscountsModalOpen(true)}
                     borderColor="transparent"
                     textColor={welcomeActionText}
@@ -1206,7 +2058,20 @@ export default function MenuBrowser({
                   <StorefrontQuickActionButton
                     label="Favourites"
                     actionLabel={favouritesVisible ? "Hide" : "View"}
-                    icon={<svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" /></svg>}
+                    icon={
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-[18px] w-[18px]"
+                        fill={favouritesVisible ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
+                      </svg>
+                    }
                     onClick={() => setFavouritesVisible((visible) => !visible)}
                     expanded={favouritesVisible}
                     controls="customer-favourites-section"
@@ -1246,28 +2111,81 @@ export default function MenuBrowser({
                   aria-label="Search menu"
                   title="Search menu"
                 >
-                  <svg viewBox="0 0 24 24" className="h-[23px] w-[23px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-[23px] w-[23px]"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
                     <circle cx="11" cy="11" r="7" />
                     <path d="m20 20-3.5-3.5" />
                   </svg>
                 </button>
-                <CartButton ref={cartButtonRef} tenantSlug={tenantSlug} tenantId={tenantId} accentColor={brandAccent} primaryColor={brandPrimary} pulseKey={cartPulseKey} checkoutBlocked={Boolean(trialState?.checkoutBlocked || trialState?.isTrialExpired)} checkoutBlockedMessage={trialState?.customerMessage || null} />
+                <CartButton
+                  ref={cartButtonRef}
+                  tenantSlug={tenantSlug}
+                  tenantId={tenantId}
+                  accentColor={brandAccent}
+                  primaryColor={brandPrimary}
+                  pulseKey={cartPulseKey}
+                  checkoutBlocked={Boolean(
+                    trialState?.checkoutBlocked || trialState?.isTrialExpired,
+                  )}
+                  checkoutBlockedMessage={trialState?.customerMessage || null}
+                />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <section className="rounded-[28px] border px-5 py-5 text-center ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ backgroundColor: welcomeBackground, borderColor: brandAccentBorder, boxShadow: `0 16px 36px ${welcomeShadow}22` }}>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: welcomeLabel }}>{welcomeCustomerName ? `Welcome, ${welcomeCustomerName}` : "Welcome"}</p>
-        <h2 className="mt-2 text-[1.75rem] font-semibold tracking-tight sm:text-[2.35rem] lg:text-[2.65rem]" style={{ color: welcomeHeadingColor }}>{welcomeHeading || "Browse the menu"}</h2>
-        <p className="mx-auto mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7" style={{ color: welcomeBody }}>
-          {welcomeSubheading || "Tap into the details for more information, or add favourites straight to your order."}
+      <section
+        className="rounded-[28px] border px-5 py-5 text-center ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
+        style={{
+          backgroundColor: welcomeBackground,
+          borderColor: brandAccentBorder,
+          boxShadow: `0 16px 36px ${welcomeShadow}22`,
+        }}
+      >
+        <p
+          className="text-xs font-semibold uppercase tracking-[0.28em]"
+          style={{ color: welcomeLabel }}
+        >
+          {welcomeCustomerName ? `Welcome, ${welcomeCustomerName}` : "Welcome"}
+        </p>
+        <h2
+          className="mt-2 text-[1.75rem] font-semibold tracking-tight sm:text-[2.35rem] lg:text-[2.65rem]"
+          style={{ color: welcomeHeadingColor }}
+        >
+          {welcomeHeading || "Browse the menu"}
+        </h2>
+        <p
+          className="mx-auto mt-3 max-w-3xl text-[14px] leading-6 sm:text-base sm:leading-7"
+          style={{ color: welcomeBody }}
+        >
+          {welcomeSubheading ||
+            "Tap into the details for more information, or add favourites straight to your order."}
         </p>
         <div className="mt-4 flex flex-col items-center justify-center gap-2 text-center sm:hidden">
           {showFavouriteLoadingNote ? (
-            <p className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-center text-[11px] font-semibold shadow-sm backdrop-blur" style={{ color: welcomeBody }}>
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <p
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-1.5 text-center text-[11px] font-semibold shadow-sm backdrop-blur"
+              style={{ color: welcomeBody }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
               </svg>
               Loading your saved hearts quietly in the background
@@ -1294,21 +2212,34 @@ export default function MenuBrowser({
                 <StorefrontQuickActionButton
                   label="Offers"
                   actionLabel={visibleDiscountRules.length ? "View" : "Info"}
-                  icon={<span className="text-base font-black leading-none">%</span>}
+                  icon={
+                    <span className="text-base font-black leading-none">%</span>
+                  }
                   onClick={() => setDiscountsModalOpen(true)}
                   borderColor="transparent"
                   textColor={welcomeActionText}
                   iconTextColor={welcomeActionIconText}
                   iconBackground={welcomeActionIconBackground}
                 />
-              ) : <span aria-hidden="true" />}
+              ) : (
+                <span aria-hidden="true" />
+              )}
 
               {canToggleFavourites ? (
                 <StorefrontQuickActionButton
                   label="Favourites"
                   actionLabel={favouritesVisible ? "Hide" : "View"}
                   icon={
-                    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill={favouritesVisible ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-[18px] w-[18px]"
+                      fill={favouritesVisible ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
                       <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6Z" />
                     </svg>
                   }
@@ -1320,7 +2251,9 @@ export default function MenuBrowser({
                   iconTextColor={welcomeActionIconText}
                   iconBackground={welcomeActionIconBackground}
                 />
-              ) : <span aria-hidden="true" />}
+              ) : (
+                <span aria-hidden="true" />
+              )}
 
               {canToggleBuyAgain ? (
                 <StorefrontQuickActionButton
@@ -1335,21 +2268,30 @@ export default function MenuBrowser({
                   iconTextColor={welcomeActionIconText}
                   iconBackground={welcomeActionIconBackground}
                 />
-              ) : <span aria-hidden="true" />}
+              ) : (
+                <span aria-hidden="true" />
+              )}
             </div>
           ) : null}
 
           {showNoFavouritesNote ? (
-            <p className="text-center text-[11px] font-semibold" style={{ color: welcomeBody }}>
+            <p
+              className="text-center text-[11px] font-semibold"
+              style={{ color: welcomeBody }}
+            >
               Tap the heart on any product to save it here.
             </p>
           ) : null}
         </div>
       </section>
 
-
       {discountsModalOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setDiscountsModalOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setDiscountsModalOpen(false)}
+        >
           <div className="flex min-h-full items-center justify-center">
             <div
               className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
@@ -1359,41 +2301,87 @@ export default function MenuBrowser({
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Offers & discount codes</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{discountPopupTitle || "Today’s offers"}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{discountPopupMessage || "Apply an available offer at checkout."}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Offers & discount codes
+                    </p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                      {discountPopupTitle || "Today’s offers"}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {discountPopupMessage ||
+                        "Apply an available offer at checkout."}
+                    </p>
                   </div>
-                  <button type="button" onClick={() => setDiscountsModalOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close discounts">×</button>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountsModalOpen(false)}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                    aria-label="Close discounts"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
 
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12 lg:pt-8 xl:px-8 xl:pb-14 xl:pt-8">
                 <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:items-start xl:gap-7">
                   <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">How offers work</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      How offers work
+                    </p>
                     <div className="mt-3 text-[15px] leading-7 text-slate-700">
-                      <p>Use a discount code at checkout, or tap an available offer where the store allows quick apply.</p>
-                      <p className="mt-3">Some offers can be used with rewards, while others are set as the only discount for that order.</p>
+                      <p>
+                        Use a discount code at checkout, or tap an available
+                        offer where the store allows quick apply.
+                      </p>
+                      <p className="mt-3">
+                        Some offers can be used with rewards, while others are
+                        set as the only discount for that order.
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4 xl:space-y-5">
                     {!visibleDiscountRules.length ? (
                       <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 text-center text-sm leading-6 text-slate-600 sm:p-5 lg:p-6">
-                        No offers are currently available. Please check again soon.
+                        No offers are currently available. Please check again
+                        soon.
                       </div>
                     ) : null}
                     {visibleDiscountRules.map((rule) => (
-                      <div key={rule.id} className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+                      <div
+                        key={rule.id}
+                        className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6"
+                      >
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">{rule.scope === "combo" ? "Bundle offer" : rule.scope === "product" ? "Product offer" : "Site-wide offer"}</p>
-                            <h4 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">{rule.name}</h4>
-                            <p className="mt-2 text-sm leading-6 text-slate-600">{rule.code ? `Use code ${rule.code} at checkout.` : "Applies automatically when eligible."}</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                              {rule.scope === "combo"
+                                ? "Bundle offer"
+                                : rule.scope === "product"
+                                  ? "Product offer"
+                                  : "Site-wide offer"}
+                            </p>
+                            <h4 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
+                              {rule.name}
+                            </h4>
+                            <p className="mt-2 text-sm leading-6 text-slate-600">
+                              {rule.code
+                                ? `Use code ${rule.code} at checkout.`
+                                : "Applies automatically when eligible."}
+                            </p>
                           </div>
-                          <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">{rule.type === "percentage" ? `${rule.value}%` : `${formatMoney(Number(rule.value || 0), moneySettings)}`}</span>
+                          <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                            {rule.type === "percentage"
+                              ? `${rule.value}%`
+                              : `${formatMoney(Number(rule.value || 0), moneySettings)}`}
+                          </span>
                         </div>
-                        {rule.popupMessage ? <p className="mt-3 text-sm leading-6 text-slate-600">{rule.popupMessage}</p> : null}
+                        {rule.popupMessage ? (
+                          <p className="mt-3 text-sm leading-6 text-slate-600">
+                            {rule.popupMessage}
+                          </p>
+                        ) : null}
                       </div>
                     ))}
                   </div>
@@ -1402,7 +2390,13 @@ export default function MenuBrowser({
 
               <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
-                  <button type="button" onClick={() => setDiscountsModalOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8">Back to menu</button>
+                  <button
+                    type="button"
+                    onClick={() => setDiscountsModalOpen(false)}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8"
+                  >
+                    Back to menu
+                  </button>
                 </div>
               </div>
             </div>
@@ -1411,7 +2405,12 @@ export default function MenuBrowser({
       ) : null}
 
       {rewardsModalOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setRewardsModalOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setRewardsModalOpen(false)}
+        >
           <div className="flex min-h-full items-center justify-center">
             <div
               className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
@@ -1421,26 +2420,51 @@ export default function MenuBrowser({
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{rewardProgrammeName}</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{customerAuthStatus === "signedIn" ? `${rewardTier} member` : "Join rewards"}</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      {rewardProgrammeName}
+                    </p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                      {customerAuthStatus === "signedIn"
+                        ? `${rewardTier} member`
+                        : "Join rewards"}
+                    </h3>
                     <div className="mt-4">
                       <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                        {customerAuthStatus === "signedIn" ? `${rewardDiscount}% reward discount` : "Automatic enrolment"}
+                        {customerAuthStatus === "signedIn"
+                          ? `${rewardDiscount}% reward discount`
+                          : "Automatic enrolment"}
                       </span>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setRewardsModalOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close rewards">×</button>
+                  <button
+                    type="button"
+                    onClick={() => setRewardsModalOpen(false)}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                    aria-label="Close rewards"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
 
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12 lg:pt-8 xl:px-8 xl:pb-14 xl:pt-8">
                 <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start xl:gap-7">
                   <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Reward status</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      Reward status
+                    </p>
                     <div className="mt-3 text-[15px] leading-7 text-slate-700">
-                      <p>{customerAuthStatus === "signedIn" ? `You currently receive ${rewardDiscount}% off eligible orders with this store.` : "Create or sign in to your account and you’ll be automatically enrolled."}</p>
+                      <p>
+                        {customerAuthStatus === "signedIn"
+                          ? `You currently receive ${rewardDiscount}% off eligible orders with this store.`
+                          : "Create or sign in to your account and you’ll be automatically enrolled."}
+                      </p>
                       {customerAuthStatus === "signedIn" && customerRewards ? (
-                        <p className="mt-3">{rewardNextTier ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.` : "You have reached the top tier. Very civilised indeed."}</p>
+                        <p className="mt-3">
+                          {rewardNextTier
+                            ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.`
+                            : "You have reached the top tier. Very civilised indeed."}
+                        </p>
                       ) : null}
                     </div>
                   </div>
@@ -1448,25 +2472,59 @@ export default function MenuBrowser({
                   <div className="space-y-4 xl:space-y-5">
                     {customerAuthStatus === "signedIn" && customerRewards ? (
                       <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Qualifying spend</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                          Qualifying spend
+                        </p>
                         <div className="mt-3 flex items-center justify-between gap-4 text-sm text-slate-700">
                           <span>Total qualifying spend</span>
-                          <strong className="text-slate-900">{formatMoney(customerRewards.qualifyingSpend, moneySettings)}</strong>
+                          <strong className="text-slate-900">
+                            {formatMoney(
+                              customerRewards.qualifyingSpend,
+                              moneySettings,
+                            )}
+                          </strong>
                         </div>
                         <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${rewardProgress}%` }} />
+                          <div
+                            className="h-full rounded-full bg-emerald-500"
+                            style={{ width: `${rewardProgress}%` }}
+                          />
                         </div>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">{rewardNextTier ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.` : "You have reached the top tier. Very civilised indeed."}</p>
+                        <p className="mt-3 text-sm leading-6 text-slate-600">
+                          {rewardNextTier
+                            ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.`
+                            : "You have reached the top tier. Very civilised indeed."}
+                        </p>
                       </div>
                     ) : (
-                      <div className="rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm sm:p-5 lg:p-6">Sign in or create an account to track your spend, unlock tier discounts, and keep favourites and buy-again items handy.</div>
+                      <div className="rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm sm:p-5 lg:p-6">
+                        Sign in or create an account to track your spend, unlock
+                        tier discounts, and keep favourites and buy-again items
+                        handy.
+                      </div>
                     )}
                     <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Reward tiers</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                        Reward tiers
+                      </p>
                       <div className="mt-4 grid gap-3">
-                        <RewardInfoRow name="Silver" spend="Automatic" discount={Number(rewardsSilverDiscountPercent || 0)} />
-                        <RewardInfoRow name="Gold" spend={`${formatMoney(Number(rewardsGoldMinSpend || 1000), moneySettings)} spend`} discount={Number(rewardsGoldDiscountPercent || 5)} />
-                        <RewardInfoRow name="Platinum" spend={`${formatMoney(Number(rewardsPlatinumMinSpend || 2500), moneySettings)} spend`} discount={Number(rewardsPlatinumDiscountPercent || 10)} />
+                        <RewardInfoRow
+                          name="Silver"
+                          spend="Automatic"
+                          discount={Number(rewardsSilverDiscountPercent || 0)}
+                        />
+                        <RewardInfoRow
+                          name="Gold"
+                          spend={`${formatMoney(Number(rewardsGoldMinSpend || 1000), moneySettings)} spend`}
+                          discount={Number(rewardsGoldDiscountPercent || 5)}
+                        />
+                        <RewardInfoRow
+                          name="Platinum"
+                          spend={`${formatMoney(Number(rewardsPlatinumMinSpend || 2500), moneySettings)} spend`}
+                          discount={Number(
+                            rewardsPlatinumDiscountPercent || 10,
+                          )}
+                        />
                       </div>
                     </div>
                   </div>
@@ -1475,8 +2533,25 @@ export default function MenuBrowser({
 
               <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <button type="button" onClick={() => setRewardsModalOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
-                  <a href={customerAuthStatus === "signedIn" ? "/checkout" : "/account/signup"} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8">{customerAuthStatus === "signedIn" ? "Go to checkout" : "Create account"}</a>
+                  <button
+                    type="button"
+                    onClick={() => setRewardsModalOpen(false)}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7"
+                  >
+                    Back to menu
+                  </button>
+                  <a
+                    href={
+                      customerAuthStatus === "signedIn"
+                        ? "/checkout"
+                        : "/account/signup"
+                    }
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8"
+                  >
+                    {customerAuthStatus === "signedIn"
+                      ? "Go to checkout"
+                      : "Create account"}
+                  </a>
                 </div>
               </div>
             </div>
@@ -1485,19 +2560,48 @@ export default function MenuBrowser({
       ) : null}
 
       {shouldRenderFavouritesArea ? (
-        <section id="customer-favourites-section" className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Favourite products">
+        <section
+          id="customer-favourites-section"
+          className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
+          style={{
+            backgroundColor: favouritesBackground,
+            borderColor: favouritesBorder,
+            color: favouritesText,
+          }}
+          aria-label="Favourite products"
+        >
           <div className="pointer-events-none absolute -right-12 -top-16 h-[10.5rem] w-[10.5rem] rounded-full bg-amber-200/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-orange-300/18 blur-3xl" />
           <div className="relative z-10 mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: favouritesLabelText }}>Your favourites</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl" style={{ color: favouritesText }}>{favouritesReady ? "Saved favourites" : "Loading favourites"}</h2>
+              <p
+                className="text-[10px] font-black uppercase tracking-[0.22em]"
+                style={{ color: favouritesLabelText }}
+              >
+                Your favourites
+              </p>
+              <h2
+                className="mt-1 text-xl font-black tracking-tight sm:text-2xl"
+                style={{ color: favouritesText }}
+              >
+                {favouritesReady ? "Saved favourites" : "Loading favourites"}
+              </h2>
             </div>
-            {favouriteProducts.length > 1 ? <p className="text-[10px] font-bold uppercase tracking-[0.15em] lg:hidden" style={{ color: favouritesText }}>Swipe sideways</p> : null}
+            {favouriteProducts.length > 1 ? (
+              <p
+                className="text-[10px] font-bold uppercase tracking-[0.15em] lg:hidden"
+                style={{ color: favouritesText }}
+              >
+                Swipe sideways
+              </p>
+            ) : null}
           </div>
 
           {!favouritesReady ? (
-            <div className="relative z-10 mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-hidden px-[19vw] pb-1 pt-1 sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]" aria-label="Loading favourite products">
+            <div
+              className="relative z-10 mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-hidden px-[19vw] pb-1 pt-1 sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]"
+              aria-label="Loading favourite products"
+            >
               <div className="flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-white/35 bg-white/18 p-3 ring-1 ring-white/20 sm:w-[248px]">
                 <div className="flex items-center justify-between gap-3">
                   <span className="h-6 w-24 rounded-full bg-white/24" />
@@ -1511,7 +2615,9 @@ export default function MenuBrowser({
           ) : null}
 
           {favouritesReady && favouritesMessage ? (
-            <div className="relative z-10 rounded-2xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-semibold text-white/90">{favouritesMessage}</div>
+            <div className="relative z-10 rounded-2xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-semibold text-white/90">
+              {favouritesMessage}
+            </div>
           ) : null}
 
           {favouritesReady && favouriteProducts.length ? (
@@ -1524,7 +2630,18 @@ export default function MenuBrowser({
                     className="absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
                     aria-label="Previous favourite"
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
                   </button>
                   <button
                     type="button"
@@ -1532,11 +2649,25 @@ export default function MenuBrowser({
                     className="absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
                     aria-label="Next favourite"
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
                   </button>
                 </>
               ) : null}
-              <div ref={favouritesStripRef} className="mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[19vw] pb-1 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]">
+              <div
+                ref={favouritesStripRef}
+                className="mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[19vw] pb-1 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]"
+              >
                 {favouriteProducts.map((product) => (
                   <FavouriteProductStripCard
                     key={product.id}
@@ -1546,8 +2677,12 @@ export default function MenuBrowser({
                     primaryColor={brandPrimary}
                     themeColors={storefrontTheme}
                     isBusy={Boolean(favouriteBusyById[product.id])}
-                    onAddToCart={(productId, options) => void addToCart(productId, options)}
-                    onRemoveFavourite={(productId) => void toggleFavourite(productId)}
+                    onAddToCart={(productId, options) =>
+                      void addToCart(productId, options)
+                    }
+                    onRemoveFavourite={(productId) =>
+                      void toggleFavourite(productId)
+                    }
                   />
                 ))}
               </div>
@@ -1557,19 +2692,50 @@ export default function MenuBrowser({
       ) : null}
 
       {shouldRenderBuyAgainArea ? (
-        <section id="customer-buy-again-section" className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5" style={{ backgroundColor: favouritesBackground, borderColor: favouritesBorder, color: favouritesText }} aria-label="Buy again products">
+        <section
+          id="customer-buy-again-section"
+          className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
+          style={{
+            backgroundColor: favouritesBackground,
+            borderColor: favouritesBorder,
+            color: favouritesText,
+          }}
+          aria-label="Buy again products"
+        >
           <div className="pointer-events-none absolute -right-12 -top-16 h-[10.5rem] w-[10.5rem] rounded-full bg-amber-200/20 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-orange-300/18 blur-3xl" />
           <div className="relative z-10 mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: favouritesLabelText }}>Buy again</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl" style={{ color: favouritesText }}>{buyAgainReady ? "Previously purchased" : "Loading previous buys"}</h2>
+              <p
+                className="text-[10px] font-black uppercase tracking-[0.22em]"
+                style={{ color: favouritesLabelText }}
+              >
+                Buy again
+              </p>
+              <h2
+                className="mt-1 text-xl font-black tracking-tight sm:text-2xl"
+                style={{ color: favouritesText }}
+              >
+                {buyAgainReady
+                  ? "Previously purchased"
+                  : "Loading previous buys"}
+              </h2>
             </div>
-            {buyAgainProducts.length > 1 ? <p className="text-[10px] font-bold uppercase tracking-[0.15em] lg:hidden" style={{ color: favouritesText }}>Swipe sideways</p> : null}
+            {buyAgainProducts.length > 1 ? (
+              <p
+                className="text-[10px] font-bold uppercase tracking-[0.15em] lg:hidden"
+                style={{ color: favouritesText }}
+              >
+                Swipe sideways
+              </p>
+            ) : null}
           </div>
 
           {!buyAgainReady ? (
-            <div className="relative z-10 mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-hidden px-[19vw] pb-1 pt-1 sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]" aria-label="Loading buy again products">
+            <div
+              className="relative z-10 mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-hidden px-[19vw] pb-1 pt-1 sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]"
+              aria-label="Loading buy again products"
+            >
               <div className="flex w-[62vw] max-w-[248px] shrink-0 snap-center flex-col overflow-hidden rounded-[24px] border border-white/35 bg-white/18 p-3 ring-1 ring-white/20 sm:w-[248px]">
                 <div className="flex items-center justify-between gap-3">
                   <span className="h-6 w-24 rounded-full bg-white/24" />
@@ -1583,7 +2749,9 @@ export default function MenuBrowser({
           ) : null}
 
           {buyAgainReady && buyAgainMessage ? (
-            <div className="relative z-10 rounded-2xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-semibold text-white/90">{buyAgainMessage}</div>
+            <div className="relative z-10 rounded-2xl border border-white/20 bg-white/12 px-4 py-3 text-sm font-semibold text-white/90">
+              {buyAgainMessage}
+            </div>
           ) : null}
 
           {buyAgainReady && buyAgainProducts.length ? (
@@ -1596,7 +2764,18 @@ export default function MenuBrowser({
                     className="absolute left-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
                     aria-label="Previous buy again product"
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
                   </button>
                   <button
                     type="button"
@@ -1604,11 +2783,25 @@ export default function MenuBrowser({
                     className="absolute right-2 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/55 bg-white/92 text-amber-950 shadow-[0_16px_34px_rgba(15,23,42,0.22)] backdrop-blur transition hover:scale-[1.04] hover:bg-white lg:inline-flex"
                     aria-label="Next buy again product"
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
                   </button>
                 </>
               ) : null}
-              <div ref={buyAgainStripRef} className="mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[19vw] pb-1 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]">
+              <div
+                ref={buyAgainStripRef}
+                className="mx-auto flex max-w-full snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[19vw] pb-1 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:px-[calc(50%_-_124px)] lg:px-[calc(50%_-_124px)]"
+              >
                 {buyAgainProducts.map((product) => (
                   <FavouriteProductStripCard
                     key={product.id}
@@ -1619,7 +2812,9 @@ export default function MenuBrowser({
                     themeColors={storefrontTheme}
                     stripKind="buyAgain"
                     isBusy={false}
-                    onAddToCart={(productId, options) => void addToCart(productId, options)}
+                    onAddToCart={(productId, options) =>
+                      void addToCart(productId, options)
+                    }
                   />
                 ))}
               </div>
@@ -1629,24 +2824,63 @@ export default function MenuBrowser({
       ) : null}
 
       {variantPickerProduct ? (
-        <div className="fixed inset-0 z-50 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" style={{ backgroundColor: "rgba(15,23,42,0.54)" }} role="dialog" aria-modal="true" onClick={() => setVariantPickerProduct(null)}>
+        <div
+          className="fixed inset-0 z-50 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          style={{ backgroundColor: "rgba(15,23,42,0.54)" }}
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setVariantPickerProduct(null)}
+        >
           <div className="flex min-h-full items-center justify-center">
-            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]" onClick={(event) => event.stopPropagation()}>
-              <div className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-7" style={{ borderColor: brandBorder, background: `linear-gradient(135deg, #ffffff 0%, ${brandSurface} 52%, ${blendHex(brandAccent, "#FFFFFF", 0.88)} 100%)` }}>
-                <div className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${brandAccent}, ${brandPrimary}, ${brandAccent})` }} />
+            <div
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div
+                className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-7"
+                style={{
+                  borderColor: brandBorder,
+                  background: `linear-gradient(135deg, #ffffff 0%, ${brandSurface} 52%, ${blendHex(brandAccent, "#FFFFFF", 0.88)} 100%)`,
+                }}
+              >
+                <div
+                  className="absolute inset-x-0 top-0 h-1"
+                  style={{
+                    background: `linear-gradient(90deg, ${brandAccent}, ${brandPrimary}, ${brandAccent})`,
+                  }}
+                />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{variantPickerProduct.product.variant_label || "Choose an option"}</p>
-                    <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{variantPickerProduct.product.name}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Choose the standard product as shown, or select another available option.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      {variantPickerProduct.product.variant_label ||
+                        "Choose an option"}
+                    </p>
+                    <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                      {variantPickerProduct.product.name}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Choose the standard product as shown, or select another
+                      available option.
+                    </p>
                   </div>
-                  <button type="button" onClick={() => setVariantPickerProduct(null)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-white/95 text-xl shadow-sm transition hover:bg-white" style={{ borderColor: brandBorder, color: brandPrimary }} aria-label="Close variants">×</button>
+                  <button
+                    type="button"
+                    onClick={() => setVariantPickerProduct(null)}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-white/95 text-xl shadow-sm transition hover:bg-white"
+                    style={{ borderColor: brandBorder, color: brandPrimary }}
+                    aria-label="Close variants"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12">
                 <div className="space-y-3">
                   {(() => {
-                    const baseStock = variantStockState(variantPickerProduct.product, null);
+                    const baseStock = variantStockState(
+                      variantPickerProduct.product,
+                      null,
+                    );
                     return (
                       <button
                         type="button"
@@ -1655,50 +2889,125 @@ export default function MenuBrowser({
                           if (baseStock.outOfStock) return;
                           const current = variantPickerProduct;
                           setVariantPickerProduct(null);
-                          void addCartLine(current.product.id, null, current.options);
+                          void addCartLine(
+                            current.product.id,
+                            null,
+                            current.options,
+                          );
                         }}
                         className="flex w-full items-center justify-between gap-4 rounded-[22px] border px-4 py-4 text-left shadow-sm transition enabled:hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60"
-                        style={{ borderColor: brandAccent, backgroundColor: blendHex(brandAccent, "#FFFFFF", 0.90) }}
+                        style={{
+                          borderColor: brandAccent,
+                          backgroundColor: blendHex(
+                            brandAccent,
+                            "#FFFFFF",
+                            0.9,
+                          ),
+                        }}
                       >
                         <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-slate-950">Standard product</span>
-                          <span className="mt-1 block text-xs leading-5 text-slate-500">Add {variantPickerProduct.product.name} exactly as shown on the menu.</span>
-                          {baseStock.outOfStock ? <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">Sold out</span> : baseStock.lowStock ? <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Only {baseStock.available} left</span> : null}
+                          <span className="block text-sm font-semibold text-slate-950">
+                            Standard product
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-slate-500">
+                            Add {variantPickerProduct.product.name} exactly as
+                            shown on the menu.
+                          </span>
+                          {baseStock.outOfStock ? (
+                            <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
+                              Sold out
+                            </span>
+                          ) : baseStock.lowStock ? (
+                            <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                              Only {baseStock.available} left
+                            </span>
+                          ) : null}
                         </span>
-                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(Number(variantPickerProduct.product.price || 0), moneySettings)}</span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">
+                          {formatMoney(
+                            Number(variantPickerProduct.product.price || 0),
+                            moneySettings,
+                          )}
+                        </span>
                       </button>
                     );
                   })()}
-                  {activeProductVariants(variantPickerProduct.product).map((variant) => {
-                    const variantPrice = getVariantPrice(Number(variantPickerProduct.product.price || 0), variant);
-                    const stock = variantStockState(variantPickerProduct.product, variant);
-                    return (
-                      <button
-                        key={variant.id}
-                        type="button"
-                        disabled={stock.outOfStock}
-                        onClick={() => {
-                          if (stock.outOfStock) return;
-                          const current = variantPickerProduct;
-                          setVariantPickerProduct(null);
-                          void addCartLine(current.product.id, variant, current.options);
-                        }}
-                        className="flex w-full items-center justify-between gap-4 rounded-[22px] border bg-white px-4 py-4 text-left shadow-sm transition enabled:hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60"
-                        style={{ borderColor: stock.outOfStock ? "#E2E8F0" : brandBorder }}
-                      >
-                        <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-slate-950">{variant.name}</span>
-                          {variant.description ? <span className="mt-1 block text-xs leading-5 text-slate-500">{variant.description}</span> : null}
-                          {stock.outOfStock ? <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">Sold out</span> : stock.lowStock ? <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">Only {stock.available} left</span> : null}
-                        </span>
-                        <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(variantPrice, moneySettings)}</span>
-                      </button>
-                    );
-                  })}
+                  {activeProductVariants(variantPickerProduct.product).map(
+                    (variant) => {
+                      const variantPrice = getVariantPrice(
+                        Number(variantPickerProduct.product.price || 0),
+                        variant,
+                      );
+                      const stock = variantStockState(
+                        variantPickerProduct.product,
+                        variant,
+                      );
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          disabled={stock.outOfStock}
+                          onClick={() => {
+                            if (stock.outOfStock) return;
+                            const current = variantPickerProduct;
+                            setVariantPickerProduct(null);
+                            void addCartLine(
+                              current.product.id,
+                              variant,
+                              current.options,
+                            );
+                          }}
+                          className="flex w-full items-center justify-between gap-4 rounded-[22px] border bg-white px-4 py-4 text-left shadow-sm transition enabled:hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-60"
+                          style={{
+                            borderColor: stock.outOfStock
+                              ? "#E2E8F0"
+                              : brandBorder,
+                          }}
+                        >
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-slate-950">
+                              {variant.name}
+                            </span>
+                            {variant.description ? (
+                              <span className="mt-1 block text-xs leading-5 text-slate-500">
+                                {variant.description}
+                              </span>
+                            ) : null}
+                            {stock.outOfStock ? (
+                              <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
+                                Sold out
+                              </span>
+                            ) : stock.lowStock ? (
+                              <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                                Only {stock.available} left
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">
+                            {formatMoney(variantPrice, moneySettings)}
+                          </span>
+                        </button>
+                      );
+                    },
+                  )}
                 </div>
               </div>
-              <div className="sticky bottom-0 z-10 border-t bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7" style={{ borderColor: brandBorder }}>
-                <button type="button" onClick={() => setVariantPickerProduct(null)} className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px]" style={{ borderColor: brandAccent, backgroundColor: blendHex(brandAccent, "#FFFFFF", 0.88), color: brandPrimary }}>Back to menu</button>
+              <div
+                className="sticky bottom-0 z-10 border-t bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7"
+                style={{ borderColor: brandBorder }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setVariantPickerProduct(null)}
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px]"
+                  style={{
+                    borderColor: brandAccent,
+                    backgroundColor: blendHex(brandAccent, "#FFFFFF", 0.88),
+                    color: brandPrimary,
+                  }}
+                >
+                  Back to menu
+                </button>
               </div>
             </div>
           </div>
@@ -1706,15 +3015,28 @@ export default function MenuBrowser({
       ) : null}
 
       {categories.map((category) => {
-        const categoryProducts = products.filter((product) => product.category_id === category.id);
+        const categoryProducts = products.filter(
+          (product) =>
+            product.category_id === category.id ||
+            product.secondary_category_id === category.id,
+        );
         if (!categoryProducts.length) return null;
 
         return (
           <section key={category.id} className="mb-8 sm:mb-10">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-              <h2 className="text-[1.38rem] font-semibold tracking-tight sm:text-[1.95rem]" style={{ color: brandText }}>{category.name}</h2>
-              <span className="rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]" style={{ borderColor: brandBorder, color: brandSoftText }}>
-                {categoryProducts.length} {categoryProducts.length === 1 ? "item" : "items"}
+              <h2
+                className="text-[1.38rem] font-semibold tracking-tight sm:text-[1.95rem]"
+                style={{ color: brandText }}
+              >
+                {category.name}
+              </h2>
+              <span
+                className="rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]"
+                style={{ borderColor: brandBorder, color: brandSoftText }}
+              >
+                {categoryProducts.length}{" "}
+                {categoryProducts.length === 1 ? "item" : "items"}
               </span>
             </div>
             <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -1739,8 +3061,15 @@ export default function MenuBrowser({
                   themeColors={storefrontTheme}
                   isFavourite={favouriteIdSet.has(product.id)}
                   favouriteBusy={Boolean(favouriteBusyById[product.id])}
-                  onToggleFavourite={(productId) => void toggleFavourite(productId)}
-                  onAddToCartAnimation={(payload) => launchAddToCartAnimation({ ...payload, destination: "header" })}
+                  onToggleFavourite={(productId) =>
+                    void toggleFavourite(productId)
+                  }
+                  onAddToCartAnimation={(payload) =>
+                    launchAddToCartAnimation({
+                      ...payload,
+                      destination: "header",
+                    })
+                  }
                   initiallyOpen={initialProductId === product.id}
                 />
               ))}
@@ -1750,29 +3079,91 @@ export default function MenuBrowser({
       })}
 
       {footerIconLinks.length ? (
-        <section className="rounded-[28px] border px-5 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
-          <div className="mx-auto flex w-full max-w-[244px] flex-wrap items-center justify-center gap-3 sm:max-w-[256px]" aria-label="Store footer links">
+        <section
+          className="rounded-[28px] border px-5 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
+          style={{
+            backgroundColor: footerBackground,
+            borderColor: brandBorder,
+            color: footerText,
+          }}
+        >
+          <div
+            className="mx-auto flex w-full max-w-[244px] flex-wrap items-center justify-center gap-3 sm:max-w-[256px]"
+            aria-label="Store footer links"
+          >
             {footerIconLinks.map((link) => (
-              <FooterIcon key={link.label} label={link.label} href={link.href || null}>{link.icon}</FooterIcon>
+              <FooterIcon
+                key={link.label}
+                label={link.label}
+                href={link.href || null}
+              >
+                {link.icon}
+              </FooterIcon>
             ))}
           </div>
         </section>
       ) : null}
 
-      <footer className="rounded-[24px] border px-5 py-5 text-center text-sm shadow-sm sm:px-6" style={{ backgroundColor: footerBackground, borderColor: brandBorder, color: footerText }}>
+      <footer
+        className="rounded-[24px] border px-5 py-5 text-center text-sm shadow-sm sm:px-6"
+        style={{
+          backgroundColor: footerBackground,
+          borderColor: brandBorder,
+          color: footerText,
+        }}
+      >
         <div className="flex flex-col items-center justify-center gap-3 text-center">
           {showOrduvaReferralAd !== false ? (
             <div className="w-full overflow-hidden rounded-[24px] border border-[#FF6A3D]/20 bg-[linear-gradient(135deg,#FFF7F0_0%,#FFFFFF_52%,#FFE7D9_100%)] p-4 text-left shadow-[0_18px_45px_rgba(14,14,16,0.08)] sm:p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Powered by Orduva</p>
-                  <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10]">Do you need a store like this?</h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C5F66]">Launch your own branded ordering storefront with products, customer accounts and simple order management.</p>
-                  <a href={affiliateApplicationHref} onClick={() => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("orduva:analytics", { detail: { eventType: "affiliate_apply_click", scope: "tenant_storefront", tenantId, tenantSlug, metadata: { source: "storefront_footer" } } })); }} className="mt-3 inline-flex text-xs font-black uppercase tracking-[0.18em] text-[#0E6F5C] underline decoration-[#0E6F5C]/30 underline-offset-4 transition hover:text-[#084C41]">Apply to become an Orduva affiliate</a>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">
+                    Powered by Orduva
+                  </p>
+                  <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10]">
+                    Do you need a store like this?
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C5F66]">
+                    Launch your own branded ordering storefront with products,
+                    customer accounts and simple order management.
+                  </p>
+                  <a
+                    href={affiliateApplicationHref}
+                    onClick={() => {
+                      if (typeof window !== "undefined")
+                        window.dispatchEvent(
+                          new CustomEvent("orduva:analytics", {
+                            detail: {
+                              eventType: "affiliate_apply_click",
+                              scope: "tenant_storefront",
+                              tenantId,
+                              tenantSlug,
+                              metadata: { source: "storefront_footer" },
+                            },
+                          }),
+                        );
+                    }}
+                    className="mt-3 inline-flex text-xs font-black uppercase tracking-[0.18em] text-[#0E6F5C] underline decoration-[#0E6F5C]/30 underline-offset-4 transition hover:text-[#084C41]"
+                  >
+                    Apply to become an Orduva affiliate
+                  </a>
                 </div>
                 <a
                   href={referralSignupHref}
-                  onClick={() => { if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("orduva:analytics", { detail: { eventType: "referral_link_click", scope: "tenant_storefront", tenantId, tenantSlug, metadata: { source: "storefront_footer" } } })); }}
+                  onClick={() => {
+                    if (typeof window !== "undefined")
+                      window.dispatchEvent(
+                        new CustomEvent("orduva:analytics", {
+                          detail: {
+                            eventType: "referral_link_click",
+                            scope: "tenant_storefront",
+                            tenantId,
+                            tenantSlug,
+                            metadata: { source: "storefront_footer" },
+                          },
+                        }),
+                      );
+                  }}
                   className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:-translate-y-[1px] hover:bg-[#E95B30]"
                 >
                   See how Orduva works
@@ -1781,8 +3172,15 @@ export default function MenuBrowser({
             </div>
           ) : null}
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white" style={{ backgroundColor: footerBadgeBackground }}>Orduva Online</span>
-            <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">{version.replace("Ver: ", "V ")}</span>
+            <span
+              className="inline-flex rounded-[4px] px-1.5 py-0.5 text-[0.56rem] font-semibold uppercase tracking-[0.20em] text-white"
+              style={{ backgroundColor: footerBadgeBackground }}
+            >
+              Orduva Online
+            </span>
+            <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              {version.replace("Ver: ", "V ")}
+            </span>
           </div>
           <a
             href="/admin/login"
@@ -1793,7 +3191,6 @@ export default function MenuBrowser({
           </a>
         </div>
       </footer>
-
 
       {favouriteLoginPromptOpen ? (
         <div
@@ -1808,8 +3205,14 @@ export default function MenuBrowser({
               className="relative mx-auto flex max-h-[calc(100dvh-150px)] w-full max-w-[430px] flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_34px_100px_rgba(15,23,42,0.30)] ring-1 ring-slate-900/5"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-20 blur-3xl" style={{ backgroundColor: brandAccent }} />
-              <div className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full opacity-15 blur-3xl" style={{ backgroundColor: brandPrimary }} />
+              <div
+                className="absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-20 blur-3xl"
+                style={{ backgroundColor: brandAccent }}
+              />
+              <div
+                className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full opacity-15 blur-3xl"
+                style={{ backgroundColor: brandPrimary }}
+              />
               <div className="modal-scroll relative min-h-0 overflow-y-auto px-5 pb-8 pt-6 sm:px-6 sm:pb-9 sm:pt-7">
                 <button
                   type="button"
@@ -1820,15 +3223,31 @@ export default function MenuBrowser({
                   ×
                 </button>
 
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[24px] border border-white bg-white text-3xl shadow-[0_18px_45px_rgba(15,23,42,0.14)]" style={{ color: brandAccent }} aria-hidden="true">
+                <div
+                  className="mx-auto flex h-16 w-16 items-center justify-center rounded-[24px] border border-white bg-white text-3xl shadow-[0_18px_45px_rgba(15,23,42,0.14)]"
+                  style={{ color: brandAccent }}
+                  aria-hidden="true"
+                >
                   ♥
                 </div>
 
                 <div className="mt-5 text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: brandAccent }}>Save your favourites</p>
-                  <h2 id="favourite-login-title" className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-[1.65rem]">Login or create an account first</h2>
+                  <p
+                    className="text-[10px] font-black uppercase tracking-[0.22em]"
+                    style={{ color: brandAccent }}
+                  >
+                    Save your favourites
+                  </p>
+                  <h2
+                    id="favourite-login-title"
+                    className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-[1.65rem]"
+                  >
+                    Login or create an account first
+                  </h2>
                   <p className="mt-3 text-sm leading-6 text-slate-600">
-                    Favourites are saved to your customer account so they are ready the next time you open this store. Login, or set up an account, then tap the heart again.
+                    Favourites are saved to your customer account so they are
+                    ready the next time you open this store. Login, or set up an
+                    account, then tap the heart again.
                   </p>
                 </div>
 
@@ -1836,7 +3255,10 @@ export default function MenuBrowser({
                   <a
                     href="/account/login"
                     className="inline-flex min-h-[48px] items-center justify-center rounded-[17px] border px-4 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(15,23,42,0.18)] transition hover:-translate-y-[1px]"
-                    style={{ backgroundColor: brandPrimary, borderColor: brandPrimary }}
+                    style={{
+                      backgroundColor: brandPrimary,
+                      borderColor: brandPrimary,
+                    }}
                   >
                     Login
                   </a>
@@ -1863,7 +3285,10 @@ export default function MenuBrowser({
       ) : null}
 
       {searchOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" onClick={() => setSearchOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          onClick={() => setSearchOpen(false)}
+        >
           <div className="flex min-h-full items-center justify-center">
             <div
               className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
@@ -1873,9 +3298,16 @@ export default function MenuBrowser({
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Search menu</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">Find something quickly</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Search by product name, keyword, or narrow the results to a category.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Search menu
+                    </p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                      Find something quickly
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Search by product name, keyword, or narrow the results to
+                      a category.
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -1884,15 +3316,19 @@ export default function MenuBrowser({
                       onClick={() => {
                         setSearchOpen(false);
                         if (typeof window !== "undefined") {
-                          window.dispatchEvent(new CustomEvent("orduva:analytics", {
-                            detail: {
-                              eventType: "checkout_started",
-                              scope: "tenant_storefront",
-                              tenantId,
-                              tenantSlug,
-                              metadata: { source: "search_popup_cart_button" },
-                            },
-                          }));
+                          window.dispatchEvent(
+                            new CustomEvent("orduva:analytics", {
+                              detail: {
+                                eventType: "checkout_started",
+                                scope: "tenant_storefront",
+                                tenantId,
+                                tenantSlug,
+                                metadata: {
+                                  source: "search_popup_cart_button",
+                                },
+                              },
+                            }),
+                          );
                           window.location.assign("/checkout");
                         }
                       }}
@@ -1900,7 +3336,16 @@ export default function MenuBrowser({
                       aria-label={`Go to checkout with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
                       title="Go to checkout"
                     >
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
                         <circle cx="9" cy="20" r="1" />
                         <circle cx="18" cy="20" r="1" />
                         <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" />
@@ -1933,7 +3378,9 @@ export default function MenuBrowser({
                     <span className="sr-only">Filter by category</span>
                     <select
                       value={activeCategoryId}
-                      onChange={(event) => setActiveCategoryId(event.target.value)}
+                      onChange={(event) =>
+                        setActiveCategoryId(event.target.value)
+                      }
                       className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                     >
                       <option value="all">All categories</option>
@@ -1949,8 +3396,11 @@ export default function MenuBrowser({
 
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12 lg:pt-8 xl:px-8 xl:pb-14 xl:pt-8">
                 <div className="mb-4 flex items-center justify-between gap-3 text-sm text-slate-600">
-                  <p>{filteredProducts.length} {filteredProducts.length === 1 ? "result" : "results"}</p>
-                  {(query.trim() || activeCategoryId !== "all") ? (
+                  <p>
+                    {filteredProducts.length}{" "}
+                    {filteredProducts.length === 1 ? "result" : "results"}
+                  </p>
+                  {query.trim() || activeCategoryId !== "all" ? (
                     <button
                       type="button"
                       onClick={() => {
@@ -1967,51 +3417,94 @@ export default function MenuBrowser({
                 {filteredProducts.length ? (
                   <div className="space-y-3">
                     {filteredProducts.map((product) => {
-                      const categoryName = categories.find((category) => category.id === product.category_id)?.name || "Menu item";
+                      const categoryName =
+                        categories.find(
+                          (category) => category.id === product.category_id,
+                        )?.name || "Menu item";
                       const state = buttonStateById[product.id] || "idle";
                       const thumbId = `search-thumb-${product.id}`;
                       const searchTrackedStock = !!product.stock_enabled;
-                      const searchAvailableStock = Math.max(0, Number(product.stock_quantity || 0));
-                      const searchLowStockThreshold = Math.max(0, Number(product.low_stock_threshold || 5));
-                      const searchOutOfStock = searchTrackedStock && searchAvailableStock <= 0;
-                      const searchLowStock = searchTrackedStock && searchAvailableStock > 0 && searchAvailableStock <= searchLowStockThreshold;
+                      const searchAvailableStock = Math.max(
+                        0,
+                        Number(product.stock_quantity || 0),
+                      );
+                      const searchLowStockThreshold = Math.max(
+                        0,
+                        Number(product.low_stock_threshold || 5),
+                      );
+                      const searchOutOfStock =
+                        searchTrackedStock && searchAvailableStock <= 0;
+                      const searchLowStock =
+                        searchTrackedStock &&
+                        searchAvailableStock > 0 &&
+                        searchAvailableStock <= searchLowStockThreshold;
                       return (
-                        <div key={product.id} className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                        <div
+                          key={product.id}
+                          className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5"
+                        >
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                            <div id={thumbId} className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200">
+                            <div
+                              id={thumbId}
+                              className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-slate-100 ring-1 ring-slate-200"
+                            >
                               {product.image_url ? (
-                                <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+                                <img
+                                  src={product.image_url}
+                                  alt={product.name}
+                                  className="h-full w-full object-cover"
+                                />
                               ) : (
-                                <div className="flex h-full w-full items-center justify-center px-2 text-center text-[11px] font-medium text-slate-500">No image</div>
+                                <div className="flex h-full w-full items-center justify-center px-2 text-center text-[11px] font-medium text-slate-500">
+                                  No image
+                                </div>
                               )}
                             </div>
 
                             <div className="min-w-0 flex-1 flex-col items-center text-center">
                               <div className="flex flex-wrap items-center justify-center gap-2">
-                                <h4 className="text-lg font-semibold text-slate-900">{product.name}</h4>
-                                <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold tracking-wide text-slate-500 ring-1 ring-slate-200">{categoryName}</span>
+                                <h4 className="text-lg font-semibold text-slate-900">
+                                  {product.name}
+                                </h4>
+                                <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold tracking-wide text-slate-500 ring-1 ring-slate-200">
+                                  {categoryName}
+                                </span>
                               </div>
                               <p className="mt-2 text-sm leading-6 text-slate-600">
-                                {stripHtml(product.description).slice(0, 140) || "Freshly prepared and ready to order."}
+                                {stripHtml(product.description).slice(0, 140) ||
+                                  "Freshly prepared and ready to order."}
                               </p>
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                  <p className="text-sm font-semibold text-slate-900">{formatMoney(Number(product.price), moneySettings)}</p>
+                                  <p className="text-sm font-semibold text-slate-900">
+                                    {formatMoney(
+                                      Number(product.price),
+                                      moneySettings,
+                                    )}
+                                  </p>
                                   {state === "added" ? (
                                     <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
                                       In cart: {cartCount}
                                     </span>
                                   ) : null}
-                                  {searchTrackedStock && (searchOutOfStock || searchLowStock) ? (
-                                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${searchOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
-                                      {searchOutOfStock ? "Out of stock" : `Only ${searchAvailableStock} left`}
+                                  {searchTrackedStock &&
+                                  (searchOutOfStock || searchLowStock) ? (
+                                    <span
+                                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${searchOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}
+                                    >
+                                      {searchOutOfStock
+                                        ? "Out of stock"
+                                        : `Only ${searchAvailableStock} left`}
                                     </span>
                                   ) : null}
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    const sourceRect = document.getElementById(thumbId)?.getBoundingClientRect() || null;
+                                    const sourceRect =
+                                      document
+                                        .getElementById(thumbId)
+                                        ?.getBoundingClientRect() || null;
                                     void addToCart(product.id, {
                                       sourceRect,
                                       imageUrl: product.image_url,
@@ -2022,7 +3515,13 @@ export default function MenuBrowser({
                                   disabled={searchOutOfStock}
                                   className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                  {searchOutOfStock ? "Sold out" : state === "adding" ? "Adding..." : state === "added" ? "Added ✓" : "Add"}
+                                  {searchOutOfStock
+                                    ? "Sold out"
+                                    : state === "adding"
+                                      ? "Adding..."
+                                      : state === "added"
+                                        ? "Added ✓"
+                                        : "Add"}
                                 </button>
                               </div>
                             </div>
@@ -2033,8 +3532,12 @@ export default function MenuBrowser({
                   </div>
                 ) : (
                   <div className="rounded-[26px] border border-dashed border-slate-300 bg-slate-50/60 p-8 text-center">
-                    <p className="text-lg font-semibold text-slate-900">No matching products</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Try another search term or switch the category filter.</p>
+                    <p className="text-lg font-semibold text-slate-900">
+                      No matching products
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Try another search term or switch the category filter.
+                    </p>
                   </div>
                 )}
               </div>

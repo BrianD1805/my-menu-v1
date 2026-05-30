@@ -158,3 +158,22 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Reduced the desktop product image size so the popup looks more professional and less cramped.
 - Improved desktop spacing/layout inside the product details popup.
 - No SQL required.
+
+## Ver-0.227A — Product variant editor field labels and two-column layout
+
+- Improved the Tenant Admin product variants editor so every variant input/control has a clear label.
+- Changed variant option cards to a consistent two-fields-per-row layout on desktop/tablet where space allows.
+- Removed the wasteful full-width variant description row.
+- Kept product variant logic, stock logic, storefront logic and checkout logic unchanged.
+- No Supabase SQL required.
+
+
+## Ver-0.227B — Product editor save-state polish and second category
+
+- Added unsaved-changes confirmation to the Tenant Admin product editor.
+- Save button now changes to a light red tone when there are unsaved changes.
+- Added premium product add/edit/delete toast notifications.
+- Kept interactive Creating... / Saving... button states.
+- Improved product and variant stock controls so stock tracking, stock quantity and low stock warning sit on the same line on desktop where space allows.
+- Added optional second category support for products so a product can appear in two storefront sections.
+- SQL required: add `products.secondary_category_id` and supporting index.

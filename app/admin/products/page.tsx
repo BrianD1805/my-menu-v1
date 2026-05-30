@@ -17,17 +17,23 @@ export default async function AdminProductsPage() {
     .eq("tenant_id", tenant.id)
     .order("sort_order", { ascending: true });
 
-  const categoryMap = new Map((categories || []).map((category) => [category.id, category.name]));
+  const categoryMap = new Map(
+    (categories || []).map((category) => [category.id, category.name]),
+  );
 
   const { data: products } = await db
     .from("products")
-    .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants")
+    .select(
+      "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants",
+    )
     .eq("tenant_id", tenant.id)
     .order("name", { ascending: true });
 
   const productRows = (products || []).map((product) => ({
     ...product,
     category_name: categoryMap.get(product.category_id) || null,
+    secondary_category_name:
+      categoryMap.get(product.secondary_category_id || "") || null,
   }));
 
   return (
@@ -44,10 +50,15 @@ export default async function AdminProductsPage() {
       description="Manage products, images, and rich descriptions for this tenant only."
     >
       <div className="mb-6 rounded-[24px] border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-900">
-        This product list is tenant-specific. Use the popup tools to search, add, edit, and manage images for this tenant only.
+        This product list is tenant-specific. Use the popup tools to search,
+        add, edit, and manage images for this tenant only.
       </div>
 
-      <ProductManager products={productRows} categories={categories || []} moneySettings={branding} />
+      <ProductManager
+        products={productRows}
+        categories={categories || []}
+        moneySettings={branding}
+      />
     </AdminShell>
   );
 }

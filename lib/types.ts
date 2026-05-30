@@ -29,6 +29,7 @@ export type Product = {
   id: string;
   tenant_id: string;
   category_id: string;
+  secondary_category_id?: string | null;
   name: string;
   description: string | null;
   image_url: string | null;
@@ -64,7 +65,6 @@ export type CreateOrderInput = {
     variantId?: string | null;
   }>;
 };
-
 
 export type TenantSettings = {
   tenant_id: string;

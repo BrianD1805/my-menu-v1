@@ -8,7 +8,9 @@ async function getTenant(tenantSlug: string) {
   const tenantTimer = startLoadTimer("api/products tenant lookup");
   const { data: tenant, error: tenantError } = await db
     .from("tenants")
-    .select("id, slug, name, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name")
+    .select(
+      "id, slug, name, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name",
+    )
     .eq("slug", tenantSlug)
     .single();
   tenantTimer.end({ tenantSlug, found: Boolean(tenant) });
@@ -21,7 +23,9 @@ async function getTenant(tenantSlug: string) {
   if (tenantSlug === "zimzaexpress") {
     const legacyResult = await db
       .from("tenants")
-      .select("id, slug, name, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name")
+      .select(
+        "id, slug, name, trial_status, trial_started_at, trial_ends_at, subscription_status, plan_name",
+      )
       .eq("slug", "orduva")
       .single();
 
@@ -30,7 +34,9 @@ async function getTenant(tenantSlug: string) {
     }
   }
 
-  return { error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }) };
+  return {
+    error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }),
+  };
 }
 
 export async function GET(req: Request) {
@@ -46,11 +52,15 @@ export async function GET(req: Request) {
   if (tenantLookup.error) return tenantLookup.error;
   const tenant = tenantLookup.tenant!;
 
-  const dataTimer = startLoadTimer("api/products products/categories/settings parallel load");
+  const dataTimer = startLoadTimer(
+    "api/products products/categories/settings parallel load",
+  );
   const [productsResult, categoriesResult, settings] = await Promise.all([
     db
       .from("products")
-      .select("id, name, description, image_url, price, is_active, category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants")
+      .select(
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants",
+      )
       .eq("tenant_id", tenant.id)
       .eq("is_active", true)
       .order("name", { ascending: true }),
@@ -69,7 +79,10 @@ export async function GET(req: Request) {
   });
 
   if (productsResult.error || categoriesResult.error) {
-    return NextResponse.json({ error: "Failed to load storefront data" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to load storefront data" },
+      { status: 500 },
+    );
   }
 
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
@@ -122,30 +135,52 @@ export async function GET(req: Request) {
       trialState,
       enableCashOnCollection: settings?.enable_cash_on_collection !== false,
       enableCashOnDelivery: settings?.enable_cash_on_delivery !== false,
-      enableStripeCustomerPayments: settings?.enable_stripe_customer_payments === true,
-      stripeConnectionStatus: settings?.stripe_connection_status || "not_configured",
-      stripeCustomerPaymentsLive: settings?.stripe_customer_payments_live === true,
-      enableYocoCustomerPayments: settings?.enable_yoco_customer_payments === true,
-      yocoConnectionStatus: settings?.yoco_connection_status || "not_configured",
+      enableStripeCustomerPayments:
+        settings?.enable_stripe_customer_payments === true,
+      stripeConnectionStatus:
+        settings?.stripe_connection_status || "not_configured",
+      stripeCustomerPaymentsLive:
+        settings?.stripe_customer_payments_live === true,
+      enableYocoCustomerPayments:
+        settings?.enable_yoco_customer_payments === true,
+      yocoConnectionStatus:
+        settings?.yoco_connection_status || "not_configured",
       yocoCustomerPaymentsLive: settings?.yoco_customer_payments_live === true,
-      enableMpesaCustomerPayments: settings?.enable_mpesa_customer_payments === true,
-      mpesaConnectionStatus: settings?.mpesa_connection_status || "not_configured",
-      mpesaCustomerPaymentsLive: settings?.mpesa_customer_payments_live === true,
-      enableDarajaCustomerPayments: settings?.enable_daraja_customer_payments === true,
-      darajaConnectionStatus: settings?.daraja_connection_status || "not_configured",
+      enableMpesaCustomerPayments:
+        settings?.enable_mpesa_customer_payments === true,
+      mpesaConnectionStatus:
+        settings?.mpesa_connection_status || "not_configured",
+      mpesaCustomerPaymentsLive:
+        settings?.mpesa_customer_payments_live === true,
+      enableDarajaCustomerPayments:
+        settings?.enable_daraja_customer_payments === true,
+      darajaConnectionStatus:
+        settings?.daraja_connection_status || "not_configured",
       darajaPaymentsLive: settings?.daraja_payments_live === true,
       rewardsEnabled: settings?.rewards_enabled === true,
       rewardsProgramName: settings?.rewards_program_name || "Rewards Club",
-      rewardsSilverDiscountPercent: Number(settings?.rewards_silver_discount_percent || 0),
+      rewardsSilverDiscountPercent: Number(
+        settings?.rewards_silver_discount_percent || 0,
+      ),
       rewardsGoldMinSpend: Number(settings?.rewards_gold_min_spend || 1000),
-      rewardsGoldDiscountPercent: Number(settings?.rewards_gold_discount_percent || 5),
-      rewardsPlatinumMinSpend: Number(settings?.rewards_platinum_min_spend || 2500),
-      rewardsPlatinumDiscountPercent: Number(settings?.rewards_platinum_discount_percent || 10),
+      rewardsGoldDiscountPercent: Number(
+        settings?.rewards_gold_discount_percent || 5,
+      ),
+      rewardsPlatinumMinSpend: Number(
+        settings?.rewards_platinum_min_spend || 2500,
+      ),
+      rewardsPlatinumDiscountPercent: Number(
+        settings?.rewards_platinum_discount_percent || 10,
+      ),
       discountsEnabled: settings?.discounts_enabled === true,
       discountPopupEnabled: settings?.discount_popup_enabled === true,
       discountPopupTitle: settings?.discount_popup_title || "Today's offers",
-      discountPopupMessage: settings?.discount_popup_message || "Tap an offer at checkout to apply it to your order.",
-      discountRules: Array.isArray(settings?.discount_rules) ? settings.discount_rules : [],
+      discountPopupMessage:
+        settings?.discount_popup_message ||
+        "Tap an offer at checkout to apply it to your order.",
+      discountRules: Array.isArray(settings?.discount_rules)
+        ? settings.discount_rules
+        : [],
     },
   };
 
