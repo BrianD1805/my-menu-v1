@@ -177,3 +177,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Improved product and variant stock controls so stock tracking, stock quantity and low stock warning sit on the same line on desktop where space allows.
 - Added optional second category support for products so a product can appear in two storefront sections.
 - SQL required: add `products.secondary_category_id` and supporting index.
+
+
+## Ver-0.227C — Variant popup stacking fix
+
+- Raised the storefront variant chooser above other storefront popups so it opens in front of product details and search popups.
+- Kept the existing variant popup layout, product details popup layout, cart logic, checkout logic and variant stock logic unchanged.
+- No Supabase SQL required.

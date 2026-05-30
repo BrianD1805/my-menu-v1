@@ -393,7 +393,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       </div>
 
       {variantPickerOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setVariantPickerOpen(false)}>
+        <div className="fixed inset-0 z-[120] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setVariantPickerOpen(false)}>
           <div className="flex min-h-full items-center justify-center">
             <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]" onClick={(event) => event.stopPropagation()}>
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-7">

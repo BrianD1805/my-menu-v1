@@ -2825,7 +2825,7 @@ export default function MenuBrowser({
 
       {variantPickerProduct ? (
         <div
-          className="fixed inset-0 z-50 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          className="fixed inset-0 z-[120] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
           style={{ backgroundColor: "rgba(15,23,42,0.54)" }}
           role="dialog"
           aria-modal="true"
