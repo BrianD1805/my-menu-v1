@@ -6,6 +6,30 @@ function cartKey(tenantSlug: string) {
   return `cart:${tenantSlug || "orduva"}`;
 }
 
+function clearStripeSuccessCart(tenantSlug: string) {
+  try {
+    const cleanSlug = tenantSlug.trim();
+    if (cleanSlug) {
+      window.localStorage.removeItem(cartKey(cleanSlug));
+      window.dispatchEvent(new CustomEvent("orduva:cart-updated", { detail: { tenantSlug: cleanSlug, items: [] } }));
+    }
+
+    // Safety fallback: Stripe success can occasionally return before the tenant slug has
+    // been resolved from the stored payment payload. In that case, clear any Orduva cart
+    // keys on this same storefront origin so a paid order is not left in the basket.
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (key?.startsWith("cart:")) {
+        const keySlug = key.slice("cart:".length) || "orduva";
+        window.localStorage.removeItem(key);
+        window.dispatchEvent(new CustomEvent("orduva:cart-updated", { detail: { tenantSlug: keySlug, items: [] } }));
+      }
+    }
+  } catch {
+    // Cart clearing is best-effort only.
+  }
+}
+
 type CheckoutStatus = {
   paid: boolean;
   intentStatus: string | null;
@@ -39,13 +63,8 @@ export default function StripeSuccessStatusClient({ sessionId }: { sessionId: st
         if (response.ok && data) {
           setStatus(data);
           setAttempts(nextAttempt);
-          if (data.paid && data.order && data.tenantSlug) {
-            try {
-              window.localStorage.removeItem(cartKey(data.tenantSlug));
-              window.dispatchEvent(new CustomEvent("orduva:cart-updated", { detail: { tenantSlug: data.tenantSlug, items: [] } }));
-            } catch {
-              // Cart clearing is best-effort only.
-            }
+          if (data.paid && data.order) {
+            clearStripeSuccessCart(data.tenantSlug || "");
             return;
           }
         }

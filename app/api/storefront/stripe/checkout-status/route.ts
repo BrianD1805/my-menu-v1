@@ -9,9 +9,22 @@ function first(value: string | null) {
 }
 
 function readPayloadTenantSlug(payload: unknown) {
-  if (!payload || typeof payload !== "object") return "";
-  const record = payload as Record<string, unknown>;
-  return typeof record.tenantSlug === "string" ? record.tenantSlug.trim() : "";
+  if (!payload) return "";
+
+  let record: Record<string, unknown> | null = null;
+
+  if (typeof payload === "string") {
+    try {
+      const parsed = JSON.parse(payload) as unknown;
+      if (parsed && typeof parsed === "object") record = parsed as Record<string, unknown>;
+    } catch {
+      record = null;
+    }
+  } else if (typeof payload === "object") {
+    record = payload as Record<string, unknown>;
+  }
+
+  return typeof record?.tenantSlug === "string" ? record.tenantSlug.trim() : "";
 }
 
 function buildStoreUrl(tenantSlug: string, path = "/") {

@@ -134,3 +134,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Preserved Ver-0.226 Stripe success recovery, paid order wording, and variant payload cleanup.
 - No Supabase SQL required.
 
+
+## Ver-0.226C — Stripe paid cart clear fix
+
+- Fixed the final remaining Stripe paid-order issue where the success page confirmed payment but the storefront cart could remain uncleared.
+- Stripe checkout status now reads the tenant slug safely whether the stored payment payload is returned as JSON or as a string.
+- Stripe success page now clears the confirmed tenant cart and also safely clears any Orduva cart keys on the same storefront origin as a fallback.
+- Preserved Ver-0.226 paid-order recovery, variant stock reduction and paid WhatsApp wording fixes.
+- No Supabase SQL required.
