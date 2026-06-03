@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import OwnerAffiliateApplicationsPanel from "@/components/admin/OwnerAffiliateApplicationsPanel";
 import Link from "next/link";
 import { LIVE_VERSION } from "@/lib/version";

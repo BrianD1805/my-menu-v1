@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import AnalyticsDashboardPanel from "@/components/analytics/AnalyticsDashboardPanel";
 import Link from "next/link";
 import { LIVE_VERSION } from "@/lib/version";

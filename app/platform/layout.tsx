@@ -1,7 +1,10 @@
 import OwnerPlatformAccessGate from "@/components/admin/OwnerPlatformAccessGate";
-import OwnerPlatformPwaRegistrar from "@/components/admin/OwnerPlatformPwaRegistrar";
+import OwnerPlatformBrowserCleanup from "@/components/admin/OwnerPlatformBrowserCleanup";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Orduva Owner Platform",
@@ -34,7 +37,7 @@ export const metadata: Metadata = {
 export default function PlatformLayout({ children }: { children: ReactNode }) {
   return (
     <>
-      <OwnerPlatformPwaRegistrar />
+      <OwnerPlatformBrowserCleanup />
       <OwnerPlatformAccessGate>{children}</OwnerPlatformAccessGate>
     </>
   );

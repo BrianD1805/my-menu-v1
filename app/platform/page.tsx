@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import OwnerBillingOverviewPanel from "@/components/admin/OwnerBillingOverviewPanel";
 import { LIVE_VERSION } from "@/lib/version";
 

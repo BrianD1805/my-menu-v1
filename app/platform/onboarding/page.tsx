@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import TenantOnboardingManager from "@/components/admin/TenantOnboardingManager";
 import OwnerEmailSettingsPanel from "@/components/admin/OwnerEmailSettingsPanel";
 import OwnerOnboardingEventsPanel from "@/components/admin/OwnerOnboardingEventsPanel";

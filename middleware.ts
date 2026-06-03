@@ -17,6 +17,14 @@ function currentHostFromRequest(request: NextRequest) {
   );
 }
 
+function withNoStoreHeaders(response: NextResponse) {
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
+  response.headers.set("Surrogate-Control", "no-store");
+  return response;
+}
+
 function maybeRedirectToSharedAdminHost(request: NextRequest, pathname: string) {
   const configuredAdminHost = getConfiguredAdminHostname();
   if (!configuredAdminHost) return null;
@@ -66,11 +74,13 @@ export function middleware(request: NextRequest) {
   }
 
   if (!isProtectedAdminPath(pathname) || isPublicAdminPath(pathname)) {
-    return NextResponse.next({
+    const response = NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     });
+    if (pathname.startsWith("/platform") || pathname.startsWith("/api/platform")) return withNoStoreHeaders(response);
+    return response;
   }
 
   const sessionToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
