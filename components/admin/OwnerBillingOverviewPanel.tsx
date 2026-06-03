@@ -202,7 +202,7 @@ function viewHelp(view: OwnerClientView) {
 }
 
 function statusPillClasses(view: OwnerClientView) {
-  if (view === "paid") return "border-emerald-200 bg-emerald-50 text-emerald-900";
+  if (view === "paid") return "border-[#339933]/35 bg-[#F0FFF4] text-[#0A5C2D]";
   if (view === "trial") return "border-[#336699]/35 bg-[#EAF3FB] text-[#28547D]";
   return "border-red-200 bg-red-50 text-red-900";
 }
@@ -274,8 +274,8 @@ export default function OwnerBillingOverviewPanel() {
   }, [activeView, searchTerm]);
 
   const cards: Array<{ key: OwnerClientView; label: string; value: number; hint: string; classes: string }> = [
-    { key: "paid", label: "Paid clients", value: paidStores.length, hint: "Active billing", classes: "border-emerald-200 bg-emerald-50 text-emerald-900" },
-    { key: "trial", label: "Free trial", value: trialStores.length, hint: "Still deciding", classes: "border-[#336699]/35 bg-[#EAF3FB] text-[#28547D]" },
+    { key: "paid", label: "Paid clients", value: paidStores.length, hint: "Active billing", classes: "border-[#336699]/35 bg-[#EAF3FB] text-[#28547D]" },
+    { key: "trial", label: "Free trial", value: trialStores.length, hint: "Still deciding", classes: "border-[#336699]/35 bg-white text-[#28547D]" },
     { key: "expired", label: "Trial expired", value: expiredStores.length, hint: "Follow up", classes: "border-red-200 bg-red-50 text-red-900" },
   ];
 
@@ -358,13 +358,13 @@ export default function OwnerBillingOverviewPanel() {
             <p className="mt-2 text-3xl font-semibold leading-none text-white">{data.summary.totalStores}</p>
             <p className="mt-2 text-xs font-bold text-white/58">Across all owner platform records.</p>
           </div>
-          <div className="rounded-[22px] border border-emerald-300/30 bg-emerald-500/10 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100">Last 30 days</p>
+          <div className="rounded-[22px] border border-[#339933]/35 bg-[#339933]/14 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#DDFBE4]">Last 30 days</p>
             <p className="mt-2 text-xl font-semibold leading-tight text-white">{revenueLine(data.summary.last30DaysRevenue)}</p>
             <p className="mt-2 text-xs font-bold text-white/58">Recorded Stripe billing payments.</p>
           </div>
-          <div className="rounded-[22px] border border-red-300/30 bg-red-500/10 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-100">Needs attention</p>
+          <div className="rounded-[22px] border border-[#336699]/35 bg-white/10 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#BFD8EE]">Needs attention</p>
             <p className="mt-2 text-3xl font-semibold leading-none text-white">{paymentAttentionCount}</p>
             <p className="mt-2 text-xs font-bold text-white/58">Payment attention or missing Stripe links.</p>
           </div>
@@ -484,7 +484,7 @@ export default function OwnerBillingOverviewPanel() {
                                 type="button"
                                 onClick={() => void openOwnerAssistAdmin(store)}
                                 disabled={ownerAssistBusyId === store.id}
-                                className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#336699] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#336699] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#28547D] disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 {ownerAssistBusyId === store.id ? "Opening..." : "Open admin as owner"}
                               </button>

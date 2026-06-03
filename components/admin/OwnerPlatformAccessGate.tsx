@@ -29,7 +29,14 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
-const OWNER_MENU_SECTIONS = [
+type OwnerMenuLink = {
+  href: string;
+  label: string;
+  detail: string;
+  external?: boolean;
+};
+
+const OWNER_MENU_SECTIONS: Array<{ title: string; description: string; links: OwnerMenuLink[] }> = [
   {
     title: "Core platform",
     description: "The main owner views you use most often.",
@@ -53,7 +60,6 @@ const OWNER_MENU_SECTIONS = [
     description: "Security and support access.",
     links: [
       { href: "/platform/security", label: "Security", detail: "Owner 2FA and protection" },
-      { href: "https://admin.orduva.com/admin", label: "Store admin login", detail: "Open tenant admin", external: true },
     ],
   },
 ];
@@ -363,7 +369,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
                 Menu
               </button>
               {activeMenu === "mobile" ? (
-                <div className="absolute right-0 top-full z-[160] w-[min(92vw,360px)] rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+                <div className="fixed left-1/2 top-[64px] z-[160] w-[calc(100vw-32px)] max-w-[360px] -translate-x-1/2 rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
                   <div className="space-y-3">
                     {OWNER_MENU_SECTIONS.map((section) => (
                       <div key={section.title} className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">

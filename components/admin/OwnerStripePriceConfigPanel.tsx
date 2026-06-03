@@ -135,7 +135,7 @@ export default function OwnerStripePriceConfigPanel() {
                   </div>
                   <div className="text-sm font-semibold text-[#0E0E10]">{row.currencyCode}</div>
                   <code className="overflow-x-auto rounded-xl border border-[#0E0E10]/10 bg-[#F3F7FA] px-3 py-2 text-xs font-bold text-[#373A3F]">{row.envKey}</code>
-                  <div className={`inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${row.configured ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200" : "bg-red-50 text-red-700 ring-1 ring-red-200"}`}>
+                  <div className={`inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${row.configured ? "bg-[#F0FFF4] text-[#0A5C2D] ring-1 ring-[#339933]/25" : "bg-red-50 text-red-700 ring-1 ring-red-200"}`}>
                     {row.configured ? `Set ${row.priceId}` : "Missing"}
                   </div>
                 </div>

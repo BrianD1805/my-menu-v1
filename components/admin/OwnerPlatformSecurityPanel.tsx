@@ -98,7 +98,7 @@ export default function OwnerPlatformSecurityPanel() {
     }
   }
 
-  const messageClass = tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-900" : tone === "error" ? "border-[#336699]/30 bg-[#F3F7FA] text-[#28547D]" : "border-[#0E0E10]/10 bg-white text-[#5C5F66]";
+  const messageClass = tone === "success" ? "border-[#339933]/25 bg-[#F0FFF4] text-[#0A5C2D]" : tone === "error" ? "border-[#336699]/30 bg-[#F3F7FA] text-[#28547D]" : "border-[#0E0E10]/10 bg-white text-[#5C5F66]";
 
   return (
     <section className="rounded-[34px] border border-[#0E0E10]/10 bg-white/95 p-5 shadow-[0_24px_70px_rgba(14,14,16,0.10)] sm:p-7">
@@ -110,7 +110,7 @@ export default function OwnerPlatformSecurityPanel() {
             Add Google Authenticator, Microsoft Authenticator or Authy as a second check for all Orduva platform owner pages.
           </p>
         </div>
-        <div className={["rounded-2xl px-4 py-3 text-sm font-semibold", status?.twoFactorEnabled ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200" : "bg-[#EAF3FB] text-[#28547D] ring-1 ring-[#8FB6D9]"].join(" ")}> 
+        <div className={["rounded-2xl px-4 py-3 text-sm font-semibold", status?.twoFactorEnabled ? "bg-[#F0FFF4] text-[#0A5C2D] ring-1 ring-[#339933]/25" : "bg-[#EAF3FB] text-[#28547D] ring-1 ring-[#8FB6D9]"].join(" ")}> 
           {status?.twoFactorEnabled ? "2FA enabled" : "2FA not enabled"}
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function OwnerPlatformSecurityPanel() {
           )}
         </div>
       ) : (
-        <div className="mt-6 rounded-[28px] border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900 sm:p-5">
+        <div className="mt-6 rounded-[28px] border border-[#339933]/25 bg-[#F0FFF4] p-4 text-sm leading-6 text-[#0A5C2D] sm:p-5">
           Platform owner pages now require the owner key and a 6-digit authenticator code. Confirmed at: <span className="font-semibold">{status.confirmedAt ? new Date(status.confirmedAt).toLocaleString() : "enabled"}</span>.
         </div>
       )}

@@ -14,7 +14,7 @@ function formatDate(value: string | null) {
   return date.toLocaleString(undefined, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 function statusClass(status: string | null) {
-  if (status === "sent") return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
+  if (status === "sent") return "bg-[#F0FFF4] text-[#0A5C2D] ring-1 ring-[#339933]/25";
   if (status === "failed") return "bg-red-50 text-red-800 ring-1 ring-red-200";
   if (status === "skipped") return "bg-[#EAF3FB] text-[#28547D] ring-1 ring-[#8FB6D9]";
   return "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
@@ -69,7 +69,7 @@ export default function OwnerOnboardingEventsPanel() {
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68707A]">Recent stores</p><p className="mt-2 text-3xl font-semibold text-[#0E0E10]">{summary.totalShown}</p></div>
           <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68707A]">Created today</p><p className="mt-2 text-3xl font-semibold text-[#0E0E10]">{summary.createdToday}</p></div>
-          <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68707A]">Email complete</p><p className="mt-2 text-3xl font-semibold text-emerald-700">{summary.emailComplete}</p></div>
+          <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68707A]">Email complete</p><p className="mt-2 text-3xl font-semibold text-[#0A5C2D]">{summary.emailComplete}</p></div>
           <div className="rounded-[22px] border border-[#0E0E10]/10 bg-white p-4"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#68707A]">Needs attention</p><p className="mt-2 text-3xl font-semibold text-[#28547D]">{summary.needsAttention}</p></div>
         </div>
 
@@ -91,7 +91,7 @@ export default function OwnerOnboardingEventsPanel() {
           {signups.map((signup) => {
             const expanded = expandedId === signup.id;
             return (
-              <article key={signup.id} className="rounded-[24px] border border-[#0E0E10]/10 bg-[#FDFBF8] p-4">
+              <article key={signup.id} className="rounded-[24px] border border-[#0E0E10]/10 bg-white p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="text-lg font-semibold text-[#0E0E10]">{signup.name}</h3><span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#68707A] ring-1 ring-[#0E0E10]/10">{signup.status}</span></div><a href={signup.storefrontUrl} target="_blank" rel="noreferrer" className="mt-1 block break-all text-sm font-bold text-[#28547D] hover:text-[#0E0E10]">{signup.storeAddress}</a><p className="mt-1 text-xs font-semibold text-[#68707A]">Created {formatDate(signup.createdAt)} · Owner {signup.ownerName || "not recorded"} · {signup.ownerEmail || "no email recorded"}</p></div>
                   <div className="flex flex-wrap gap-2">{emailPill(`Client email: ${signup.clientEmail.label}`, signup.clientEmail.status)}{emailPill(`Owner notice: ${signup.ownerNotification.label}`, signup.ownerNotification.status)}</div>

@@ -115,7 +115,7 @@ const EMPTY_SUMMARY: Summary = {
 
 function toneClasses(tone: string) {
   if (tone === "ready")
-    return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
+    return "bg-[#F0FFF4] text-[#0A5C2D] ring-1 ring-[#339933]/25";
   if (tone === "attention")
     return "bg-[#EAF3FB] text-[#28547D] ring-1 ring-[#8FB6D9]";
   return "bg-red-50 text-red-800 ring-1 ring-red-200";
@@ -127,12 +127,12 @@ function trialPillClasses(trial: TrialState) {
     trial.trialStatus === "converted" ||
     trial.isSubscriptionActive
   )
-    return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
+    return "bg-[#F0FFF4] text-[#0A5C2D] ring-1 ring-[#339933]/25";
   if (trial.isTrialExpired || trial.checkoutBlocked)
     return "bg-red-50 text-red-800 ring-1 ring-red-200";
   if ((trial.trialDaysRemaining ?? 99) <= 2)
     return "bg-[#F3F7FA] text-[#28547D] ring-1 ring-[#336699]/25";
-  return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
+  return "bg-[#F0FFF4] text-[#0A5C2D] ring-1 ring-[#339933]/25";
 }
 function trialLabel(trial: TrialState) {
   if (
@@ -148,7 +148,7 @@ function trialLabel(trial: TrialState) {
 }
 
 function checkClasses(ready: boolean, important: boolean) {
-  if (ready) return "border-emerald-200 bg-emerald-50 text-emerald-900";
+  if (ready) return "border-[#339933]/25 bg-[#F0FFF4] text-[#0A5C2D]";
   if (important) return "border-red-200 bg-red-50 text-red-900";
   return "border-[#8FB6D9] bg-[#EAF3FB] text-[#28547D]";
 }
@@ -543,7 +543,7 @@ export default function OwnerStoreReadinessPanel() {
               <article
                 key={store.id}
                 className={[
-                  "rounded-[26px] border bg-[#FDFBF8] p-4 transition",
+                  "rounded-[26px] border bg-white p-4 transition",
                   selectedDeleteIds.includes(store.id)
                     ? "border-red-300 ring-2 ring-red-200"
                     : "border-[#0E0E10]/10",
@@ -599,7 +599,7 @@ export default function OwnerStoreReadinessPanel() {
                           </span>
                         ) : null}
                         {store.referral?.referredBy ? (
-                          <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-800 ring-1 ring-blue-200">
+                          <span className="rounded-full bg-[#EAF3FB] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#28547D] ring-1 ring-[#336699]/25">
                             Referred
                           </span>
                         ) : null}

@@ -27,7 +27,7 @@ function statusPill(ok: boolean, yes: string, no: string) {
       className={[
         "inline-flex min-h-8 items-center rounded-2xl px-3 py-1 text-xs font-semibold",
         ok
-          ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
+          ? "bg-[#F0FFF4] text-[#0A5C2D] ring-1 ring-[#339933]/25"
           : "bg-[#EAF3FB] text-[#28547D] ring-1 ring-[#8FB6D9]",
       ].join(" ")}
     >
@@ -129,7 +129,7 @@ export default function OwnerEmailSettingsPanel({
   const status = payload?.status;
   const messageClass = useMemo(() => {
     if (tone === "success")
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-[#339933]/25 bg-[#F0FFF4] text-[#0A5C2D]";
     if (tone === "error") return "border-rose-200 bg-rose-50 text-rose-800";
     if (tone === "info")
       return "border-[#8FB6D9] bg-[#EAF3FB] text-[#28547D]";

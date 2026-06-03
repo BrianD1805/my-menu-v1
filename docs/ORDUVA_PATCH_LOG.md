@@ -298,3 +298,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Forced Owner Platform pages to dynamic/no-store rendering to avoid stale skeleton/blank pages.
 - Added no-store cache headers for `/platform` routes in middleware.
 - No storefront, checkout, payment, Tenant Admin, product, or database changes.
+
+
+## Ver-0.229K — Owner Platform palette and menu clarification
+
+- Applied the blue Owner Platform header style consistently across platform pages.
+- Removed duplicate page-header navigation buttons now that the mega menu handles navigation.
+- Removed the ambiguous Store admin login item from the top mega menu. Owner-assisted tenant admin access now happens from an expanded client row, so Orduva knows exactly which tenant is being opened.
+- Centred the mobile mega menu so it no longer runs off the page.
+- Softened owner dashboard client cards toward the black / blue #336699 palette, keeping green for positive highlights and red only for genuine warnings.

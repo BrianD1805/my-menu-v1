@@ -53,7 +53,7 @@ function dateLabel(value: string | null) {
 
 function statusClass(status: string | null) {
   const clean = String(status || "pending").toLowerCase();
-  if (clean === "approved" || clean === "active") return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+  if (clean === "approved" || clean === "active") return "bg-[#F0FFF4] text-[#0A5C2D] ring-[#339933]/25";
   if (clean === "declined" || clean === "cancelled") return "bg-red-50 text-red-800 ring-red-200";
   if (clean === "paused") return "bg-[#EAF3FB] text-[#28547D] ring-[#8FB6D9]";
   return "bg-[#F3F7FA] text-[#28547D] ring-[#336699]/25";
@@ -132,10 +132,10 @@ export default function OwnerAffiliateApplicationsPanel() {
           <p className="mt-2 text-4xl font-semibold">{pendingApplications.length}</p>
           <p className="mt-1 text-sm text-white/65">Applications waiting for owner approval</p>
         </div>
-        <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-[0_18px_45px_rgba(14,14,16,0.08)]">
+        <div className="rounded-[28px] border border-[#339933]/25 bg-[#F0FFF4] p-5 text-[#0A5C2D] shadow-[0_18px_45px_rgba(14,14,16,0.08)]">
           <p className="text-xs font-semibold uppercase tracking-[0.22em]">Approved partners</p>
           <p className="mt-2 text-4xl font-semibold">{(payload?.partners || []).length}</p>
-          <p className="mt-1 text-sm text-emerald-800/75">Separate affiliate links and dashboard logins</p>
+          <p className="mt-1 text-sm text-[#0A5C2D]/75">Separate affiliate links and dashboard logins</p>
         </div>
         <div className="rounded-[28px] border border-[#336699]/20 bg-[#F3F7FA] p-5 text-[#28547D] shadow-[0_18px_45px_rgba(14,14,16,0.08)]">
           <p className="text-xs font-semibold uppercase tracking-[0.22em]">Rates</p>
@@ -146,7 +146,7 @@ export default function OwnerAffiliateApplicationsPanel() {
 
       {message ? <p className="rounded-2xl border border-[#336699]/25 bg-white px-4 py-3 text-sm font-bold text-[#28547D]">{message}</p> : null}
       {lastApproved ? (
-        <div className="rounded-[26px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
+        <div className="rounded-[26px] border border-[#339933]/25 bg-[#F0FFF4] p-5 text-[#0A5C2D]">
           <p className="text-sm font-semibold">Affiliate approved</p>
           <p className="mt-2 break-all text-sm"><strong>Share link:</strong> {lastApproved.shareUrl}</p>
           <p className="mt-1 break-all text-sm"><strong>Login key:</strong> {lastApproved.accessKey}</p>

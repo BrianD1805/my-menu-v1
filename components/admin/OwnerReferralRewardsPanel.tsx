@@ -147,7 +147,7 @@ function monthLabel(value: string | null) {
 
 function statusClasses(status: string | null | undefined) {
   const clean = String(status || "trial").toLowerCase();
-  if (clean === "active") return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+  if (clean === "active") return "bg-[#F0FFF4] text-[#0A5C2D] ring-[#339933]/25";
   if (clean === "paused") return "bg-[#EAF3FB] text-[#28547D] ring-[#8FB6D9]";
   if (clean === "cancelled") return "bg-red-50 text-red-800 ring-red-200";
   return "bg-[#F3F7FA] text-[#28547D] ring-[#336699]/25";
@@ -155,8 +155,8 @@ function statusClasses(status: string | null | undefined) {
 
 function creditClasses(status: string | null | undefined) {
   const clean = String(status || "pending").toLowerCase();
-  if (clean === "paid") return "bg-emerald-50 text-emerald-800 ring-emerald-200";
-  if (clean === "credited") return "bg-blue-50 text-blue-800 ring-blue-200";
+  if (clean === "paid") return "bg-[#F0FFF4] text-[#0A5C2D] ring-[#339933]/25";
+  if (clean === "credited") return "bg-[#EAF3FB] text-[#28547D] ring-[#336699]/25";
   if (clean === "void") return "bg-slate-100 text-slate-700 ring-slate-200";
   return "bg-[#EAF3FB] text-[#28547D] ring-[#8FB6D9]";
 }
@@ -390,7 +390,7 @@ export default function OwnerReferralRewardsPanel() {
             const referredName = row.referredTenant?.name || row.referredTenant?.slug || "Referred store";
             const secondaryTenantName = row.secondaryReferrerTenant?.name || row.secondaryReferrerTenant?.slug || "Referring tenant";
             return (
-              <article key={row.signup.id} className="rounded-[26px] border border-[#0E0E10]/10 bg-[#FDFBF8] p-4">
+              <article key={row.signup.id} className="rounded-[26px] border border-[#0E0E10]/10 bg-white p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -446,12 +446,12 @@ export default function OwnerReferralRewardsPanel() {
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#28547D]">Subscription payment events</p>
                     <div className="mt-3 space-y-2">
                       {row.payments.slice(0, 6).map((payment) => (
-                        <div key={payment.id} className="flex flex-col gap-2 rounded-2xl border border-[#0E0E10]/8 bg-[#FDFBF8] px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                        <div key={payment.id} className="flex flex-col gap-2 rounded-2xl border border-[#0E0E10]/8 bg-white px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="font-semibold text-[#0E0E10]">{monthLabel(payment.billing_period_month)} · {money(payment.subscription_amount, payment.currency_code || currency)}</p>
                             <p className="text-xs font-semibold text-[#68707A]">{payment.payment_source || "manual"} · {payment.payment_reference || "No reference"}</p>
                           </div>
-                          <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-800 ring-1 ring-emerald-200">{payment.payment_status || "paid"}</span>
+                          <span className="rounded-full bg-[#F0FFF4] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0A5C2D] ring-1 ring-[#339933]/25">{payment.payment_status || "paid"}</span>
                         </div>
                       ))}
                     </div>
@@ -463,7 +463,7 @@ export default function OwnerReferralRewardsPanel() {
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#28547D]">Monthly credit ledger</p>
                     <div className="mt-3 space-y-2">
                       {row.credits.slice(0, 8).map((credit) => (
-                        <div key={credit.id} className="flex flex-col gap-2 rounded-2xl border border-[#0E0E10]/8 bg-[#FDFBF8] px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                        <div key={credit.id} className="flex flex-col gap-2 rounded-2xl border border-[#0E0E10]/8 bg-white px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="font-semibold text-[#0E0E10]">{monthLabel(credit.paid_month)} · {money(credit.reward_amount, credit.currency_code || currency)}</p>
                             <p className="text-xs font-semibold text-[#68707A]">Subscription {money(credit.subscription_amount, credit.currency_code || currency)} · {credit.reward_rate_percent || 15}% · {credit.payment_reference || "No reference"}</p>
