@@ -206,13 +206,13 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
 
   if ((!booted || checking || restoringSession) && !needsTwoFactor && !unlockedKey) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#FFF7F0] px-4 py-8 text-[#0E0E10]">
+      <main className="flex min-h-screen items-center justify-center bg-[#F3F7FA] px-4 py-8 text-[#0E0E10]">
         <section className="w-full max-w-md rounded-[30px] border border-[#0E0E10]/10 bg-white p-6 text-center shadow-[0_24px_70px_rgba(14,14,16,0.14)]">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0E0E10] shadow-[0_16px_34px_rgba(14,14,16,0.22)]">
             <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-10 w-10 rounded-xl" />
           </div>
-          <p className="mt-5 text-xs font-black uppercase tracking-[0.22em] text-[#FF6A3D]">Owner platform</p>
-          <h1 className="mt-2 text-xl font-black tracking-tight">Checking secure access…</h1>
+          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.22em] text-[#336699]">Owner platform</p>
+          <h1 className="mt-2 text-xl font-semibold tracking-tight">Checking secure access…</h1>
           <p className="mt-2 text-sm leading-6 text-[#5C5F66]">One moment while Orduva confirms your saved owner session.</p>
         </section>
       </main>
@@ -227,8 +227,8 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
             <div className="flex items-center gap-4">
               <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(0,0,0,0.35)]" />
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FFB168]">Owner only</p>
-                <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Orduva platform access</h1>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8FB6D9]">Owner only</p>
+                <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Orduva platform access</h1>
               </div>
             </div>
             <p className="mt-5 text-sm leading-6 text-white/72">
@@ -237,34 +237,34 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
           </div>
 
           {!needsTwoFactor ? (
-            <form className="space-y-4 bg-[#FFF7F0] px-5 py-6 text-[#0E0E10] sm:px-7" onSubmit={(event) => { event.preventDefault(); verifyKey(platformKey); }}>
+            <form className="space-y-4 bg-[#F3F7FA] px-5 py-6 text-[#0E0E10] sm:px-7" onSubmit={(event) => { event.preventDefault(); verifyKey(platformKey); }}>
               <label className="block">
-                <span className="mb-2 block text-sm font-black text-[#0E0E10]">Platform access key</span>
-                <input type="password" value={platformKey} onChange={(event) => setPlatformKey(event.target.value)} autoComplete="current-password" autoFocus placeholder="Enter owner access key" className="min-h-12 w-full rounded-2xl border border-[#0E0E10]/15 bg-white px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#FF6A3D] focus:ring-2 focus:ring-[#FF6A3D]/20" />
+                <span className="mb-2 block text-sm font-semibold text-[#0E0E10]">Platform access key</span>
+                <input type="password" value={platformKey} onChange={(event) => setPlatformKey(event.target.value)} autoComplete="current-password" autoFocus placeholder="Enter owner access key" className="min-h-12 w-full rounded-2xl border border-[#0E0E10]/15 bg-white px-4 py-3 text-sm font-semibold outline-none transition focus:border-[#336699] focus:ring-2 focus:ring-[#336699]/20" />
               </label>
-              {message ? <p className="rounded-2xl border border-[#FF6A3D]/25 bg-white px-4 py-3 text-sm font-bold text-[#C84F2A]">{message}</p> : null}
-              <button type="submit" disabled={checking} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_18px_40px_rgba(255,106,61,0.28)] transition hover:bg-[#e65f36] disabled:cursor-not-allowed disabled:opacity-60">
+              {message ? <p className="rounded-2xl border border-[#336699]/25 bg-white px-4 py-3 text-sm font-bold text-[#336699]">{message}</p> : null}
+              <button type="submit" disabled={checking} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#336699] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(51,102,153,0.28)] transition hover:bg-[#28547D] disabled:cursor-not-allowed disabled:opacity-60">
                 {checking ? "Checking..." : "Unlock owner platform"}
               </button>
               <div className="rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3 text-xs leading-5 text-[#5C5F66]">
                 Once authenticator security is enabled, the platform key alone will no longer open owner pages.
               </div>
-              <p className="text-center text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</p>
+              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</p>
             </form>
           ) : (
-            <form className="space-y-4 bg-[#FFF7F0] px-5 py-6 text-[#0E0E10] sm:px-7" onSubmit={(event) => { event.preventDefault(); verifyTwoFactorCode(); }}>
+            <form className="space-y-4 bg-[#F3F7FA] px-5 py-6 text-[#0E0E10] sm:px-7" onSubmit={(event) => { event.preventDefault(); verifyTwoFactorCode(); }}>
               <label className="block">
-                <span className="mb-2 block text-sm font-black text-[#0E0E10]">Authenticator code</span>
-                <input inputMode="numeric" value={authCode} onChange={(event) => setAuthCode(event.target.value.replace(/\D/g, "").slice(0, 6))} autoComplete="one-time-code" autoFocus placeholder="6-digit code" className="min-h-12 w-full rounded-2xl border border-[#0E0E10]/15 bg-white px-4 py-3 text-center text-2xl font-black tracking-[0.35em] outline-none transition focus:border-[#FF6A3D] focus:ring-2 focus:ring-[#FF6A3D]/20" />
+                <span className="mb-2 block text-sm font-semibold text-[#0E0E10]">Authenticator code</span>
+                <input inputMode="numeric" value={authCode} onChange={(event) => setAuthCode(event.target.value.replace(/\D/g, "").slice(0, 6))} autoComplete="one-time-code" autoFocus placeholder="6-digit code" className="min-h-12 w-full rounded-2xl border border-[#0E0E10]/15 bg-white px-4 py-3 text-center text-2xl font-semibold tracking-[0.35em] outline-none transition focus:border-[#336699] focus:ring-2 focus:ring-[#336699]/20" />
               </label>
-              {message ? <p className="rounded-2xl border border-[#FF6A3D]/25 bg-white px-4 py-3 text-sm font-bold text-[#C84F2A]">{message}</p> : null}
-              <button type="submit" disabled={checking} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_18px_40px_rgba(255,106,61,0.28)] transition hover:bg-[#e65f36] disabled:cursor-not-allowed disabled:opacity-60">
+              {message ? <p className="rounded-2xl border border-[#336699]/25 bg-white px-4 py-3 text-sm font-bold text-[#336699]">{message}</p> : null}
+              <button type="submit" disabled={checking} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#336699] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(51,102,153,0.28)] transition hover:bg-[#28547D] disabled:cursor-not-allowed disabled:opacity-60">
                 {checking ? "Checking..." : "Verify authenticator code"}
               </button>
-              <button type="button" onClick={() => { setNeedsTwoFactor(false); setPendingKey(""); setAuthCode(""); setMessage("Enter the platform key again."); }} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#F5F2EE]">
+              <button type="button" onClick={() => { setNeedsTwoFactor(false); setPendingKey(""); setAuthCode(""); setMessage("Enter the platform key again."); }} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-semibold text-[#0E0E10] transition hover:bg-[#F5F2EE]">
                 Back to platform key
               </button>
-              <p className="text-center text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</p>
+              <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</p>
             </form>
           )}
         </section>
@@ -278,34 +278,64 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 text-xs">
           <Link href="/platform" className="inline-flex items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/5" aria-label="Owner dashboard">
             <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-9 w-9 rounded-xl shadow-[0_10px_22px_rgba(0,0,0,0.28)]" />
-            <span className="hidden font-black uppercase tracking-[0.18em] text-[#FFB168] sm:inline">Owner platform</span>
+            <span className="hidden font-semibold uppercase tracking-[0.18em] text-[#8FB6D9] sm:inline">Owner platform</span>
           </Link>
 
           <div className="relative flex items-center gap-2">
-            <div className="group relative">
-              <button
-                type="button"
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white transition hover:bg-white/18 focus:outline-none focus:ring-2 focus:ring-[#FFB168]/45"
-                aria-haspopup="true"
-              >
-                Menu <span className="text-[#FFB168]">⌄</span>
-              </button>
+            <nav className="hidden items-center gap-2 lg:flex" aria-label="Owner platform sections">
+              {OWNER_MENU_SECTIONS.map((section) => (
+                <div key={section.title} className="group relative pb-3">
+                  <button
+                    type="button"
+                    className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white transition hover:border-[#336699]/70 hover:bg-[#336699]/22 focus:outline-none focus:ring-2 focus:ring-[#336699]/45"
+                    aria-haspopup="true"
+                  >
+                    {section.title}
+                  </button>
 
-              <div className="invisible absolute right-0 top-[calc(100%+10px)] w-[min(92vw,780px)] translate-y-2 rounded-[28px] border border-white/12 bg-[#111113] p-3 text-white opacity-0 shadow-[0_24px_80px_rgba(0,0,0,0.42)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                <div className="grid gap-3 md:grid-cols-3">
-                  {OWNER_MENU_SECTIONS.map((section) => (
-                    <div key={section.title} className="rounded-[22px] border border-white/10 bg-white/[0.04] p-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FFB168]">{section.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-white/55">{section.description}</p>
+                  <div className="invisible absolute right-0 top-full w-[min(88vw,360px)] translate-y-1 rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white opacity-0 shadow-[0_24px_80px_rgba(0,0,0,0.42)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-white/58">{section.description}</p>
                       <div className="mt-3 space-y-2">
                         {section.links.map((link) => {
-                          const className = "block rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2 transition hover:border-[#FFB168]/45 hover:bg-[#FFB168]/10";
+                          const className = "block rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 transition hover:border-[#336699]/70 hover:bg-[#336699]/20";
                           const content = (
                             <>
-                              <span className="block text-sm font-black text-white">{link.label}{link.external ? " ↗" : ""}</span>
-                              <span className="mt-0.5 block text-xs font-semibold text-white/55">{link.detail}</span>
+                              <span className="block text-sm font-semibold text-white">{link.label}{link.external ? " ↗" : ""}</span>
+                              <span className="mt-0.5 block text-xs font-medium text-white/55">{link.detail}</span>
                             </>
                           );
+                          return link.external ? (
+                            <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={className}>{content}</a>
+                          ) : (
+                            <Link key={link.href} href={link.href} className={className}>{content}</Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </nav>
+
+            <div className="group relative pb-3 lg:hidden">
+              <button
+                type="button"
+                className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white transition hover:border-[#336699]/70 hover:bg-[#336699]/22 focus:outline-none focus:ring-2 focus:ring-[#336699]/45"
+                aria-haspopup="true"
+              >
+                Menu
+              </button>
+              <div className="invisible absolute right-0 top-full w-[min(92vw,360px)] translate-y-1 rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white opacity-0 shadow-[0_24px_80px_rgba(0,0,0,0.42)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                <div className="space-y-3">
+                  {OWNER_MENU_SECTIONS.map((section) => (
+                    <div key={section.title} className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
+                      <div className="mt-2 space-y-2">
+                        {section.links.map((link) => {
+                          const className = "block rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 transition hover:border-[#336699]/70 hover:bg-[#336699]/20";
+                          const content = <span className="block text-sm font-semibold text-white">{link.label}{link.external ? " ↗" : ""}</span>;
                           return link.external ? (
                             <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={className}>{content}</a>
                           ) : (
@@ -319,7 +349,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
               </div>
             </div>
 
-            <button type="button" onClick={lock} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FFB168]/30 bg-[#FFB168]/12 px-4 py-2 text-xs font-black text-white transition hover:bg-[#FFB168]/22">Lock</button>
+            <button type="button" onClick={lock} className="mb-3 inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#339933]/35 bg-[#339933]/14 px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#339933]/24">Lock</button>
           </div>
         </div>
       </div>

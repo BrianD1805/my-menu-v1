@@ -203,7 +203,7 @@ function viewHelp(view: OwnerClientView) {
 
 function statusPillClasses(view: OwnerClientView) {
   if (view === "paid") return "border-emerald-200 bg-emerald-50 text-emerald-900";
-  if (view === "trial") return "border-[#FFB168]/45 bg-[#FFF7F0] text-[#8A3C18]";
+  if (view === "trial") return "border-[#336699]/35 bg-[#EAF3FB] text-[#28547D]";
   return "border-red-200 bg-red-50 text-red-900";
 }
 
@@ -217,7 +217,7 @@ function statusTextFor(store: BillingStore, view: OwnerClientView) {
 function detailCard(label: string, value: string) {
   return (
     <div className="rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8B929C]">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8B929C]">{label}</p>
       <p className="mt-1 break-words text-sm font-bold text-[#111827]">{value}</p>
     </div>
   );
@@ -275,7 +275,7 @@ export default function OwnerBillingOverviewPanel() {
 
   const cards: Array<{ key: OwnerClientView; label: string; value: number; hint: string; classes: string }> = [
     { key: "paid", label: "Paid clients", value: paidStores.length, hint: "Active billing", classes: "border-emerald-200 bg-emerald-50 text-emerald-900" },
-    { key: "trial", label: "Free trial", value: trialStores.length, hint: "Still deciding", classes: "border-[#FFB168]/45 bg-[#FFF7F0] text-[#8A3C18]" },
+    { key: "trial", label: "Free trial", value: trialStores.length, hint: "Still deciding", classes: "border-[#336699]/35 bg-[#EAF3FB] text-[#28547D]" },
     { key: "expired", label: "Trial expired", value: expiredStores.length, hint: "Follow up", classes: "border-red-200 bg-red-50 text-red-900" },
   ];
 
@@ -323,11 +323,11 @@ export default function OwnerBillingOverviewPanel() {
 
   return (
     <section className="overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-white shadow-[0_18px_50px_rgba(14,14,16,0.08)]">
-      <div className="bg-gradient-to-br from-[#0E0E10] via-[#17171A] to-[#3A241A] p-5 text-white sm:p-6">
+      <div className="bg-gradient-to-br from-[#0E0E10] via-[#102338] to-[#336699] p-5 text-white sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner platform</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Client status overview</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#BFD8EE]">Owner platform</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Client status overview</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
               A simpler owner view. Start with the three important groups, then open one client row only when you need the account details.
             </p>
@@ -337,7 +337,7 @@ export default function OwnerBillingOverviewPanel() {
               type="button"
               onClick={() => void loadBillingOverview()}
               disabled={loading || !canLoad}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-[#FFF7F0] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#0E0E10] transition hover:bg-[#F3F7FA] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Refreshing..." : "Refresh"}
             </button>
@@ -345,7 +345,7 @@ export default function OwnerBillingOverviewPanel() {
               type="button"
               onClick={exportCurrentView}
               disabled={!activeStores.length}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Export view
             </button>
@@ -354,18 +354,18 @@ export default function OwnerBillingOverviewPanel() {
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <div className="rounded-[22px] border border-white/15 bg-white/10 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#FFE1C7]">Total stores</p>
-            <p className="mt-2 text-3xl font-black leading-none text-white">{data.summary.totalStores}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#BFD8EE]">Total stores</p>
+            <p className="mt-2 text-3xl font-semibold leading-none text-white">{data.summary.totalStores}</p>
             <p className="mt-2 text-xs font-bold text-white/58">Across all owner platform records.</p>
           </div>
           <div className="rounded-[22px] border border-emerald-300/30 bg-emerald-500/10 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-emerald-100">Last 30 days</p>
-            <p className="mt-2 text-xl font-black leading-tight text-white">{revenueLine(data.summary.last30DaysRevenue)}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100">Last 30 days</p>
+            <p className="mt-2 text-xl font-semibold leading-tight text-white">{revenueLine(data.summary.last30DaysRevenue)}</p>
             <p className="mt-2 text-xs font-bold text-white/58">Recorded Stripe billing payments.</p>
           </div>
           <div className="rounded-[22px] border border-red-300/30 bg-red-500/10 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-100">Needs attention</p>
-            <p className="mt-2 text-3xl font-black leading-none text-white">{paymentAttentionCount}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-red-100">Needs attention</p>
+            <p className="mt-2 text-3xl font-semibold leading-none text-white">{paymentAttentionCount}</p>
             <p className="mt-2 text-xs font-bold text-white/58">Payment attention or missing Stripe links.</p>
           </div>
         </div>
@@ -373,7 +373,7 @@ export default function OwnerBillingOverviewPanel() {
 
       <div className="border-t border-[#0E0E10]/10 p-5 sm:p-6">
         {message ? (
-          <p className="mb-4 rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm font-bold text-[#C84F2A]">{message}</p>
+          <p className="mb-4 rounded-2xl border border-[#336699]/20 bg-[#F3F7FA] px-4 py-3 text-sm font-bold text-[#336699]">{message}</p>
         ) : null}
 
         <div className="grid gap-3 md:grid-cols-3">
@@ -384,38 +384,38 @@ export default function OwnerBillingOverviewPanel() {
                 key={card.key}
                 type="button"
                 onClick={() => setActiveView(card.key)}
-                className={`rounded-[26px] border p-5 text-left transition hover:-translate-y-0.5 ${card.classes} ${selected ? "ring-2 ring-[#FF6A3D] ring-offset-2" : ""}`}
+                className={`rounded-[26px] border p-5 text-left transition hover:-translate-y-0.5 ${card.classes} ${selected ? "ring-2 ring-[#336699] ring-offset-2" : ""}`}
                 aria-pressed={selected}
               >
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] opacity-70">{card.label}</p>
-                <p className="mt-3 text-5xl font-black leading-none">{card.value}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-70">{card.label}</p>
+                <p className="mt-3 text-5xl font-semibold leading-none">{card.value}</p>
                 <p className="mt-3 text-sm font-bold opacity-70">{card.hint}</p>
               </button>
             );
           })}
         </div>
 
-        <div className="mt-5 rounded-[28px] border border-[#0E0E10]/10 bg-[#FFF7F0] p-4 sm:p-5">
+        <div className="mt-5 rounded-[28px] border border-[#0E0E10]/10 bg-[#F3F7FA] p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#C84F2A]">Selected list</p>
-              <h3 className="mt-1 text-2xl font-black text-[#0E0E10]">{viewTitle(activeView)}</h3>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#336699]">Selected list</p>
+              <h3 className="mt-1 text-2xl font-semibold text-[#0E0E10]">{viewTitle(activeView)}</h3>
               <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#68707A]">{viewHelp(activeView)}</p>
             </div>
             <div className="rounded-2xl border border-[#0E0E10]/10 bg-white p-3 lg:min-w-[280px]">
-              <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#8B929C]" htmlFor="owner-client-search">Search this list</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8B929C]" htmlFor="owner-client-search">Search this list</label>
               <input
                 id="owner-client-search"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Store, slug, plan or status"
-                className="mt-2 min-h-11 w-full rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0E0E10] outline-none transition focus:border-[#FF6A3D] focus:bg-white"
+                className="mt-2 min-h-11 w-full rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 text-sm font-bold text-[#0E0E10] outline-none transition focus:border-[#336699] focus:bg-white"
               />
             </div>
           </div>
 
           <div className="mt-4 overflow-hidden rounded-[22px] border border-[#0E0E10]/10 bg-white">
-            <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.35fr] gap-3 border-b border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-[#8B929C] lg:grid">
+            <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.35fr] gap-3 border-b border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8B929C] lg:grid">
               <span>Store</span>
               <span>Status</span>
               <span>Plan</span>
@@ -437,11 +437,11 @@ export default function OwnerBillingOverviewPanel() {
                         aria-expanded={expanded}
                       >
                         <div>
-                          <p className="font-black text-[#0E0E10]">{store.name}</p>
-                          <p className="mt-1 text-xs font-bold text-[#C84F2A]">{store.slug ? `${store.slug}.orduva.com` : "No slug"}</p>
+                          <p className="font-semibold text-[#0E0E10]">{store.name}</p>
+                          <p className="mt-1 text-xs font-bold text-[#336699]">{store.slug ? `${store.slug}.orduva.com` : "No slug"}</p>
                         </div>
                         <div>
-                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${statusPillClasses(activeView)}`}>
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] ${statusPillClasses(activeView)}`}>
                             {statusTextFor(store, activeView)}
                           </span>
                         </div>
@@ -453,8 +453,8 @@ export default function OwnerBillingOverviewPanel() {
                               : "No payment recorded"
                             : formatDate(store.trialEndsAt)}
                         </p>
-                        <span className="mx-auto inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white text-lg font-black text-[#0E0E10] shadow-sm transition hover:border-[#FF6A3D]/40 hover:bg-[#FFF7F0]" aria-label={expanded ? "Close details" : "Open details"}>
-                          {expanded ? "⌃" : "⌄"}
+                        <span className="mx-auto inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-3 text-xs font-semibold text-[#336699] shadow-sm transition hover:border-[#336699]/40 hover:bg-[#EAF3FB]" aria-label={expanded ? "Close details" : "Open details"}>
+                          {expanded ? "Close" : "Details"}
                         </span>
                       </button>
 
@@ -462,8 +462,8 @@ export default function OwnerBillingOverviewPanel() {
                         <div className="border-t border-[#0E0E10]/8 bg-[#FBFCFD] px-4 py-5">
                           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                             <div>
-                              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#8B929C]">Account information</p>
-                              <h4 className="mt-1 text-lg font-black text-[#0E0E10]">{store.name}</h4>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8B929C]">Account information</p>
+                              <h4 className="mt-1 text-lg font-semibold text-[#0E0E10]">{store.name}</h4>
                               <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#68707A]">
                                 Owner-only billing and access details. Checklist progress is kept out of this view so the client list stays focused.
                               </p>
@@ -474,7 +474,7 @@ export default function OwnerBillingOverviewPanel() {
                                   href={storeUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#111827] transition hover:border-[#FF6A3D]/35 hover:bg-[#FFF7F0]"
+                                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-semibold text-[#111827] transition hover:border-[#336699]/35 hover:bg-[#EAF3FB]"
                                   title="Open storefront"
                                 >
                                   Store ↗
@@ -484,7 +484,7 @@ export default function OwnerBillingOverviewPanel() {
                                 type="button"
                                 onClick={() => void openOwnerAssistAdmin(store)}
                                 disabled={ownerAssistBusyId === store.id}
-                                className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#C84F2A] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#336699] disabled:cursor-not-allowed disabled:opacity-60"
                               >
                                 {ownerAssistBusyId === store.id ? "Opening..." : "Open admin as owner"}
                               </button>

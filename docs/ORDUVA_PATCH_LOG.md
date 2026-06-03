@@ -209,3 +209,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept the dashboard focused on the client status grid/list.
 - Removed the heavy checklist panel from the main dashboard view.
 - No SQL required.
+
+
+## Ver-0.229A — Owner Platform mega menu palette and hover polish
+
+- Reworked the Owner Platform top navigation into three separate menu groups: Core platform, Money and growth, and Owner controls.
+- Fixed the hover gap so dropdowns stay open while moving from the menu button into the dropdown.
+- Removed the decorative up/down glyph styling from the menu and replaced the owner list row toggle with simple Details/Close text.
+- Updated the Owner Platform palette away from orange-heavy styling toward black, blue #336699, and green highlights.
+- Softened heavy title font weights across the owner dashboard area.
+- No storefront, checkout, payment, product, or database logic changed.
