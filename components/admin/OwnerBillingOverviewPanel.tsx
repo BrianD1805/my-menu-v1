@@ -104,6 +104,19 @@ function formatDate(value: string | null | undefined) {
   });
 }
 
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "Not recorded";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not recorded";
+  return date.toLocaleString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function daysUntil(value: string | null | undefined) {
   if (!value) return null;
   const date = new Date(value);
@@ -194,6 +207,22 @@ function statusPillClasses(view: OwnerClientView) {
   return "border-red-200 bg-red-50 text-red-900";
 }
 
+function statusTextFor(store: BillingStore, view: OwnerClientView) {
+  const trialDays = daysUntil(store.trialEndsAt);
+  if (view === "paid") return "Paid client";
+  if (view === "trial") return trialDays === null ? "Free trial" : `${trialDays} day${trialDays === 1 ? "" : "s"} left`;
+  return "Trial expired";
+}
+
+function detailCard(label: string, value: string) {
+  return (
+    <div className="rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8B929C]">{label}</p>
+      <p className="mt-1 break-words text-sm font-bold text-[#111827]">{value}</p>
+    </div>
+  );
+}
+
 export default function OwnerBillingOverviewPanel() {
   const ownerAccess = useOwnerPlatformAccess();
   const [payload, setPayload] = useState<BillingOverviewPayload | null>(null);
@@ -201,6 +230,8 @@ export default function OwnerBillingOverviewPanel() {
   const [message, setMessage] = useState("");
   const [activeView, setActiveView] = useState<OwnerClientView>("paid");
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
+  const [ownerAssistBusyId, setOwnerAssistBusyId] = useState<string | null>(null);
   const canLoad = ownerAccess.unlocked && Boolean(ownerAccess.platformKey);
 
   const loadBillingOverview = useCallback(async () => {
@@ -238,6 +269,10 @@ export default function OwnerBillingOverviewPanel() {
     [data.stores, activeView, searchTerm],
   );
 
+  useEffect(() => {
+    setExpandedStoreId(null);
+  }, [activeView, searchTerm]);
+
   const cards: Array<{ key: OwnerClientView; label: string; value: number; hint: string; classes: string }> = [
     { key: "paid", label: "Paid clients", value: paidStores.length, hint: "Active billing", classes: "border-emerald-200 bg-emerald-50 text-emerald-900" },
     { key: "trial", label: "Free trial", value: trialStores.length, hint: "Still deciding", classes: "border-[#FFB168]/45 bg-[#FFF7F0] text-[#8A3C18]" },
@@ -265,6 +300,27 @@ export default function OwnerBillingOverviewPanel() {
     );
   }, [activeStores, activeView]);
 
+  const openOwnerAssistAdmin = useCallback(async (store: BillingStore) => {
+    if (!store.id) return;
+    setOwnerAssistBusyId(store.id);
+    setMessage("Opening owner support access...");
+    try {
+      const response = await fetch("/api/platform/tenant-admin-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...ownerAccess.platformHeaders },
+        body: JSON.stringify({ tenantId: store.id }),
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: string; tenant?: { name?: string; slug?: string } };
+      if (!response.ok) throw new Error(data?.error || "Could not open tenant admin.");
+      setMessage(`Owner support access ready for ${data?.tenant?.name || store.name}.`);
+      window.open("/admin", "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not open tenant admin.");
+    } finally {
+      setOwnerAssistBusyId(null);
+    }
+  }, [ownerAccess.platformHeaders]);
+
   return (
     <section className="overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-white shadow-[0_18px_50px_rgba(14,14,16,0.08)]">
       <div className="bg-gradient-to-br from-[#0E0E10] via-[#17171A] to-[#3A241A] p-5 text-white sm:p-6">
@@ -273,7 +329,7 @@ export default function OwnerBillingOverviewPanel() {
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Owner platform</p>
             <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Client status overview</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-white/72">
-              A simpler owner view. Start with the three important groups, then click a card to see only the stores in that group.
+              A simpler owner view. Start with the three important groups, then open one client row only when you need the account details.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -359,51 +415,98 @@ export default function OwnerBillingOverviewPanel() {
           </div>
 
           <div className="mt-4 overflow-hidden rounded-[22px] border border-[#0E0E10]/10 bg-white">
-            <div className="hidden grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr] gap-3 border-b border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-[#8B929C] lg:grid">
+            <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.35fr] gap-3 border-b border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-[11px] font-black uppercase tracking-[0.14em] text-[#8B929C] lg:grid">
               <span>Store</span>
               <span>Status</span>
               <span>Plan</span>
               <span>{activeView === "paid" ? "Last payment" : "Trial ends"}</span>
-              <span>Quick link</span>
+              <span className="text-center">Open</span>
             </div>
 
             {activeStores.length ? (
               <div className="divide-y divide-[#0E0E10]/8">
                 {activeStores.map((store) => {
-                  const trialDays = daysUntil(store.trialEndsAt);
                   const storeUrl = store.slug ? `https://${store.slug}.orduva.com` : "#";
-                  const statusText = activeView === "paid" ? "Paid client" : activeView === "trial" ? (trialDays === null ? "Free trial" : `${trialDays} day${trialDays === 1 ? "" : "s"} left`) : "Trial expired";
+                  const expanded = expandedStoreId === store.id;
                   return (
-                    <article key={store.id} className="grid gap-3 px-4 py-4 text-sm lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr] lg:items-center">
-                      <div>
-                        <p className="font-black text-[#0E0E10]">{store.name}</p>
-                        <p className="mt-1 text-xs font-bold text-[#68707A]">{store.slug ? `${store.slug}.orduva.com` : "No slug"}</p>
-                      </div>
-                      <div>
-                        <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${statusPillClasses(activeView)}`}>
-                          {statusText}
+                    <article key={store.id} className="bg-white text-sm">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedStoreId(expanded ? null : store.id)}
+                        className="grid w-full gap-3 px-4 py-4 text-left transition hover:bg-[#F8FAFC] lg:grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.35fr] lg:items-center"
+                        aria-expanded={expanded}
+                      >
+                        <div>
+                          <p className="font-black text-[#0E0E10]">{store.name}</p>
+                          <p className="mt-1 text-xs font-bold text-[#C84F2A]">{store.slug ? `${store.slug}.orduva.com` : "No slug"}</p>
+                        </div>
+                        <div>
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] ${statusPillClasses(activeView)}`}>
+                            {statusTextFor(store, activeView)}
+                          </span>
+                        </div>
+                        <p className="font-bold text-[#505862]">{store.planLabel}</p>
+                        <p className="font-bold text-[#505862]">
+                          {activeView === "paid"
+                            ? store.lastPayment
+                              ? `${money(store.lastPayment.amount, store.lastPayment.currencyCode)} · ${formatDate(store.lastPayment.paidAt)}`
+                              : "No payment recorded"
+                            : formatDate(store.trialEndsAt)}
+                        </p>
+                        <span className="mx-auto inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white text-lg font-black text-[#0E0E10] shadow-sm transition hover:border-[#FF6A3D]/40 hover:bg-[#FFF7F0]" aria-label={expanded ? "Close details" : "Open details"}>
+                          {expanded ? "⌃" : "⌄"}
                         </span>
-                      </div>
-                      <p className="font-bold text-[#505862]">{store.planLabel}</p>
-                      <p className="font-bold text-[#505862]">
-                        {activeView === "paid"
-                          ? store.lastPayment
-                            ? `${money(store.lastPayment.amount, store.lastPayment.currencyCode)} · ${formatDate(store.lastPayment.paidAt)}`
-                            : "No payment recorded"
-                          : formatDate(store.trialEndsAt)}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {store.slug ? (
-                          <a
-                            href={storeUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-2 text-xs font-black text-[#9A3412] transition hover:bg-white"
-                          >
-                            Open store
-                          </a>
-                        ) : null}
-                      </div>
+                      </button>
+
+                      {expanded ? (
+                        <div className="border-t border-[#0E0E10]/8 bg-[#FBFCFD] px-4 py-5">
+                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#8B929C]">Account information</p>
+                              <h4 className="mt-1 text-lg font-black text-[#0E0E10]">{store.name}</h4>
+                              <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#68707A]">
+                                Owner-only billing and access details. Checklist progress is kept out of this view so the client list stays focused.
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {store.slug ? (
+                                <a
+                                  href={storeUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-2 text-xs font-black text-[#111827] transition hover:border-[#FF6A3D]/35 hover:bg-[#FFF7F0]"
+                                  title="Open storefront"
+                                >
+                                  Store ↗
+                                </a>
+                              ) : null}
+                              <button
+                                type="button"
+                                onClick={() => void openOwnerAssistAdmin(store)}
+                                disabled={ownerAssistBusyId === store.id}
+                                className="inline-flex min-h-10 items-center justify-center rounded-2xl bg-[#0E0E10] px-4 py-2 text-xs font-black text-white transition hover:bg-[#C84F2A] disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {ownerAssistBusyId === store.id ? "Opening..." : "Open admin as owner"}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            {detailCard("Tenant ID", store.id)}
+                            {detailCard("Created", formatDateTime(store.createdAt))}
+                            {detailCard("Billing state", store.billingState || "Not recorded")}
+                            {detailCard("Billing provider", store.billingProvider || "Not recorded")}
+                            {detailCard("Subscription", store.subscriptionStatus || "Not recorded")}
+                            {detailCard("Trial status", store.trialStatus || "Not recorded")}
+                            {detailCard("Trial ends", formatDateTime(store.trialEndsAt))}
+                            {detailCard("Plan", store.planLabel || "Not recorded")}
+                            {detailCard("Stripe customer", store.stripeCustomerId || "Not linked")}
+                            {detailCard("Stripe subscription", store.stripeSubscriptionId || "Not linked")}
+                            {detailCard("Last payment", store.lastPayment ? money(store.lastPayment.amount, store.lastPayment.currencyCode) : "Not recorded")}
+                            {detailCard("Last payment date", formatDateTime(store.lastPayment?.paidAt))}
+                          </div>
+                        </div>
+                      ) : null}
                     </article>
                   );
                 })}

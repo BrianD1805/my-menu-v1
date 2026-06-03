@@ -192,3 +192,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Replaced dense billing cards with a compact listing for the selected group.
 - Kept refresh, search and export for the selected view.
 - No database changes required.
+
+## Ver-0.228A — Owner Platform row expansion and owner assist admin access
+
+- Replaced the dense Owner Platform client list actions with compact row expansion.
+- Removed the large Open store button from list rows.
+- Expanded rows now show only owner-relevant account, billing and Stripe details.
+- Kept client checklist progress out of the expanded billing view.
+- Added owner-only support access for opening a tenant admin session from the Owner Platform.
+- The owner access route uses the existing platform key / 2FA protection and does not expose tenant passwords.
+- No Supabase SQL required.
