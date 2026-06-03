@@ -184,3 +184,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Raised the storefront variant chooser above other storefront popups so it opens in front of product details and search popups.
 - Kept the existing variant popup layout, product details popup layout, cart logic, checkout logic and variant stock logic unchanged.
 - No Supabase SQL required.
+
+## Ver-0.228 — Owner Platform simplified client status overview
+
+- Reworked the Owner Platform billing overview into a calmer client-status dashboard.
+- Added three primary click-through cards: Paid clients, Free trial, and Trial expired.
+- Replaced dense billing cards with a compact listing for the selected group.
+- Kept refresh, search and export for the selected view.
+- No database changes required.
