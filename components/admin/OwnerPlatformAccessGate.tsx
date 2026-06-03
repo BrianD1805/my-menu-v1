@@ -205,6 +205,28 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
     setActiveMenu(null);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!activeMenu) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest("[data-owner-platform-menu]")) {
+        setActiveMenu(null);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setActiveMenu(null);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeMenu]);
+
   function closeOwnerMenu() {
     setActiveMenu(null);
   }
@@ -310,9 +332,9 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
             <span className="hidden font-semibold uppercase tracking-[0.18em] text-[#8FB6D9] sm:inline">Owner platform</span>
           </Link>
 
-          <div className="relative flex items-center gap-2">
+          <div className="relative flex items-center gap-2" data-owner-platform-menu>
             <nav className="hidden items-center gap-2 lg:flex" aria-label="Owner platform sections">
-              {OWNER_MENU_SECTIONS.map((section) => {
+              {OWNER_MENU_SECTIONS.map((section, index) => {
                 const isOpen = activeMenu === section.title;
                 return (
                   <div
@@ -330,7 +352,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
                     </button>
 
                     {isOpen ? (
-                      <div className="absolute left-0 top-full z-[160] w-[min(88vw,360px)] rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+                      <div className={`absolute top-full z-[160] w-[min(88vw,360px)] rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)] ${index === OWNER_MENU_SECTIONS.length - 1 ? "right-0" : "left-0"}`}>
                         <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
                           <p className="mt-1 text-xs leading-5 text-white/58">{section.description}</p>

@@ -307,3 +307,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Removed the ambiguous Store admin login item from the top mega menu. Owner-assisted tenant admin access now happens from an expanded client row, so Orduva knows exactly which tenant is being opened.
 - Centred the mobile mega menu so it no longer runs off the page.
 - Softened owner dashboard client cards toward the black / blue #336699 palette, keeping green for positive highlights and red only for genuine warnings.
+
+## Ver-0.229L — Owner Platform header and menu correction
+- Restored Owner Platform page headers to the previous white card style after the Ver-0.229K blue-gradient headers were too broad.
+- Kept page-level duplicate navigation removed because the main mega menu now handles navigation.
+- Added click-outside and Escape-key closing for the Owner Platform menu.
+- Fixed the final desktop dropdown alignment so it does not open off-screen.
+- No SQL required.
