@@ -73,9 +73,46 @@ function buildAdminManifest(): MetadataRoute.Manifest {
   };
 }
 
+
+
+function buildOwnerPlatformManifest(): MetadataRoute.Manifest {
+  return {
+    id: "/platform/app/orduva-owner-platform-v2",
+    name: "Orduva Owner Platform",
+    short_name: "Orduva Owner",
+    description: "Owner dashboard for urgent Orduva platform checks, billing and tenant support.",
+    start_url: "/platform?source=pwa&app=orduva-owner-platform",
+    scope: "/platform",
+    display: "standalone",
+    display_override: ["standalone", "minimal-ui", "browser"],
+    orientation: "portrait",
+    background_color: "#F3F7FA",
+    theme_color: "#336699",
+    categories: ["business", "productivity"],
+    launch_handler: {
+      client_mode: ["navigate-existing", "auto"],
+    },
+    icons: [
+      { src: "/orduva-owner-platform-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/orduva-owner-platform-icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/orduva-owner-platform-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/orduva-owner-platform-icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+}
+
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const h = await headers();
   const host = normalizeHostname(h.get("x-forwarded-host") || h.get("host") || "");
+  const referer = h.get("referer") || "";
+  const routeKind = h.get("x-orduva-route-kind") || "";
+
+  // Some browsers still ask for /manifest.webmanifest on admin.orduva.com even when
+  // the current page is /platform. Use the referer/route hint so the Owner Platform
+  // never inherits the Tenant Admin install card by mistake.
+  if (routeKind === "platform" || /\/platform(?:[/?#]|$)/.test(referer)) {
+    return buildOwnerPlatformManifest();
+  }
 
   if (isSharedAdminHost(host)) {
     return buildAdminManifest();

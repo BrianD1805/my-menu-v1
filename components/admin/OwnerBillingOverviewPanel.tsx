@@ -414,8 +414,8 @@ export default function OwnerBillingOverviewPanel() {
             </div>
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-[22px] border border-[#0E0E10]/10 bg-white">
-            <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.35fr] gap-3 border-b border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8B929C] lg:grid">
+          <div className="mt-4 rounded-[22px] border border-[#0E0E10]/10 bg-white">
+            <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.35fr] gap-3 rounded-t-[22px] border-b border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8B929C] lg:grid">
               <span>Store</span>
               <span>Status</span>
               <span>Plan</span>
@@ -424,12 +424,12 @@ export default function OwnerBillingOverviewPanel() {
             </div>
 
             {activeStores.length ? (
-              <div className="divide-y divide-[#0E0E10]/8">
+              <div className="space-y-3 p-3">
                 {activeStores.map((store) => {
                   const storeUrl = store.slug ? `https://${store.slug}.orduva.com` : "#";
                   const expanded = expandedStoreId === store.id;
                   return (
-                    <article key={store.id} className="bg-white text-sm">
+                    <article key={store.id} className="overflow-hidden rounded-[20px] border border-[#0E0E10]/10 bg-white text-sm shadow-[0_10px_28px_rgba(14,14,16,0.04)]">
                       <button
                         type="button"
                         onClick={() => setExpandedStoreId(expanded ? null : store.id)}

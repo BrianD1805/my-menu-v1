@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: "/platform/app/orduva-owner-platform",
+    id: "/platform/app/orduva-owner-platform-v2",
     name: "Orduva Owner Platform",
     short_name: "Orduva Owner",
     description: "Owner dashboard for urgent Orduva platform checks, billing and tenant support.",

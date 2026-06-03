@@ -65,8 +65,29 @@ function OwnerPlatformInstallButton() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    // Force the browser to see the Owner Platform as its own installable app.
+    // admin.orduva.com also hosts Tenant Admin, so stale/competing manifest links
+    // can otherwise make Chrome offer "Orduva Admin" instead of "Orduva Owner".
+    document.querySelectorAll('link[rel="manifest"]').forEach((node) => node.remove());
+    const manifestLink = document.createElement("link");
+    manifestLink.rel = "manifest";
+    manifestLink.href = "/platform/manifest.webmanifest?v=0.229g";
+    document.head.appendChild(manifestLink);
+
+    document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach((node) => node.remove());
+    const faviconLink = document.createElement("link");
+    faviconLink.rel = "icon";
+    faviconLink.type = "image/png";
+    faviconLink.sizes = "192x192";
+    faviconLink.href = "/orduva-owner-platform-icon-192.png?v=0.229g";
+    document.head.appendChild(faviconLink);
+    const appleIconLink = document.createElement("link");
+    appleIconLink.rel = "apple-touch-icon";
+    appleIconLink.href = "/orduva-owner-platform-icon-192.png?v=0.229g";
+    document.head.appendChild(appleIconLink);
+
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+      navigator.serviceWorker.register("/owner-platform-sw.js", { scope: "/platform" }).catch(() => undefined);
     }
 
     const standalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -96,7 +117,7 @@ function OwnerPlatformInstallButton() {
   async function handleInstall() {
     if (!deferredPrompt) {
       const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-      setMessage(isIos ? "Use Safari Share → Add to Home Screen" : "Use your browser install option");
+      setMessage(isIos ? "Use Safari Share → Add to Home Screen" : "Refresh once, then use the browser install option for Orduva Owner");
       return;
     }
     await deferredPrompt.prompt();
@@ -356,7 +377,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
               <button type="submit" disabled={checking} className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#336699] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(51,102,153,0.28)] transition hover:bg-[#28547D] disabled:cursor-not-allowed disabled:opacity-60">
                 {checking ? "Checking..." : "Verify authenticator code"}
               </button>
-              <button type="button" onClick={() => { setNeedsTwoFactor(false); setPendingKey(""); setAuthCode(""); setMessage("Enter the platform key again."); }} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-semibold text-[#0E0E10] transition hover:bg-[#F5F2EE]">
+              <button type="button" onClick={() => { setNeedsTwoFactor(false); setPendingKey(""); setAuthCode(""); setMessage("Enter the platform key again."); }} className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-semibold text-[#0E0E10] transition hover:bg-[#EAF3FB]">
                 Back to platform key
               </button>
               <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5C5F66]">{LIVE_VERSION}</p>

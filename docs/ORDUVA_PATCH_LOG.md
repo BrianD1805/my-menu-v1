@@ -255,3 +255,22 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Improved the Owner Platform install button so it gives visible guidance if the browser cannot show the native install prompt.
 - No storefront, checkout, payment, tenant admin, product, variant or database logic changed.
 - No Supabase SQL required.
+
+
+## Ver-0.229F — Owner Platform palette and expanded row spacing
+
+- Applied the Owner Platform black, blue #336699, and green-highlight palette more consistently across platform pages and owner panels.
+- Reduced old orange-heavy styling and softened overly heavy font weights in owner-only pages.
+- Added visible spacing between expanded client rows and the next client row so the expanded view is easier to understand.
+- Kept red styling for true warnings/errors only.
+- No storefront, checkout, payment, tenant admin, product, variant or database logic changed.
+- No Supabase SQL required.
+
+
+## Ver-0.229G — Owner Platform PWA Identity Fix
+
+- Forced the Owner Platform to use its own manifest and icon links on /platform.
+- Added a dedicated Owner Platform service worker scoped to /platform.
+- Added root manifest fallback logic so admin.orduva.com/platform does not inherit the Tenant Admin install identity.
+- Updated install fallback wording for browsers that do not immediately show the native prompt.
+- No SQL required.

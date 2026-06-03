@@ -55,8 +55,8 @@ function statusClass(status: string | null) {
   const clean = String(status || "pending").toLowerCase();
   if (clean === "approved" || clean === "active") return "bg-emerald-50 text-emerald-800 ring-emerald-200";
   if (clean === "declined" || clean === "cancelled") return "bg-red-50 text-red-800 ring-red-200";
-  if (clean === "paused") return "bg-orange-50 text-orange-800 ring-orange-200";
-  return "bg-[#FFF7F0] text-[#9A3412] ring-[#FF6A3D]/25";
+  if (clean === "paused") return "bg-[#EAF3FB] text-[#28547D] ring-[#8FB6D9]";
+  return "bg-[#F3F7FA] text-[#28547D] ring-[#336699]/25";
 }
 
 export default function OwnerAffiliateApplicationsPanel() {
@@ -128,26 +128,26 @@ export default function OwnerAffiliateApplicationsPanel() {
     <section className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-[28px] border border-white/10 bg-[#0E0E10] p-5 text-white shadow-[0_20px_60px_rgba(14,14,16,0.18)]">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FFB168]">Pending</p>
-          <p className="mt-2 text-4xl font-black">{pendingApplications.length}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8FB6D9]">Pending</p>
+          <p className="mt-2 text-4xl font-semibold">{pendingApplications.length}</p>
           <p className="mt-1 text-sm text-white/65">Applications waiting for owner approval</p>
         </div>
         <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-[0_18px_45px_rgba(14,14,16,0.08)]">
-          <p className="text-xs font-black uppercase tracking-[0.22em]">Approved partners</p>
-          <p className="mt-2 text-4xl font-black">{(payload?.partners || []).length}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em]">Approved partners</p>
+          <p className="mt-2 text-4xl font-semibold">{(payload?.partners || []).length}</p>
           <p className="mt-1 text-sm text-emerald-800/75">Separate affiliate links and dashboard logins</p>
         </div>
-        <div className="rounded-[28px] border border-[#FF6A3D]/20 bg-[#FFF7F0] p-5 text-[#9A3412] shadow-[0_18px_45px_rgba(14,14,16,0.08)]">
-          <p className="text-xs font-black uppercase tracking-[0.22em]">Rates</p>
-          <p className="mt-2 text-2xl font-black">10% + 5%</p>
+        <div className="rounded-[28px] border border-[#336699]/20 bg-[#F3F7FA] p-5 text-[#28547D] shadow-[0_18px_45px_rgba(14,14,16,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em]">Rates</p>
+          <p className="mt-2 text-2xl font-semibold">10% + 5%</p>
           <p className="mt-1 text-sm">Affiliate commission + referring tenant commission</p>
         </div>
       </div>
 
-      {message ? <p className="rounded-2xl border border-[#FF6A3D]/25 bg-white px-4 py-3 text-sm font-bold text-[#C84F2A]">{message}</p> : null}
+      {message ? <p className="rounded-2xl border border-[#336699]/25 bg-white px-4 py-3 text-sm font-bold text-[#28547D]">{message}</p> : null}
       {lastApproved ? (
         <div className="rounded-[26px] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
-          <p className="text-sm font-black">Affiliate approved</p>
+          <p className="text-sm font-semibold">Affiliate approved</p>
           <p className="mt-2 break-all text-sm"><strong>Share link:</strong> {lastApproved.shareUrl}</p>
           <p className="mt-1 break-all text-sm"><strong>Login key:</strong> {lastApproved.accessKey}</p>
         </div>
@@ -156,25 +156,25 @@ export default function OwnerAffiliateApplicationsPanel() {
       <div className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FF6A3D]">Applications</p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10]">Pending affiliate applicants</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#336699]">Applications</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#0E0E10]">Pending affiliate applicants</h2>
           </div>
-          <button onClick={() => void loadAffiliates()} disabled={loading} className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE] disabled:opacity-60">Refresh</button>
+          <button onClick={() => void loadAffiliates()} disabled={loading} className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#EAF3FB] disabled:opacity-60">Refresh</button>
         </div>
 
         <div className="mt-5 space-y-4">
           {pendingApplications.length ? pendingApplications.map((application) => {
             const tenant = application.referring_tenant_id ? tenantById.get(application.referring_tenant_id) : null;
             return (
-              <article key={application.id} className="rounded-[24px] border border-[#0E0E10]/10 bg-[#FFFDF8] p-4">
+              <article key={application.id} className="rounded-[24px] border border-[#0E0E10]/10 bg-[#FFFFFF] p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-lg font-black text-[#0E0E10]">{application.applicant_name || "Applicant"}</h3>
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] ring-1 ${statusClass(application.status)}`}>{application.status || "pending"}</span>
+                      <h3 className="text-lg font-semibold text-[#0E0E10]">{application.applicant_name || "Applicant"}</h3>
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ring-1 ${statusClass(application.status)}`}>{application.status || "pending"}</span>
                     </div>
                     <p className="mt-1 text-sm font-bold text-[#5C5F66]">{application.email}</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-[#9A3412]">Applied {dateLabel(application.created_at)}</p>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-[#28547D]">Applied {dateLabel(application.created_at)}</p>
                     <p className="mt-2 text-sm text-[#5C5F66]"><strong>Payout currency:</strong> {affiliatePayoutCurrencyLabel(application.payout_currency_code || application.country || "GBP")}</p>
                     <p className="mt-1 text-sm text-[#5C5F66]"><strong>Target earning region:</strong> {application.earning_region || "Not supplied"}{application.earning_region_other ? ` — ${application.earning_region_other}` : ""}</p>
                     {tenant ? <p className="mt-2 text-sm text-[#5C5F66]">Introduced by tenant: <strong>{tenant.name || tenant.slug}</strong></p> : application.ref_tenant_slug ? <p className="mt-2 text-sm text-[#5C5F66]">Tenant source: <strong>{application.ref_tenant_slug}</strong></p> : null}
@@ -183,8 +183,8 @@ export default function OwnerAffiliateApplicationsPanel() {
                     {application.website_url ? <p className="mt-2 break-all text-sm text-[#5C5F66]"><strong>Website/social:</strong> {application.website_url}</p> : null}
                   </div>
                   <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
-                    <button onClick={() => updateAffiliate({ action: "approve", applicationId: application.id }, application.id)} disabled={busyId === application.id} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:bg-[#E95B30] disabled:opacity-60">Approve</button>
-                    <button onClick={() => updateAffiliate({ action: "decline", applicationId: application.id }, `${application.id}-decline`)} disabled={busyId === `${application.id}-decline`} className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE] disabled:opacity-60">Decline</button>
+                    <button onClick={() => updateAffiliate({ action: "approve", applicationId: application.id }, application.id)} disabled={busyId === application.id} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#336699] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(51,102,153,0.22)] transition hover:bg-[#28547D] disabled:opacity-60">Approve</button>
+                    <button onClick={() => updateAffiliate({ action: "decline", applicationId: application.id }, `${application.id}-decline`)} disabled={busyId === `${application.id}-decline`} className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#EAF3FB] disabled:opacity-60">Decline</button>
                   </div>
                 </div>
               </article>
@@ -194,21 +194,21 @@ export default function OwnerAffiliateApplicationsPanel() {
       </div>
 
       <div className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-[#FF6A3D]">Approved partners</p>
-        <h2 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10]">Affiliate links and login keys</h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#336699]">Approved partners</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#0E0E10]">Affiliate links and login keys</h2>
         <div className="mt-5 space-y-3">
           {(payload?.partners || []).map((partner) => (
-            <article key={partner.id} className="rounded-[24px] border border-[#0E0E10]/10 bg-[#FFFDF8] p-4">
+            <article key={partner.id} className="rounded-[24px] border border-[#0E0E10]/10 bg-[#FFFFFF] p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-black text-[#0E0E10]">{partner.display_name || partner.email}</h3>
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] ring-1 ${statusClass(partner.status)}`}>{partner.status || "active"}</span>
+                    <h3 className="text-lg font-semibold text-[#0E0E10]">{partner.display_name || partner.email}</h3>
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] ring-1 ${statusClass(partner.status)}`}>{partner.status || "active"}</span>
                   </div>
                   <p className="mt-1 break-all text-sm text-[#5C5F66]">{buildAffiliateShareUrl(partner.tracking_code || "")}</p>
                   <p className="mt-1 text-sm text-[#5C5F66]">Affiliate {partner.affiliate_reward_rate_percent ?? 10}% · Tenant {partner.tenant_reward_rate_percent ?? 5}% {partner.referring_tenant_slug ? `· Tenant source ${partner.referring_tenant_slug}` : ""}</p>
                   <p className="mt-1 text-sm text-[#5C5F66]">Payout: <strong>{affiliatePayoutCurrencyLabel(partner.payout_currency_code || "GBP")}</strong>{partner.earning_region ? ` · Target: ${partner.earning_region}` : ""}</p>
-                  {partner.access_key ? <p className="mt-1 break-all text-xs font-bold uppercase tracking-[0.12em] text-[#9A3412]">Login key: {partner.access_key}</p> : null}
+                  {partner.access_key ? <p className="mt-1 break-all text-xs font-bold uppercase tracking-[0.12em] text-[#28547D]">Login key: {partner.access_key}</p> : null}
                 </div>
                 <div className="flex gap-2">
                   {String(partner.status) !== "active" ? <button onClick={() => updateAffiliate({ action: "partner-status", partnerId: partner.id, status: "active" }, `${partner.id}-active`)} className="rounded-2xl bg-[#0E0E10] px-4 py-2 text-sm font-bold text-white">Activate</button> : null}

@@ -9,14 +9,14 @@ export default function PlatformAnalyticsPage() {
         <header className="rounded-[34px] border border-[#0E0E10]/10 bg-white/90 p-5 shadow-[0_28px_80px_rgba(14,14,16,0.12)] backdrop-blur sm:p-7">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-4">
-              <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(14,14,16,0.16)]" />
+              <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-full object-cover shadow-[0_16px_36px_rgba(14,14,16,0.16)]" />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#336699]">Orduva platform</p>
                 <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#0E0E10] sm:text-4xl">Platform analytics</h1>
               </div>
             </div>
             <div className="flex flex-wrap gap-2.5">
-              <Link href="/platform" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]">Owner dashboard</Link>
+              <Link href="/platform" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#EAF3FB]">Owner dashboard</Link>
               <Link href="/platform/referrals" className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#336699]/25 bg-[#F3F7FA] px-5 py-3 text-sm font-semibold text-[#28547D] transition hover:bg-white">Referrals</Link>
             </div>
           </div>
