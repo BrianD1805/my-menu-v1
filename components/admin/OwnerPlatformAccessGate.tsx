@@ -119,14 +119,21 @@ function OwnerPlatformInstallButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleInstall}
-      title={message || "Install the Owner Platform as an app"}
-      className="mb-3 inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#336699]/55 bg-[#336699]/24 px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#336699]/36 focus:outline-none focus:ring-2 focus:ring-[#8FB6D9]/45"
-    >
-      Install app
-    </button>
+    <span className="relative mb-3 inline-flex">
+      <button
+        type="button"
+        onClick={handleInstall}
+        title={message || "Install the Owner Platform as an app"}
+        className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#336699]/55 bg-[#336699]/24 px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#336699]/36 focus:outline-none focus:ring-2 focus:ring-[#8FB6D9]/45"
+      >
+        Install app
+      </button>
+      {message ? (
+        <span className="absolute right-0 top-[calc(100%+8px)] z-[180] w-56 rounded-2xl border border-[#336699]/25 bg-white px-3 py-2 text-[11px] font-semibold leading-4 text-[#1F2328] shadow-[0_14px_40px_rgba(14,14,16,0.18)]">
+          {message}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
@@ -297,7 +304,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
       <main className="flex min-h-screen items-center justify-center bg-[#F3F7FA] px-4 py-8 text-[#0E0E10]">
         <section className="w-full max-w-md rounded-[30px] border border-[#0E0E10]/10 bg-white p-6 text-center shadow-[0_24px_70px_rgba(14,14,16,0.14)]">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0E0E10] shadow-[0_16px_34px_rgba(14,14,16,0.22)]">
-            <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-10 w-10 rounded-xl" />
+            <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-10 w-10 rounded-full object-cover" />
           </div>
           <p className="mt-5 text-xs font-semibold uppercase tracking-[0.22em] text-[#336699]">Owner platform</p>
           <h1 className="mt-2 text-xl font-semibold tracking-tight">Checking secure access…</h1>
@@ -313,7 +320,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
         <section className="w-full max-w-xl overflow-hidden rounded-[34px] border border-white/10 bg-white shadow-[0_30px_100px_rgba(0,0,0,0.38)]">
           <div className="bg-[#0E0E10] px-5 py-6 text-white sm:px-7">
             <div className="flex items-center gap-4">
-              <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(0,0,0,0.35)]" />
+              <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-full object-cover shadow-[0_16px_36px_rgba(0,0,0,0.35)]" />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8FB6D9]">Owner only</p>
                 <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Orduva platform access</h1>
@@ -365,7 +372,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
       <div className="sticky top-0 z-[120] border-b border-[#0E0E10]/10 bg-[#0E0E10] px-4 py-2 text-white shadow-[0_12px_30px_rgba(14,14,16,0.18)] sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 text-xs">
           <Link href="/platform" className="inline-flex items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/5" aria-label="Owner dashboard">
-            <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-9 w-9 rounded-xl shadow-[0_10px_22px_rgba(0,0,0,0.28)]" />
+            <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-9 w-9 rounded-full object-cover shadow-[0_10px_22px_rgba(0,0,0,0.28)]" />
             <span className="hidden font-semibold uppercase tracking-[0.18em] text-[#8FB6D9] sm:inline">Owner platform</span>
           </Link>
 

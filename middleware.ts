@@ -59,7 +59,9 @@ export function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   const currentHost = currentHostFromRequest(request);
 
-  if (pathname.startsWith("/admin") || isSharedAdminHost(currentHost)) {
+  if (pathname.startsWith("/platform")) {
+    requestHeaders.set("x-orduva-route-kind", "platform");
+  } else if (pathname.startsWith("/admin") || isSharedAdminHost(currentHost)) {
     requestHeaders.set("x-orduva-route-kind", "admin");
   }
 
@@ -90,5 +92,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/api/admin/:path*", "/manifest.webmanifest"],
+  matcher: ["/", "/admin/:path*", "/api/admin/:path*", "/platform", "/platform/:path*", "/manifest.webmanifest"],
 };

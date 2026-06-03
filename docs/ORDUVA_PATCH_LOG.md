@@ -244,3 +244,14 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Rebuilt Owner Platform PWA icons using the same approved design.
 - Kept the icon canvas white and square, with Ord in #336699 and Uva in black.
 - No Supabase SQL required.
+
+
+## Ver-0.229E — Owner Platform favicon routing and PWA install polish
+
+- Replaced the Owner Platform browser favicon and PWA icons with the user-supplied approved artwork.
+- Kept the artwork square with a full white canvas so browser/PWA masks do not add a black edge.
+- Updated platform routing metadata so /platform uses the Owner Platform favicon and manifest instead of inheriting Tenant Admin metadata on admin.orduva.com.
+- Updated the Owner Platform icon display areas to use a true circle crop.
+- Improved the Owner Platform install button so it gives visible guidance if the browser cannot show the native install prompt.
+- No storefront, checkout, payment, tenant admin, product, variant or database logic changed.
+- No Supabase SQL required.

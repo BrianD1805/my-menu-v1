@@ -75,6 +75,38 @@ function buildAdminMetadata(): Metadata {
   };
 }
 
+
+function buildOwnerPlatformMetadata(): Metadata {
+  return {
+    title: "Orduva Owner Platform",
+    description: "Owner dashboard for urgent Orduva platform checks, billing and tenant support.",
+    applicationName: "Orduva Owner Platform",
+    manifest: "/platform/manifest.webmanifest",
+    themeColor: "#336699",
+    icons: {
+      icon: [
+        { url: "/orduva-owner-platform-favicon.ico" },
+        { url: "/orduva-owner-platform-icon-32.png", sizes: "32x32", type: "image/png" },
+        { url: "/orduva-owner-platform-icon-48.png", sizes: "48x48", type: "image/png" },
+        { url: "/orduva-owner-platform-icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/orduva-owner-platform-icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      shortcut: "/orduva-owner-platform-favicon.ico",
+      apple: "/orduva-owner-platform-icon-192.png",
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: "Orduva Owner",
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-title": "Orduva Owner",
+    },
+  };
+}
+
 type StorefrontSeoContext = {
   tenant: any;
   settings: TenantSettings | null;
@@ -202,6 +234,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const routeKind = h.get("x-orduva-route-kind");
   const host = normalizeHostname(h.get("x-forwarded-host") || h.get("host") || "");
 
+  if (routeKind === "platform") {
+    return buildOwnerPlatformMetadata();
+  }
+
   if (routeKind === "admin" || isSharedAdminHost(host)) {
     return buildAdminMetadata();
   }
@@ -235,7 +271,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const h = await headers();
   const routeKind = h.get("x-orduva-route-kind");
   const host = normalizeHostname(h.get("x-forwarded-host") || h.get("host") || "");
-  const isTenantStorefront = routeKind !== "admin" && !isSharedAdminHost(host) && !isRootPlatformHost(host);
+  const isTenantStorefront = routeKind !== "admin" && routeKind !== "platform" && !isSharedAdminHost(host) && !isRootPlatformHost(host);
   const context = isTenantStorefront ? await loadStorefrontSeoContext() : null;
   const settings = context?.settings || null;
   const trackingId = normalizeTrackingId(settings?.google_tracking_id);

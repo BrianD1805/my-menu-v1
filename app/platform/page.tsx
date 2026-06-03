@@ -11,7 +11,7 @@ export default function PlatformDashboardPage() {
                 <img
                   src="/orduva-owner-platform-icon-192.png"
                   alt="Orduva"
-                  className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(14,14,16,0.16)]"
+                  className="h-14 w-14 rounded-full object-cover shadow-[0_16px_36px_rgba(14,14,16,0.16)]"
                 />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#336699]">
