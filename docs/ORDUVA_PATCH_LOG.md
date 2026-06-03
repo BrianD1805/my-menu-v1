@@ -228,3 +228,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added an Owner Platform PWA manifest scoped to /platform for urgent owner access away from the office.
 - Added a small Install app action in the Owner Platform header and registered the existing service worker from the owner area.
 - No storefront, checkout, payment, product, tenant admin or database logic changed.
+
+
+## Ver-0.229C — Owner Platform favicon shape correction
+
+- Restored the Owner Platform favicon layout to the original stacked Orduva style, with Ord above Uva.
+- Kept the requested colour update: Ord in blue #336699, Uva in black, on a white background.
+- Removed the visible dark/black surround by filling the icon canvas edge to edge with white.
+- Rebuilt the Owner Platform favicon and PWA icon sizes.
+- No storefront, checkout, payment, tenant admin, product, variant or database logic changed.
