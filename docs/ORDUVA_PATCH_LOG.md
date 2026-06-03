@@ -1,3 +1,17 @@
+## Ver-0.229I — Owner Platform Stability and PWA Cache Fix
+- Removed dynamic page caching from the Owner Platform service worker.
+- Cleared stale Owner Platform PWA caches that could show skeleton/blank platform pages.
+- Changed Owner Platform mega menus to click-open to avoid incorrect hover/highlight behaviour.
+- No SQL required.
+
+
+## Ver-0.229H — Owner Platform PWA Install Fix
+- Added a dedicated static Owner Platform manifest.
+- Added a dedicated Owner Platform PWA registrar.
+- Rebuilt favicon/PWA icons from the supplied artwork without altering the white canvas.
+- Updated service worker/cache version and install guidance.
+- No SQL required.
+
 # Orduva Patch Log
 
 This is the rolling patch log for the Orduva SaaS Ordering project.

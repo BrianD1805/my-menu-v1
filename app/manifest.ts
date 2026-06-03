@@ -77,7 +77,7 @@ function buildAdminManifest(): MetadataRoute.Manifest {
 
 function buildOwnerPlatformManifest(): MetadataRoute.Manifest {
   return {
-    id: "/platform/app/orduva-owner-platform-v2",
+    id: "/platform/app/orduva-owner-platform-v5",
     name: "Orduva Owner Platform",
     short_name: "Orduva Owner",
     description: "Owner dashboard for urgent Orduva platform checks, billing and tenant support.",

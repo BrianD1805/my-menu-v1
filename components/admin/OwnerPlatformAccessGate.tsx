@@ -71,7 +71,7 @@ function OwnerPlatformInstallButton() {
     document.querySelectorAll('link[rel="manifest"]').forEach((node) => node.remove());
     const manifestLink = document.createElement("link");
     manifestLink.rel = "manifest";
-    manifestLink.href = "/platform/manifest.webmanifest?v=0.229g";
+    manifestLink.href = "/orduva-owner-platform.webmanifest?v=0.229i";
     document.head.appendChild(manifestLink);
 
     document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach((node) => node.remove());
@@ -79,15 +79,15 @@ function OwnerPlatformInstallButton() {
     faviconLink.rel = "icon";
     faviconLink.type = "image/png";
     faviconLink.sizes = "192x192";
-    faviconLink.href = "/orduva-owner-platform-icon-192.png?v=0.229g";
+    faviconLink.href = "/orduva-owner-platform-icon-192.png?v=0.229i";
     document.head.appendChild(faviconLink);
     const appleIconLink = document.createElement("link");
     appleIconLink.rel = "apple-touch-icon";
-    appleIconLink.href = "/orduva-owner-platform-icon-192.png?v=0.229g";
+    appleIconLink.href = "/orduva-owner-platform-icon-192.png?v=0.229i";
     document.head.appendChild(appleIconLink);
 
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/owner-platform-sw.js", { scope: "/platform" }).catch(() => undefined);
+    if ("caches" in window) {
+      caches.keys().then((keys) => Promise.all(keys.filter((key) => key.startsWith("orduva-owner-platform-")).map((key) => caches.delete(key)))).catch(() => undefined);
     }
 
     const standalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -117,7 +117,7 @@ function OwnerPlatformInstallButton() {
   async function handleInstall() {
     if (!deferredPrompt) {
       const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-      setMessage(isIos ? "Use Safari Share → Add to Home Screen" : "Refresh once, then use the browser install option for Orduva Owner");
+      setMessage(isIos ? "On iPhone/iPad: Safari Share → Add to Home Screen." : "Use your browser menu → Install app. If it is not shown yet, leave this page open for a few seconds and try again.");
       return;
     }
     await deferredPrompt.prompt();
@@ -405,8 +405,6 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
                   <div
                     key={section.title}
                     className="relative pb-3"
-                    onMouseEnter={() => setActiveMenu(section.title)}
-                    onMouseLeave={() => setActiveMenu(null)}
                   >
                     <button
                       type="button"
@@ -419,7 +417,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
                     </button>
 
                     {isOpen ? (
-                      <div className="absolute right-0 top-full z-[160] w-[min(88vw,360px)] rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+                      <div className="absolute left-0 top-full z-[160] w-[min(88vw,360px)] rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
                         <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
                           <p className="mt-1 text-xs leading-5 text-white/58">{section.description}</p>
