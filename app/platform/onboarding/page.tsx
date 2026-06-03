@@ -6,21 +6,21 @@ import { LIVE_VERSION } from "@/lib/version";
 
 export default function PlatformOnboardingPage() {
   return (
-      <main className="min-h-screen bg-[#FFF7F0] px-4 py-5 text-[#1F2328] sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-[#F3F7FA] px-4 py-5 text-[#1F2328] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <header className="rounded-[34px] border border-[#0E0E10]/10 bg-white/90 p-5 shadow-[0_28px_80px_rgba(14,14,16,0.12)] backdrop-blur sm:p-7">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
                 <img
-                  src="/orduva-platform-icon-192.png"
+                  src="/orduva-owner-platform-icon-192.png"
                   alt="Orduva"
                   className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(14,14,16,0.16)]"
                 />
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FF6A3D]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#336699]">
                     Orduva platform
                   </p>
-                  <h1 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10] sm:text-4xl">
+                  <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#0E0E10] sm:text-4xl">
                     Onboarding tools
                   </h1>
                 </div>
@@ -50,10 +50,10 @@ export default function PlatformOnboardingPage() {
               Dedicated owner tools for store creation, onboarding checks, owner email testing and onboarding events. The main store overview now lives on the platform dashboard.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <div className="inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">
+              <div className="inline-flex rounded-full border border-[#0E0E10]/10 bg-[#F3F7FA] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5C5F66]">
                 {LIVE_VERSION}
               </div>
-              <div className="inline-flex rounded-full border border-[#FF6A3D]/20 bg-[#FF6A3D]/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#C84F2A]">
+              <div className="inline-flex rounded-full border border-[#336699]/20 bg-[#336699]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#28547D]">
                 Owner onboarding
               </div>
             </div>

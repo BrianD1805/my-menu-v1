@@ -9,7 +9,7 @@ export default function PlatformDashboardPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex items-center gap-4">
                 <img
-                  src="/orduva-platform-icon-192.png"
+                  src="/orduva-owner-platform-icon-192.png"
                   alt="Orduva"
                   className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(14,14,16,0.16)]"
                 />

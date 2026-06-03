@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { LIVE_VERSION } from "@/lib/version";
 
@@ -22,6 +23,11 @@ const OwnerPlatformAccessContext = createContext<OwnerPlatformAccessContextValue
 
 const SESSION_KEY = "orduvaOwnerPlatformAccessKey";
 const SESSION_2FA_KEY = "orduvaOwnerPlatform2faSession";
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
 
 const OWNER_MENU_SECTIONS = [
   {
@@ -52,11 +58,85 @@ const OWNER_MENU_SECTIONS = [
   },
 ];
 
+
+function OwnerPlatformInstallButton() {
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    }
+
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    setIsInstalled(Boolean(standalone));
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setDeferredPrompt(event as BeforeInstallPromptEvent);
+      setMessage("");
+    };
+
+    const handleInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      setMessage("Installed");
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleInstalled);
+    };
+  }, []);
+
+  async function handleInstall() {
+    if (!deferredPrompt) {
+      const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      setMessage(isIos ? "Use Safari Share → Add to Home Screen" : "Use your browser install option");
+      return;
+    }
+    await deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    if (choice.outcome === "accepted") {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      setMessage("Installed");
+    } else {
+      setMessage("Install dismissed");
+    }
+  }
+
+  if (isInstalled) {
+    return (
+      <span className="mb-3 hidden min-h-10 items-center justify-center rounded-2xl border border-[#339933]/30 bg-[#339933]/12 px-4 py-2 text-xs font-semibold text-white/88 sm:inline-flex">
+        App installed
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleInstall}
+      title={message || "Install the Owner Platform as an app"}
+      className="mb-3 inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#336699]/55 bg-[#336699]/24 px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#336699]/36 focus:outline-none focus:ring-2 focus:ring-[#8FB6D9]/45"
+    >
+      Install app
+    </button>
+  );
+}
+
 export function useOwnerPlatformAccess() {
   return useContext(OwnerPlatformAccessContext);
 }
 
 export default function OwnerPlatformAccessGate({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [platformKey, setPlatformKey] = useState("");
   const [authCode, setAuthCode] = useState("");
   const [pendingKey, setPendingKey] = useState("");
@@ -180,6 +260,14 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    setActiveMenu(null);
+  }, [pathname]);
+
+  function closeOwnerMenu() {
+    setActiveMenu(null);
+  }
+
   function lock() {
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_2FA_KEY);
@@ -209,7 +297,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
       <main className="flex min-h-screen items-center justify-center bg-[#F3F7FA] px-4 py-8 text-[#0E0E10]">
         <section className="w-full max-w-md rounded-[30px] border border-[#0E0E10]/10 bg-white p-6 text-center shadow-[0_24px_70px_rgba(14,14,16,0.14)]">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0E0E10] shadow-[0_16px_34px_rgba(14,14,16,0.22)]">
-            <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-10 w-10 rounded-xl" />
+            <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-10 w-10 rounded-xl" />
           </div>
           <p className="mt-5 text-xs font-semibold uppercase tracking-[0.22em] text-[#336699]">Owner platform</p>
           <h1 className="mt-2 text-xl font-semibold tracking-tight">Checking secure access…</h1>
@@ -225,7 +313,7 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
         <section className="w-full max-w-xl overflow-hidden rounded-[34px] border border-white/10 bg-white shadow-[0_30px_100px_rgba(0,0,0,0.38)]">
           <div className="bg-[#0E0E10] px-5 py-6 text-white sm:px-7">
             <div className="flex items-center gap-4">
-              <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(0,0,0,0.35)]" />
+              <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-14 w-14 rounded-[20px] shadow-[0_16px_36px_rgba(0,0,0,0.35)]" />
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8FB6D9]">Owner only</p>
                 <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">Orduva platform access</h1>
@@ -277,79 +365,96 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
       <div className="sticky top-0 z-[120] border-b border-[#0E0E10]/10 bg-[#0E0E10] px-4 py-2 text-white shadow-[0_12px_30px_rgba(14,14,16,0.18)] sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 text-xs">
           <Link href="/platform" className="inline-flex items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/5" aria-label="Owner dashboard">
-            <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-9 w-9 rounded-xl shadow-[0_10px_22px_rgba(0,0,0,0.28)]" />
+            <img src="/orduva-owner-platform-icon-192.png" alt="Orduva" className="h-9 w-9 rounded-xl shadow-[0_10px_22px_rgba(0,0,0,0.28)]" />
             <span className="hidden font-semibold uppercase tracking-[0.18em] text-[#8FB6D9] sm:inline">Owner platform</span>
           </Link>
 
           <div className="relative flex items-center gap-2">
             <nav className="hidden items-center gap-2 lg:flex" aria-label="Owner platform sections">
-              {OWNER_MENU_SECTIONS.map((section) => (
-                <div key={section.title} className="group relative pb-3">
-                  <button
-                    type="button"
-                    className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white transition hover:border-[#336699]/70 hover:bg-[#336699]/22 focus:outline-none focus:ring-2 focus:ring-[#336699]/45"
-                    aria-haspopup="true"
+              {OWNER_MENU_SECTIONS.map((section) => {
+                const isOpen = activeMenu === section.title;
+                return (
+                  <div
+                    key={section.title}
+                    className="relative pb-3"
+                    onMouseEnter={() => setActiveMenu(section.title)}
+                    onMouseLeave={() => setActiveMenu(null)}
                   >
-                    {section.title}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMenu(isOpen ? null : section.title)}
+                      className={`inline-flex min-h-10 items-center justify-center rounded-2xl border px-4 py-2 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#336699]/45 ${isOpen ? "border-[#336699]/70 bg-[#336699]/28 text-white" : "border-white/12 bg-white/[0.06] text-white hover:border-[#336699]/70 hover:bg-[#336699]/22"}`}
+                      aria-haspopup="true"
+                      aria-expanded={isOpen}
+                    >
+                      {section.title}
+                    </button>
 
-                  <div className="invisible absolute right-0 top-full w-[min(88vw,360px)] translate-y-1 rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white opacity-0 shadow-[0_24px_80px_rgba(0,0,0,0.42)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-white/58">{section.description}</p>
-                      <div className="mt-3 space-y-2">
-                        {section.links.map((link) => {
-                          const className = "block rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 transition hover:border-[#336699]/70 hover:bg-[#336699]/20";
-                          const content = (
-                            <>
-                              <span className="block text-sm font-semibold text-white">{link.label}{link.external ? " ↗" : ""}</span>
-                              <span className="mt-0.5 block text-xs font-medium text-white/55">{link.detail}</span>
-                            </>
-                          );
-                          return link.external ? (
-                            <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={className}>{content}</a>
-                          ) : (
-                            <Link key={link.href} href={link.href} className={className}>{content}</Link>
-                          );
-                        })}
+                    {isOpen ? (
+                      <div className="absolute right-0 top-full z-[160] w-[min(88vw,360px)] rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+                        <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
+                          <p className="mt-1 text-xs leading-5 text-white/58">{section.description}</p>
+                          <div className="mt-3 space-y-2">
+                            {section.links.map((link) => {
+                              const className = "block rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 transition hover:border-[#336699]/70 hover:bg-[#336699]/20";
+                              const content = (
+                                <>
+                                  <span className="block text-sm font-semibold text-white">{link.label}{link.external ? " ↗" : ""}</span>
+                                  <span className="mt-0.5 block text-xs font-medium text-white/55">{link.detail}</span>
+                                </>
+                              );
+                              return link.external ? (
+                                <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={className} onClick={closeOwnerMenu}>{content}</a>
+                              ) : (
+                                <Link key={link.href} href={link.href} className={className} onClick={closeOwnerMenu}>{content}</Link>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : null}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </nav>
 
-            <div className="group relative pb-3 lg:hidden">
+            <div className="relative pb-3 lg:hidden">
               <button
                 type="button"
+                onClick={() => setActiveMenu(activeMenu === "mobile" ? null : "mobile")}
                 className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white transition hover:border-[#336699]/70 hover:bg-[#336699]/22 focus:outline-none focus:ring-2 focus:ring-[#336699]/45"
                 aria-haspopup="true"
+                aria-expanded={activeMenu === "mobile"}
               >
                 Menu
               </button>
-              <div className="invisible absolute right-0 top-full w-[min(92vw,360px)] translate-y-1 rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white opacity-0 shadow-[0_24px_80px_rgba(0,0,0,0.42)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                <div className="space-y-3">
-                  {OWNER_MENU_SECTIONS.map((section) => (
-                    <div key={section.title} className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
-                      <div className="mt-2 space-y-2">
-                        {section.links.map((link) => {
-                          const className = "block rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 transition hover:border-[#336699]/70 hover:bg-[#336699]/20";
-                          const content = <span className="block text-sm font-semibold text-white">{link.label}{link.external ? " ↗" : ""}</span>;
-                          return link.external ? (
-                            <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={className}>{content}</a>
-                          ) : (
-                            <Link key={link.href} href={link.href} className={className}>{content}</Link>
-                          );
-                        })}
+              {activeMenu === "mobile" ? (
+                <div className="absolute right-0 top-full z-[160] w-[min(92vw,360px)] rounded-[24px] border border-[#336699]/35 bg-[#101317] p-3 text-white shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+                  <div className="space-y-3">
+                    {OWNER_MENU_SECTIONS.map((section) => (
+                      <div key={section.title} className="rounded-[20px] border border-white/10 bg-white/[0.04] p-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8FB6D9]">{section.title}</p>
+                        <div className="mt-2 space-y-2">
+                          {section.links.map((link) => {
+                            const className = "block rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2 transition hover:border-[#336699]/70 hover:bg-[#336699]/20";
+                            const content = <span className="block text-sm font-semibold text-white">{link.label}{link.external ? " ↗" : ""}</span>;
+                            return link.external ? (
+                              <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={className} onClick={closeOwnerMenu}>{content}</a>
+                            ) : (
+                              <Link key={link.href} href={link.href} className={className} onClick={closeOwnerMenu}>{content}</Link>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
 
-            <button type="button" onClick={lock} className="mb-3 inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#339933]/35 bg-[#339933]/14 px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#339933]/24">Lock</button>
+            <OwnerPlatformInstallButton />
+            <button type="button" onClick={() => { closeOwnerMenu(); lock(); }} className="mb-3 inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#339933]/35 bg-[#339933]/14 px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#339933]/24">Lock</button>
           </div>
         </div>
       </div>

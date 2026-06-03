@@ -219,3 +219,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Updated the Owner Platform palette away from orange-heavy styling toward black, blue #336699, and green highlights.
 - Softened heavy title font weights across the owner dashboard area.
 - No storefront, checkout, payment, product, or database logic changed.
+
+
+## Ver-0.229B — Owner Platform menu close, favicon and PWA install
+
+- Closed Owner Platform mega dropdowns immediately after selecting a menu item.
+- Added a dedicated Owner Platform favicon and PWA icon with white background, Ord in blue #336699 and uva in black.
+- Added an Owner Platform PWA manifest scoped to /platform for urgent owner access away from the office.
+- Added a small Install app action in the Owner Platform header and registered the existing service worker from the owner area.
+- No storefront, checkout, payment, product, tenant admin or database logic changed.
