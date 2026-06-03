@@ -1,6 +1,4 @@
 import OwnerBillingOverviewPanel from "@/components/admin/OwnerBillingOverviewPanel";
-import OwnerStoreReadinessPanel from "@/components/admin/OwnerStoreReadinessPanel";
-import Link from "next/link";
 import { LIVE_VERSION } from "@/lib/version";
 
 export default function PlatformDashboardPage() {
@@ -24,53 +22,12 @@ export default function PlatformDashboardPage() {
                   </h1>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2.5">
-                <Link
-                  href="/platform/onboarding"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_16px_34px_rgba(255,106,61,0.24)] transition hover:bg-[#e65f36]"
-                >
-                  Onboarding tools
-                </Link>
-                <Link
-                  href="/platform/analytics"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm font-black text-sky-900 transition hover:bg-white"
-                >
-                  Analytics
-                </Link>
-                <Link
-                  href="/platform/referrals"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-5 py-3 text-sm font-black text-[#9A3412] transition hover:bg-white"
-                >
-                  Referrals
-                </Link>
-                <Link
-                  href="/platform/affiliates"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-900 transition hover:bg-white"
-                >
-                  Affiliates
-                </Link>
-                <Link
-                  href="/platform/billing"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-5 py-3 text-sm font-black text-[#9A3412] transition hover:bg-white"
-                >
-                  Billing
-                </Link>
-                <Link
-                  href="/platform/security"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-white px-5 py-3 text-sm font-bold text-[#0E0E10] transition hover:bg-[#F5F2EE]"
-                >
-                  Security
-                </Link>
-                <a
-                  href="https://admin.orduva.com/admin"
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#252528]"
-                >
-                  Store admin login
-                </a>
+              <div className="rounded-[26px] border border-[#0E0E10]/10 bg-[#FFF7F0] px-5 py-4 text-sm font-bold leading-6 text-[#5C5F66] lg:max-w-md">
+                Use the owner menu in the black header for platform sections. This dashboard now stays focused on client status only.
               </div>
             </div>
             <p className="mt-5 max-w-3xl text-sm leading-7 text-[#5C5F66] sm:text-base">
-              The main owner view for Orduva. Use the cards below to jump straight to stores, paying clients, trials, expired trials, checkout paused stores, and stores that still need setup.
+              The main owner view for Orduva. Start with paid clients, free trials and expired trials, then open a single row only when you need more detail.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <div className="inline-flex rounded-full border border-[#0E0E10]/10 bg-[#FFF7F0] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#5C5F66]">
@@ -86,9 +43,6 @@ export default function PlatformDashboardPage() {
             <OwnerBillingOverviewPanel />
           </div>
 
-          <div className="mt-6">
-            <OwnerStoreReadinessPanel />
-          </div>
         </div>
       </main>
   );

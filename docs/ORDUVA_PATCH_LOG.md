@@ -202,3 +202,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added owner-only support access for opening a tenant admin session from the Owner Platform.
 - The owner access route uses the existing platform key / 2FA protection and does not expose tenant passwords.
 - No Supabase SQL required.
+
+## Ver-0.229 — Owner Platform Mega Menu and Dashboard Tidy
+- Added a compact mega menu to the owner header.
+- Removed duplicate page-level owner navigation links from the dashboard hero.
+- Kept the dashboard focused on the client status grid/list.
+- Removed the heavy checklist panel from the main dashboard view.
+- No SQL required.

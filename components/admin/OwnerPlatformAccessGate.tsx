@@ -23,6 +23,35 @@ const OwnerPlatformAccessContext = createContext<OwnerPlatformAccessContextValue
 const SESSION_KEY = "orduvaOwnerPlatformAccessKey";
 const SESSION_2FA_KEY = "orduvaOwnerPlatform2faSession";
 
+const OWNER_MENU_SECTIONS = [
+  {
+    title: "Core platform",
+    description: "The main owner views you use most often.",
+    links: [
+      { href: "/platform", label: "Dashboard", detail: "Client status overview" },
+      { href: "/platform/onboarding", label: "Onboarding", detail: "Store setup and trials" },
+      { href: "/platform/analytics", label: "Analytics", detail: "Platform activity" },
+    ],
+  },
+  {
+    title: "Money and growth",
+    description: "Billing, referrals and affiliate work.",
+    links: [
+      { href: "/platform/billing", label: "Billing", detail: "Plans and payments" },
+      { href: "/platform/referrals", label: "Referrals", detail: "Tenant referrals" },
+      { href: "/platform/affiliates", label: "Affiliates", detail: "Affiliate applications" },
+    ],
+  },
+  {
+    title: "Owner controls",
+    description: "Security and support access.",
+    links: [
+      { href: "/platform/security", label: "Security", detail: "Owner 2FA and protection" },
+      { href: "https://admin.orduva.com/admin", label: "Store admin login", detail: "Open tenant admin", external: true },
+    ],
+  },
+];
+
 export function useOwnerPlatformAccess() {
   return useContext(OwnerPlatformAccessContext);
 }
@@ -245,16 +274,52 @@ export default function OwnerPlatformAccessGate({ children }: { children: ReactN
 
   return (
     <OwnerPlatformAccessContext.Provider value={contextValue}>
-      <div className="border-b border-[#0E0E10]/10 bg-[#0E0E10] px-4 py-2 text-white sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 text-xs md:flex-row md:items-center md:justify-between">
-          <span className="font-black uppercase tracking-[0.18em] text-[#FFB168]">Owner platform unlocked</span>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/platform" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Dashboard</Link>
-            <Link href="/platform/onboarding" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Onboarding</Link>
-            <Link href="/platform/referrals" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Referrals</Link>
-            <Link href="/platform/billing" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Billing</Link>
-            <Link href="/platform/security" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-[#FFB168]/35 bg-[#FFB168]/15 px-3 py-2 text-xs font-black text-white transition hover:bg-[#FFB168]/25">Security</Link>
-            <button type="button" onClick={lock} className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/20">Lock owner area</button>
+      <div className="sticky top-0 z-[120] border-b border-[#0E0E10]/10 bg-[#0E0E10] px-4 py-2 text-white shadow-[0_12px_30px_rgba(14,14,16,0.18)] sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 text-xs">
+          <Link href="/platform" className="inline-flex items-center gap-3 rounded-2xl px-1 py-1 transition hover:bg-white/5" aria-label="Owner dashboard">
+            <img src="/orduva-platform-icon-192.png" alt="Orduva" className="h-9 w-9 rounded-xl shadow-[0_10px_22px_rgba(0,0,0,0.28)]" />
+            <span className="hidden font-black uppercase tracking-[0.18em] text-[#FFB168] sm:inline">Owner platform</span>
+          </Link>
+
+          <div className="relative flex items-center gap-2">
+            <div className="group relative">
+              <button
+                type="button"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-xs font-black text-white transition hover:bg-white/18 focus:outline-none focus:ring-2 focus:ring-[#FFB168]/45"
+                aria-haspopup="true"
+              >
+                Menu <span className="text-[#FFB168]">⌄</span>
+              </button>
+
+              <div className="invisible absolute right-0 top-[calc(100%+10px)] w-[min(92vw,780px)] translate-y-2 rounded-[28px] border border-white/12 bg-[#111113] p-3 text-white opacity-0 shadow-[0_24px_80px_rgba(0,0,0,0.42)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                <div className="grid gap-3 md:grid-cols-3">
+                  {OWNER_MENU_SECTIONS.map((section) => (
+                    <div key={section.title} className="rounded-[22px] border border-white/10 bg-white/[0.04] p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FFB168]">{section.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-white/55">{section.description}</p>
+                      <div className="mt-3 space-y-2">
+                        {section.links.map((link) => {
+                          const className = "block rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2 transition hover:border-[#FFB168]/45 hover:bg-[#FFB168]/10";
+                          const content = (
+                            <>
+                              <span className="block text-sm font-black text-white">{link.label}{link.external ? " ↗" : ""}</span>
+                              <span className="mt-0.5 block text-xs font-semibold text-white/55">{link.detail}</span>
+                            </>
+                          );
+                          return link.external ? (
+                            <a key={link.href} href={link.href} target="_blank" rel="noreferrer" className={className}>{content}</a>
+                          ) : (
+                            <Link key={link.href} href={link.href} className={className}>{content}</Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <button type="button" onClick={lock} className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-[#FFB168]/30 bg-[#FFB168]/12 px-4 py-2 text-xs font-black text-white transition hover:bg-[#FFB168]/22">Lock</button>
           </div>
         </div>
       </div>
