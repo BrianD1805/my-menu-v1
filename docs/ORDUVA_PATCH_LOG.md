@@ -237,3 +237,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Removed the visible dark/black surround by filling the icon canvas edge to edge with white.
 - Rebuilt the Owner Platform favicon and PWA icon sizes.
 - No storefront, checkout, payment, tenant admin, product, variant or database logic changed.
+
+## Ver-0.229D — Owner Platform approved favicon and PWA icon
+
+- Replaced the Owner Platform browser favicon with the approved stacked Orduva icon.
+- Rebuilt Owner Platform PWA icons using the same approved design.
+- Kept the icon canvas white and square, with Ord in #336699 and Uva in black.
+- No Supabase SQL required.
