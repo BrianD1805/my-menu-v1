@@ -353,3 +353,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Invoice payment cards use a separate card layout without images, variants, favourites or normal product detail popups.
 - Normal product category sections now exclude customer-entered amount products when they are shown through the invoice payments section.
 - No payment provider setup changes and no new public table.
+
+
+## Ver-0.231C — Invoice payment cards storefront visibility fix
+
+- Fixed storefront payload so Invoice payments settings are actually returned to the storefront.
+- Bumped storefront cache key to avoid old cached storefront data hiding newly enabled invoice cards.
+- Changed storefront products endpoint/client fetch to no-store so tenant setting changes appear immediately after saving.
+- No database changes.

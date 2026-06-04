@@ -181,6 +181,12 @@ export async function GET(req: Request) {
       discountRules: Array.isArray(settings?.discount_rules)
         ? settings.discount_rules
         : [],
+      invoicePaymentsEnabled: settings?.invoice_payments_enabled === true,
+      invoicePaymentsSectionTitle:
+        settings?.invoice_payments_section_title || "Payments",
+      invoicePaymentsIntroText:
+        settings?.invoice_payments_intro_text ||
+        "Pay an invoice, deposit or statement balance securely online.",
     },
   };
 
@@ -189,7 +195,9 @@ export async function GET(req: Request) {
       // Ver-0.172: this menu data is public tenant storefront data, so it can
       // be cached briefly at the edge and reused by the storefront service
       // worker/local cache while fresh data is refreshed in the background.
-      "Cache-Control": "public, s-maxage=90, stale-while-revalidate=600",
+      // Ver-0.231C: invoice/payment settings need to appear immediately after a tenant saves them.
+      // Keep browser/edge caching off for this endpoint so storefront settings do not lag behind admin changes.
+      "Cache-Control": "no-store, max-age=0",
     },
   });
 }

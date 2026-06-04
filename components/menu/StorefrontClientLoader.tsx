@@ -69,7 +69,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-231b";
+const STOREFRONT_CACHE_VERSION = "ver-0-231c";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -182,8 +182,8 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
     async function loadStorefront() {
       setError(null);
       try {
-        const res = await fetch(`/api/products?tenantSlug=${encodeURIComponent(tenantSlug)}`, {
-          cache: "default",
+        const res = await fetch(`/api/products?tenantSlug=${encodeURIComponent(tenantSlug)}&_v=${STOREFRONT_CACHE_VERSION}`, {
+          cache: "no-store",
           signal: controller.signal,
         });
         const data = await res.json().catch(() => ({}));
