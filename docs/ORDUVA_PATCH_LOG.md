@@ -370,3 +370,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Normal product cards, variants, stock, rewards, discounts and cart checkout are not used for these payment cards.
 - Added SQL to allow invoice-payment order items to have no product_id because they are not stock products.
 - No payment provider setup was changed.
+
+## Ver-0.231E — Checkout back to storefront icon
+
+- Added a compact Back to storefront button at the top of checkout.
+- Uses the tenant checkout palette and preserves the cart when returning to the storefront.
+- No checkout/payment/provider/cart logic changed.
+

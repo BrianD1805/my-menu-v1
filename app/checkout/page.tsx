@@ -800,6 +800,21 @@ useEffect(() => {
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl p-6" style={{ backgroundColor: checkoutBackground }}>
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => { window.location.href = "/"; }}
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+          style={{ borderColor: checkoutBorder, color: checkoutPrimary }}
+          aria-label="Back to storefront"
+        >
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full text-lg" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }} aria-hidden="true">
+            ←
+          </span>
+          <span className="hidden sm:inline">Back to storefront</span>
+        </button>
+      </div>
+
       <h1 className="mb-2 text-3xl font-bold" style={{ color: checkoutPrimary }}>Checkout</h1>
       <p className="mb-6" style={{ color: checkoutText }}>
         Enter the customer details below, review the order, and confirm when ready.
