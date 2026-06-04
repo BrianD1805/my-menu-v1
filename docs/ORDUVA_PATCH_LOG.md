@@ -323,3 +323,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added secure one-use password reset tokens with 45 minute expiry.
 - Uses existing Orduva email domain/configuration; no new Resend domain required.
 - Added Supabase table `public.password_reset_tokens` with explicit `service_role` grant only.
+
+## Ver-0.230A — Admin forgot password public route fix
+
+- Fixed `/admin/forgot-password` redirecting back to `/admin/login`.
+- Made `/admin/reset-password` public so email reset links can be opened without an admin session.
+- No Supabase SQL required for this hotfix.
+

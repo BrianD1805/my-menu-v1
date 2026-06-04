@@ -8,7 +8,12 @@ function isProtectedAdminPath(pathname: string) {
 }
 
 function isPublicAdminPath(pathname: string) {
-  return pathname === "/admin/login" || pathname.startsWith("/api/admin/auth/");
+  return (
+    pathname === "/admin/login" ||
+    pathname === "/admin/forgot-password" ||
+    pathname === "/admin/reset-password" ||
+    pathname.startsWith("/api/admin/auth/")
+  );
 }
 
 function currentHostFromRequest(request: NextRequest) {
