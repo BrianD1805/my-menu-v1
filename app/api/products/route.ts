@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     db
       .from("products")
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts",
       )
       .eq("tenant_id", tenant.id)
       .eq("is_active", true)

@@ -55,6 +55,30 @@ function normalizeStockEnabled(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1;
 }
 
+
+function normalizeProductType(value: unknown) {
+  const text = String(value || "standard").trim();
+  return text === "customer_amount" ? "customer_amount" : "standard";
+}
+
+function normalizeBooleanDefaultTrue(value: unknown) {
+  if (value === false || value === "false" || value === "0" || value === 0) return false;
+  return true;
+}
+
+function normalizeOptionalMoney(value: unknown) {
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const num = Number(text);
+  if (!Number.isFinite(num) || num < 0) return null;
+  return Number(num.toFixed(2));
+}
+
+function normalizeShortText(value: unknown, fallback: string) {
+  const text = String(value || "").trim();
+  return text || fallback;
+}
+
 function normalizeVariantsEnabled(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1;
 }
@@ -147,6 +171,16 @@ export async function POST(req: Request) {
     const variantsEnabled = normalizeVariantsEnabled(body?.variantsEnabled);
     const variantLabel = normalizeVariantLabel(body?.variantLabel);
     const productVariants = normalizeProductVariants(body?.productVariants);
+    const productType = normalizeProductType(body?.productType);
+    const customAmountEnabled = productType === "customer_amount" || normalizeActive(body?.customAmountEnabled);
+    const customAmountLabel = normalizeShortText(body?.customAmountLabel, "Amount to pay");
+    const customAmountReferenceLabel = normalizeShortText(body?.customAmountReferenceLabel, "Invoice number");
+    const customAmountReferenceRequired = normalizeBooleanDefaultTrue(body?.customAmountReferenceRequired);
+    const customAmountMin = normalizeOptionalMoney(body?.customAmountMin) ?? 1;
+    const customAmountMax = normalizeOptionalMoney(body?.customAmountMax);
+    const customAmountHelpText = normalizeShortText(body?.customAmountHelpText, "Enter the amount shown on your invoice.");
+    const customAmountDisableRewards = normalizeBooleanDefaultTrue(body?.customAmountDisableRewards);
+    const customAmountDisableDiscounts = normalizeBooleanDefaultTrue(body?.customAmountDisableDiscounts);
 
     if (!name || !categoryId || price === null || stockQuantity === null) {
       return NextResponse.json(
@@ -195,10 +229,20 @@ export async function POST(req: Request) {
         low_stock_threshold: lowStockThreshold,
         variants_enabled: variantsEnabled,
         variant_label: variantLabel,
-        product_variants: productVariants,
+        product_variants: productType === "customer_amount" ? [] : productVariants,
+        product_type: productType,
+        custom_amount_enabled: customAmountEnabled,
+        custom_amount_label: customAmountLabel,
+        custom_amount_reference_label: customAmountReferenceLabel,
+        custom_amount_reference_required: customAmountReferenceRequired,
+        custom_amount_min: customAmountMin,
+        custom_amount_max: customAmountMax,
+        custom_amount_help_text: customAmountHelpText,
+        custom_amount_disable_rewards: customAmountDisableRewards,
+        custom_amount_disable_discounts: customAmountDisableDiscounts,
       })
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts",
       )
       .single();
 
@@ -238,6 +282,16 @@ export async function PATCH(req: Request) {
     const variantsEnabled = normalizeVariantsEnabled(body?.variantsEnabled);
     const variantLabel = normalizeVariantLabel(body?.variantLabel);
     const productVariants = normalizeProductVariants(body?.productVariants);
+    const productType = normalizeProductType(body?.productType);
+    const customAmountEnabled = productType === "customer_amount" || normalizeActive(body?.customAmountEnabled);
+    const customAmountLabel = normalizeShortText(body?.customAmountLabel, "Amount to pay");
+    const customAmountReferenceLabel = normalizeShortText(body?.customAmountReferenceLabel, "Invoice number");
+    const customAmountReferenceRequired = normalizeBooleanDefaultTrue(body?.customAmountReferenceRequired);
+    const customAmountMin = normalizeOptionalMoney(body?.customAmountMin) ?? 1;
+    const customAmountMax = normalizeOptionalMoney(body?.customAmountMax);
+    const customAmountHelpText = normalizeShortText(body?.customAmountHelpText, "Enter the amount shown on your invoice.");
+    const customAmountDisableRewards = normalizeBooleanDefaultTrue(body?.customAmountDisableRewards);
+    const customAmountDisableDiscounts = normalizeBooleanDefaultTrue(body?.customAmountDisableDiscounts);
 
     if (
       !productId ||
@@ -294,12 +348,22 @@ export async function PATCH(req: Request) {
         low_stock_threshold: lowStockThreshold,
         variants_enabled: variantsEnabled,
         variant_label: variantLabel,
-        product_variants: productVariants,
+        product_variants: productType === "customer_amount" ? [] : productVariants,
+        product_type: productType,
+        custom_amount_enabled: customAmountEnabled,
+        custom_amount_label: customAmountLabel,
+        custom_amount_reference_label: customAmountReferenceLabel,
+        custom_amount_reference_required: customAmountReferenceRequired,
+        custom_amount_min: customAmountMin,
+        custom_amount_max: customAmountMax,
+        custom_amount_help_text: customAmountHelpText,
+        custom_amount_disable_rewards: customAmountDisableRewards,
+        custom_amount_disable_discounts: customAmountDisableDiscounts,
       })
       .eq("id", productId)
       .eq("tenant_id", tenant.id)
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts",
       )
       .single();
 

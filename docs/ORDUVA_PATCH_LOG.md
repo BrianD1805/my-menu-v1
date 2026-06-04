@@ -330,3 +330,18 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Made `/admin/reset-password` public so email reset links can be opened without an admin session.
 - No Supabase SQL required for this hotfix.
 
+## Ver-0.231 — Customer-entered amount products
+
+- Added customer-entered amount product type for invoice/deposit/balance payments.
+- Added Tenant Admin product settings for amount label, reference label, min/max amount and reward/discount exclusions.
+- Added storefront amount/reference popup using standard Orduva popup rules.
+- Added checkout/order/payment support for customer-entered amount lines.
+- Added SQL columns on products and order_items; no new public tables.
+
+
+
+## Ver-0.231A — Customer-entered amount checkout build fix
+
+- Fixed the local build error by adding customer-entered amount fields to the checkout cart item type.
+- Preserved Ver-0.231 invoice/deposit/balance payment product behaviour.
+- No Supabase SQL required.

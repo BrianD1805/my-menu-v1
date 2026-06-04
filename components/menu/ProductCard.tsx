@@ -40,6 +40,16 @@ type Props = {
   variantsEnabled?: boolean | null;
   variantLabel?: string | null;
   productVariants?: ProductVariant[] | null;
+  productType?: string | null;
+  customAmountEnabled?: boolean | null;
+  customAmountLabel?: string | null;
+  customAmountReferenceLabel?: string | null;
+  customAmountReferenceRequired?: boolean | null;
+  customAmountMin?: number | null;
+  customAmountMax?: number | null;
+  customAmountHelpText?: string | null;
+  customAmountDisableRewards?: boolean | null;
+  customAmountDisableDiscounts?: boolean | null;
   moneySettings?: MoneyFormatSettings;
   accentColor?: string | null;
   primaryColor?: string | null;
@@ -61,10 +71,15 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, variantsEnabled = false, variantLabel = "Choose an option", productVariants = [], moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, variantsEnabled = false, variantLabel = "Choose an option", productVariants = [], productType = "standard", customAmountEnabled = false, customAmountLabel = "Amount to pay", customAmountReferenceLabel = "Invoice number", customAmountReferenceRequired = true, customAmountMin = 1, customAmountMax = null, customAmountHelpText = "Enter the amount shown on your invoice.", customAmountDisableRewards = true, customAmountDisableDiscounts = true, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [variantPickerOpen, setVariantPickerOpen] = useState(false);
+  const [customAmountOpen, setCustomAmountOpen] = useState(false);
+  const [customAmountValue, setCustomAmountValue] = useState("");
+  const [customAmountReference, setCustomAmountReference] = useState("");
+  const [customAmountNote, setCustomAmountNote] = useState("");
+  const [customAmountError, setCustomAmountError] = useState("");
   const [pendingAddSource, setPendingAddSource] = useState<"card" | "modal">("card");
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
   const [cartCount, setCartCount] = useState(0);
@@ -81,6 +96,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
   const activeVariants = (Array.isArray(productVariants) ? productVariants : []).filter((variant) => variant && variant.isActive !== false && String(variant.name || "").trim());
   const shouldPickVariant = Boolean(variantsEnabled && activeVariants.length);
+  const isCustomerAmountProduct = productType === "customer_amount" || customAmountEnabled === true;
 
   useEffect(() => {
     if (!initiallyOpen) return;
@@ -187,6 +203,12 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   async function addToCart(source: "card" | "modal" = "card", variant?: ProductVariant | null, allowBaseProduct = false) {
     if (buttonState === "adding" || isOutOfStock) return;
 
+    if (isCustomerAmountProduct && !allowBaseProduct) {
+      setPendingAddSource(source);
+      setCustomAmountOpen(true);
+      return;
+    }
+
     if (shouldPickVariant && !variant && !allowBaseProduct) {
       setPendingAddSource(source);
       setVariantPickerOpen(true);
@@ -238,6 +260,57 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     setTimeout(() => setButtonState("idle"), 1200);
   }
 
+
+
+  async function addCustomAmountToCart() {
+    setCustomAmountError("");
+    const amount = Number(String(customAmountValue || "").replace(/,/g, ""));
+    const minAmount = Math.max(0, Number(customAmountMin ?? 1));
+    const maxAmount = customAmountMax === null || customAmountMax === undefined ? null : Number(customAmountMax);
+    const reference = customAmountReference.trim();
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setCustomAmountError("Please enter a valid payment amount.");
+      return;
+    }
+    if (amount < minAmount) {
+      setCustomAmountError(`Minimum amount is ${formatMoney(minAmount, money)}.`);
+      return;
+    }
+    if (maxAmount !== null && Number.isFinite(maxAmount) && maxAmount > 0 && amount > maxAmount) {
+      setCustomAmountError(`Maximum amount is ${formatMoney(maxAmount, money)}.`);
+      return;
+    }
+    if (customAmountReferenceRequired !== false && !reference) {
+      setCustomAmountError(`Please enter ${customAmountReferenceLabel || "the reference"}.`);
+      return;
+    }
+    const existing = readCart<StoredCartItem>(tenantSlug);
+    const line = {
+      productId: id,
+      quantity: 1,
+      variantId: null,
+      variantName: null,
+      variantLabel: null,
+      variantPriceDelta: 0,
+      variantPrice: null,
+      variantDescription: null,
+      customAmount: Number(amount.toFixed(2)),
+      customAmountReference: reference,
+      customAmountNote: customAmountNote.trim() || null,
+      customAmountLabel: customAmountLabel || "Amount to pay",
+    };
+    const key = cartLineKey(line);
+    const withoutExisting = existing.filter((item) => cartLineKey(item) !== key);
+    writeCart(tenantSlug, [...withoutExisting, line]);
+    trackStorefrontEvent("add_to_cart", { source: pendingAddSource, customAmount: amount, customAmountReference: reference || null });
+    setCustomAmountOpen(false);
+    setCustomAmountValue("");
+    setCustomAmountReference("");
+    setCustomAmountNote("");
+    setButtonState("added");
+    setTimeout(() => setButtonState("idle"), 1200);
+  }
+
   function goToCheckout() {
     trackStorefrontEvent("checkout_started", { source: "product_details_popup" });
     setDetailsOpen(false);
@@ -248,7 +321,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     if (isOutOfStock) return "Sold out";
     if (buttonState === "adding") return "Adding";
     if (buttonState === "added") return "Added ✓";
-    return "Add";
+    return isCustomerAmountProduct ? "Pay" : "Add";
   }
 
   const money = buildMoneySettings(moneySettings);
@@ -441,6 +514,46 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               </div>
               <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7">
                 <button type="button" onClick={() => setVariantPickerOpen(false)} className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100">Back to menu</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {customAmountOpen ? (
+        <div className="fixed inset-0 z-[125] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]" role="dialog" aria-modal="true" onClick={() => setCustomAmountOpen(false)}>
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.30)]" onClick={(event) => event.stopPropagation()}>
+              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-blue-50/60 px-5 pb-5 pt-5 sm:px-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-700 via-slate-700 to-emerald-500" />
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Customer payment</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{name}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{customAmountHelpText || "Enter the amount shown on your invoice."}</p>
+                  </div>
+                  <button type="button" onClick={() => setCustomAmountOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm" aria-label="Close payment amount">×</button>
+                </div>
+              </div>
+              <div className="modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-6 sm:px-7">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountReferenceLabel || "Invoice number"}{customAmountReferenceRequired !== false ? " *" : ""}</label>
+                  <input value={customAmountReference} onChange={(event) => setCustomAmountReference(event.target.value)} placeholder="e.g. INV-1007" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountLabel || "Amount to pay"}</label>
+                  <input type="number" min={Math.max(0, Number(customAmountMin ?? 1))} max={customAmountMax || undefined} step="0.01" value={customAmountValue} onChange={(event) => setCustomAmountValue(event.target.value)} placeholder={formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                  <p className="mt-2 text-xs text-slate-500">{customAmountMax ? `Allowed range: ${formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)} to ${formatMoney(Number(customAmountMax), money)}.` : `Minimum amount: ${formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)}.`}</p>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">Optional note</label>
+                  <textarea value={customAmountNote} onChange={(event) => setCustomAmountNote(event.target.value)} rows={3} placeholder="Anything the store should know about this payment" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                </div>
+                {customAmountError ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{customAmountError}</p> : null}
+              </div>
+              <div className="sticky bottom-0 flex gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+                <button type="button" onClick={() => setCustomAmountOpen(false)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700">Cancel</button>
+                <button type="button" onClick={() => void addCustomAmountToCart()} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white">Add payment</button>
               </div>
             </div>
           </div>

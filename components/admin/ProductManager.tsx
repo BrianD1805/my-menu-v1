@@ -48,6 +48,16 @@ type ProductRow = {
   variants_enabled?: boolean | null;
   variant_label?: string | null;
   product_variants?: ProductVariantRow[] | null;
+  product_type?: string | null;
+  custom_amount_enabled?: boolean | null;
+  custom_amount_label?: string | null;
+  custom_amount_reference_label?: string | null;
+  custom_amount_reference_required?: boolean | null;
+  custom_amount_min?: number | null;
+  custom_amount_max?: number | null;
+  custom_amount_help_text?: string | null;
+  custom_amount_disable_rewards?: boolean | null;
+  custom_amount_disable_discounts?: boolean | null;
 };
 
 type DraftState = {
@@ -64,6 +74,16 @@ type DraftState = {
   variantsEnabled: boolean;
   variantLabel: string;
   variants: ProductVariantDraft[];
+  productType: string;
+  customAmountEnabled: boolean;
+  customAmountLabel: string;
+  customAmountReferenceLabel: string;
+  customAmountReferenceRequired: boolean;
+  customAmountMin: string;
+  customAmountMax: string;
+  customAmountHelpText: string;
+  customAmountDisableRewards: boolean;
+  customAmountDisableDiscounts: boolean;
 };
 
 function emptyDraft(defaultCategoryId: string): DraftState {
@@ -81,6 +101,16 @@ function emptyDraft(defaultCategoryId: string): DraftState {
     variantsEnabled: false,
     variantLabel: "Choose an option",
     variants: [],
+    productType: "standard",
+    customAmountEnabled: false,
+    customAmountLabel: "Amount to pay",
+    customAmountReferenceLabel: "Invoice number",
+    customAmountReferenceRequired: true,
+    customAmountMin: "1",
+    customAmountMax: "",
+    customAmountHelpText: "Enter the amount shown on your invoice.",
+    customAmountDisableRewards: true,
+    customAmountDisableDiscounts: true,
   };
 }
 
@@ -345,6 +375,16 @@ export default function ProductManager({
       stockQuantity: String(draft.stockQuantity || "").trim(),
       lowStockThreshold: String(draft.lowStockThreshold || "").trim(),
       variantLabel: draft.variantLabel.trim(),
+      productType: draft.productType || "standard",
+      customAmountEnabled: draft.customAmountEnabled === true,
+      customAmountLabel: draft.customAmountLabel.trim(),
+      customAmountReferenceLabel: draft.customAmountReferenceLabel.trim(),
+      customAmountReferenceRequired: draft.customAmountReferenceRequired === true,
+      customAmountMin: String(draft.customAmountMin || "").trim(),
+      customAmountMax: String(draft.customAmountMax || "").trim(),
+      customAmountHelpText: draft.customAmountHelpText.trim(),
+      customAmountDisableRewards: draft.customAmountDisableRewards === true,
+      customAmountDisableDiscounts: draft.customAmountDisableDiscounts === true,
       variants: draft.variants.map((variant) => ({
         ...variant,
         name: variant.name.trim(),
@@ -442,6 +482,16 @@ export default function ProductManager({
         product.product_variants,
         Number(product.price || 0),
       ),
+      productType: product.product_type || (product.custom_amount_enabled ? "customer_amount" : "standard"),
+      customAmountEnabled: product.custom_amount_enabled === true,
+      customAmountLabel: product.custom_amount_label || "Amount to pay",
+      customAmountReferenceLabel: product.custom_amount_reference_label || "Invoice number",
+      customAmountReferenceRequired: product.custom_amount_reference_required !== false,
+      customAmountMin: String(product.custom_amount_min ?? "1"),
+      customAmountMax: product.custom_amount_max === null || product.custom_amount_max === undefined ? "" : String(product.custom_amount_max),
+      customAmountHelpText: product.custom_amount_help_text || "Enter the amount shown on your invoice.",
+      customAmountDisableRewards: product.custom_amount_disable_rewards !== false,
+      customAmountDisableDiscounts: product.custom_amount_disable_discounts !== false,
     };
     setEditingDraft(draft);
     setOriginalDraftSnapshot(normalizeDraftForCompare(draft));
@@ -496,6 +546,16 @@ export default function ProductManager({
           variantsEnabled: newDraft.variantsEnabled,
           variantLabel: newDraft.variantLabel,
           productVariants: cleanVariantRows(newDraft.variants),
+          productType: newDraft.productType,
+          customAmountEnabled: newDraft.productType === "customer_amount" || newDraft.customAmountEnabled,
+          customAmountLabel: newDraft.customAmountLabel,
+          customAmountReferenceLabel: newDraft.customAmountReferenceLabel,
+          customAmountReferenceRequired: newDraft.customAmountReferenceRequired,
+          customAmountMin: newDraft.customAmountMin,
+          customAmountMax: newDraft.customAmountMax,
+          customAmountHelpText: newDraft.customAmountHelpText,
+          customAmountDisableRewards: newDraft.customAmountDisableRewards,
+          customAmountDisableDiscounts: newDraft.customAmountDisableDiscounts,
         }),
       });
       const payload = await response.json();
@@ -537,6 +597,16 @@ export default function ProductManager({
           product.product_variants,
           Number(product.price || 0),
         ),
+        productType: product.product_type || (product.custom_amount_enabled ? "customer_amount" : "standard"),
+        customAmountEnabled: product.custom_amount_enabled === true,
+        customAmountLabel: product.custom_amount_label || "Amount to pay",
+        customAmountReferenceLabel: product.custom_amount_reference_label || "Invoice number",
+        customAmountReferenceRequired: product.custom_amount_reference_required !== false,
+        customAmountMin: String(product.custom_amount_min ?? "1"),
+        customAmountMax: product.custom_amount_max === null || product.custom_amount_max === undefined ? "" : String(product.custom_amount_max),
+        customAmountHelpText: product.custom_amount_help_text || "Enter the amount shown on your invoice.",
+        customAmountDisableRewards: product.custom_amount_disable_rewards !== false,
+        customAmountDisableDiscounts: product.custom_amount_disable_discounts !== false,
       };
       setEditingDraft(createdDraft);
       setOriginalDraftSnapshot(normalizeDraftForCompare(createdDraft));
@@ -582,6 +652,16 @@ export default function ProductManager({
           variantsEnabled: editingDraft.variantsEnabled,
           variantLabel: editingDraft.variantLabel,
           productVariants: cleanVariantRows(editingDraft.variants),
+          productType: editingDraft.productType,
+          customAmountEnabled: editingDraft.productType === "customer_amount" || editingDraft.customAmountEnabled,
+          customAmountLabel: editingDraft.customAmountLabel,
+          customAmountReferenceLabel: editingDraft.customAmountReferenceLabel,
+          customAmountReferenceRequired: editingDraft.customAmountReferenceRequired,
+          customAmountMin: editingDraft.customAmountMin,
+          customAmountMax: editingDraft.customAmountMax,
+          customAmountHelpText: editingDraft.customAmountHelpText,
+          customAmountDisableRewards: editingDraft.customAmountDisableRewards,
+          customAmountDisableDiscounts: editingDraft.customAmountDisableDiscounts,
         }),
       });
       const payload = await response.json();
@@ -692,6 +772,14 @@ export default function ProductManager({
     : "Choose image file";
   const editorHasUnsavedChanges =
     modalOpen && activeDraft ? hasUnsavedEditorChanges() : false;
+
+  function updateActiveDraft(patch: Partial<DraftState>) {
+    if (creating) {
+      setNewDraft((current) => ({ ...current, ...patch }));
+      return;
+    }
+    setEditingDraft((current) => (current ? { ...current, ...patch } : current));
+  }
 
   return (
     <>
@@ -1227,6 +1315,86 @@ export default function ProductManager({
                           Visible on the live menu
                         </label>
                       </div>
+                    </div>
+
+                    <div className="rounded-[24px] border border-blue-100 bg-blue-50/60 p-4 sm:p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <FieldLabel>Product type</FieldLabel>
+                          <p className="text-xs leading-5 text-slate-500">
+                            Use a normal product for menu items. Use customer-entered amount for invoice, deposit, balance, or quotation payments.
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">Ver 0.231</span>
+                      </div>
+                      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <label className={`flex min-h-[60px] cursor-pointer items-start gap-3 rounded-2xl border bg-white px-4 py-3 text-sm transition ${activeDraft.productType !== "customer_amount" ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200"}`}>
+                          <input
+                            type="radio"
+                            name="productType"
+                            checked={activeDraft.productType !== "customer_amount"}
+                            onChange={() => updateActiveDraft({ productType: "standard", customAmountEnabled: false })}
+                            className="mt-1 h-4 w-4 text-blue-700 focus:ring-blue-500"
+                          />
+                          <span>
+                            <span className="block font-semibold text-slate-950">Standard menu product</span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">Customer adds this product at the set price.</span>
+                          </span>
+                        </label>
+                        <label className={`flex min-h-[60px] cursor-pointer items-start gap-3 rounded-2xl border bg-white px-4 py-3 text-sm transition ${activeDraft.productType === "customer_amount" ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200"}`}>
+                          <input
+                            type="radio"
+                            name="productType"
+                            checked={activeDraft.productType === "customer_amount"}
+                            onChange={() => updateActiveDraft({ productType: "customer_amount", customAmountEnabled: true, variantsEnabled: false, stockEnabled: false })}
+                            className="mt-1 h-4 w-4 text-blue-700 focus:ring-blue-500"
+                          />
+                          <span>
+                            <span className="block font-semibold text-slate-950">Customer-entered amount</span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">Customer enters invoice/reference and amount before checkout.</span>
+                          </span>
+                        </label>
+                      </div>
+
+                      {activeDraft.productType === "customer_amount" ? (
+                        <div className="mt-4 rounded-[22px] border border-blue-100 bg-white p-4">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                              <FieldLabel>Amount field label</FieldLabel>
+                              <input type="text" value={activeDraft.customAmountLabel} onChange={(event) => updateActiveDraft({ customAmountLabel: event.target.value })} placeholder="Amount to pay" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                            </div>
+                            <div>
+                              <FieldLabel>Reference field label</FieldLabel>
+                              <input type="text" value={activeDraft.customAmountReferenceLabel} onChange={(event) => updateActiveDraft({ customAmountReferenceLabel: event.target.value })} placeholder="Invoice number" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                            </div>
+                            <div>
+                              <FieldLabel>Minimum amount</FieldLabel>
+                              <input type="number" min="0" step="0.01" value={activeDraft.customAmountMin} onChange={(event) => updateActiveDraft({ customAmountMin: event.target.value })} placeholder="1" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                            </div>
+                            <div>
+                              <FieldLabel>Maximum amount</FieldLabel>
+                              <input type="number" min="0" step="0.01" value={activeDraft.customAmountMax} onChange={(event) => updateActiveDraft({ customAmountMax: event.target.value })} placeholder="Optional" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                            </div>
+                            <div className="sm:col-span-2">
+                              <FieldLabel>Customer help text</FieldLabel>
+                              <input type="text" value={activeDraft.customAmountHelpText} onChange={(event) => updateActiveDraft({ customAmountHelpText: event.target.value })} placeholder="Enter the amount shown on your invoice." className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                            </div>
+                            <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                              <input type="checkbox" checked={activeDraft.customAmountReferenceRequired} onChange={(event) => updateActiveDraft({ customAmountReferenceRequired: event.target.checked })} className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500" />
+                              Require reference/invoice number
+                            </label>
+                            <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                              <input type="checkbox" checked={activeDraft.customAmountDisableRewards} onChange={(event) => updateActiveDraft({ customAmountDisableRewards: event.target.checked })} className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500" />
+                              Do not apply rewards
+                            </label>
+                            <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                              <input type="checkbox" checked={activeDraft.customAmountDisableDiscounts} onChange={(event) => updateActiveDraft({ customAmountDisableDiscounts: event.target.checked })} className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500" />
+                              Do not apply discount codes
+                            </label>
+                          </div>
+                          <p className="mt-3 text-xs leading-5 text-slate-500">Set the display price to 0 if this is only used for invoice payments. The customer-entered amount becomes the checkout amount.</p>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">

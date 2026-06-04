@@ -132,6 +132,16 @@ type Product = {
   variants_enabled?: boolean | null;
   variant_label?: string | null;
   product_variants?: ProductVariant[] | null;
+  product_type?: string | null;
+  custom_amount_enabled?: boolean | null;
+  custom_amount_label?: string | null;
+  custom_amount_reference_label?: string | null;
+  custom_amount_reference_required?: boolean | null;
+  custom_amount_min?: number | null;
+  custom_amount_max?: number | null;
+  custom_amount_help_text?: string | null;
+  custom_amount_disable_rewards?: boolean | null;
+  custom_amount_disable_discounts?: boolean | null;
 };
 
 function hexToRgb(hex: string) {
@@ -947,6 +957,14 @@ export default function MenuBrowser({
     Record<string, "idle" | "adding" | "added">
   >({});
   const [cartCount, setCartCount] = useState(0);
+  const [customAmountPickerProduct, setCustomAmountPickerProduct] = useState<{
+    product: Product;
+    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" };
+  } | null>(null);
+  const [customAmountValue, setCustomAmountValue] = useState("");
+  const [customAmountReference, setCustomAmountReference] = useState("");
+  const [customAmountNote, setCustomAmountNote] = useState("");
+  const [customAmountError, setCustomAmountError] = useState("");
   const [variantPickerProduct, setVariantPickerProduct] = useState<{
     product: Product;
     source: string;
@@ -1924,6 +1942,14 @@ export default function MenuBrowser({
     },
   ) {
     const product = products.find((item) => item.id === productId);
+    if (product?.product_type === "customer_amount" || product?.custom_amount_enabled === true) {
+      setCustomAmountPickerProduct({ product, options });
+      setCustomAmountValue("");
+      setCustomAmountReference("");
+      setCustomAmountNote("");
+      setCustomAmountError("");
+      return;
+    }
     const variants = activeProductVariants(product);
     if (product?.variants_enabled && variants.length) {
       setVariantPickerProduct({
@@ -1938,6 +1964,28 @@ export default function MenuBrowser({
     }
 
     await addCartLine(productId, null, options);
+  }
+
+
+
+  function addCustomAmountLineFromMenu() {
+    if (!customAmountPickerProduct) return;
+    const product = customAmountPickerProduct.product;
+    const amount = Number(String(customAmountValue || "").replace(/,/g, ""));
+    const minAmount = Math.max(0, Number(product.custom_amount_min ?? 1));
+    const maxAmount = product.custom_amount_max === null || product.custom_amount_max === undefined ? null : Number(product.custom_amount_max);
+    const reference = customAmountReference.trim();
+    if (!Number.isFinite(amount) || amount <= 0) { setCustomAmountError("Please enter a valid payment amount."); return; }
+    if (amount < minAmount) { setCustomAmountError(`Minimum amount is ${formatMoney(minAmount, moneySettings)}.`); return; }
+    if (maxAmount !== null && Number.isFinite(maxAmount) && maxAmount > 0 && amount > maxAmount) { setCustomAmountError(`Maximum amount is ${formatMoney(maxAmount, moneySettings)}.`); return; }
+    if (product.custom_amount_reference_required !== false && !reference) { setCustomAmountError(`Please enter ${product.custom_amount_reference_label || "the reference"}.`); return; }
+    const line = { productId: product.id, quantity: 1, variantId: null, variantName: null, variantLabel: null, variantPriceDelta: 0, variantPrice: null, variantDescription: null, customAmount: Number(amount.toFixed(2)), customAmountReference: reference, customAmountNote: customAmountNote.trim() || null, customAmountLabel: product.custom_amount_label || "Amount to pay" };
+    const existing = readCart<StoredCartItem>(tenantSlug);
+    const key = cartLineKey(line);
+    writeCart(tenantSlug, [...existing.filter((item) => cartLineKey(item) !== key), line]);
+    setCustomAmountPickerProduct(null);
+    setButtonStateById((current) => ({ ...current, [product.id]: "added" }));
+    window.setTimeout(() => setButtonStateById((current) => ({ ...current, [product.id]: "idle" })), 1200);
   }
 
   return (
@@ -2823,6 +2871,29 @@ export default function MenuBrowser({
         </section>
       ) : null}
 
+      {customAmountPickerProduct ? (
+        <div className="fixed inset-0 z-[125] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" style={{ backgroundColor: "rgba(15,23,42,0.54)" }} role="dialog" aria-modal="true" onClick={() => setCustomAmountPickerProduct(null)}>
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]" onClick={(event) => event.stopPropagation()}>
+              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-blue-50/60 px-5 pb-5 pt-5 sm:px-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-700 via-slate-700 to-emerald-500" />
+                <div className="flex items-start justify-between gap-4">
+                  <div><p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Customer payment</p><h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{customAmountPickerProduct.product.name}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{customAmountPickerProduct.product.custom_amount_help_text || "Enter the amount shown on your invoice."}</p></div>
+                  <button type="button" onClick={() => setCustomAmountPickerProduct(null)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm" aria-label="Close payment amount">×</button>
+                </div>
+              </div>
+              <div className="modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-6 sm:px-7">
+                <div><label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountPickerProduct.product.custom_amount_reference_label || "Invoice number"}{customAmountPickerProduct.product.custom_amount_reference_required !== false ? " *" : ""}</label><input value={customAmountReference} onChange={(event) => setCustomAmountReference(event.target.value)} placeholder="e.g. INV-1007" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></div>
+                <div><label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountPickerProduct.product.custom_amount_label || "Amount to pay"}</label><input type="number" min={Math.max(0, Number(customAmountPickerProduct.product.custom_amount_min ?? 1))} max={customAmountPickerProduct.product.custom_amount_max || undefined} step="0.01" value={customAmountValue} onChange={(event) => setCustomAmountValue(event.target.value)} placeholder={formatMoney(Math.max(0, Number(customAmountPickerProduct.product.custom_amount_min ?? 1)), moneySettings)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></div>
+                <div><label className="mb-2 block text-sm font-semibold text-slate-700">Optional note</label><textarea value={customAmountNote} onChange={(event) => setCustomAmountNote(event.target.value)} rows={3} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></div>
+                {customAmountError ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{customAmountError}</p> : null}
+              </div>
+              <div className="sticky bottom-0 flex gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:px-7"><button type="button" onClick={() => setCustomAmountPickerProduct(null)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700">Cancel</button><button type="button" onClick={addCustomAmountLineFromMenu} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white">Add payment</button></div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {variantPickerProduct ? (
         <div
           className="fixed inset-0 z-[120] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
@@ -3055,6 +3126,16 @@ export default function MenuBrowser({
                   variantsEnabled={product.variants_enabled}
                   variantLabel={product.variant_label}
                   productVariants={product.product_variants}
+                  productType={product.product_type}
+                  customAmountEnabled={product.custom_amount_enabled}
+                  customAmountLabel={product.custom_amount_label}
+                  customAmountReferenceLabel={product.custom_amount_reference_label}
+                  customAmountReferenceRequired={product.custom_amount_reference_required}
+                  customAmountMin={product.custom_amount_min}
+                  customAmountMax={product.custom_amount_max}
+                  customAmountHelpText={product.custom_amount_help_text}
+                  customAmountDisableRewards={product.custom_amount_disable_rewards}
+                  customAmountDisableDiscounts={product.custom_amount_disable_discounts}
                   moneySettings={moneySettings}
                   accentColor={accentColor}
                   primaryColor={primaryColor}

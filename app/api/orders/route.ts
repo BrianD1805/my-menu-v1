@@ -151,6 +151,8 @@ export async function POST(req: Request) {
     for (const [lineKey, requestedQuantity] of requestedQuantityBySellableLine.entries()) {
       const [productId, variantId] = lineKey.split("::");
       const product = products.find((p) => p.id === productId);
+      const isCustomAmountProduct = product?.product_type === "customer_amount" || product?.custom_amount_enabled === true;
+      if (isCustomAmountProduct) continue;
       const selectedVariant = variantId !== "base" ? findActiveVariant(product, variantId) : null;
 
       if (variantId !== "base" && !selectedVariant) {
@@ -176,21 +178,44 @@ export async function POST(req: Request) {
         throw new Error(`Product missing: ${item.productId}`);
       }
 
+      const isCustomAmountProduct = product.product_type === "customer_amount" || product.custom_amount_enabled === true;
       const variants = Array.isArray(product.product_variants) ? product.product_variants : [];
-      const selectedVariant = findActiveVariant(product, item.variantId);
+      const selectedVariant = isCustomAmountProduct ? null : findActiveVariant(product, item.variantId);
 
-      if (product.variants_enabled && variants.some((variant: any) => variant?.isActive !== false) && item.variantId && !selectedVariant) {
+      if (!isCustomAmountProduct && product.variants_enabled && variants.some((variant: any) => variant?.isActive !== false) && item.variantId && !selectedVariant) {
         throw new Error(`Variant missing: ${item.variantId}`);
       }
 
       const variantLabel = selectedVariant ? String(product.variant_label || "Option") : null;
       const variantName = selectedVariant ? String((selectedVariant as any).name || "").trim() : null;
       const basePrice = Number(product.price || 0);
-      const unitPrice = selectedVariant ? getVariantPrice(basePrice, selectedVariant) : basePrice;
+      let unitPrice = selectedVariant ? getVariantPrice(basePrice, selectedVariant) : basePrice;
+      let customAmountReference: string | null = null;
+      let customAmountNote: string | null = null;
+      if (isCustomAmountProduct) {
+        const amount = Number((item as any).customAmount);
+        const minAmount = Math.max(0, Number(product.custom_amount_min ?? 1));
+        const maxAmount = product.custom_amount_max === null || product.custom_amount_max === undefined ? null : Number(product.custom_amount_max);
+        const reference = String((item as any).customAmountReference || "").trim();
+        if (!Number.isFinite(amount) || amount <= 0 || amount < minAmount) {
+          throw new Error(`${product.name} needs a valid payment amount.`);
+        }
+        if (Number.isFinite(maxAmount as number) && maxAmount !== null && maxAmount > 0 && amount > maxAmount) {
+          throw new Error(`${product.name} amount is above the allowed maximum.`);
+        }
+        if (product.custom_amount_reference_required !== false && !reference) {
+          throw new Error(`${product.name} needs a reference or invoice number.`);
+        }
+        unitPrice = Number(amount.toFixed(2));
+        customAmountReference = reference || null;
+        customAmountNote = String((item as any).customAmountNote || "").trim() || null;
+      }
       const variantPriceDelta = selectedVariant ? getVariantPriceDeltaForStorage(basePrice, selectedVariant, unitPrice) : 0;
       const lineTotal = unitPrice * item.quantity;
       subtotal += lineTotal;
-      const displayName = variantName ? `${product.name} (${variantLabel}: ${variantName})` : product.name;
+      const displayName = isCustomAmountProduct
+        ? `${product.name}${customAmountReference ? ` (${String(product.custom_amount_reference_label || "Reference")}: ${customAmountReference})` : ""}`
+        : variantName ? `${product.name} (${variantLabel}: ${variantName})` : product.name;
 
       return {
         product_id: product.id,
@@ -202,20 +227,28 @@ export async function POST(req: Request) {
         variant_label: variantLabel,
         variant_name: variantName,
         variant_price_delta: selectedVariant ? Number(variantPriceDelta.toFixed(2)) : 0,
+        customer_entered_amount: isCustomAmountProduct ? unitPrice : null,
+        customer_reference: customAmountReference,
+        customer_note: customAmountNote,
       };
     });
 
     const settings = await getTenantSettings(tenant.id);
     const customerAccountId = body.customerAccountId?.trim() || null;
-    const rewardSummary = await getCustomerRewardSummary({ tenantId: tenant.id, customerAccountId, settings });
+    const containsCustomAmountLines = orderItems.some((item: any) => item.customer_entered_amount !== null && item.customer_entered_amount !== undefined);
+    const customAmountDisablesRewards = containsCustomAmountLines && products.some((product: any) => (product.product_type === "customer_amount" || product.custom_amount_enabled === true) && product.custom_amount_disable_rewards !== false);
+    const customAmountDisablesDiscounts = containsCustomAmountLines && products.some((product: any) => (product.product_type === "customer_amount" || product.custom_amount_enabled === true) && product.custom_amount_disable_discounts !== false);
+    const rewardSummary = customAmountDisablesRewards ? { enabled: false, tier: null, discountPercent: 0, qualifyingSpend: 0 } as any : await getCustomerRewardSummary({ tenantId: tenant.id, customerAccountId, settings });
     const initialRewardDiscount = rewardSummary.enabled && customerAccountId ? calculateRewardDiscount(subtotal, rewardSummary.discountPercent) : calculateRewardDiscount(subtotal, 0);
-    const discountCalculation = calculateBestDiscount({
-      settings,
-      cartLines: orderItems.map((item) => ({ productId: item.product_id, quantity: item.quantity, lineTotal: item.line_total })),
-      subtotal,
-      code: (body as any).discountCode,
-      rewardDiscountAmount: initialRewardDiscount.discountAmount,
-    });
+    const discountCalculation = customAmountDisablesDiscounts
+      ? { applied: false, rewardAllowed: true, totalAfterDiscount: Math.max(0, Math.round((subtotal - initialRewardDiscount.discountAmount) * 100) / 100) } as any
+      : calculateBestDiscount({
+          settings,
+          cartLines: orderItems.map((item) => ({ productId: item.product_id, quantity: item.quantity, lineTotal: item.line_total })),
+          subtotal,
+          code: (body as any).discountCode,
+          rewardDiscountAmount: initialRewardDiscount.discountAmount,
+        });
     const rewardDiscount = discountCalculation.applied && !discountCalculation.rewardAllowed ? calculateRewardDiscount(subtotal, 0) : initialRewardDiscount;
     const totalAfterRewards = Math.max(0, Math.round((subtotal - rewardDiscount.discountAmount) * 100) / 100);
     const total = discountCalculation.applied ? discountCalculation.totalAfterDiscount : totalAfterRewards;
@@ -515,6 +548,7 @@ export async function POST(req: Request) {
       const [productId, variantId] = lineKey.split("::");
       const product = products.find((p) => p.id === productId);
       if (!product) continue;
+      if (product.product_type === "customer_amount" || product.custom_amount_enabled === true) continue;
 
       if (variantId !== "base") {
         const variants = Array.isArray(product.product_variants) ? product.product_variants : [];

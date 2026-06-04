@@ -41,6 +41,16 @@ export type Product = {
   variants_enabled?: boolean | null;
   variant_label?: string | null;
   product_variants?: ProductVariant[] | null;
+  product_type?: string | null;
+  custom_amount_enabled?: boolean | null;
+  custom_amount_label?: string | null;
+  custom_amount_reference_label?: string | null;
+  custom_amount_reference_required?: boolean | null;
+  custom_amount_min?: number | null;
+  custom_amount_max?: number | null;
+  custom_amount_help_text?: string | null;
+  custom_amount_disable_rewards?: boolean | null;
+  custom_amount_disable_discounts?: boolean | null;
 };
 
 export type CartItemInput = {
@@ -63,6 +73,9 @@ export type CreateOrderInput = {
     productId: string;
     quantity: number;
     variantId?: string | null;
+    customAmount?: number | null;
+    customAmountReference?: string | null;
+    customAmountNote?: string | null;
   }>;
 };
 

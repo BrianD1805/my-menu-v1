@@ -68,6 +68,9 @@ type PendingOrderPayload = {
     variant_label?: string | null;
     variant_name?: string | null;
     variant_price_delta?: number | null;
+    customer_entered_amount?: number | null;
+    customer_reference?: string | null;
+    customer_note?: string | null;
   }>;
 };
 
@@ -209,11 +212,12 @@ async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPa
     const [productId, variantId] = lineKey.split("::");
     const { data: product, error } = await db
       .from("products")
-      .select("id, stock_enabled, stock_quantity, product_variants")
+      .select("id, stock_enabled, stock_quantity, product_variants, product_type, custom_amount_enabled")
       .eq("id", productId)
       .eq("tenant_id", tenantId)
       .maybeSingle();
     if (error || !product) continue;
+    if ((product as any).product_type === "customer_amount" || (product as any).custom_amount_enabled === true) continue;
 
     if (variantId && variantId !== "base") {
       const variants = Array.isArray(product.product_variants) ? product.product_variants : [];

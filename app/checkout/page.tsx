@@ -16,6 +16,10 @@ type CartItem = {
   variantPriceDelta?: number | null;
   variantPrice?: number | null;
   variantDescription?: string | null;
+  customAmount?: number | null;
+  customAmountReference?: string | null;
+  customAmountNote?: string | null;
+  customAmountLabel?: string | null;
 };
 
 type ProductVariant = {
@@ -48,6 +52,16 @@ type Product = {
   variants_enabled?: boolean | null;
   variant_label?: string | null;
   product_variants?: ProductVariant[] | null;
+  product_type?: string | null;
+  custom_amount_enabled?: boolean | null;
+  custom_amount_label?: string | null;
+  custom_amount_reference_label?: string | null;
+  custom_amount_reference_required?: boolean | null;
+  custom_amount_min?: number | null;
+  custom_amount_max?: number | null;
+  custom_amount_help_text?: string | null;
+  custom_amount_disable_rewards?: boolean | null;
+  custom_amount_disable_discounts?: boolean | null;
 };
 
 type TenantTrialState = {
@@ -334,9 +348,10 @@ useEffect(() => {
         const product = products.find((p) => p.id === item.productId);
         if (!product) return null;
 
+        const isCustomAmountProduct = product.product_type === "customer_amount" || product.custom_amount_enabled === true;
         const variant = Array.isArray(product.product_variants) ? product.product_variants.find((option) => option.id === item.variantId && option.isActive !== false) : null;
         const variantName = variant?.name || item.variantName || null;
-        const unitPrice = getVariantPrice(Number(product.price || 0), variant, item.variantPrice, item.variantPriceDelta);
+        const unitPrice = isCustomAmountProduct ? Math.max(0, Number(item.customAmount || 0)) : getVariantPrice(Number(product.price || 0), variant, item.variantPrice, item.variantPriceDelta);
         const lineTotal = unitPrice * item.quantity;
 
         return {
@@ -347,8 +362,14 @@ useEffect(() => {
           variantDescription: variant?.description || item.variantDescription || null,
           unitPrice,
           lineTotal,
-          stockEnabled: !!product.stock_enabled,
-          stockQuantity: Math.max(0, Number(product.stock_quantity || 0)),
+          stockEnabled: isCustomAmountProduct ? false : !!product.stock_enabled,
+          stockQuantity: isCustomAmountProduct ? 999999 : Math.max(0, Number(product.stock_quantity || 0)),
+          isCustomAmountProduct,
+          customAmountReference: item.customAmountReference || null,
+          customAmountNote: item.customAmountNote || null,
+          customAmountLabel: item.customAmountLabel || product.custom_amount_label || "Amount to pay",
+          customAmountDisableRewards: product.custom_amount_disable_rewards !== false,
+          customAmountDisableDiscounts: product.custom_amount_disable_discounts !== false,
         };
       })
       .filter(Boolean) as Array<{
@@ -363,6 +384,12 @@ useEffect(() => {
       lineTotal: number;
       stockEnabled: boolean;
       stockQuantity: number;
+      isCustomAmountProduct?: boolean;
+      customAmountReference?: string | null;
+      customAmountNote?: string | null;
+      customAmountLabel?: string | null;
+      customAmountDisableRewards?: boolean;
+      customAmountDisableDiscounts?: boolean;
     }>;
   }, [items, products]);
 
@@ -370,14 +397,17 @@ useEffect(() => {
     () => cartRows.reduce((sum, row) => sum + row.lineTotal, 0),
     [cartRows]
   );
-  const rewardSummary = customerAccount?.rewards && customerAccount.rewards.enabled ? customerAccount.rewards : null;
+  const hasCustomAmountLines = cartRows.some((row) => row.isCustomAmountProduct);
+  const customAmountDisablesRewards = cartRows.some((row) => row.isCustomAmountProduct && row.customAmountDisableRewards !== false);
+  const customAmountDisablesDiscounts = cartRows.some((row) => row.isCustomAmountProduct && row.customAmountDisableDiscounts !== false);
+  const rewardSummary = !customAmountDisablesRewards && customerAccount?.rewards && customerAccount.rewards.enabled ? customerAccount.rewards : null;
   const rewardDiscountPercent = Number(rewardSummary?.discountPercent || 0);
   const rewardDiscountAmount = useMemo(() => Math.min(total, Math.round(total * rewardDiscountPercent) / 100), [total, rewardDiscountPercent]);
   const totalAfterRewards = Math.max(0, Math.round((total - rewardDiscountAmount) * 100) / 100);
   const discountRules = useMemo(() => normalizeDiscountRules(tenantSettings.discountRules || []), [tenantSettings.discountRules]);
   const discountCartLines = useMemo(() => cartRows.map((row) => ({ productId: row.productId, quantity: row.quantity, lineTotal: row.lineTotal })), [cartRows]);
   const visibleDiscounts = useMemo(() => getApplicableDiscounts({ settings: tenantSettings, cartLines: discountCartLines, subtotal: total, includeVisibleAutomatic: true }).filter((item) => item.rule.showOnCheckout !== false), [tenantSettings, discountCartLines, total]);
-  const discountResult = useMemo(() => calculateBestDiscount({ settings: tenantSettings, cartLines: discountCartLines, subtotal: total, code: discountCode, rewardDiscountAmount }), [tenantSettings, discountCartLines, total, discountCode, rewardDiscountAmount]);
+  const discountResult = useMemo(() => customAmountDisablesDiscounts ? { applied: false, rewardAllowed: true, totalAfterDiscount: totalAfterRewards, name: null, code: null, amount: 0 } as any : calculateBestDiscount({ settings: tenantSettings, cartLines: discountCartLines, subtotal: total, code: discountCode, rewardDiscountAmount }), [customAmountDisablesDiscounts, tenantSettings, discountCartLines, total, discountCode, rewardDiscountAmount, totalAfterRewards]);
   const effectiveRewardDiscountAmount = discountResult.applied && !discountResult.rewardAllowed ? 0 : rewardDiscountAmount;
   const totalAfterDiscounts = discountResult.applied ? discountResult.totalAfterDiscount : totalAfterRewards;
 
@@ -555,7 +585,14 @@ useEffect(() => {
           notes,
           paymentProvider: selectedPaymentOption.id,
           discountCode: discountCode.trim(),
-          items
+          items: items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            variantId: item.variantId || null,
+            customAmount: item.customAmount || null,
+            customAmountReference: item.customAmountReference || null,
+            customAmountNote: item.customAmountNote || null,
+          }))
         })
       });
 
@@ -956,7 +993,9 @@ useEffect(() => {
                       <p className="font-medium">{row.name}</p>
                       {row.variantName ? <p className="mt-1 text-xs font-semibold text-slate-500">{row.variantLabel || "Option"}: {row.variantName}</p> : null}
                       {row.variantDescription ? <p className="mt-1 text-xs leading-5 text-slate-500">{row.variantDescription}</p> : null}
-                      <p className="text-sm text-gray-600">{formatMoney(row.unitPrice, tenantSettings)} each</p>
+                      {row.isCustomAmountProduct && row.customAmountReference ? <p className="mt-1 text-xs font-semibold text-blue-700">Reference: {row.customAmountReference}</p> : null}
+                      {row.isCustomAmountProduct && row.customAmountNote ? <p className="mt-1 text-xs leading-5 text-slate-500">{row.customAmountNote}</p> : null}
+                      <p className="text-sm text-gray-600">{row.isCustomAmountProduct ? (row.customAmountLabel || "Amount") : formatMoney(row.unitPrice, tenantSettings) + " each"}</p>
                       {row.stockEnabled ? (
                         <p className={`mt-1 text-xs font-semibold ${row.stockQuantity <= 0 ? "text-red-600" : row.quantity >= row.stockQuantity ? "text-orange-600" : "text-emerald-700"}`}>
                           {row.stockQuantity <= 0 ? "Out of stock" : `${row.stockQuantity} in stock`}
@@ -966,22 +1005,24 @@ useEffect(() => {
                     <p className="font-medium">{formatMoney(row.lineTotal, tenantSettings)}</p>
                   </div>
 
-                  <div className="mt-3 flex items-center gap-2">
-                    <button
-                      className="rounded border px-3 py-1" style={{ borderColor: checkoutBorder }}
-                      onClick={() => updateQuantity(row, row.quantity - 1)}
-                    >
-                      -
-                    </button>
-                    <span>{row.quantity}</span>
-                    <button
-                      className="rounded border px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: checkoutBorder }}
-                      onClick={() => updateQuantity(row, row.quantity + 1)}
-                      disabled={row.stockEnabled && row.quantity >= row.stockQuantity}
-                    >
-                      +
-                    </button>
-                  </div>
+                  {row.isCustomAmountProduct ? null : (
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        className="rounded border px-3 py-1" style={{ borderColor: checkoutBorder }}
+                        onClick={() => updateQuantity(row, row.quantity - 1)}
+                      >
+                        -
+                      </button>
+                      <span>{row.quantity}</span>
+                      <button
+                        className="rounded border px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: checkoutBorder }}
+                        onClick={() => updateQuantity(row, row.quantity + 1)}
+                        disabled={row.stockEnabled && row.quantity >= row.stockQuantity}
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
 

@@ -8,6 +8,10 @@ export type StoredCartItem = {
   variantPrice?: number | null;
   variantDescription?: string | null;
   variantStockEnabled?: boolean | null;
+  customAmount?: number | null;
+  customAmountReference?: string | null;
+  customAmountNote?: string | null;
+  customAmountLabel?: string | null;
 };
 
 const CART_UPDATED_EVENT = "orduva:cart-updated";
@@ -16,7 +20,10 @@ export function getCartStorageKey(tenantSlug: string) {
   return `cart:${tenantSlug || "orduva"}`;
 }
 
-export function cartLineKey(item: Pick<StoredCartItem, "productId" | "variantId">) {
+export function cartLineKey(item: Pick<StoredCartItem, "productId" | "variantId" | "customAmount" | "customAmountReference">) {
+  if (item.customAmount !== undefined && item.customAmount !== null) {
+    return `${item.productId || ""}::custom::${String(item.customAmountReference || "").trim().toLowerCase()}::${Number(item.customAmount || 0).toFixed(2)}`;
+  }
   return `${item.productId || ""}::${item.variantId || "base"}`;
 }
 
