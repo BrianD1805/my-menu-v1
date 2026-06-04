@@ -53,6 +53,9 @@ discountsEnabled?: boolean | null;
   discountPopupTitle?: string | null;
   discountPopupMessage?: string | null;
   discountRules?: any[] | null;
+  invoicePaymentsEnabled?: boolean | null;
+  invoicePaymentsSectionTitle?: string | null;
+  invoicePaymentsIntroText?: string | null;
 };
 
 type StorefrontPayload = {
@@ -66,7 +69,7 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-222e";
+const STOREFRONT_CACHE_VERSION = "ver-0-231b";
 const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
 
 function cacheKeyForTenant(tenantSlug: string) {
@@ -286,6 +289,9 @@ export default function StorefrontClientLoader({ tenantSlug, version, initialPro
         discountPopupTitle={settings.discountPopupTitle}
         discountPopupMessage={settings.discountPopupMessage}
         discountRules={settings.discountRules || []}
+        invoicePaymentsEnabled={settings.invoicePaymentsEnabled === true}
+        invoicePaymentsSectionTitle={settings.invoicePaymentsSectionTitle}
+        invoicePaymentsIntroText={settings.invoicePaymentsIntroText}
         initialProductId={initialProductId}
         onFirstMeaningfulPaintReady={hideEarlyPreloader}
       />

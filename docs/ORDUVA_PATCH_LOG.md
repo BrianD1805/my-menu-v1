@@ -345,3 +345,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Fixed the local build error by adding customer-entered amount fields to the checkout cart item type.
 - Preserved Ver-0.231 invoice/deposit/balance payment product behaviour.
 - No Supabase SQL required.
+
+## Ver-0.231B — Invoice payments settings and dedicated storefront cards
+
+- Added Tenant Settings controls for enabling invoice payments.
+- Added a dedicated first storefront section for customer-entered amount products.
+- Invoice payment cards use a separate card layout without images, variants, favourites or normal product detail popups.
+- Normal product category sections now exclude customer-entered amount products when they are shown through the invoice payments section.
+- No payment provider setup changes and no new public table.

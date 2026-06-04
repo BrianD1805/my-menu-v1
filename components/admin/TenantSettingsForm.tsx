@@ -151,6 +151,9 @@ type FormState = {
   seoStructuredDataEnabled: boolean;
   googleTrackingId: string;
   googleTagManagerId: string;
+  invoicePaymentsEnabled: boolean;
+  invoicePaymentsSectionTitle: string;
+  invoicePaymentsIntroText: string;
 };
 
 
@@ -642,6 +645,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const discountsDirty = formValueChanged(["discountsEnabled", "discountPopupEnabled", "discountPopupTitle", "discountPopupMessage", "discountRules"]);
   const receiptInfoDirty = formValueChanged(["receiptDocumentName", "receiptTaxLabel", "receiptTaxNumber", "receiptTaxRatePercent", "receiptExtraField1Enabled", "receiptExtraField1Label", "receiptExtraField1Value", "receiptExtraField2Enabled", "receiptExtraField2Label", "receiptExtraField2Value", "receiptFooterMessage", "receiptBrandImageMode"]);
   const seoDirty = formValueChanged(["seoPageName", "seoMetaDescription", "seoKeywords", "seoCanonicalUrl", "seoStructuredDataEnabled", "googleTrackingId", "googleTagManagerId"]);
+  const invoicePaymentsDirty = formValueChanged(["invoicePaymentsEnabled", "invoicePaymentsSectionTitle", "invoicePaymentsIntroText"]);
   const paymentDirty = formValueChanged(["enableCashOnCollection", "enableCashOnDelivery", "enableStripeCustomerPayments", "stripeConnectionStatus", "stripeCustomerPaymentMode", "stripeCustomerPublishableKey", "stripeCustomerSecretKeyInput", "stripeCustomerWebhookSecretInput", "stripeCustomerAccountLabel", "stripeCustomerTestMode", "stripeCustomerSetupNotes", "enableYocoCustomerPayments", "yocoConnectionStatus", "yocoCustomerMode", "yocoCustomerSecretKeyInput", "yocoCustomerWebhookSecretInput", "yocoCustomerAccountLabel", "yocoCustomerSetupNotes", "yocoCustomerPaymentsLive", "enableMpesaCustomerPayments", "mpesaConnectionStatus", "mpesaCustomerMode", "mpesaCustomerConsumerKey", "mpesaCustomerConsumerSecretInput", "mpesaCustomerIpnId", "mpesaCustomerAccountLabel", "mpesaCustomerSetupNotes", "mpesaCustomerPaymentsLive", "enableDarajaCustomerPayments", "darajaConnectionStatus", "darajaCustomerMode", "darajaConsumerKey", "darajaConsumerSecretInput", "darajaShortcode", "darajaPasskeyInput", "darajaTransactionType", "darajaAccountReferencePrefix", "darajaCallbackUrl", "darajaAccountLabel", "darajaSetupNotes", "darajaPaymentsLive"]);
   const stripeCredentialReady = Boolean(form.stripeCustomerPublishableKey.trim() && (form.stripeCustomerSecretKeySet || form.stripeCustomerSecretKeyInput.trim()) && (form.stripeCustomerWebhookSecretSet || form.stripeCustomerWebhookSecretInput.trim()));
   const yocoCurrencyAllowed = String(form.currencyCode || "").trim().toUpperCase() === "ZAR";
@@ -660,7 +664,7 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
   const darajaUsesSandboxShortcode = form.darajaShortcode.trim() === "174379";
   const darajaLiveReadinessOk = Boolean(darajaCurrencyAllowed && darajaCredentialReady && (!darajaModeLive || !darajaUsesSandboxShortcode));
   const mpesaReadyForCheckout = Boolean(form.enableMpesaCustomerPayments && form.mpesaCustomerPaymentsLive && mpesaCurrencyAllowed && mpesaCredentialReady);
-  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || discountsDirty || receiptInfoDirty || seoDirty || adminWorkspaceDirty;
+  const hasUnsavedChanges = brandingDirty || themeDirty || contactDirty || currencyDirty || paymentDirty || rewardsDirty || discountsDirty || receiptInfoDirty || seoDirty || invoicePaymentsDirty || adminWorkspaceDirty;
   const themeGroupDirty = (group: typeof THEME_GROUPS[number]) =>
     group.fields.some((field) => String(theme[field.key] || "") !== String(savedTheme[field.key] || "")) ||
     Boolean(group.options?.some((option) => Boolean(theme[option.key]) !== Boolean(savedTheme[option.key])));
@@ -1475,6 +1479,33 @@ export default function TenantSettingsForm({ initial, tenantName }: { initial: F
               <Field label="TikTok URL"><input value={form.socialTikTokUrl} onChange={(e) => update("socialTikTokUrl", e.target.value)} className="input" placeholder="https://tiktok.com/@..." /></Field>
               <Field label="X / Twitter URL"><input value={form.socialXUrl} onChange={(e) => update("socialXUrl", e.target.value)} className="input" placeholder="https://x.com/..." /></Field>
               <div className="md:col-span-2"><Field label="Website URL"><input value={form.socialWebsiteUrl} onChange={(e) => update("socialWebsiteUrl", e.target.value)} className="input" placeholder="https://example.com" /></Field></div>
+            </div>
+          </div>
+        </Section>
+
+        <Section id="invoice-payments" title="Invoice payments" dirty={invoicePaymentsDirty} saving={saving}>
+          <div className="rounded-[22px] border border-blue-200 bg-blue-50/80 p-4 text-sm leading-6 text-blue-950">
+            <p className="font-semibold text-slate-950">Let customers pay invoices, deposits and statement balances</p>
+            <p className="mt-1 text-xs leading-5 text-blue-900">When enabled, customer-entered amount payment cards are shown in their own first storefront section. These cards use a separate layout with no product image, variants, favourites or normal product details popup.</p>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2 rounded-[22px] border border-slate-200 bg-white p-4">
+              <label className="flex items-start justify-between gap-4">
+                <span>
+                  <span className="block text-sm font-semibold text-slate-900">Allow customers to pay invoices online</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">Switch this on after creating customer-entered amount products such as Pay Your Invoice, Pay a Deposit and Pay Statement Balance.</span>
+                </span>
+                <input type="checkbox" checked={form.invoicePaymentsEnabled} onChange={(e) => update("invoicePaymentsEnabled", e.target.checked)} className="mt-1 h-5 w-5 rounded border-slate-300 text-blue-700 focus:ring-blue-200" />
+              </label>
+            </div>
+            <Field label="Section title">
+              <input value={form.invoicePaymentsSectionTitle} onChange={(e) => update("invoicePaymentsSectionTitle", e.target.value)} className="input" placeholder="Payments" />
+            </Field>
+            <Field label="Intro text">
+              <input value={form.invoicePaymentsIntroText} onChange={(e) => update("invoicePaymentsIntroText", e.target.value)} className="input" placeholder="Pay an invoice, deposit or statement balance securely online." />
+            </Field>
+            <div className="md:col-span-2 rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-xs leading-5 text-slate-600">
+              Suggested cards: <span className="font-semibold text-slate-800">Pay Your Invoice</span>, <span className="font-semibold text-slate-800">Pay a Deposit</span>, and <span className="font-semibold text-slate-800">Pay Statement Balance</span>. Create these as customer-entered amount products in Products. Orduva will display them here first when this setting is switched on.
             </div>
           </div>
         </Section>
@@ -2524,6 +2555,7 @@ const SETTINGS_MENU_ITEMS = [
   { id: "theme-presets", group: "Theme", title: "Theme presets", help: "Choose a ready-made colour starting point." },
   { id: "per-item-storefront-colours", group: "Theme", title: "Per-item storefront colours", help: "Fine-tune each visible storefront area." },
   { id: "business-contact-details", group: "Contact", title: "Business contact details", help: "Phone, email, address, footer and social links." },
+  { id: "invoice-payments", group: "Payments", title: "Invoice payments", help: "Enable a dedicated first storefront section for invoice, deposit and statement balance payment cards." },
   { id: "receipt-information", group: "Receipts", title: "Receipt information", help: "Document name, tax details, optional fields, receipt image and footer wording." },
   { id: "storefront-seo", group: "SEO", title: "Storefront SEO", help: "Page title, meta description, schema, favicon and Google tracking." },
   { id: "customer-rewards-program", group: "Rewards", title: "Customer rewards programme", help: "Silver, Gold and Platinum spend tiers with percentage discounts." },

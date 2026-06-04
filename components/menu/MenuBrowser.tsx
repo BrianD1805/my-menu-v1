@@ -126,6 +126,7 @@ type Product = {
   description: string | null;
   image_url: string | null;
   price: number;
+  is_active?: boolean | null;
   stock_enabled?: boolean | null;
   stock_quantity?: number | null;
   low_stock_threshold?: number | null;
@@ -143,6 +144,38 @@ type Product = {
   custom_amount_disable_rewards?: boolean | null;
   custom_amount_disable_discounts?: boolean | null;
 };
+
+type InvoicePaymentCardProps = {
+  product: Product;
+  moneySettings: MoneyFormatSettings;
+  brandPrimary: string;
+  brandAccent: string;
+  brandBorder: string;
+  onPay: (productId: string) => void;
+};
+
+function InvoicePaymentCard({ product, moneySettings, brandPrimary, brandAccent, brandBorder, onPay }: InvoicePaymentCardProps) {
+  const minAmount = Math.max(0, Number(product.custom_amount_min ?? 1));
+  const referenceLabel = product.custom_amount_reference_label || "Reference";
+  return (
+    <article className="relative overflow-hidden rounded-[28px] border bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.08)] ring-1 ring-white/80 sm:p-6" style={{ borderColor: brandBorder }}>
+      <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-20 blur-3xl" style={{ backgroundColor: brandAccent }} />
+      <div className="relative z-10 flex h-full flex-col">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: brandAccent }}>Secure payment</p>
+        <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">{product.name}</h3>
+        <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{product.custom_amount_help_text || "Enter your reference and the amount you would like to pay."}</p>
+        <div className="mt-4 grid gap-2 text-xs text-slate-500">
+          <span>{referenceLabel}{product.custom_amount_reference_required !== false ? " required" : " optional"}</span>
+          <span>Minimum: {formatMoney(minAmount, moneySettings)}</span>
+        </div>
+        <button type="button" onClick={() => onPay(product.id)} className="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]" style={{ backgroundColor: brandPrimary }}>
+          Pay now
+        </button>
+      </div>
+    </article>
+  );
+}
+
 
 function hexToRgb(hex: string) {
   const clean = hex.replace("#", "");
@@ -865,6 +898,9 @@ export default function MenuBrowser({
   discountPopupTitle,
   discountPopupMessage,
   discountRules,
+  invoicePaymentsEnabled,
+  invoicePaymentsSectionTitle,
+  invoicePaymentsIntroText,
   initialProductId,
   onFirstMeaningfulPaintReady,
 }: {
@@ -923,6 +959,9 @@ export default function MenuBrowser({
   discountPopupTitle?: string | null;
   discountPopupMessage?: string | null;
   discountRules?: DiscountRule[] | null;
+  invoicePaymentsEnabled?: boolean | null;
+  invoicePaymentsSectionTitle?: string | null;
+  invoicePaymentsIntroText?: string | null;
   initialProductId?: string | null;
   onFirstMeaningfulPaintReady?: () => void;
 }) {
@@ -1239,6 +1278,15 @@ export default function MenuBrowser({
     [discountRules],
   );
   const storefrontDiscountsEnabled = discountsEnabled === true;
+  const invoicePaymentProducts = useMemo(
+    () => products.filter((product) => product.is_active !== false && (product.product_type === "customer_amount" || product.custom_amount_enabled === true)),
+    [products],
+  );
+  const normalStorefrontProducts = useMemo(
+    () => products.filter((product) => !(product.product_type === "customer_amount" || product.custom_amount_enabled === true)),
+    [products],
+  );
+  const showInvoicePaymentsSection = invoicePaymentsEnabled === true && invoicePaymentProducts.length > 0;
   const visibleDiscountRules = useMemo(
     () =>
       storefrontDiscountRules.filter(
@@ -3085,8 +3133,41 @@ export default function MenuBrowser({
         </div>
       ) : null}
 
+
+      {showInvoicePaymentsSection ? (
+        <section className="mb-8 sm:mb-10">
+          <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: brandAccent }}>Customer payments</p>
+              <h2 className="mt-1 text-[1.38rem] font-semibold tracking-tight sm:text-[1.95rem]" style={{ color: brandText }}>
+                {invoicePaymentsSectionTitle || "Payments"}
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6" style={{ color: brandSoftText }}>
+                {invoicePaymentsIntroText || "Pay an invoice, deposit or statement balance securely online."}
+              </p>
+            </div>
+            <span className="w-fit rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]" style={{ borderColor: brandBorder, color: brandSoftText }}>
+              {invoicePaymentProducts.length} payment {invoicePaymentProducts.length === 1 ? "option" : "options"}
+            </span>
+          </div>
+          <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {invoicePaymentProducts.map((product) => (
+              <InvoicePaymentCard
+                key={product.id}
+                product={product}
+                moneySettings={moneySettings}
+                brandPrimary={brandPrimary}
+                brandAccent={brandAccent}
+                brandBorder={brandBorder}
+                onPay={(productId) => void addToCart(productId, { destination: "header" })}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {categories.map((category) => {
-        const categoryProducts = products.filter(
+        const categoryProducts = normalStorefrontProducts.filter(
           (product) =>
             product.category_id === category.id ||
             product.secondary_category_id === category.id,

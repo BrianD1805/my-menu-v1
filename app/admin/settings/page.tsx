@@ -197,6 +197,9 @@ export default async function AdminSettingsPage() {
           seoStructuredDataEnabled: settings?.seo_structured_data_enabled !== false,
           googleTrackingId: settings?.google_tracking_id || "",
           googleTagManagerId: settings?.google_tag_manager_id || "",
+          invoicePaymentsEnabled: settings?.invoice_payments_enabled === true,
+          invoicePaymentsSectionTitle: settings?.invoice_payments_section_title || "Payments",
+          invoicePaymentsIntroText: settings?.invoice_payments_intro_text || "Pay an invoice, deposit or statement balance securely online.",
         }}
       />
     </AdminShell>
