@@ -62,7 +62,7 @@ type PendingOrderPayload = {
   rewards?: RewardOrderMetadata | null;
   discounts?: DiscountOrderMetadata | null;
   items: Array<{
-    product_id: string;
+    product_id: string | null;
     product_name: string;
     unit_price: number;
     quantity: number;
@@ -89,13 +89,17 @@ function timingSafeEqualText(left: string, right: string) {
 }
 
 function configured(status: string | null | undefined) {
-  return status === "configured" || status === "connected" || status === "active";
+  return (
+    status === "configured" || status === "connected" || status === "active"
+  );
 }
 
 export async function loadTenantStripeCustomerSettings(tenantId: string) {
   const { data, error } = await db
     .from("tenant_settings")
-    .select("tenant_id, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_publishable_key, stripe_customer_secret_key, stripe_customer_webhook_secret, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_payments_live")
+    .select(
+      "tenant_id, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_publishable_key, stripe_customer_secret_key, stripe_customer_webhook_secret, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_payments_live",
+    )
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
@@ -103,14 +107,24 @@ export async function loadTenantStripeCustomerSettings(tenantId: string) {
   return (data || null) as TenantStripeCustomerSettings | null;
 }
 
-export function assertTenantStripeReady(settings: TenantStripeCustomerSettings | null) {
+export function assertTenantStripeReady(
+  settings: TenantStripeCustomerSettings | null,
+) {
   if (!settings) throw new Error("Stripe is not configured for this store.");
-  if (settings.enable_stripe_customer_payments !== true) throw new Error("Stripe customer payments are not enabled for this store.");
-  if (!configured(settings.stripe_connection_status)) throw new Error("Stripe is not marked as connected for this store.");
-  if (settings.stripe_customer_payments_live !== true) throw new Error("Stripe customer payments are not live for this store yet.");
-  if (!getString(settings.stripe_customer_publishable_key)) throw new Error("Tenant Stripe publishable key is missing.");
-  if (!getString(settings.stripe_customer_secret_key)) throw new Error("Tenant Stripe secret key is missing.");
-  if (!getString(settings.stripe_customer_webhook_secret)) throw new Error("Tenant Stripe webhook secret is missing.");
+  if (settings.enable_stripe_customer_payments !== true)
+    throw new Error("Stripe customer payments are not enabled for this store.");
+  if (!configured(settings.stripe_connection_status))
+    throw new Error("Stripe is not marked as connected for this store.");
+  if (settings.stripe_customer_payments_live !== true)
+    throw new Error(
+      "Stripe customer payments are not live for this store yet.",
+    );
+  if (!getString(settings.stripe_customer_publishable_key))
+    throw new Error("Tenant Stripe publishable key is missing.");
+  if (!getString(settings.stripe_customer_secret_key))
+    throw new Error("Tenant Stripe secret key is missing.");
+  if (!getString(settings.stripe_customer_webhook_secret))
+    throw new Error("Tenant Stripe webhook secret is missing.");
 }
 
 function originFromRequest(req: Request) {
@@ -176,13 +190,15 @@ export async function createTenantStripeOrderCheckoutIntent(input: {
     .select("id")
     .single();
 
-  if (intentError || !intent?.id) throw new Error("Could not prepare Stripe checkout.");
+  if (intentError || !intent?.id)
+    throw new Error("Could not prepare Stripe checkout.");
 
   const checkoutId = String(intent.id);
   const secretKey = getString(stripeSettings?.stripe_customer_secret_key);
   const currencyCode = String(input.currencyCode || "GBP").toLowerCase();
   const unitAmount = toStripeUnitAmount(input.total);
-  if (unitAmount < 50) throw new Error("Order total is too small for Stripe Checkout.");
+  if (unitAmount < 50)
+    throw new Error("Order total is too small for Stripe Checkout.");
 
   const origin = originFromRequest(input.req);
   const successUrl = `${origin}/checkout/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}`;
@@ -194,8 +210,14 @@ export async function createTenantStripeOrderCheckoutIntent(input: {
   params.set("cancel_url", cancelUrl);
   params.set("client_reference_id", checkoutId);
   params.set("line_items[0][price_data][currency]", currencyCode);
-  params.set("line_items[0][price_data][product_data][name]", `${input.tenantName} order`);
-  params.set("line_items[0][price_data][product_data][description]", `Customer order via Orduva`);
+  params.set(
+    "line_items[0][price_data][product_data][name]",
+    `${input.tenantName} order`,
+  );
+  params.set(
+    "line_items[0][price_data][product_data][description]",
+    `Customer order via Orduva`,
+  );
   params.set("line_items[0][price_data][unit_amount]", String(unitAmount));
   params.set("line_items[0][quantity]", "1");
   params.set("metadata[orduva_flow]", "storefront_order_checkout");
@@ -204,7 +226,10 @@ export async function createTenantStripeOrderCheckoutIntent(input: {
   params.set("metadata[checkout_id]", checkoutId);
   params.set("metadata[customer_name]", input.customerName.slice(0, 120));
   params.set("metadata[customer_phone]", input.customerPhone.slice(0, 80));
-  params.set("payment_intent_data[metadata][orduva_flow]", "storefront_order_checkout");
+  params.set(
+    "payment_intent_data[metadata][orduva_flow]",
+    "storefront_order_checkout",
+  );
   params.set("payment_intent_data[metadata][tenant_id]", input.tenantId);
   params.set("payment_intent_data[metadata][tenant_slug]", input.tenantSlug);
   params.set("payment_intent_data[metadata][checkout_id]", checkoutId);
@@ -219,10 +244,22 @@ export async function createTenantStripeOrderCheckoutIntent(input: {
     cache: "no-store",
   });
 
-  const data = await response.json().catch(() => null) as { id?: string; url?: string; payment_intent?: string; error?: { message?: string } } | null;
+  const data = (await response.json().catch(() => null)) as {
+    id?: string;
+    url?: string;
+    payment_intent?: string;
+    error?: { message?: string };
+  } | null;
   if (!response.ok || !data?.id || !data?.url) {
-    await db.from("storefront_payment_intents").update({ status: "failed" }).eq("id", checkoutId).eq("tenant_id", input.tenantId);
-    throw new Error(data?.error?.message || `Tenant Stripe checkout failed with status ${response.status}`);
+    await db
+      .from("storefront_payment_intents")
+      .update({ status: "failed" })
+      .eq("id", checkoutId)
+      .eq("tenant_id", input.tenantId);
+    throw new Error(
+      data?.error?.message ||
+        `Tenant Stripe checkout failed with status ${response.status}`,
+    );
   }
 
   await db
@@ -253,37 +290,61 @@ function parseSignatureHeader(signatureHeader: string | null) {
   );
   const timestamp = parts.t;
   const signature = parts.v1;
-  if (!timestamp || !signature) throw new Error("Invalid Stripe signature header.");
+  if (!timestamp || !signature)
+    throw new Error("Invalid Stripe signature header.");
   return { timestamp, signature };
 }
 
-function verifyStripeSignature(rawBody: string, signatureHeader: string | null, webhookSecret: string) {
+function verifyStripeSignature(
+  rawBody: string,
+  signatureHeader: string | null,
+  webhookSecret: string,
+) {
   const { timestamp, signature } = parseSignatureHeader(signatureHeader);
-  const expected = crypto.createHmac("sha256", webhookSecret).update(`${timestamp}.${rawBody}`).digest("hex");
-  if (!timingSafeEqualText(expected, signature)) throw new Error("Stripe webhook signature verification failed.");
+  const expected = crypto
+    .createHmac("sha256", webhookSecret)
+    .update(`${timestamp}.${rawBody}`)
+    .digest("hex");
+  if (!timingSafeEqualText(expected, signature))
+    throw new Error("Stripe webhook signature verification failed.");
 }
 
 function readTenantIdFromEvent(event: StripeEvent) {
   const object = event.data?.object || {};
   const metadata = (object.metadata || {}) as Record<string, any>;
-  const paymentIntentData = (object.payment_intent_data || {}) as Record<string, any>;
-  const nestedMetadata = (paymentIntentData.metadata || {}) as Record<string, any>;
+  const paymentIntentData = (object.payment_intent_data || {}) as Record<
+    string,
+    any
+  >;
+  const nestedMetadata = (paymentIntentData.metadata || {}) as Record<
+    string,
+    any
+  >;
   return getString(metadata.tenant_id) || getString(nestedMetadata.tenant_id);
 }
 
 function readCheckoutIdFromObject(object: Record<string, any>) {
   const metadata = (object.metadata || {}) as Record<string, any>;
-  return getString(metadata.checkout_id) || getString(object.client_reference_id);
+  return (
+    getString(metadata.checkout_id) || getString(object.client_reference_id)
+  );
 }
 
-export async function verifyAndParseTenantStripeWebhook(rawBody: string, signatureHeader: string | null) {
+export async function verifyAndParseTenantStripeWebhook(
+  rawBody: string,
+  signatureHeader: string | null,
+) {
   const unverified = JSON.parse(rawBody) as StripeEvent;
-  if (!unverified?.id || !unverified?.type) throw new Error("Invalid Stripe event payload.");
+  if (!unverified?.id || !unverified?.type)
+    throw new Error("Invalid Stripe event payload.");
   const tenantId = readTenantIdFromEvent(unverified);
   if (tenantId) {
     const stripeSettings = await loadTenantStripeCustomerSettings(tenantId);
-    const webhookSecret = getString(stripeSettings?.stripe_customer_webhook_secret);
-    if (!webhookSecret) throw new Error("Tenant Stripe webhook secret is not configured.");
+    const webhookSecret = getString(
+      stripeSettings?.stripe_customer_webhook_secret,
+    );
+    if (!webhookSecret)
+      throw new Error("Tenant Stripe webhook secret is not configured.");
     verifyStripeSignature(rawBody, signatureHeader, webhookSecret);
     return unverified;
   }
@@ -292,9 +353,15 @@ export async function verifyAndParseTenantStripeWebhook(rawBody: string, signatu
     .from("tenant_settings")
     .select("tenant_id, stripe_customer_webhook_secret")
     .not("stripe_customer_webhook_secret", "is", null);
-  if (error || !data?.length) throw new Error("No tenant Stripe webhook secrets are available for verification.");
+  if (error || !data?.length)
+    throw new Error(
+      "No tenant Stripe webhook secrets are available for verification.",
+    );
 
-  for (const row of data as Array<{ tenant_id: string; stripe_customer_webhook_secret: string | null }>) {
+  for (const row of data as Array<{
+    tenant_id: string;
+    stripe_customer_webhook_secret: string | null;
+  }>) {
     const secret = getString(row.stripe_customer_webhook_secret);
     if (!secret) continue;
     try {
@@ -305,14 +372,23 @@ export async function verifyAndParseTenantStripeWebhook(rawBody: string, signatu
     }
   }
 
-  throw new Error("Stripe webhook signature verification failed for all tenant secrets.");
+  throw new Error(
+    "Stripe webhook signature verification failed for all tenant secrets.",
+  );
 }
 
-async function loadIntentByCheckout(input: { checkoutId?: string | null; sessionId?: string | null; paymentIntentId?: string | null; tenantId?: string | null }) {
+async function loadIntentByCheckout(input: {
+  checkoutId?: string | null;
+  sessionId?: string | null;
+  paymentIntentId?: string | null;
+  tenantId?: string | null;
+}) {
   let query = db.from("storefront_payment_intents").select("*");
   if (input.checkoutId) query = query.eq("id", input.checkoutId);
-  else if (input.sessionId) query = query.eq("stripe_checkout_session_id", input.sessionId);
-  else if (input.paymentIntentId) query = query.eq("stripe_payment_intent_id", input.paymentIntentId);
+  else if (input.sessionId)
+    query = query.eq("stripe_checkout_session_id", input.sessionId);
+  else if (input.paymentIntentId)
+    query = query.eq("stripe_payment_intent_id", input.paymentIntentId);
   else throw new Error("Stripe event did not include checkout metadata.");
   if (input.tenantId) query = query.eq("tenant_id", input.tenantId);
   const { data, error } = await query.maybeSingle();
@@ -320,38 +396,62 @@ async function loadIntentByCheckout(input: { checkoutId?: string | null; session
   return data as Record<string, any> | null;
 }
 
-function reduceVariantStock(productVariants: any[], variantId: string, quantity: number) {
+function reduceVariantStock(
+  productVariants: any[],
+  variantId: string,
+  quantity: number,
+) {
   return productVariants.map((variant: any) => {
-    if (variant?.id !== variantId || variant?.stockEnabled !== true) return variant;
-    const currentStock = Math.max(0, Math.floor(Number(variant.stockQuantity || 0)));
+    if (variant?.id !== variantId || variant?.stockEnabled !== true)
+      return variant;
+    const currentStock = Math.max(
+      0,
+      Math.floor(Number(variant.stockQuantity || 0)),
+    );
     return { ...variant, stockQuantity: Math.max(0, currentStock - quantity) };
   });
 }
 
-async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPayload["items"]) {
+async function reduceStockAfterPaidOrder(
+  tenantId: string,
+  items: PendingOrderPayload["items"],
+) {
   const quantityBySellableLine = new Map<string, number>();
   for (const item of items) {
     const productId = String(item.product_id || "");
     if (!productId) continue;
     const variantId = item.variant_id ? String(item.variant_id) : "base";
     const lineKey = `${productId}::${variantId}`;
-    quantityBySellableLine.set(lineKey, (quantityBySellableLine.get(lineKey) || 0) + Number(item.quantity || 0));
+    quantityBySellableLine.set(
+      lineKey,
+      (quantityBySellableLine.get(lineKey) || 0) + Number(item.quantity || 0),
+    );
   }
 
   for (const [lineKey, quantity] of quantityBySellableLine.entries()) {
     const [productId, variantId] = lineKey.split("::");
     const { data: product, error } = await db
       .from("products")
-      .select("id, stock_enabled, stock_quantity, product_variants, product_type, custom_amount_enabled")
+      .select(
+        "id, stock_enabled, stock_quantity, product_variants, product_type, custom_amount_enabled",
+      )
       .eq("id", productId)
       .eq("tenant_id", tenantId)
       .maybeSingle();
     if (error || !product) continue;
-    if ((product as any).product_type === "customer_amount" || (product as any).custom_amount_enabled === true) continue;
+    if (
+      (product as any).product_type === "customer_amount" ||
+      (product as any).custom_amount_enabled === true
+    )
+      continue;
 
     if (variantId && variantId !== "base") {
-      const variants = Array.isArray(product.product_variants) ? product.product_variants : [];
-      const selectedVariant = variants.find((variant: any) => variant?.id === variantId);
+      const variants = Array.isArray(product.product_variants)
+        ? product.product_variants
+        : [];
+      const selectedVariant = variants.find(
+        (variant: any) => variant?.id === variantId,
+      );
       if (!selectedVariant?.stockEnabled) continue;
       const nextVariants = reduceVariantStock(variants, variantId, quantity);
       const { error: stockError } = await db
@@ -359,18 +459,29 @@ async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPa
         .update({ product_variants: nextVariants })
         .eq("id", product.id)
         .eq("tenant_id", tenantId);
-      if (stockError) console.error("Failed to reduce variant stock after Stripe payment", stockError);
+      if (stockError)
+        console.error(
+          "Failed to reduce variant stock after Stripe payment",
+          stockError,
+        );
       continue;
     }
 
     if (!product.stock_enabled) continue;
-    const nextStock = Math.max(0, Number(product.stock_quantity || 0) - quantity);
+    const nextStock = Math.max(
+      0,
+      Number(product.stock_quantity || 0) - quantity,
+    );
     const { error: stockError } = await db
       .from("products")
       .update({ stock_quantity: nextStock })
       .eq("id", product.id)
       .eq("tenant_id", tenantId);
-    if (stockError) console.error("Failed to reduce product stock after Stripe payment", stockError);
+    if (stockError)
+      console.error(
+        "Failed to reduce product stock after Stripe payment",
+        stockError,
+      );
   }
 }
 export async function createPaidOrderFromIntent(input: {
@@ -380,8 +491,10 @@ export async function createPaidOrderFromIntent(input: {
   paymentReference?: string | null;
   paidAt?: string | null;
 }) {
-  const finalSessionId = input.sessionId || input.intent.stripe_checkout_session_id || null;
-  const finalPaymentIntentId = input.paymentIntentId || input.intent.stripe_payment_intent_id || null;
+  const finalSessionId =
+    input.sessionId || input.intent.stripe_checkout_session_id || null;
+  const finalPaymentIntentId =
+    input.paymentIntentId || input.intent.stripe_payment_intent_id || null;
 
   if (input.intent.order_id) {
     await db
@@ -390,7 +503,11 @@ export async function createPaidOrderFromIntent(input: {
         payment_status: "paid",
         payment_checkout_session_id: finalSessionId,
         payment_intent_id: finalPaymentIntentId,
-        payment_reference: input.paymentReference || finalPaymentIntentId || finalSessionId || null,
+        payment_reference:
+          input.paymentReference ||
+          finalPaymentIntentId ||
+          finalSessionId ||
+          null,
         paid_at: input.paidAt || new Date().toISOString(),
       })
       .eq("id", input.intent.order_id)
@@ -426,26 +543,33 @@ export async function createPaidOrderFromIntent(input: {
   if (claimError) throw new Error("Could not claim Stripe checkout intent.");
 
   if (!claimedIntent) {
-    const latest = await loadIntentByCheckout({ checkoutId: input.intent.id, tenantId: input.intent.tenant_id });
+    const latest = await loadIntentByCheckout({
+      checkoutId: input.intent.id,
+      tenantId: input.intent.tenant_id,
+    });
     if (latest?.order_id) return latest.order_id as string;
 
     // If Stripe has already marked the payment intent as paid but no order has been
     // linked yet, do not report success to the customer without creating the Orduva
     // order. Returning an empty order id here leaves stock unreduced and the cart uncleared.
-    throw new Error("Stripe payment is paid but the Orduva order has not been created yet.");
+    throw new Error(
+      "Stripe payment is paid but the Orduva order has not been created yet.",
+    );
   }
 
   input.intent = claimedIntent;
 
   const payload = input.intent.order_payload as PendingOrderPayload | null;
-  if (!payload?.items?.length) throw new Error("Stripe checkout intent is missing order payload.");
+  if (!payload?.items?.length)
+    throw new Error("Stripe checkout intent is missing order payload.");
 
   const { data: tenant, error: tenantError } = await db
     .from("tenants")
     .select("id, slug, name, whatsapp_number")
     .eq("id", input.intent.tenant_id)
     .maybeSingle();
-  if (tenantError || !tenant) throw new Error("Tenant not found for Stripe checkout intent.");
+  if (tenantError || !tenant)
+    throw new Error("Tenant not found for Stripe checkout intent.");
 
   const { data: order, error: orderError } = await db
     .from("orders")
@@ -454,7 +578,10 @@ export async function createPaidOrderFromIntent(input: {
       customer_name: payload.customerName,
       customer_phone: payload.customerPhone,
       customer_account_id: payload.customerAccountId || null,
-      customer_address: payload.orderType === "collection" ? null : payload.customerAddress || null,
+      customer_address:
+        payload.orderType === "collection"
+          ? null
+          : payload.customerAddress || null,
       order_type: payload.orderType,
       status: "new",
       total: payload.total,
@@ -470,27 +597,42 @@ export async function createPaidOrderFromIntent(input: {
       discount_value: payload.discounts?.discount_value ?? 0,
       discount_base_amount: payload.discounts?.discount_base_amount ?? 0,
       discount_amount: payload.discounts?.discount_amount ?? 0,
-      discount_allow_with_rewards: payload.discounts?.discount_allow_with_rewards ?? true,
-      discount_only_this_discount: payload.discounts?.discount_only_this_discount ?? false,
+      discount_allow_with_rewards:
+        payload.discounts?.discount_allow_with_rewards ?? true,
+      discount_only_this_discount:
+        payload.discounts?.discount_only_this_discount ?? false,
       rewards_spend_before: payload.rewards?.rewards_spend_before ?? null,
       rewards_spend_after: payload.rewards?.rewards_spend_after ?? null,
       notes: payload.notes || null,
       payment_provider: "stripe",
       payment_method_label: payload.paymentMethodLabel || "Stripe card payment",
       payment_status: "paid",
-      payment_checkout_session_id: input.sessionId || input.intent.stripe_checkout_session_id || null,
-      payment_intent_id: input.paymentIntentId || input.intent.stripe_payment_intent_id || null,
-      payment_reference: input.paymentReference || input.paymentIntentId || input.sessionId || null,
+      payment_checkout_session_id:
+        input.sessionId || input.intent.stripe_checkout_session_id || null,
+      payment_intent_id:
+        input.paymentIntentId || input.intent.stripe_payment_intent_id || null,
+      payment_reference:
+        input.paymentReference ||
+        input.paymentIntentId ||
+        input.sessionId ||
+        null,
       paid_at: input.paidAt || new Date().toISOString(),
     })
     .select()
     .single();
 
-  if (orderError || !order) throw new Error("Could not create paid storefront order after Stripe payment.");
+  if (orderError || !order)
+    throw new Error(
+      "Could not create paid storefront order after Stripe payment.",
+    );
 
-  const orderItems = payload.items.map((item) => ({ ...item, order_id: order.id }));
+  const orderItems = payload.items.map((item) => ({
+    ...item,
+    order_id: order.id,
+  }));
   const { error: itemsError } = await db.from("order_items").insert(orderItems);
-  if (itemsError) throw new Error("Could not create order items after Stripe payment.");
+  if (itemsError)
+    throw new Error("Could not create order items after Stripe payment.");
 
   await reduceStockAfterPaidOrder(tenant.id, payload.items);
 
@@ -508,11 +650,19 @@ export async function createPaidOrderFromIntent(input: {
     payment: {
       label: payload.paymentMethodLabel || "Paid by card",
       status: "paid",
-      reference: input.paymentReference || input.paymentIntentId || input.sessionId || null,
+      reference:
+        input.paymentReference ||
+        input.paymentIntentId ||
+        input.sessionId ||
+        null,
     },
   });
 
-  await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
+  await db
+    .from("orders")
+    .update({ whatsapp_message: message })
+    .eq("id", order.id)
+    .eq("tenant_id", tenant.id);
 
   await Promise.allSettled([
     enqueueNotificationEvent({
@@ -546,8 +696,10 @@ export async function createPaidOrderFromIntent(input: {
     .update({
       status: "paid",
       order_id: order.id,
-      stripe_checkout_session_id: input.sessionId || input.intent.stripe_checkout_session_id || null,
-      stripe_payment_intent_id: input.paymentIntentId || input.intent.stripe_payment_intent_id || null,
+      stripe_checkout_session_id:
+        input.sessionId || input.intent.stripe_checkout_session_id || null,
+      stripe_payment_intent_id:
+        input.paymentIntentId || input.intent.stripe_payment_intent_id || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.intent.id)
@@ -556,14 +708,21 @@ export async function createPaidOrderFromIntent(input: {
   return order.id as string;
 }
 
-async function markIntentStatus(input: { intent: Record<string, any> | null; status: string; sessionId?: string | null; paymentIntentId?: string | null }) {
+async function markIntentStatus(input: {
+  intent: Record<string, any> | null;
+  status: string;
+  sessionId?: string | null;
+  paymentIntentId?: string | null;
+}) {
   if (!input.intent?.id) return;
   await db
     .from("storefront_payment_intents")
     .update({
       status: input.status,
-      stripe_checkout_session_id: input.sessionId || input.intent.stripe_checkout_session_id || null,
-      stripe_payment_intent_id: input.paymentIntentId || input.intent.stripe_payment_intent_id || null,
+      stripe_checkout_session_id:
+        input.sessionId || input.intent.stripe_checkout_session_id || null,
+      stripe_payment_intent_id:
+        input.paymentIntentId || input.intent.stripe_payment_intent_id || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.intent.id)
@@ -575,9 +734,18 @@ export async function processTenantStripeWebhook(event: StripeEvent) {
   const metadata = (object.metadata || {}) as Record<string, any>;
   const tenantId = getString(metadata.tenant_id);
   const checkoutId = readCheckoutIdFromObject(object);
-  const sessionId = event.type.startsWith("checkout.session") ? getString(object.id) : getString(metadata.checkout_session_id);
-  const paymentIntentId = event.type.startsWith("payment_intent") ? getString(object.id) : getString(object.payment_intent);
-  const intent = await loadIntentByCheckout({ checkoutId, sessionId, paymentIntentId, tenantId });
+  const sessionId = event.type.startsWith("checkout.session")
+    ? getString(object.id)
+    : getString(metadata.checkout_session_id);
+  const paymentIntentId = event.type.startsWith("payment_intent")
+    ? getString(object.id)
+    : getString(object.payment_intent);
+  const intent = await loadIntentByCheckout({
+    checkoutId,
+    sessionId,
+    paymentIntentId,
+    tenantId,
+  });
 
   switch (event.type) {
     case "checkout.session.completed":
@@ -585,12 +753,17 @@ export async function processTenantStripeWebhook(event: StripeEvent) {
         intent: intent || {},
         sessionId: getString(object.id),
         paymentIntentId: getString(object.payment_intent),
-        paymentReference: getString(object.payment_intent) || getString(object.id),
+        paymentReference:
+          getString(object.payment_intent) || getString(object.id),
         paidAt: new Date().toISOString(),
       });
       return "Storefront Stripe checkout completed, paid order created, and stock reduced.";
     case "checkout.session.expired":
-      await markIntentStatus({ intent, status: "cancelled", sessionId: getString(object.id) });
+      await markIntentStatus({
+        intent,
+        status: "cancelled",
+        sessionId: getString(object.id),
+      });
       return "Storefront Stripe checkout expired. No order was created.";
     case "payment_intent.succeeded":
       if (intent && !intent.order_id) {
@@ -602,15 +775,31 @@ export async function processTenantStripeWebhook(event: StripeEvent) {
         });
         return "Storefront Stripe payment intent succeeded, paid order created, and stock reduced.";
       }
-      await markIntentStatus({ intent, status: "paid", paymentIntentId: getString(object.id) });
+      await markIntentStatus({
+        intent,
+        status: "paid",
+        paymentIntentId: getString(object.id),
+      });
       return "Storefront Stripe payment intent succeeded.";
     case "payment_intent.payment_failed":
-      await markIntentStatus({ intent, status: "failed", paymentIntentId: getString(object.id) });
+      await markIntentStatus({
+        intent,
+        status: "failed",
+        paymentIntentId: getString(object.id),
+      });
       return "Storefront Stripe payment intent failed. No order was created.";
     case "charge.refunded":
-      await markIntentStatus({ intent, status: "refunded", paymentIntentId: getString(object.payment_intent) });
+      await markIntentStatus({
+        intent,
+        status: "refunded",
+        paymentIntentId: getString(object.payment_intent),
+      });
       if (intent?.order_id) {
-        await db.from("orders").update({ payment_status: "refunded" }).eq("id", intent.order_id).eq("tenant_id", intent.tenant_id);
+        await db
+          .from("orders")
+          .update({ payment_status: "refunded" })
+          .eq("id", intent.order_id)
+          .eq("tenant_id", intent.tenant_id);
       }
       return "Storefront Stripe charge refunded.";
     default:

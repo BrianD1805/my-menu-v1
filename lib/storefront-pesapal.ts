@@ -55,7 +55,7 @@ type PendingOrderPayload = {
   rewards?: RewardOrderMetadata | null;
   discounts?: DiscountOrderMetadata | null;
   items: Array<{
-    product_id: string;
+    product_id: string | null;
     product_name: string;
     unit_price: number;
     quantity: number;
@@ -105,19 +105,31 @@ export function getString(value: unknown) {
 }
 
 function configured(status: string | null | undefined) {
-  return status === "configured" || status === "connected" || status === "active";
+  return (
+    status === "configured" || status === "connected" || status === "active"
+  );
 }
 
 function pesapalApiBase(mode: string | null | undefined) {
-  return mode === "live" ? "https://pay.pesapal.com/v3/api" : "https://cybqa.pesapal.com/pesapalv3/api";
+  return mode === "live"
+    ? "https://pay.pesapal.com/v3/api"
+    : "https://cybqa.pesapal.com/pesapalv3/api";
 }
 
 function allowPesapalSandboxHostedCheckout() {
-  return String(process.env.ORDUVA_ALLOW_PESAPAL_SANDBOX_CHECKOUTS || "").trim().toLowerCase() === "true";
+  return (
+    String(process.env.ORDUVA_ALLOW_PESAPAL_SANDBOX_CHECKOUTS || "")
+      .trim()
+      .toLowerCase() === "true"
+  );
 }
 
 function isPesapalSandboxMode(mode: string | null | undefined) {
-  return String(mode || "test").trim().toLowerCase() !== "live";
+  return (
+    String(mode || "test")
+      .trim()
+      .toLowerCase() !== "live"
+  );
 }
 
 function originFromRequest(req: Request) {
@@ -138,27 +150,55 @@ function storefrontReturnOrigin(req: Request, tenantSlug: string) {
 
 function firstLastName(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  return { firstName: parts[0] || "Customer", lastName: parts.slice(1).join(" ") || "" };
+  return {
+    firstName: parts[0] || "Customer",
+    lastName: parts.slice(1).join(" ") || "",
+  };
 }
 
 function safeMerchantReference(checkoutId: string) {
-  return `ORDUVA-${checkoutId.replace(/[^a-zA-Z0-9_.:-]/g, "").slice(0, 42)}`.slice(0, 50);
+  return `ORDUVA-${checkoutId.replace(/[^a-zA-Z0-9_.:-]/g, "").slice(0, 42)}`.slice(
+    0,
+    50,
+  );
 }
 
 export function isCompletedStatus(value: string | number | null | undefined) {
-  const text = String(value || "").trim().toLowerCase();
-  return text === "1" || text === "completed" || text === "complete" || text === "paid" || text === "success" || text === "successful";
+  const text = String(value || "")
+    .trim()
+    .toLowerCase();
+  return (
+    text === "1" ||
+    text === "completed" ||
+    text === "complete" ||
+    text === "paid" ||
+    text === "success" ||
+    text === "successful"
+  );
 }
 
 export function isFailedStatus(value: string | number | null | undefined) {
-  const text = String(value || "").trim().toLowerCase();
-  return text === "2" || text === "failed" || text === "invalid" || text === "0" || text === "3" || text === "reversed" || text === "cancelled" || text === "canceled";
+  const text = String(value || "")
+    .trim()
+    .toLowerCase();
+  return (
+    text === "2" ||
+    text === "failed" ||
+    text === "invalid" ||
+    text === "0" ||
+    text === "3" ||
+    text === "reversed" ||
+    text === "cancelled" ||
+    text === "canceled"
+  );
 }
 
 export async function loadTenantPesapalCustomerSettings(tenantId: string) {
   const { data, error } = await db
     .from("tenant_settings")
-    .select("tenant_id, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live")
+    .select(
+      "tenant_id, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live",
+    )
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
@@ -166,33 +206,68 @@ export async function loadTenantPesapalCustomerSettings(tenantId: string) {
   return (data || null) as TenantPesapalCustomerSettings | null;
 }
 
-export function assertTenantPesapalReady(settings: TenantPesapalCustomerSettings | null, currencyCode: string) {
-  if (String(currencyCode || "").toUpperCase() !== "KES") throw new Error("M-Pesa checkout is currently only available for KES stores.");
-  if (!settings) throw new Error("M-Pesa/Pesapal is not configured for this store.");
-  if (settings.enable_mpesa_customer_payments !== true) throw new Error("M-Pesa customer payments are not enabled for this store.");
-  if (!configured(settings.mpesa_connection_status)) throw new Error("M-Pesa/Pesapal is not marked as connected for this store.");
-  if (settings.mpesa_customer_payments_live !== true) throw new Error("M-Pesa customer payments are not live for this store yet.");
-  if (!getString(settings.mpesa_customer_consumer_key)) throw new Error("Tenant Pesapal consumer key is missing.");
-  if (!getString(settings.mpesa_customer_consumer_secret)) throw new Error("Tenant Pesapal consumer secret is missing.");
-  if (!getString(settings.mpesa_customer_ipn_id)) throw new Error("Tenant Pesapal IPN notification ID is missing.");
-  if (isPesapalSandboxMode(settings.mpesa_customer_mode) && !allowPesapalSandboxHostedCheckout()) {
-    throw new Error("Pesapal sandbox checkout is safety-blocked because sandbox M-Pesa may still debit a real phone wallet. Use live mode with the tenant's real Pesapal merchant account for controlled low-value tests, or set ORDUVA_ALLOW_PESAPAL_SANDBOX_CHECKOUTS=true only if you deliberately want sandbox hosted checkout exposed.");
+export function assertTenantPesapalReady(
+  settings: TenantPesapalCustomerSettings | null,
+  currencyCode: string,
+) {
+  if (String(currencyCode || "").toUpperCase() !== "KES")
+    throw new Error(
+      "M-Pesa checkout is currently only available for KES stores.",
+    );
+  if (!settings)
+    throw new Error("M-Pesa/Pesapal is not configured for this store.");
+  if (settings.enable_mpesa_customer_payments !== true)
+    throw new Error("M-Pesa customer payments are not enabled for this store.");
+  if (!configured(settings.mpesa_connection_status))
+    throw new Error(
+      "M-Pesa/Pesapal is not marked as connected for this store.",
+    );
+  if (settings.mpesa_customer_payments_live !== true)
+    throw new Error(
+      "M-Pesa customer payments are not live for this store yet.",
+    );
+  if (!getString(settings.mpesa_customer_consumer_key))
+    throw new Error("Tenant Pesapal consumer key is missing.");
+  if (!getString(settings.mpesa_customer_consumer_secret))
+    throw new Error("Tenant Pesapal consumer secret is missing.");
+  if (!getString(settings.mpesa_customer_ipn_id))
+    throw new Error("Tenant Pesapal IPN notification ID is missing.");
+  if (
+    isPesapalSandboxMode(settings.mpesa_customer_mode) &&
+    !allowPesapalSandboxHostedCheckout()
+  ) {
+    throw new Error(
+      "Pesapal sandbox checkout is safety-blocked because sandbox M-Pesa may still debit a real phone wallet. Use live mode with the tenant's real Pesapal merchant account for controlled low-value tests, or set ORDUVA_ALLOW_PESAPAL_SANDBOX_CHECKOUTS=true only if you deliberately want sandbox hosted checkout exposed.",
+    );
   }
 }
 
 async function requestPesapalToken(settings: TenantPesapalCustomerSettings) {
-  const response = await fetch(`${pesapalApiBase(settings.mpesa_customer_mode)}/Auth/RequestToken`, {
-    method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify({
-      consumer_key: getString(settings.mpesa_customer_consumer_key),
-      consumer_secret: getString(settings.mpesa_customer_consumer_secret),
-    }),
-    cache: "no-store",
-  });
-  const data = (await response.json().catch(() => null)) as PesapalTokenResponse | null;
+  const response = await fetch(
+    `${pesapalApiBase(settings.mpesa_customer_mode)}/Auth/RequestToken`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        consumer_key: getString(settings.mpesa_customer_consumer_key),
+        consumer_secret: getString(settings.mpesa_customer_consumer_secret),
+      }),
+      cache: "no-store",
+    },
+  );
+  const data = (await response
+    .json()
+    .catch(() => null)) as PesapalTokenResponse | null;
   const token = getString(data?.token);
-  if (!response.ok || !token) throw new Error(data?.error?.message || data?.message || `Pesapal token request failed with status ${response.status}`);
+  if (!response.ok || !token)
+    throw new Error(
+      data?.error?.message ||
+        data?.message ||
+        `Pesapal token request failed with status ${response.status}`,
+    );
   return token;
 }
 
@@ -215,7 +290,9 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
   discounts?: DiscountOrderMetadata | null;
 }) {
   const currencyCode = String(input.currencyCode || "KES").toUpperCase();
-  const pesapalSettings = await loadTenantPesapalCustomerSettings(input.tenantId);
+  const pesapalSettings = await loadTenantPesapalCustomerSettings(
+    input.tenantId,
+  );
   assertTenantPesapalReady(pesapalSettings, currencyCode);
 
   const payload: PendingOrderPayload = {
@@ -251,7 +328,8 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
     .select("id")
     .single();
 
-  if (intentError || !intent?.id) throw new Error("Could not prepare M-Pesa checkout.");
+  if (intentError || !intent?.id)
+    throw new Error("Could not prepare M-Pesa checkout.");
 
   const checkoutId = String(intent.id);
   const merchantReference = safeMerchantReference(checkoutId);
@@ -261,44 +339,61 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
   const { firstName, lastName } = firstLastName(input.customerName);
   const token = await requestPesapalToken(pesapalSettings!);
 
-  const response = await fetch(`${pesapalApiBase(pesapalSettings!.mpesa_customer_mode)}/Transactions/SubmitOrderRequest`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify({
-      id: merchantReference,
-      currency: currencyCode,
-      amount: Number(input.total.toFixed(2)),
-      description: `Order for ${input.tenantName}`.slice(0, 100),
-      callback_url: successUrl,
-      cancellation_url: cancelUrl,
-      redirect_mode: "TOP_WINDOW",
-      notification_id: getString(pesapalSettings!.mpesa_customer_ipn_id),
-      branch: input.tenantName.slice(0, 100),
-      billing_address: {
-        phone_number: input.customerPhone,
-        email_address: "",
-        country_code: "KE",
-        first_name: firstName,
-        middle_name: "",
-        last_name: lastName,
-        line_1: input.customerAddress || "",
-        line_2: "",
-        city: "",
-        state: "",
-        postal_code: "",
-        zip_code: "",
+  const response = await fetch(
+    `${pesapalApiBase(pesapalSettings!.mpesa_customer_mode)}/Transactions/SubmitOrderRequest`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
       },
-    }),
-    cache: "no-store",
-  });
+      body: JSON.stringify({
+        id: merchantReference,
+        currency: currencyCode,
+        amount: Number(input.total.toFixed(2)),
+        description: `Order for ${input.tenantName}`.slice(0, 100),
+        callback_url: successUrl,
+        cancellation_url: cancelUrl,
+        redirect_mode: "TOP_WINDOW",
+        notification_id: getString(pesapalSettings!.mpesa_customer_ipn_id),
+        branch: input.tenantName.slice(0, 100),
+        billing_address: {
+          phone_number: input.customerPhone,
+          email_address: "",
+          country_code: "KE",
+          first_name: firstName,
+          middle_name: "",
+          last_name: lastName,
+          line_1: input.customerAddress || "",
+          line_2: "",
+          city: "",
+          state: "",
+          postal_code: "",
+          zip_code: "",
+        },
+      }),
+      cache: "no-store",
+    },
+  );
 
-  const data = (await response.json().catch(() => null)) as PesapalSubmitOrderResponse | null;
+  const data = (await response
+    .json()
+    .catch(() => null)) as PesapalSubmitOrderResponse | null;
   const orderTrackingId = getString(data?.order_tracking_id);
   const redirectUrl = getString(data?.redirect_url);
 
   if (!response.ok || !orderTrackingId || !redirectUrl) {
-    await db.from("storefront_payment_intents").update({ status: "failed" }).eq("id", checkoutId).eq("tenant_id", input.tenantId);
-    throw new Error(data?.error?.message || data?.message || `Pesapal checkout failed with status ${response.status}`);
+    await db
+      .from("storefront_payment_intents")
+      .update({ status: "failed" })
+      .eq("id", checkoutId)
+      .eq("tenant_id", input.tenantId);
+    throw new Error(
+      data?.error?.message ||
+        data?.message ||
+        `Pesapal checkout failed with status ${response.status}`,
+    );
   }
 
   await db
@@ -306,7 +401,8 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
     .update({
       status: "checkout_started",
       pesapal_order_tracking_id: orderTrackingId,
-      pesapal_merchant_reference: getString(data?.merchant_reference) || merchantReference,
+      pesapal_merchant_reference:
+        getString(data?.merchant_reference) || merchantReference,
       updated_at: new Date().toISOString(),
     })
     .eq("id", checkoutId)
@@ -315,10 +411,20 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
   return { checkoutId, orderTrackingId, merchantReference, url: redirectUrl };
 }
 
-export async function loadPesapalIntentByCheckout(input: { checkoutId?: string | null; orderTrackingId?: string | null; merchantReference?: string | null }) {
-  let query = db.from("storefront_payment_intents").select("id,status,order_id,tenant_id,provider,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code,customer_name,customer_phone,created_at,updated_at");
-  if (input.orderTrackingId) query = query.eq("pesapal_order_tracking_id", input.orderTrackingId);
-  else if (input.merchantReference) query = query.eq("pesapal_merchant_reference", input.merchantReference);
+export async function loadPesapalIntentByCheckout(input: {
+  checkoutId?: string | null;
+  orderTrackingId?: string | null;
+  merchantReference?: string | null;
+}) {
+  let query = db
+    .from("storefront_payment_intents")
+    .select(
+      "id,status,order_id,tenant_id,provider,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code,customer_name,customer_phone,created_at,updated_at",
+    );
+  if (input.orderTrackingId)
+    query = query.eq("pesapal_order_tracking_id", input.orderTrackingId);
+  else if (input.merchantReference)
+    query = query.eq("pesapal_merchant_reference", input.merchantReference);
   else if (input.checkoutId) query = query.eq("id", input.checkoutId);
   else return null;
 
@@ -327,7 +433,9 @@ export async function loadPesapalIntentByCheckout(input: { checkoutId?: string |
   return data as Record<string, any> | null;
 }
 
-export async function fetchPesapalTransactionStatusDetail(input: { intent: Record<string, any> }) {
+export async function fetchPesapalTransactionStatusDetail(input: {
+  intent: Record<string, any>;
+}) {
   const orderTrackingId = getString(input.intent.pesapal_order_tracking_id);
   if (!orderTrackingId) {
     return {
@@ -342,7 +450,9 @@ export async function fetchPesapalTransactionStatusDetail(input: { intent: Recor
     };
   }
 
-  const settings = await loadTenantPesapalCustomerSettings(String(input.intent.tenant_id));
+  const settings = await loadTenantPesapalCustomerSettings(
+    String(input.intent.tenant_id),
+  );
   if (!settings) {
     return {
       ok: false,
@@ -357,14 +467,27 @@ export async function fetchPesapalTransactionStatusDetail(input: { intent: Recor
   }
 
   const token = await requestPesapalToken(settings);
-  const response = await fetch(`${pesapalApiBase(settings.mpesa_customer_mode)}/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(orderTrackingId)}`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json", "Content-Type": "application/json" },
-    cache: "no-store",
-  });
+  const response = await fetch(
+    `${pesapalApiBase(settings.mpesa_customer_mode)}/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(orderTrackingId)}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    },
+  );
 
-  const data = (await response.json().catch(() => null)) as PesapalStatusResponse | null;
-  const status = getString(data?.payment_status_description) || getString(data?.status_code) || input.intent.status || "checkout_started";
+  const data = (await response
+    .json()
+    .catch(() => null)) as PesapalStatusResponse | null;
+  const status =
+    getString(data?.payment_status_description) ||
+    getString(data?.status_code) ||
+    input.intent.status ||
+    "checkout_started";
   return {
     ok: response.ok,
     httpStatus: response.status,
@@ -373,11 +496,18 @@ export async function fetchPesapalTransactionStatusDetail(input: { intent: Recor
     paymentMethod: getString(data?.payment_method) || null,
     confirmationCode: getString(data?.confirmation_code) || null,
     raw: data,
-    errorMessage: getString(data?.error?.message) || getString(data?.message) || (!response.ok ? `Pesapal status check returned HTTP ${response.status}` : null),
+    errorMessage:
+      getString(data?.error?.message) ||
+      getString(data?.message) ||
+      (!response.ok
+        ? `Pesapal status check returned HTTP ${response.status}`
+        : null),
   };
 }
 
-export async function fetchPesapalTransactionStatus(input: { intent: Record<string, any> }) {
+export async function fetchPesapalTransactionStatus(input: {
+  intent: Record<string, any>;
+}) {
   const detail = await fetchPesapalTransactionStatusDetail(input);
   return {
     status: detail.status,
@@ -387,38 +517,62 @@ export async function fetchPesapalTransactionStatus(input: { intent: Record<stri
   };
 }
 
-function reduceVariantStock(productVariants: any[], variantId: string, quantity: number) {
+function reduceVariantStock(
+  productVariants: any[],
+  variantId: string,
+  quantity: number,
+) {
   return productVariants.map((variant: any) => {
-    if (variant?.id !== variantId || variant?.stockEnabled !== true) return variant;
-    const currentStock = Math.max(0, Math.floor(Number(variant.stockQuantity || 0)));
+    if (variant?.id !== variantId || variant?.stockEnabled !== true)
+      return variant;
+    const currentStock = Math.max(
+      0,
+      Math.floor(Number(variant.stockQuantity || 0)),
+    );
     return { ...variant, stockQuantity: Math.max(0, currentStock - quantity) };
   });
 }
 
-async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPayload["items"]) {
+async function reduceStockAfterPaidOrder(
+  tenantId: string,
+  items: PendingOrderPayload["items"],
+) {
   const quantityBySellableLine = new Map<string, number>();
   for (const item of items) {
     const productId = String(item.product_id || "");
     if (!productId) continue;
     const variantId = item.variant_id ? String(item.variant_id) : "base";
     const lineKey = `${productId}::${variantId}`;
-    quantityBySellableLine.set(lineKey, (quantityBySellableLine.get(lineKey) || 0) + Number(item.quantity || 0));
+    quantityBySellableLine.set(
+      lineKey,
+      (quantityBySellableLine.get(lineKey) || 0) + Number(item.quantity || 0),
+    );
   }
 
   for (const [lineKey, quantity] of quantityBySellableLine.entries()) {
     const [productId, variantId] = lineKey.split("::");
     const { data: product, error } = await db
       .from("products")
-      .select("id, stock_enabled, stock_quantity, product_variants, product_type, custom_amount_enabled")
+      .select(
+        "id, stock_enabled, stock_quantity, product_variants, product_type, custom_amount_enabled",
+      )
       .eq("id", productId)
       .eq("tenant_id", tenantId)
       .maybeSingle();
     if (error || !product) continue;
-    if ((product as any).product_type === "customer_amount" || (product as any).custom_amount_enabled === true) continue;
+    if (
+      (product as any).product_type === "customer_amount" ||
+      (product as any).custom_amount_enabled === true
+    )
+      continue;
 
     if (variantId && variantId !== "base") {
-      const variants = Array.isArray(product.product_variants) ? product.product_variants : [];
-      const selectedVariant = variants.find((variant: any) => variant?.id === variantId);
+      const variants = Array.isArray(product.product_variants)
+        ? product.product_variants
+        : [];
+      const selectedVariant = variants.find(
+        (variant: any) => variant?.id === variantId,
+      );
       if (!selectedVariant?.stockEnabled) continue;
       const nextVariants = reduceVariantStock(variants, variantId, quantity);
       const { error: stockError } = await db
@@ -426,21 +580,38 @@ async function reduceStockAfterPaidOrder(tenantId: string, items: PendingOrderPa
         .update({ product_variants: nextVariants })
         .eq("id", product.id)
         .eq("tenant_id", tenantId);
-      if (stockError) console.error("Failed to reduce variant stock after Pesapal payment", stockError);
+      if (stockError)
+        console.error(
+          "Failed to reduce variant stock after Pesapal payment",
+          stockError,
+        );
       continue;
     }
 
     if (!product.stock_enabled) continue;
-    const nextStock = Math.max(0, Number(product.stock_quantity || 0) - quantity);
+    const nextStock = Math.max(
+      0,
+      Number(product.stock_quantity || 0) - quantity,
+    );
     const { error: stockError } = await db
       .from("products")
       .update({ stock_quantity: nextStock })
       .eq("id", product.id)
       .eq("tenant_id", tenantId);
-    if (stockError) console.error("Failed to reduce product stock after Pesapal payment", stockError);
+    if (stockError)
+      console.error(
+        "Failed to reduce product stock after Pesapal payment",
+        stockError,
+      );
   }
 }
-export async function createPaidOrderFromPesapalIntent(input: { intent: Record<string, any>; paymentReference?: string | null; paymentId?: string | null; paidAt?: string | null; paymentMethod?: string | null }) {
+export async function createPaidOrderFromPesapalIntent(input: {
+  intent: Record<string, any>;
+  paymentReference?: string | null;
+  paymentId?: string | null;
+  paidAt?: string | null;
+  paymentMethod?: string | null;
+}) {
   if (!input.intent?.id) throw new Error("Missing M-Pesa checkout intent.");
   if (input.intent.order_id) return input.intent.order_id as string;
 
@@ -451,22 +622,32 @@ export async function createPaidOrderFromPesapalIntent(input: { intent: Record<s
     .eq("tenant_id", input.intent.tenant_id)
     .is("order_id", null)
     .in("status", ["created", "checkout_started"])
-    .select("id,status,order_id,tenant_id,provider,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code,customer_name,customer_phone,created_at,updated_at")
+    .select(
+      "id,status,order_id,tenant_id,provider,pesapal_order_tracking_id,pesapal_merchant_reference,order_payload,amount_total,currency_code,customer_name,customer_phone,created_at,updated_at",
+    )
     .maybeSingle();
 
   if (claimError) throw new Error("Could not claim M-Pesa checkout intent.");
   if (!claimedIntent) {
-    const latest = await loadPesapalIntentByCheckout({ checkoutId: input.intent.id });
+    const latest = await loadPesapalIntentByCheckout({
+      checkoutId: input.intent.id,
+    });
     if (latest?.order_id) return latest.order_id as string;
     return input.intent.order_id as string;
   }
 
   input.intent = claimedIntent;
   const payload = input.intent.order_payload as PendingOrderPayload | null;
-  if (!payload?.items?.length) throw new Error("M-Pesa checkout intent is missing order payload.");
+  if (!payload?.items?.length)
+    throw new Error("M-Pesa checkout intent is missing order payload.");
 
-  const { data: tenant, error: tenantError } = await db.from("tenants").select("id, slug, name, whatsapp_number").eq("id", input.intent.tenant_id).maybeSingle();
-  if (tenantError || !tenant) throw new Error("Tenant not found for M-Pesa checkout intent.");
+  const { data: tenant, error: tenantError } = await db
+    .from("tenants")
+    .select("id, slug, name, whatsapp_number")
+    .eq("id", input.intent.tenant_id)
+    .maybeSingle();
+  if (tenantError || !tenant)
+    throw new Error("Tenant not found for M-Pesa checkout intent.");
 
   const { data: order, error: orderError } = await db
     .from("orders")
@@ -475,7 +656,10 @@ export async function createPaidOrderFromPesapalIntent(input: { intent: Record<s
       customer_name: payload.customerName,
       customer_phone: payload.customerPhone,
       customer_account_id: payload.customerAccountId || null,
-      customer_address: payload.orderType === "collection" ? null : payload.customerAddress || null,
+      customer_address:
+        payload.orderType === "collection"
+          ? null
+          : payload.customerAddress || null,
       order_type: payload.orderType,
       status: "new",
       total: payload.total,
@@ -491,27 +675,42 @@ export async function createPaidOrderFromPesapalIntent(input: { intent: Record<s
       discount_value: payload.discounts?.discount_value ?? 0,
       discount_base_amount: payload.discounts?.discount_base_amount ?? 0,
       discount_amount: payload.discounts?.discount_amount ?? 0,
-      discount_allow_with_rewards: payload.discounts?.discount_allow_with_rewards ?? true,
-      discount_only_this_discount: payload.discounts?.discount_only_this_discount ?? false,
+      discount_allow_with_rewards:
+        payload.discounts?.discount_allow_with_rewards ?? true,
+      discount_only_this_discount:
+        payload.discounts?.discount_only_this_discount ?? false,
       rewards_spend_before: payload.rewards?.rewards_spend_before ?? null,
       rewards_spend_after: payload.rewards?.rewards_spend_after ?? null,
       notes: payload.notes || null,
       payment_provider: "mpesa",
       payment_method_label: payload.paymentMethodLabel || "M-Pesa payment",
       payment_status: "paid",
-      payment_checkout_session_id: input.intent.pesapal_order_tracking_id || input.intent.id || null,
-      payment_intent_id: input.paymentId || input.intent.pesapal_order_tracking_id || null,
-      payment_reference: input.paymentReference || input.intent.pesapal_order_tracking_id || input.intent.pesapal_merchant_reference || null,
+      payment_checkout_session_id:
+        input.intent.pesapal_order_tracking_id || input.intent.id || null,
+      payment_intent_id:
+        input.paymentId || input.intent.pesapal_order_tracking_id || null,
+      payment_reference:
+        input.paymentReference ||
+        input.intent.pesapal_order_tracking_id ||
+        input.intent.pesapal_merchant_reference ||
+        null,
       paid_at: input.paidAt || new Date().toISOString(),
     })
     .select()
     .single();
 
-  if (orderError || !order) throw new Error("Could not create paid storefront order after M-Pesa payment.");
+  if (orderError || !order)
+    throw new Error(
+      "Could not create paid storefront order after M-Pesa payment.",
+    );
 
-  const orderItems = payload.items.map((item) => ({ ...item, order_id: order.id }));
+  const orderItems = payload.items.map((item) => ({
+    ...item,
+    order_id: order.id,
+  }));
   const { error: itemsError } = await db.from("order_items").insert(orderItems);
-  if (itemsError) throw new Error("Could not create order items after M-Pesa payment.");
+  if (itemsError)
+    throw new Error("Could not create order items after M-Pesa payment.");
 
   await reduceStockAfterPaidOrder(tenant.id, payload.items);
 
@@ -521,15 +720,27 @@ export async function createPaidOrderFromPesapalIntent(input: { intent: Record<s
     tenantName: branding.displayName,
     order,
     ...branding,
-    items: payload.items.map((item) => ({ product_name: item.product_name, quantity: item.quantity, line_total: item.line_total })),
+    items: payload.items.map((item) => ({
+      product_name: item.product_name,
+      quantity: item.quantity,
+      line_total: item.line_total,
+    })),
     payment: {
       label: payload.paymentMethodLabel || "Paid online",
       status: "paid",
-      reference: input.paymentReference || input.intent.pesapal_order_tracking_id || input.intent.pesapal_merchant_reference || null,
+      reference:
+        input.paymentReference ||
+        input.intent.pesapal_order_tracking_id ||
+        input.intent.pesapal_merchant_reference ||
+        null,
     },
   });
 
-  await db.from("orders").update({ whatsapp_message: message }).eq("id", order.id).eq("tenant_id", tenant.id);
+  await db
+    .from("orders")
+    .update({ whatsapp_message: message })
+    .eq("id", order.id)
+    .eq("tenant_id", tenant.id);
 
   await Promise.allSettled([
     enqueueNotificationEvent({
@@ -560,17 +771,31 @@ export async function createPaidOrderFromPesapalIntent(input: { intent: Record<s
 
   await db
     .from("storefront_payment_intents")
-    .update({ status: "paid", order_id: order.id, updated_at: new Date().toISOString() })
+    .update({
+      status: "paid",
+      order_id: order.id,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", input.intent.id)
     .eq("tenant_id", tenant.id);
 
   return order.id as string;
 }
 
-export async function reconcilePesapalIntent(input: { checkoutId?: string | null; orderTrackingId?: string | null; merchantReference?: string | null }) {
+export async function reconcilePesapalIntent(input: {
+  checkoutId?: string | null;
+  orderTrackingId?: string | null;
+  merchantReference?: string | null;
+}) {
   const intent = await loadPesapalIntentByCheckout(input);
   if (!intent) return null;
-  if (intent.order_id) return { intent, status: "paid", orderId: intent.order_id as string, paymentId: getString(intent.pesapal_order_tracking_id) || null };
+  if (intent.order_id)
+    return {
+      intent,
+      status: "paid",
+      orderId: intent.order_id as string,
+      paymentId: getString(intent.pesapal_order_tracking_id) || null,
+    };
 
   const pesapalStatus = await fetchPesapalTransactionStatus({ intent });
   const statusValue = pesapalStatus.statusCode ?? pesapalStatus.status;
@@ -579,17 +804,41 @@ export async function reconcilePesapalIntent(input: { checkoutId?: string | null
     const orderId = await createPaidOrderFromPesapalIntent({
       intent,
       paymentId: getString(intent.pesapal_order_tracking_id),
-      paymentReference: pesapalStatus.confirmationCode || getString(intent.pesapal_order_tracking_id) || getString(intent.pesapal_merchant_reference),
+      paymentReference:
+        pesapalStatus.confirmationCode ||
+        getString(intent.pesapal_order_tracking_id) ||
+        getString(intent.pesapal_merchant_reference),
       paymentMethod: pesapalStatus.paymentMethod,
       paidAt: new Date().toISOString(),
     });
-    return { intent: { ...intent, order_id: orderId }, status: "paid", orderId, paymentId: getString(intent.pesapal_order_tracking_id), paymentMethod: pesapalStatus.paymentMethod };
+    return {
+      intent: { ...intent, order_id: orderId },
+      status: "paid",
+      orderId,
+      paymentId: getString(intent.pesapal_order_tracking_id),
+      paymentMethod: pesapalStatus.paymentMethod,
+    };
   }
 
   if (isFailedStatus(statusValue)) {
-    const nextStatus = String(statusValue).toLowerCase() === "3" || String(statusValue).toLowerCase() === "reversed" ? "refunded" : "failed";
-    await db.from("storefront_payment_intents").update({ status: nextStatus, updated_at: new Date().toISOString() }).eq("id", intent.id).eq("tenant_id", intent.tenant_id).is("order_id", null);
+    const nextStatus =
+      String(statusValue).toLowerCase() === "3" ||
+      String(statusValue).toLowerCase() === "reversed"
+        ? "refunded"
+        : "failed";
+    await db
+      .from("storefront_payment_intents")
+      .update({ status: nextStatus, updated_at: new Date().toISOString() })
+      .eq("id", intent.id)
+      .eq("tenant_id", intent.tenant_id)
+      .is("order_id", null);
   }
 
-  return { intent, status: pesapalStatus.status || intent.status || "checkout_started", orderId: null as string | null, paymentId: getString(intent.pesapal_order_tracking_id) || null, paymentMethod: pesapalStatus.paymentMethod };
+  return {
+    intent,
+    status: pesapalStatus.status || intent.status || "checkout_started",
+    orderId: null as string | null,
+    paymentId: getString(intent.pesapal_order_tracking_id) || null,
+    paymentMethod: pesapalStatus.paymentMethod,
+  };
 }

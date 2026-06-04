@@ -145,37 +145,70 @@ type Product = {
   custom_amount_disable_discounts?: boolean | null;
 };
 
+type InvoicePaymentOption = {
+  id: "invoice" | "deposit" | "statement_balance";
+  title: string;
+  description: string;
+  referenceLabel: string;
+  amountLabel: string;
+  minAmount: number;
+};
+
 type InvoicePaymentCardProps = {
-  product: Product;
+  option: InvoicePaymentOption;
   moneySettings: MoneyFormatSettings;
   brandPrimary: string;
   brandAccent: string;
   brandBorder: string;
-  onPay: (productId: string) => void;
+  onPay: (option: InvoicePaymentOption) => void;
 };
 
-function InvoicePaymentCard({ product, moneySettings, brandPrimary, brandAccent, brandBorder, onPay }: InvoicePaymentCardProps) {
-  const minAmount = Math.max(0, Number(product.custom_amount_min ?? 1));
-  const referenceLabel = product.custom_amount_reference_label || "Reference";
+function InvoicePaymentCard({
+  option,
+  moneySettings,
+  brandPrimary,
+  brandAccent,
+  brandBorder,
+  onPay,
+}: InvoicePaymentCardProps) {
   return (
-    <article className="relative overflow-hidden rounded-[28px] border bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.08)] ring-1 ring-white/80 sm:p-6" style={{ borderColor: brandBorder }}>
-      <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-20 blur-3xl" style={{ backgroundColor: brandAccent }} />
+    <article
+      className="relative overflow-hidden rounded-[28px] border bg-white p-5 shadow-[0_18px_48px_rgba(15,23,42,0.08)] ring-1 ring-white/80 sm:p-6"
+      style={{ borderColor: brandBorder }}
+    >
+      <div
+        className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-20 blur-3xl"
+        style={{ backgroundColor: brandAccent }}
+      />
       <div className="relative z-10 flex h-full flex-col">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: brandAccent }}>Secure payment</p>
-        <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">{product.name}</h3>
-        <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{product.custom_amount_help_text || "Enter your reference and the amount you would like to pay."}</p>
+        <p
+          className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+          style={{ color: brandAccent }}
+        >
+          Secure payment
+        </p>
+        <h3 className="mt-3 text-xl font-semibold tracking-tight text-slate-950">
+          {option.title}
+        </h3>
+        <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">
+          {option.description}
+        </p>
         <div className="mt-4 grid gap-2 text-xs text-slate-500">
-          <span>{referenceLabel}{product.custom_amount_reference_required !== false ? " required" : " optional"}</span>
-          <span>Minimum: {formatMoney(minAmount, moneySettings)}</span>
+          <span>{option.referenceLabel} required</span>
+          <span>Minimum: {formatMoney(option.minAmount, moneySettings)}</span>
         </div>
-        <button type="button" onClick={() => onPay(product.id)} className="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]" style={{ backgroundColor: brandPrimary }}>
+        <button
+          type="button"
+          onClick={() => onPay(option)}
+          className="mt-5 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
+          style={{ backgroundColor: brandPrimary }}
+        >
           Pay now
         </button>
       </div>
     </article>
   );
 }
-
 
 function hexToRgb(hex: string) {
   const clean = hex.replace("#", "");
@@ -901,6 +934,9 @@ export default function MenuBrowser({
   invoicePaymentsEnabled,
   invoicePaymentsSectionTitle,
   invoicePaymentsIntroText,
+  invoicePaymentsInvoiceEnabled,
+  invoicePaymentsDepositEnabled,
+  invoicePaymentsBalanceEnabled,
   initialProductId,
   onFirstMeaningfulPaintReady,
 }: {
@@ -962,6 +998,9 @@ export default function MenuBrowser({
   invoicePaymentsEnabled?: boolean | null;
   invoicePaymentsSectionTitle?: string | null;
   invoicePaymentsIntroText?: string | null;
+  invoicePaymentsInvoiceEnabled?: boolean | null;
+  invoicePaymentsDepositEnabled?: boolean | null;
+  invoicePaymentsBalanceEnabled?: boolean | null;
   initialProductId?: string | null;
   onFirstMeaningfulPaintReady?: () => void;
 }) {
@@ -998,12 +1037,22 @@ export default function MenuBrowser({
   const [cartCount, setCartCount] = useState(0);
   const [customAmountPickerProduct, setCustomAmountPickerProduct] = useState<{
     product: Product;
-    options?: { sourceRect?: DOMRect | null; imageUrl?: string | null; name?: string; targetRect?: DOMRect | null; destination?: "header" | "search" };
+    options?: {
+      sourceRect?: DOMRect | null;
+      imageUrl?: string | null;
+      name?: string;
+      targetRect?: DOMRect | null;
+      destination?: "header" | "search";
+    };
   } | null>(null);
   const [customAmountValue, setCustomAmountValue] = useState("");
   const [customAmountReference, setCustomAmountReference] = useState("");
   const [customAmountNote, setCustomAmountNote] = useState("");
+  const [customAmountCustomerName, setCustomAmountCustomerName] = useState("");
+  const [customAmountCustomerPhone, setCustomAmountCustomerPhone] =
+    useState("");
   const [customAmountError, setCustomAmountError] = useState("");
+  const [customAmountSubmitting, setCustomAmountSubmitting] = useState(false);
   const [variantPickerProduct, setVariantPickerProduct] = useState<{
     product: Product;
     source: string;
@@ -1278,15 +1327,59 @@ export default function MenuBrowser({
     [discountRules],
   );
   const storefrontDiscountsEnabled = discountsEnabled === true;
-  const invoicePaymentProducts = useMemo(
-    () => products.filter((product) => product.is_active !== false && (product.product_type === "customer_amount" || product.custom_amount_enabled === true)),
-    [products],
-  );
+  const invoicePaymentOptions = useMemo<InvoicePaymentOption[]>(() => {
+    const options: InvoicePaymentOption[] = [];
+    if (invoicePaymentsInvoiceEnabled !== false) {
+      options.push({
+        id: "invoice",
+        title: "Pay Your Invoice",
+        description:
+          "Enter your invoice number and the exact amount you would like to pay.",
+        referenceLabel: "Invoice number",
+        amountLabel: "Amount to pay",
+        minAmount: 1,
+      });
+    }
+    if (invoicePaymentsDepositEnabled !== false) {
+      options.push({
+        id: "deposit",
+        title: "Pay a Deposit",
+        description: "Pay a deposit using the reference supplied by the store.",
+        referenceLabel: "Deposit reference",
+        amountLabel: "Deposit amount",
+        minAmount: 1,
+      });
+    }
+    if (invoicePaymentsBalanceEnabled !== false) {
+      options.push({
+        id: "statement_balance",
+        title: "Pay Statement Balance",
+        description:
+          "Pay the outstanding balance shown on your account statement.",
+        referenceLabel: "Statement or account reference",
+        amountLabel: "Amount to pay",
+        minAmount: 1,
+      });
+    }
+    return options;
+  }, [
+    invoicePaymentsInvoiceEnabled,
+    invoicePaymentsDepositEnabled,
+    invoicePaymentsBalanceEnabled,
+  ]);
   const normalStorefrontProducts = useMemo(
-    () => products.filter((product) => !(product.product_type === "customer_amount" || product.custom_amount_enabled === true)),
+    () =>
+      products.filter(
+        (product) =>
+          !(
+            product.product_type === "customer_amount" ||
+            product.custom_amount_enabled === true
+          ),
+      ),
     [products],
   );
-  const showInvoicePaymentsSection = invoicePaymentsEnabled === true && invoicePaymentProducts.length > 0;
+  const showInvoicePaymentsSection =
+    invoicePaymentsEnabled === true && invoicePaymentOptions.length > 0;
   const visibleDiscountRules = useMemo(
     () =>
       storefrontDiscountRules.filter(
@@ -1725,7 +1818,7 @@ export default function MenuBrowser({
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return products.filter((product) => {
+    return normalStorefrontProducts.filter((product) => {
       const categoryName =
         categories.find((category) => category.id === product.category_id)
           ?.name || "";
@@ -1744,7 +1837,7 @@ export default function MenuBrowser({
         .toLowerCase();
       return haystack.includes(normalizedQuery);
     });
-  }, [products, categories, query, activeCategoryId]);
+  }, [normalStorefrontProducts, categories, query, activeCategoryId]);
 
   useEffect(() => {
     const getCount = (items: StoredCartItem[]) =>
@@ -1990,7 +2083,10 @@ export default function MenuBrowser({
     },
   ) {
     const product = products.find((item) => item.id === productId);
-    if (product?.product_type === "customer_amount" || product?.custom_amount_enabled === true) {
+    if (
+      product?.product_type === "customer_amount" ||
+      product?.custom_amount_enabled === true
+    ) {
       setCustomAmountPickerProduct({ product, options });
       setCustomAmountValue("");
       setCustomAmountReference("");
@@ -2014,26 +2110,99 @@ export default function MenuBrowser({
     await addCartLine(productId, null, options);
   }
 
-
-
-  function addCustomAmountLineFromMenu() {
-    if (!customAmountPickerProduct) return;
-    const product = customAmountPickerProduct.product;
+  async function startStandaloneCustomerPayment() {
+    if (!customAmountPickerProduct || customAmountSubmitting) return;
+    const option = customAmountPickerProduct.product as Product;
     const amount = Number(String(customAmountValue || "").replace(/,/g, ""));
-    const minAmount = Math.max(0, Number(product.custom_amount_min ?? 1));
-    const maxAmount = product.custom_amount_max === null || product.custom_amount_max === undefined ? null : Number(product.custom_amount_max);
+    const minAmount = Math.max(0, Number(option.custom_amount_min ?? 1));
     const reference = customAmountReference.trim();
-    if (!Number.isFinite(amount) || amount <= 0) { setCustomAmountError("Please enter a valid payment amount."); return; }
-    if (amount < minAmount) { setCustomAmountError(`Minimum amount is ${formatMoney(minAmount, moneySettings)}.`); return; }
-    if (maxAmount !== null && Number.isFinite(maxAmount) && maxAmount > 0 && amount > maxAmount) { setCustomAmountError(`Maximum amount is ${formatMoney(maxAmount, moneySettings)}.`); return; }
-    if (product.custom_amount_reference_required !== false && !reference) { setCustomAmountError(`Please enter ${product.custom_amount_reference_label || "the reference"}.`); return; }
-    const line = { productId: product.id, quantity: 1, variantId: null, variantName: null, variantLabel: null, variantPriceDelta: 0, variantPrice: null, variantDescription: null, customAmount: Number(amount.toFixed(2)), customAmountReference: reference, customAmountNote: customAmountNote.trim() || null, customAmountLabel: product.custom_amount_label || "Amount to pay" };
-    const existing = readCart<StoredCartItem>(tenantSlug);
-    const key = cartLineKey(line);
-    writeCart(tenantSlug, [...existing.filter((item) => cartLineKey(item) !== key), line]);
-    setCustomAmountPickerProduct(null);
-    setButtonStateById((current) => ({ ...current, [product.id]: "added" }));
-    window.setTimeout(() => setButtonStateById((current) => ({ ...current, [product.id]: "idle" })), 1200);
+    const customerName = customAmountCustomerName.trim();
+    const customerPhone = customAmountCustomerPhone.trim();
+    if (!customerName) {
+      setCustomAmountError("Please enter your name.");
+      return;
+    }
+    if (!customerPhone) {
+      setCustomAmountError("Please enter your phone number.");
+      return;
+    }
+    if (!reference) {
+      setCustomAmountError("Please enter the payment reference.");
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0 || amount < minAmount) {
+      setCustomAmountError(
+        `Please enter an amount of at least ${formatMoney(minAmount, moneySettings)}.`,
+      );
+      return;
+    }
+    setCustomAmountError("");
+    setCustomAmountSubmitting(true);
+    try {
+      const res = await fetch("/api/storefront/invoice-payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tenantSlug,
+          tenantId,
+          paymentType: option.id,
+          customerName,
+          customerPhone,
+          reference,
+          amount,
+          note: customAmountNote.trim() || null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok)
+        throw new Error(String(data?.error || "Payment could not be started."));
+      const redirectUrl =
+        data.stripeCheckoutUrl ||
+        data.yocoCheckoutUrl ||
+        data.mpesaCheckoutUrl ||
+        data.darajaCheckoutUrl;
+      if (!redirectUrl)
+        throw new Error("Payment provider did not return a payment link.");
+      window.location.href = redirectUrl;
+    } catch (error) {
+      setCustomAmountError(
+        error instanceof Error
+          ? error.message
+          : "Payment could not be started.",
+      );
+      setCustomAmountSubmitting(false);
+    }
+  }
+
+  function openStandalonePayment(option: InvoicePaymentOption) {
+    setCustomAmountPickerProduct({
+      product: {
+        id: option.id,
+        category_id: "invoice-payments",
+        name: option.title,
+        description: option.description,
+        image_url: null,
+        price: 0,
+        is_active: true,
+        product_type: "customer_amount",
+        custom_amount_enabled: true,
+        custom_amount_label: option.amountLabel,
+        custom_amount_reference_label: option.referenceLabel,
+        custom_amount_reference_required: true,
+        custom_amount_min: option.minAmount,
+        custom_amount_max: null,
+        custom_amount_help_text: option.description,
+        custom_amount_disable_rewards: true,
+        custom_amount_disable_discounts: true,
+      },
+    });
+    setCustomAmountValue("");
+    setCustomAmountReference("");
+    setCustomAmountNote("");
+    setCustomAmountCustomerName("");
+    setCustomAmountCustomerPhone("");
+    setCustomAmountError("");
+    setCustomAmountSubmitting(false);
   }
 
   return (
@@ -2920,23 +3089,162 @@ export default function MenuBrowser({
       ) : null}
 
       {customAmountPickerProduct ? (
-        <div className="fixed inset-0 z-[125] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" style={{ backgroundColor: "rgba(15,23,42,0.54)" }} role="dialog" aria-modal="true" onClick={() => setCustomAmountPickerProduct(null)}>
+        <div
+          className="fixed inset-0 z-[125] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          style={{ backgroundColor: "rgba(15,23,42,0.54)" }}
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCustomAmountPickerProduct(null)}
+        >
           <div className="flex min-h-full items-center justify-center">
-            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]" onClick={(event) => event.stopPropagation()}>
+            <div
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+              onClick={(event) => event.stopPropagation()}
+            >
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-blue-50/60 px-5 pb-5 pt-5 sm:px-7">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-700 via-slate-700 to-emerald-500" />
                 <div className="flex items-start justify-between gap-4">
-                  <div><p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Customer payment</p><h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{customAmountPickerProduct.product.name}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{customAmountPickerProduct.product.custom_amount_help_text || "Enter the amount shown on your invoice."}</p></div>
-                  <button type="button" onClick={() => setCustomAmountPickerProduct(null)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm" aria-label="Close payment amount">×</button>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      Customer payment
+                    </p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+                      {customAmountPickerProduct.product.name}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {customAmountPickerProduct.product
+                        .custom_amount_help_text ||
+                        "Enter the amount shown on your invoice."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCustomAmountPickerProduct(null)}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm"
+                    aria-label="Close payment amount"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
               <div className="modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-6 sm:px-7">
-                <div><label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountPickerProduct.product.custom_amount_reference_label || "Invoice number"}{customAmountPickerProduct.product.custom_amount_reference_required !== false ? " *" : ""}</label><input value={customAmountReference} onChange={(event) => setCustomAmountReference(event.target.value)} placeholder="e.g. INV-1007" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></div>
-                <div><label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountPickerProduct.product.custom_amount_label || "Amount to pay"}</label><input type="number" min={Math.max(0, Number(customAmountPickerProduct.product.custom_amount_min ?? 1))} max={customAmountPickerProduct.product.custom_amount_max || undefined} step="0.01" value={customAmountValue} onChange={(event) => setCustomAmountValue(event.target.value)} placeholder={formatMoney(Math.max(0, Number(customAmountPickerProduct.product.custom_amount_min ?? 1)), moneySettings)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></div>
-                <div><label className="mb-2 block text-sm font-semibold text-slate-700">Optional note</label><textarea value={customAmountNote} onChange={(event) => setCustomAmountNote(event.target.value)} rows={3} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" /></div>
-                {customAmountError ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{customAmountError}</p> : null}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                      Your name *
+                    </label>
+                    <input
+                      value={customAmountCustomerName}
+                      onChange={(event) =>
+                        setCustomAmountCustomerName(event.target.value)
+                      }
+                      placeholder="Full name"
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                      Phone number *
+                    </label>
+                    <input
+                      value={customAmountCustomerPhone}
+                      onChange={(event) =>
+                        setCustomAmountCustomerPhone(event.target.value)
+                      }
+                      placeholder="Phone number"
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    {customAmountPickerProduct.product
+                      .custom_amount_reference_label || "Invoice number"}{" "}
+                    *
+                  </label>
+                  <input
+                    value={customAmountReference}
+                    onChange={(event) =>
+                      setCustomAmountReference(event.target.value)
+                    }
+                    placeholder="e.g. INV-1007"
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    {customAmountPickerProduct.product.custom_amount_label ||
+                      "Amount to pay"}
+                  </label>
+                  <input
+                    type="number"
+                    min={Math.max(
+                      0,
+                      Number(
+                        customAmountPickerProduct.product.custom_amount_min ??
+                          1,
+                      ),
+                    )}
+                    max={
+                      customAmountPickerProduct.product.custom_amount_max ||
+                      undefined
+                    }
+                    step="0.01"
+                    value={customAmountValue}
+                    onChange={(event) =>
+                      setCustomAmountValue(event.target.value)
+                    }
+                    placeholder={formatMoney(
+                      Math.max(
+                        0,
+                        Number(
+                          customAmountPickerProduct.product.custom_amount_min ??
+                            1,
+                        ),
+                      ),
+                      moneySettings,
+                    )}
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Optional note
+                  </label>
+                  <textarea
+                    value={customAmountNote}
+                    onChange={(event) =>
+                      setCustomAmountNote(event.target.value)
+                    }
+                    rows={3}
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                {customAmountError ? (
+                  <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                    {customAmountError}
+                  </p>
+                ) : null}
               </div>
-              <div className="sticky bottom-0 flex gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:px-7"><button type="button" onClick={() => setCustomAmountPickerProduct(null)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700">Cancel</button><button type="button" onClick={addCustomAmountLineFromMenu} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white">Add payment</button></div>
+              <div className="sticky bottom-0 flex gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+                <button
+                  type="button"
+                  onClick={() => setCustomAmountPickerProduct(null)}
+                  className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={startStandaloneCustomerPayment}
+                  disabled={customAmountSubmitting}
+                  className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-70"
+                >
+                  {customAmountSubmitting
+                    ? "Opening payment..."
+                    : "Continue to secure payment"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -3133,33 +3441,48 @@ export default function MenuBrowser({
         </div>
       ) : null}
 
-
       {showInvoicePaymentsSection ? (
         <section className="mb-8 sm:mb-10">
           <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: brandAccent }}>Customer payments</p>
-              <h2 className="mt-1 text-[1.38rem] font-semibold tracking-tight sm:text-[1.95rem]" style={{ color: brandText }}>
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.2em]"
+                style={{ color: brandAccent }}
+              >
+                Customer payments
+              </p>
+              <h2
+                className="mt-1 text-[1.38rem] font-semibold tracking-tight sm:text-[1.95rem]"
+                style={{ color: brandText }}
+              >
                 {invoicePaymentsSectionTitle || "Payments"}
               </h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6" style={{ color: brandSoftText }}>
-                {invoicePaymentsIntroText || "Pay an invoice, deposit or statement balance securely online."}
+              <p
+                className="mt-1 max-w-2xl text-sm leading-6"
+                style={{ color: brandSoftText }}
+              >
+                {invoicePaymentsIntroText ||
+                  "Pay an invoice, deposit or statement balance securely online."}
               </p>
             </div>
-            <span className="w-fit rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]" style={{ borderColor: brandBorder, color: brandSoftText }}>
-              {invoicePaymentProducts.length} payment {invoicePaymentProducts.length === 1 ? "option" : "options"}
+            <span
+              className="w-fit rounded-full border bg-white/90 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] shadow-sm sm:px-3.5 sm:text-[11px] sm:tracking-[0.18em]"
+              style={{ borderColor: brandBorder, color: brandSoftText }}
+            >
+              {invoicePaymentOptions.length} payment{" "}
+              {invoicePaymentOptions.length === 1 ? "option" : "options"}
             </span>
           </div>
           <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {invoicePaymentProducts.map((product) => (
+            {invoicePaymentOptions.map((option) => (
               <InvoicePaymentCard
-                key={product.id}
-                product={product}
+                key={option.id}
+                option={option}
                 moneySettings={moneySettings}
                 brandPrimary={brandPrimary}
                 brandAccent={brandAccent}
                 brandBorder={brandBorder}
-                onPay={(productId) => void addToCart(productId, { destination: "header" })}
+                onPay={openStandalonePayment}
               />
             ))}
           </div>
@@ -3210,13 +3533,21 @@ export default function MenuBrowser({
                   productType={product.product_type}
                   customAmountEnabled={product.custom_amount_enabled}
                   customAmountLabel={product.custom_amount_label}
-                  customAmountReferenceLabel={product.custom_amount_reference_label}
-                  customAmountReferenceRequired={product.custom_amount_reference_required}
+                  customAmountReferenceLabel={
+                    product.custom_amount_reference_label
+                  }
+                  customAmountReferenceRequired={
+                    product.custom_amount_reference_required
+                  }
                   customAmountMin={product.custom_amount_min}
                   customAmountMax={product.custom_amount_max}
                   customAmountHelpText={product.custom_amount_help_text}
-                  customAmountDisableRewards={product.custom_amount_disable_rewards}
-                  customAmountDisableDiscounts={product.custom_amount_disable_discounts}
+                  customAmountDisableRewards={
+                    product.custom_amount_disable_rewards
+                  }
+                  customAmountDisableDiscounts={
+                    product.custom_amount_disable_discounts
+                  }
                   moneySettings={moneySettings}
                   accentColor={accentColor}
                   primaryColor={primaryColor}

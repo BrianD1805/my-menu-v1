@@ -187,6 +187,12 @@ export async function GET(req: Request) {
       invoicePaymentsIntroText:
         settings?.invoice_payments_intro_text ||
         "Pay an invoice, deposit or statement balance securely online.",
+      invoicePaymentsInvoiceEnabled:
+        settings?.invoice_payments_invoice_enabled !== false,
+      invoicePaymentsDepositEnabled:
+        settings?.invoice_payments_deposit_enabled !== false,
+      invoicePaymentsBalanceEnabled:
+        settings?.invoice_payments_balance_enabled !== false,
     },
   };
 

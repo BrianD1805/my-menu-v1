@@ -361,3 +361,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Bumped storefront cache key to avoid old cached storefront data hiding newly enabled invoice cards.
 - Changed storefront products endpoint/client fetch to no-store so tenant setting changes appear immediately after saving.
 - No database changes.
+
+## Ver-0.231D — Standalone invoice payment flow
+
+- Separated invoice/deposit/statement payments from the normal storefront cart.
+- Tenant Settings now manages the three dedicated payment cards directly.
+- Storefront payment cards now open a dedicated payment popup and send customers straight to the configured online payment provider.
+- Normal product cards, variants, stock, rewards, discounts and cart checkout are not used for these payment cards.
+- Added SQL to allow invoice-payment order items to have no product_id because they are not stock products.
+- No payment provider setup was changed.
