@@ -210,6 +210,10 @@ export default function AdminLoginPage() {
               </button>
             </form>
 
+            <p className="mt-4 text-sm text-[#374151]">
+              <a href="/admin/forgot-password" className="font-semibold text-[#111827] underline">Forgot password?</a>
+            </p>
+
             {message ? <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${messageClasses}`}>{message}</div> : null}
           </section>
         )}

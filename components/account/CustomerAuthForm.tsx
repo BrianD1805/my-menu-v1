@@ -99,7 +99,10 @@ export default function CustomerAuthForm({
         {mode === "signup" ? (
           <p>Already have an account? <a href="/account/login" className="font-semibold text-slate-900 underline">Sign in</a></p>
         ) : (
-          <p>Need an account? <a href="/account/signup" className="font-semibold text-slate-900 underline">Create one</a></p>
+          <p className="space-y-2">
+            <span className="block">Need an account? <a href="/account/signup" className="font-semibold text-slate-900 underline">Create one</a></span>
+            <span className="block"><a href="/account/forgot-password" className="font-semibold text-slate-900 underline">Forgot password?</a></span>
+          </p>
         )}
       </div>
     </form>

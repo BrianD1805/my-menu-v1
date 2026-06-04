@@ -314,3 +314,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added click-outside and Escape-key closing for the Owner Platform menu.
 - Fixed the final desktop dropdown alignment so it does not open off-screen.
 - No SQL required.
+
+## Ver-0.230 — Password reset foundation
+
+- Added Tenant/Admin forgot password and reset password pages.
+- Added Storefront customer forgot password and reset password pages.
+- Added shared password reset token API using Resend.
+- Added secure one-use password reset tokens with 45 minute expiry.
+- Uses existing Orduva email domain/configuration; no new Resend domain required.
+- Added Supabase table `public.password_reset_tokens` with explicit `service_role` grant only.
