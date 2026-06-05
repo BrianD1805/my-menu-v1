@@ -246,6 +246,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
           {
             productId: id,
             quantity: 1,
+            unitPrice: variant ? Number(getVariantPrice(Number(price || 0), variant).toFixed(2)) : Number(Number(price || 0).toFixed(2)),
+            basePrice: Number(Number(price || 0).toFixed(2)),
             variantId: variant?.id || null,
             variantName: variant?.name || null,
             variantLabel: variant ? (variantLabel || "Option") : null,
@@ -288,6 +290,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     const line = {
       productId: id,
       quantity: 1,
+      unitPrice: Number(amount.toFixed(2)),
+      basePrice: Number(amount.toFixed(2)),
       variantId: null,
       variantName: null,
       variantLabel: null,

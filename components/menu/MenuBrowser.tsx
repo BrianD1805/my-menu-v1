@@ -2038,6 +2038,8 @@ export default function MenuBrowser({
           {
             productId,
             quantity: 1,
+            unitPrice: variant && product ? Number(getVariantPrice(Number(product.price || 0), variant).toFixed(2)) : Number(Number(product?.price || 0).toFixed(2)),
+            basePrice: Number(Number(product?.price || 0).toFixed(2)),
             variantId: variant?.id || null,
             variantName: variant?.name || null,
             variantLabel: variant ? product?.variant_label || "Option" : null,

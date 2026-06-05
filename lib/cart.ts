@@ -1,6 +1,11 @@
 export type StoredCartItem = {
   productId: string;
   quantity: number;
+  /** Snapshot of the sellable line price when it was added to cart.
+   * Used as a safe checkout fallback so non-product/payment work never
+   * causes ordinary product rows to display as zero. */
+  unitPrice?: number | null;
+  basePrice?: number | null;
   variantId?: string | null;
   variantName?: string | null;
   variantLabel?: string | null;

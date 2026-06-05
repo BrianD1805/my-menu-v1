@@ -10,6 +10,8 @@ import { calculateBestDiscount, getApplicableDiscounts, normalizeDiscountRules, 
 type CartItem = {
   productId: string;
   quantity: number;
+  unitPrice?: number | null;
+  basePrice?: number | null;
   variantId?: string | null;
   variantName?: string | null;
   variantLabel?: string | null;
@@ -41,6 +43,16 @@ function getVariantPrice(basePrice: number, variant: ProductVariant | null | und
   if (Number.isFinite(storedPrice) && storedPrice >= 0) return storedPrice;
   const legacyDelta = Number(variant?.priceDelta ?? fallbackDelta);
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
+}
+
+function resolveProductLinePrice(productPrice: number, cartUnitPrice?: number | null, cartBasePrice?: number | null) {
+  const livePrice = Number(productPrice);
+  if (Number.isFinite(livePrice) && livePrice > 0) return livePrice;
+
+  const snapshotPrice = Number(cartUnitPrice ?? cartBasePrice);
+  if (Number.isFinite(snapshotPrice) && snapshotPrice > 0) return snapshotPrice;
+
+  return Math.max(0, Number.isFinite(livePrice) ? livePrice : 0);
 }
 
 type Product = {
@@ -342,6 +354,22 @@ useEffect(() => {
     }
   }, [tenantResolved, tenantSlug]);
 
+  useEffect(() => {
+    if (!tenantResolved || !tenantSlug || !products.length || !items.length) return;
+
+    const normalItems = items.filter((item) => {
+      if (item.customAmount !== undefined && item.customAmount !== null) return false;
+      const product = products.find((candidate) => candidate.id === item.productId);
+      if (!product) return true;
+      return !(product.product_type === "customer_amount" || product.custom_amount_enabled === true);
+    });
+
+    if (normalItems.length !== items.length) {
+      writeCart(tenantSlug, normalItems);
+      setItems(normalItems);
+    }
+  }, [items, products, tenantResolved, tenantSlug]);
+
   const cartRows = useMemo(() => {
     return items
       .map((item) => {
@@ -351,7 +379,8 @@ useEffect(() => {
         const isCustomAmountProduct = product.product_type === "customer_amount" || product.custom_amount_enabled === true;
         const variant = Array.isArray(product.product_variants) ? product.product_variants.find((option) => option.id === item.variantId && option.isActive !== false) : null;
         const variantName = variant?.name || item.variantName || null;
-        const unitPrice = isCustomAmountProduct ? Math.max(0, Number(item.customAmount || 0)) : getVariantPrice(Number(product.price || 0), variant, item.variantPrice, item.variantPriceDelta);
+        const productBasePrice = resolveProductLinePrice(Number(product.price || 0), item.unitPrice, item.basePrice);
+        const unitPrice = isCustomAmountProduct ? Math.max(0, Number(item.customAmount || 0)) : getVariantPrice(productBasePrice, variant, item.variantPrice, item.variantPriceDelta);
         const lineTotal = unitPrice * item.quantity;
 
         return {
@@ -361,6 +390,7 @@ useEffect(() => {
           variantLabel: product.variant_label || item.variantLabel || null,
           variantDescription: variant?.description || item.variantDescription || null,
           unitPrice,
+          basePrice: productBasePrice,
           lineTotal,
           stockEnabled: isCustomAmountProduct ? false : !!product.stock_enabled,
           stockQuantity: isCustomAmountProduct ? 999999 : Math.max(0, Number(product.stock_quantity || 0)),

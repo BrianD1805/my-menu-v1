@@ -377,3 +377,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Uses the tenant checkout palette and preserves the cart when returning to the storefront.
 - No checkout/payment/provider/cart logic changed.
 
+
+## Ver-0.231F — Restore normal checkout product pricing
+
+- Fixed normal product checkout pricing after the standalone invoice payment work.
+- Cart lines now store a safe unit-price snapshot when ordinary products are added.
+- Checkout falls back to the cart price snapshot if a product payload is stale or temporarily reports zero.
+- Checkout now removes stale customer-entered amount payment rows from the cart because invoice/deposit/balance payments are no longer cart items.
+- No database changes.
