@@ -1,3 +1,11 @@
+
+## Ver-0.232C — Theme preview window correction
+
+- Replaced the always-visible floating theme preview with a desktop-only draggable preview window.
+- The preview is launched only from the Per-item storefront colours editor.
+- Added close/collapse controls and kept mobile preview behaviour unchanged.
+- No Supabase SQL required.
+
 ## Ver-0.229I — Owner Platform Stability and PWA Cache Fix
 - Removed dynamic page caching from the Owner Platform service worker.
 - Cleared stale Owner Platform PWA caches that could show skeleton/blank platform pages.
