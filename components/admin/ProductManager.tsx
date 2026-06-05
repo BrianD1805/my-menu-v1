@@ -379,7 +379,8 @@ export default function ProductManager({
       customAmountEnabled: draft.customAmountEnabled === true,
       customAmountLabel: draft.customAmountLabel.trim(),
       customAmountReferenceLabel: draft.customAmountReferenceLabel.trim(),
-      customAmountReferenceRequired: draft.customAmountReferenceRequired === true,
+      customAmountReferenceRequired:
+        draft.customAmountReferenceRequired === true,
       customAmountMin: String(draft.customAmountMin || "").trim(),
       customAmountMax: String(draft.customAmountMax || "").trim(),
       customAmountHelpText: draft.customAmountHelpText.trim(),
@@ -482,16 +483,28 @@ export default function ProductManager({
         product.product_variants,
         Number(product.price || 0),
       ),
-      productType: product.product_type || (product.custom_amount_enabled ? "customer_amount" : "standard"),
+      productType:
+        product.product_type ||
+        (product.custom_amount_enabled ? "customer_amount" : "standard"),
       customAmountEnabled: product.custom_amount_enabled === true,
       customAmountLabel: product.custom_amount_label || "Amount to pay",
-      customAmountReferenceLabel: product.custom_amount_reference_label || "Invoice number",
-      customAmountReferenceRequired: product.custom_amount_reference_required !== false,
+      customAmountReferenceLabel:
+        product.custom_amount_reference_label || "Invoice number",
+      customAmountReferenceRequired:
+        product.custom_amount_reference_required !== false,
       customAmountMin: String(product.custom_amount_min ?? "1"),
-      customAmountMax: product.custom_amount_max === null || product.custom_amount_max === undefined ? "" : String(product.custom_amount_max),
-      customAmountHelpText: product.custom_amount_help_text || "Enter the amount shown on your invoice.",
-      customAmountDisableRewards: product.custom_amount_disable_rewards !== false,
-      customAmountDisableDiscounts: product.custom_amount_disable_discounts !== false,
+      customAmountMax:
+        product.custom_amount_max === null ||
+        product.custom_amount_max === undefined
+          ? ""
+          : String(product.custom_amount_max),
+      customAmountHelpText:
+        product.custom_amount_help_text ||
+        "Enter the amount shown on your invoice.",
+      customAmountDisableRewards:
+        product.custom_amount_disable_rewards !== false,
+      customAmountDisableDiscounts:
+        product.custom_amount_disable_discounts !== false,
     };
     setEditingDraft(draft);
     setOriginalDraftSnapshot(normalizeDraftForCompare(draft));
@@ -547,7 +560,9 @@ export default function ProductManager({
           variantLabel: newDraft.variantLabel,
           productVariants: cleanVariantRows(newDraft.variants),
           productType: newDraft.productType,
-          customAmountEnabled: newDraft.productType === "customer_amount" || newDraft.customAmountEnabled,
+          customAmountEnabled:
+            newDraft.productType === "customer_amount" ||
+            newDraft.customAmountEnabled,
           customAmountLabel: newDraft.customAmountLabel,
           customAmountReferenceLabel: newDraft.customAmountReferenceLabel,
           customAmountReferenceRequired: newDraft.customAmountReferenceRequired,
@@ -597,16 +612,28 @@ export default function ProductManager({
           product.product_variants,
           Number(product.price || 0),
         ),
-        productType: product.product_type || (product.custom_amount_enabled ? "customer_amount" : "standard"),
+        productType:
+          product.product_type ||
+          (product.custom_amount_enabled ? "customer_amount" : "standard"),
         customAmountEnabled: product.custom_amount_enabled === true,
         customAmountLabel: product.custom_amount_label || "Amount to pay",
-        customAmountReferenceLabel: product.custom_amount_reference_label || "Invoice number",
-        customAmountReferenceRequired: product.custom_amount_reference_required !== false,
+        customAmountReferenceLabel:
+          product.custom_amount_reference_label || "Invoice number",
+        customAmountReferenceRequired:
+          product.custom_amount_reference_required !== false,
         customAmountMin: String(product.custom_amount_min ?? "1"),
-        customAmountMax: product.custom_amount_max === null || product.custom_amount_max === undefined ? "" : String(product.custom_amount_max),
-        customAmountHelpText: product.custom_amount_help_text || "Enter the amount shown on your invoice.",
-        customAmountDisableRewards: product.custom_amount_disable_rewards !== false,
-        customAmountDisableDiscounts: product.custom_amount_disable_discounts !== false,
+        customAmountMax:
+          product.custom_amount_max === null ||
+          product.custom_amount_max === undefined
+            ? ""
+            : String(product.custom_amount_max),
+        customAmountHelpText:
+          product.custom_amount_help_text ||
+          "Enter the amount shown on your invoice.",
+        customAmountDisableRewards:
+          product.custom_amount_disable_rewards !== false,
+        customAmountDisableDiscounts:
+          product.custom_amount_disable_discounts !== false,
       };
       setEditingDraft(createdDraft);
       setOriginalDraftSnapshot(normalizeDraftForCompare(createdDraft));
@@ -653,15 +680,19 @@ export default function ProductManager({
           variantLabel: editingDraft.variantLabel,
           productVariants: cleanVariantRows(editingDraft.variants),
           productType: editingDraft.productType,
-          customAmountEnabled: editingDraft.productType === "customer_amount" || editingDraft.customAmountEnabled,
+          customAmountEnabled:
+            editingDraft.productType === "customer_amount" ||
+            editingDraft.customAmountEnabled,
           customAmountLabel: editingDraft.customAmountLabel,
           customAmountReferenceLabel: editingDraft.customAmountReferenceLabel,
-          customAmountReferenceRequired: editingDraft.customAmountReferenceRequired,
+          customAmountReferenceRequired:
+            editingDraft.customAmountReferenceRequired,
           customAmountMin: editingDraft.customAmountMin,
           customAmountMax: editingDraft.customAmountMax,
           customAmountHelpText: editingDraft.customAmountHelpText,
           customAmountDisableRewards: editingDraft.customAmountDisableRewards,
-          customAmountDisableDiscounts: editingDraft.customAmountDisableDiscounts,
+          customAmountDisableDiscounts:
+            editingDraft.customAmountDisableDiscounts,
         }),
       });
       const payload = await response.json();
@@ -778,7 +809,9 @@ export default function ProductManager({
       setNewDraft((current) => ({ ...current, ...patch }));
       return;
     }
-    setEditingDraft((current) => (current ? { ...current, ...patch } : current));
+    setEditingDraft((current) =>
+      current ? { ...current, ...patch } : current,
+    );
   }
 
   return (
@@ -941,9 +974,9 @@ export default function ProductManager({
       </div>
 
       {searchOpen ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">
-          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
-            <div className="my-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-3rem)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]">
+          <div className="flex min-h-0 w-full items-center justify-center">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/70 px-5 pb-5 pt-5 sm:px-6 lg:px-8">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
@@ -1116,10 +1149,10 @@ export default function ProductManager({
       ) : null}
 
       {modalOpen && activeDraft ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-[2px]">
-          <div className="flex min-h-dvh items-center justify-center px-4 py-5 sm:p-5 lg:p-6 xl:p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]">
+          <div className="flex min-h-0 w-full items-center justify-center">
             <div
-              className={`${modalShellClassName()} my-auto max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-2.5rem)] lg:max-h-[calc(100dvh-3rem)]`}
+              className={`${modalShellClassName()} max-h-[calc(100dvh-150px)]`}
             >
               <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
@@ -1322,36 +1355,69 @@ export default function ProductManager({
                         <div>
                           <FieldLabel>Product type</FieldLabel>
                           <p className="text-xs leading-5 text-slate-500">
-                            Use a normal product for menu items. Use customer-entered amount for invoice, deposit, balance, or quotation payments.
+                            Use a normal product for menu items. Use
+                            customer-entered amount for invoice, deposit,
+                            balance, or quotation payments.
                           </p>
                         </div>
-                        <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">Ver 0.231</span>
+                        <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">
+                          Ver 0.231
+                        </span>
                       </div>
                       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        <label className={`flex min-h-[60px] cursor-pointer items-start gap-3 rounded-2xl border bg-white px-4 py-3 text-sm transition ${activeDraft.productType !== "customer_amount" ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200"}`}>
+                        <label
+                          className={`flex min-h-[60px] cursor-pointer items-start gap-3 rounded-2xl border bg-white px-4 py-3 text-sm transition ${activeDraft.productType !== "customer_amount" ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200"}`}
+                        >
                           <input
                             type="radio"
                             name="productType"
-                            checked={activeDraft.productType !== "customer_amount"}
-                            onChange={() => updateActiveDraft({ productType: "standard", customAmountEnabled: false })}
+                            checked={
+                              activeDraft.productType !== "customer_amount"
+                            }
+                            onChange={() =>
+                              updateActiveDraft({
+                                productType: "standard",
+                                customAmountEnabled: false,
+                              })
+                            }
                             className="mt-1 h-4 w-4 text-blue-700 focus:ring-blue-500"
                           />
                           <span>
-                            <span className="block font-semibold text-slate-950">Standard menu product</span>
-                            <span className="mt-1 block text-xs leading-5 text-slate-500">Customer adds this product at the set price.</span>
+                            <span className="block font-semibold text-slate-950">
+                              Standard menu product
+                            </span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">
+                              Customer adds this product at the set price.
+                            </span>
                           </span>
                         </label>
-                        <label className={`flex min-h-[60px] cursor-pointer items-start gap-3 rounded-2xl border bg-white px-4 py-3 text-sm transition ${activeDraft.productType === "customer_amount" ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200"}`}>
+                        <label
+                          className={`flex min-h-[60px] cursor-pointer items-start gap-3 rounded-2xl border bg-white px-4 py-3 text-sm transition ${activeDraft.productType === "customer_amount" ? "border-blue-300 ring-2 ring-blue-100" : "border-slate-200"}`}
+                        >
                           <input
                             type="radio"
                             name="productType"
-                            checked={activeDraft.productType === "customer_amount"}
-                            onChange={() => updateActiveDraft({ productType: "customer_amount", customAmountEnabled: true, variantsEnabled: false, stockEnabled: false })}
+                            checked={
+                              activeDraft.productType === "customer_amount"
+                            }
+                            onChange={() =>
+                              updateActiveDraft({
+                                productType: "customer_amount",
+                                customAmountEnabled: true,
+                                variantsEnabled: false,
+                                stockEnabled: false,
+                              })
+                            }
                             className="mt-1 h-4 w-4 text-blue-700 focus:ring-blue-500"
                           />
                           <span>
-                            <span className="block font-semibold text-slate-950">Customer-entered amount</span>
-                            <span className="mt-1 block text-xs leading-5 text-slate-500">Customer enters invoice/reference and amount before checkout.</span>
+                            <span className="block font-semibold text-slate-950">
+                              Customer-entered amount
+                            </span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">
+                              Customer enters invoice/reference and amount
+                              before checkout.
+                            </span>
                           </span>
                         </label>
                       </div>
@@ -1361,38 +1427,131 @@ export default function ProductManager({
                           <div className="grid gap-4 sm:grid-cols-2">
                             <div>
                               <FieldLabel>Amount field label</FieldLabel>
-                              <input type="text" value={activeDraft.customAmountLabel} onChange={(event) => updateActiveDraft({ customAmountLabel: event.target.value })} placeholder="Amount to pay" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                              <input
+                                type="text"
+                                value={activeDraft.customAmountLabel}
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountLabel: event.target.value,
+                                  })
+                                }
+                                placeholder="Amount to pay"
+                                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                              />
                             </div>
                             <div>
                               <FieldLabel>Reference field label</FieldLabel>
-                              <input type="text" value={activeDraft.customAmountReferenceLabel} onChange={(event) => updateActiveDraft({ customAmountReferenceLabel: event.target.value })} placeholder="Invoice number" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                              <input
+                                type="text"
+                                value={activeDraft.customAmountReferenceLabel}
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountReferenceLabel:
+                                      event.target.value,
+                                  })
+                                }
+                                placeholder="Invoice number"
+                                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                              />
                             </div>
                             <div>
                               <FieldLabel>Minimum amount</FieldLabel>
-                              <input type="number" min="0" step="0.01" value={activeDraft.customAmountMin} onChange={(event) => updateActiveDraft({ customAmountMin: event.target.value })} placeholder="1" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={activeDraft.customAmountMin}
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountMin: event.target.value,
+                                  })
+                                }
+                                placeholder="1"
+                                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                              />
                             </div>
                             <div>
                               <FieldLabel>Maximum amount</FieldLabel>
-                              <input type="number" min="0" step="0.01" value={activeDraft.customAmountMax} onChange={(event) => updateActiveDraft({ customAmountMax: event.target.value })} placeholder="Optional" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={activeDraft.customAmountMax}
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountMax: event.target.value,
+                                  })
+                                }
+                                placeholder="Optional"
+                                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                              />
                             </div>
                             <div className="sm:col-span-2">
                               <FieldLabel>Customer help text</FieldLabel>
-                              <input type="text" value={activeDraft.customAmountHelpText} onChange={(event) => updateActiveDraft({ customAmountHelpText: event.target.value })} placeholder="Enter the amount shown on your invoice." className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                              <input
+                                type="text"
+                                value={activeDraft.customAmountHelpText}
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountHelpText: event.target.value,
+                                  })
+                                }
+                                placeholder="Enter the amount shown on your invoice."
+                                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                              />
                             </div>
                             <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                              <input type="checkbox" checked={activeDraft.customAmountReferenceRequired} onChange={(event) => updateActiveDraft({ customAmountReferenceRequired: event.target.checked })} className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500" />
+                              <input
+                                type="checkbox"
+                                checked={
+                                  activeDraft.customAmountReferenceRequired
+                                }
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountReferenceRequired:
+                                      event.target.checked,
+                                  })
+                                }
+                                className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500"
+                              />
                               Require reference/invoice number
                             </label>
                             <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                              <input type="checkbox" checked={activeDraft.customAmountDisableRewards} onChange={(event) => updateActiveDraft({ customAmountDisableRewards: event.target.checked })} className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500" />
+                              <input
+                                type="checkbox"
+                                checked={activeDraft.customAmountDisableRewards}
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountDisableRewards:
+                                      event.target.checked,
+                                  })
+                                }
+                                className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500"
+                              />
                               Do not apply rewards
                             </label>
                             <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                              <input type="checkbox" checked={activeDraft.customAmountDisableDiscounts} onChange={(event) => updateActiveDraft({ customAmountDisableDiscounts: event.target.checked })} className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500" />
+                              <input
+                                type="checkbox"
+                                checked={
+                                  activeDraft.customAmountDisableDiscounts
+                                }
+                                onChange={(event) =>
+                                  updateActiveDraft({
+                                    customAmountDisableDiscounts:
+                                      event.target.checked,
+                                  })
+                                }
+                                className="h-4 w-4 rounded border-gray-300 text-blue-700 focus:ring-blue-500"
+                              />
                               Do not apply discount codes
                             </label>
                           </div>
-                          <p className="mt-3 text-xs leading-5 text-slate-500">Set the display price to 0 if this is only used for invoice payments. The customer-entered amount becomes the checkout amount.</p>
+                          <p className="mt-3 text-xs leading-5 text-slate-500">
+                            Set the display price to 0 if this is only used for
+                            invoice payments. The customer-entered amount
+                            becomes the checkout amount.
+                          </p>
                         </div>
                       ) : null}
                     </div>
@@ -2030,8 +2189,8 @@ export default function ProductManager({
       ) : null}
 
       {confirmCloseOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.25)]">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 px-[35px] py-[75px] backdrop-blur-[2px]">
+          <div className="max-h-[calc(100dvh-150px)] w-full max-w-md overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.25)]">
             <div className="relative border-b border-slate-100 px-6 pb-5 pt-6">
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-300 via-slate-500 to-red-300" />
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">

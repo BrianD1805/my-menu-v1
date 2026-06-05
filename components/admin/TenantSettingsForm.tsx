@@ -353,7 +353,8 @@ const THEME_GROUPS: Array<{
   {
     id: "offers",
     title: "Discount popup colours",
-    description: "Every visible surface used by the offers and discount-code popup.",
+    description:
+      "Every visible surface used by the offers and discount-code popup.",
     fields: [
       { key: "offersPopupBackground", label: "Popup background" },
       { key: "offersPopupTopEdge", label: "Top edge accent" },
@@ -851,6 +852,8 @@ export default function TenantSettingsForm({
   const [mobileThemeModal, setMobileThemeModal] = useState<
     null | "preview" | "suggested"
   >(null);
+  const [desktopSuggestedColoursOpen, setDesktopSuggestedColoursOpen] =
+    useState(false);
   const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
   const [yocoWebhookRegistering, setYocoWebhookRegistering] = useState(false);
   const [mpesaDiagnosticReference, setMpesaDiagnosticReference] = useState("");
@@ -2229,7 +2232,10 @@ export default function TenantSettingsForm({
                 );
               })}
             </div>
-            <div ref={previewPanelRef} className="hidden space-y-3 xl:block">
+            <div
+              ref={previewPanelRef}
+              className="hidden space-y-3 xl:sticky xl:top-24 xl:block xl:self-start"
+            >
               <div className="rounded-[24px] border border-orange-100 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
                 <div className="flex flex-col gap-3">
                   <div>
@@ -2272,8 +2278,23 @@ export default function TenantSettingsForm({
                 />
               </div>
 
-              <div ref={suggestedColoursRef}>
-                {renderSuggestedColoursPanel()}
+              <div ref={suggestedColoursRef} className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDesktopSuggestedColoursOpen((current) => !current)
+                  }
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-bold text-orange-900 shadow-sm transition hover:border-orange-300 hover:bg-orange-100"
+                  aria-expanded={desktopSuggestedColoursOpen}
+                >
+                  <span aria-hidden="true">🎨</span>
+                  {desktopSuggestedColoursOpen
+                    ? "Hide suggested colours"
+                    : "Show suggested colours"}
+                </button>
+                {desktopSuggestedColoursOpen
+                  ? renderSuggestedColoursPanel()
+                  : null}
               </div>
             </div>
           </div>
@@ -4886,11 +4907,11 @@ export default function TenantSettingsForm({
 
       {mobileThemeModal ? (
         <div
-          className="fixed inset-0 z-[90] flex items-end bg-slate-950/55 px-3 pb-3 pt-8 backdrop-blur-[2px] md:hidden"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[2px] md:hidden"
           onClick={() => setMobileThemeModal(null)}
         >
           <div
-            className="max-h-[88dvh] w-full overflow-y-auto rounded-[28px] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.35)]"
+            className="max-h-[calc(100dvh-150px)] w-full overflow-y-auto rounded-[28px] bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.35)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-3 flex items-start justify-between gap-3">
@@ -5000,6 +5021,8 @@ function labelForPreview(target: PreviewTarget) {
   if (target === "global") return "Global page";
   if (target === "header") return "Header";
   if (target === "welcome") return "Welcome card";
+  if (target === "rewards") return "Rewards popup";
+  if (target === "offers") return "Discount popup";
   if (target === "products") return "Product card";
   if (target === "favourites") return "Favourites";
   return "Footer";
@@ -5364,6 +5387,288 @@ function PreviewPanel({
                   Active discount card preview.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {target === "rewards" ? (
+        <div
+          className="overflow-hidden rounded-[22px] border text-sm shadow-sm"
+          style={{
+            backgroundColor: normalizeThemeColor(
+              theme.rewardsPopupBackground,
+              "#FFFFFF",
+            ),
+            borderColor: normalizeThemeColor(
+              theme.rewardsPopupCardBorder,
+              "#D9C7A3",
+            ),
+            color: normalizeThemeColor(theme.rewardsPopupBodyText, "#2B2B2B"),
+          }}
+        >
+          <div
+            className="h-1.5 w-full"
+            style={{
+              backgroundColor: normalizeThemeColor(
+                theme.rewardsPopupTopEdge,
+                "#10B981",
+              ),
+            }}
+          />
+          <div
+            className="p-4"
+            style={{
+              background: `linear-gradient(135deg, ${normalizeThemeColor(theme.rewardsPopupHeaderBackground, "#334155")}, ${normalizeThemeColor(theme.rewardsPopupHeaderBlend, "#475569")})`,
+              color: normalizeThemeColor(
+                theme.rewardsPopupHeaderText,
+                "#FFFFFF",
+              ),
+            }}
+          >
+            <p
+              className="text-[11px] font-bold uppercase tracking-[0.18em]"
+              style={{
+                color: normalizeThemeColor(
+                  theme.rewardsPopupLabelText,
+                  "#D1FAE5",
+                ),
+              }}
+            >
+              Rewards club
+            </p>
+            <h4 className="mt-1 text-lg font-bold">Silver rewards</h4>
+            <p className="mt-1 text-xs opacity-90">
+              Preview of the customer rewards popup.
+            </p>
+          </div>
+          <div className="space-y-3 p-4">
+            <div
+              className="rounded-[18px] border p-3"
+              style={{
+                backgroundColor: normalizeThemeColor(
+                  theme.rewardsPopupCardBackground,
+                  "#F8FAFC",
+                ),
+                borderColor: normalizeThemeColor(
+                  theme.rewardsPopupCardBorder,
+                  "#D9C7A3",
+                ),
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span>Current tier</span>
+                <span
+                  className="rounded-full px-2.5 py-1 text-xs font-bold"
+                  style={{
+                    backgroundColor: normalizeThemeColor(
+                      theme.rewardsPopupPillBackground,
+                      "#334155",
+                    ),
+                    color: normalizeThemeColor(
+                      theme.rewardsPopupPillText,
+                      "#FFFFFF",
+                    ),
+                  }}
+                >
+                  5% off
+                </span>
+              </div>
+              <div
+                className="mt-3 h-2 overflow-hidden rounded-full"
+                style={{
+                  backgroundColor: normalizeThemeColor(
+                    theme.rewardsPopupProgressBackground,
+                    "#E2E8F0",
+                  ),
+                }}
+              >
+                <div
+                  className="h-full w-2/3 rounded-full"
+                  style={{
+                    backgroundColor: normalizeThemeColor(
+                      theme.rewardsPopupProgressFill,
+                      "#10B981",
+                    ),
+                  }}
+                />
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between gap-3 border-t px-1 pt-3"
+              style={{
+                backgroundColor: normalizeThemeColor(
+                  theme.rewardsPopupFooterBackground,
+                  "#FFFFFF",
+                ),
+                borderColor: normalizeThemeColor(
+                  theme.rewardsPopupFooterBorder,
+                  "#E2E8F0",
+                ),
+              }}
+            >
+              <span
+                className="rounded-xl px-3 py-2 text-xs"
+                style={{
+                  backgroundColor: normalizeThemeColor(
+                    theme.rewardsPopupCloseBackground,
+                    "#F8FAFC",
+                  ),
+                  color: normalizeThemeColor(
+                    theme.rewardsPopupCloseText,
+                    "#334155",
+                  ),
+                }}
+              >
+                Close
+              </span>
+              <span
+                className="rounded-xl px-3 py-2 text-xs font-bold"
+                style={{
+                  backgroundColor: normalizeThemeColor(
+                    theme.rewardsPopupButtonBackground,
+                    "#0F172A",
+                  ),
+                  color: normalizeThemeColor(
+                    theme.rewardsPopupButtonText,
+                    "#FFFFFF",
+                  ),
+                }}
+              >
+                Keep shopping
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {target === "offers" ? (
+        <div
+          className="overflow-hidden rounded-[22px] border text-sm shadow-sm"
+          style={{
+            backgroundColor: normalizeThemeColor(
+              theme.offersPopupBackground,
+              "#FFFFFF",
+            ),
+            borderColor: normalizeThemeColor(
+              theme.offersPopupCardBorder,
+              "#D9C7A3",
+            ),
+            color: normalizeThemeColor(theme.offersPopupBodyText, "#2B2B2B"),
+          }}
+        >
+          <div
+            className="h-1.5 w-full"
+            style={{
+              backgroundColor: normalizeThemeColor(
+                theme.offersPopupTopEdge,
+                "#FF6A3D",
+              ),
+            }}
+          />
+          <div
+            className="p-4"
+            style={{
+              background: `linear-gradient(135deg, ${normalizeThemeColor(theme.offersPopupHeaderBackground, "#0F172A")}, ${normalizeThemeColor(theme.offersPopupHeaderBlend, "#334155")})`,
+              color: normalizeThemeColor(
+                theme.offersPopupHeaderText,
+                "#FFFFFF",
+              ),
+            }}
+          >
+            <p
+              className="text-[11px] font-bold uppercase tracking-[0.18em]"
+              style={{
+                color: normalizeThemeColor(
+                  theme.offersPopupLabelText,
+                  "#FED7AA",
+                ),
+              }}
+            >
+              Specials and offers
+            </p>
+            <h4 className="mt-1 text-lg font-bold">Today&apos;s offers</h4>
+            <p className="mt-1 text-xs opacity-90">
+              Preview of the customer discount popup.
+            </p>
+          </div>
+          <div className="space-y-3 p-4">
+            <div
+              className="rounded-[18px] border p-3"
+              style={{
+                backgroundColor: normalizeThemeColor(
+                  theme.offersPopupCardBackground,
+                  "#F8F4F0",
+                ),
+                borderColor: normalizeThemeColor(
+                  theme.offersPopupCardBorder,
+                  "#D9C7A3",
+                ),
+              }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span>Weekend discount</span>
+                <span
+                  className="rounded-full px-2.5 py-1 text-xs font-bold"
+                  style={{
+                    backgroundColor: normalizeThemeColor(
+                      theme.offersPopupPillBackground,
+                      "#0F172A",
+                    ),
+                    color: normalizeThemeColor(
+                      theme.offersPopupPillText,
+                      "#FFFFFF",
+                    ),
+                  }}
+                >
+                  SAVE10
+                </span>
+              </div>
+              <p className="mt-2 text-xs">
+                Offer card, pill and body text preview.
+              </p>
+            </div>
+            <div
+              className="flex items-center justify-between gap-3 border-t px-1 pt-3"
+              style={{
+                backgroundColor: normalizeThemeColor(
+                  theme.offersPopupFooterBackground,
+                  "#FFFFFF",
+                ),
+                borderColor: normalizeThemeColor(
+                  theme.offersPopupFooterBorder,
+                  "#E2E8F0",
+                ),
+              }}
+            >
+              <span
+                className="rounded-xl px-3 py-2 text-xs"
+                style={{
+                  backgroundColor: normalizeThemeColor(
+                    theme.offersPopupCloseBackground,
+                    "#F8FAFC",
+                  ),
+                  color: normalizeThemeColor(
+                    theme.offersPopupCloseText,
+                    "#334155",
+                  ),
+                }}
+              >
+                Close
+              </span>
+              <span
+                className="rounded-xl px-3 py-2 text-xs font-bold"
+                style={{
+                  backgroundColor: normalizeThemeColor(
+                    theme.offersPopupButtonBackground,
+                    "#0F172A",
+                  ),
+                  color: normalizeThemeColor(
+                    theme.offersPopupButtonText,
+                    "#FFFFFF",
+                  ),
+                }}
+              >
+                Apply offer
+              </span>
             </div>
           </div>
         </div>
@@ -5976,11 +6281,11 @@ function SettingsMenuModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-end bg-slate-950/60 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[3px]"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
+        className="flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
@@ -6096,11 +6401,11 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-end bg-slate-950/60 px-3 pb-3 pt-6 backdrop-blur-[3px] sm:items-center sm:justify-center sm:p-6"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[3px]"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
+        className="flex max-h-[calc(100dvh-150px)] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">

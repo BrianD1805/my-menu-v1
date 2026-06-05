@@ -402,3 +402,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Preserved standard Orduva popup spacing and shell behaviour.
 - No Supabase SQL required.
 
+
+## Ver-0.232A — Theme editor preview and popup polish
+
+- Restored the desktop per-item storefront colour preview as a sticky right-hand panel while editing colours.
+- Added dedicated Rewards popup and Discount popup previews to the theme editor preview selector.
+- Suggested colours are now hidden by default on desktop and can be opened from a button under the preview.
+- Applied the standard Orduva popup spacing pattern to Tenant Admin settings popups and the main product manager popups.
+- No Supabase SQL required.
