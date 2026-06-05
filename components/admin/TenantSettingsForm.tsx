@@ -854,6 +854,7 @@ export default function TenantSettingsForm({
   >(null);
   const [desktopSuggestedColoursOpen, setDesktopSuggestedColoursOpen] =
     useState(false);
+  const [desktopPreviewExpanded, setDesktopPreviewExpanded] = useState(true);
   const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
   const [yocoWebhookRegistering, setYocoWebhookRegistering] = useState(false);
   const [mpesaDiagnosticReference, setMpesaDiagnosticReference] = useState("");
@@ -2127,7 +2128,7 @@ export default function TenantSettingsForm({
           title="Per-item storefront colours"
           showSave={false}
         >
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] xl:items-start">
+          <div className="grid gap-5 xl:block xl:pr-[460px]">
             <div className="space-y-4">
               {THEME_GROUPS.map((group) => {
                 const isOpen = openThemeGroup === group.id;
@@ -2234,21 +2235,32 @@ export default function TenantSettingsForm({
             </div>
             <div
               ref={previewPanelRef}
-              className="hidden space-y-3 xl:sticky xl:top-24 xl:block xl:self-start"
+              className="hidden space-y-3 xl:fixed xl:right-[max(1.5rem,calc((100vw-72rem)/2+1.5rem))] xl:top-24 xl:z-40 xl:block xl:w-[420px] xl:max-w-[calc(100vw-3rem)]"
             >
-              <div className="rounded-[24px] border border-orange-100 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)]">
+              <div className="max-h-[calc(100dvh-8rem)] overflow-hidden rounded-[24px] border border-orange-100 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.14)]">
+                <div className="border-b border-slate-100 p-4">
                 <div className="flex flex-col gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      Theme editor preview
-                    </p>
-                    <h3 className="mt-1 text-lg font-bold text-slate-900">
-                      {labelForPreview(previewTarget)}
-                    </h3>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Preview stays with the colour editor only, so operational
-                      settings can use the full desktop width.
-                    </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        Theme editor preview
+                      </p>
+                      <h3 className="mt-1 text-lg font-bold text-slate-900">
+                        {labelForPreview(previewTarget)}
+                      </h3>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        This desktop preview floats with you while editing any
+                        theme colour, so changes stay visible.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDesktopPreviewExpanded((current) => !current)}
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-bold text-slate-600 transition hover:bg-white"
+                      aria-label={desktopPreviewExpanded ? "Collapse theme preview" : "Expand theme preview"}
+                    >
+                      {desktopPreviewExpanded ? "−" : "+"}
+                    </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {THEME_GROUPS.map((group) => (
@@ -2264,18 +2276,24 @@ export default function TenantSettingsForm({
                   </div>
                 </div>
 
-                <PreviewPanel
-                  target={previewTarget}
-                  theme={theme}
-                  previewName={previewName}
-                  previewHeading={previewHeading}
-                  previewSubheading={previewSubheading}
-                  footerBlurb={footerBlurb}
-                  footerNotice={footerNotice}
-                  money={formatMoney(295, moneySettings)}
-                  logoUrl={form.logoUrl}
-                  faviconUrl={form.faviconUrl}
-                />
+                </div>
+
+                {desktopPreviewExpanded ? (
+                  <div className="max-h-[calc(100dvh-20rem)] overflow-y-auto p-4">
+                    <PreviewPanel
+                      target={previewTarget}
+                      theme={theme}
+                      previewName={previewName}
+                      previewHeading={previewHeading}
+                      previewSubheading={previewSubheading}
+                      footerBlurb={footerBlurb}
+                      footerNotice={footerNotice}
+                      money={formatMoney(295, moneySettings)}
+                      logoUrl={form.logoUrl}
+                      faviconUrl={form.faviconUrl}
+                    />
+                  </div>
+                ) : null}
               </div>
 
               <div ref={suggestedColoursRef} className="space-y-3">

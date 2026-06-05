@@ -410,3 +410,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Suggested colours are now hidden by default on desktop and can be opened from a button under the preview.
 - Applied the standard Orduva popup spacing pattern to Tenant Admin settings popups and the main product manager popups.
 - No Supabase SQL required.
+
+
+## Ver-0.232B — Floating desktop theme preview
+
+- Changed the desktop per-item storefront colour preview from an in-section sticky panel to a fixed floating preview panel.
+- The preview now stays visible while editing any theme colour group on desktop.
+- Added a compact collapse/expand control to keep the editor usable on shorter screens.
+- Suggested colours remain hidden by default and accessible under the floating preview.
+- No Supabase SQL required.
