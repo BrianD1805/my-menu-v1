@@ -852,13 +852,16 @@ export default function TenantSettingsForm({
   const [mobileThemeModal, setMobileThemeModal] = useState<
     null | "preview" | "suggested"
   >(null);
-  const [desktopSuggestedColoursOpen, setDesktopSuggestedColoursOpen] =
-    useState(false);
   const [desktopPreviewExpanded, setDesktopPreviewExpanded] = useState(true);
   const [desktopPreviewWindowOpen, setDesktopPreviewWindowOpen] = useState(false);
-  const [desktopPreviewPosition, setDesktopPreviewPosition] = useState({ x: 96, y: 96 });
+  const [desktopPreviewPosition, setDesktopPreviewPosition] = useState({ x: 740, y: 108 });
   const [desktopPreviewDragging, setDesktopPreviewDragging] = useState(false);
   const desktopPreviewDragOffsetRef = useRef({ x: 0, y: 0 });
+  const [desktopSuggestedWindowOpen, setDesktopSuggestedWindowOpen] = useState(false);
+  const [desktopSuggestedExpanded, setDesktopSuggestedExpanded] = useState(true);
+  const [desktopSuggestedPosition, setDesktopSuggestedPosition] = useState({ x: 740, y: 108 });
+  const [desktopSuggestedDragging, setDesktopSuggestedDragging] = useState(false);
+  const desktopSuggestedDragOffsetRef = useRef({ x: 0, y: 0 });
   const [stripeGuideOpen, setStripeGuideOpen] = useState(false);
   const [yocoWebhookRegistering, setYocoWebhookRegistering] = useState(false);
   const [mpesaDiagnosticReference, setMpesaDiagnosticReference] = useState("");
@@ -889,19 +892,43 @@ export default function TenantSettingsForm({
     form.footerNotice.trim() ||
     "Prices and availability may change without notice.";
 
+  function getDesktopFloatingPanelStart() {
+    if (typeof window === "undefined") return { x: 740, y: 108 };
+    return {
+      x: Math.min(Math.max(24, Math.round(window.innerWidth * 0.54)), Math.max(24, window.innerWidth - 470)),
+      y: 108,
+    };
+  }
+
   function openDesktopPreviewWindow(target: PreviewTarget = previewTarget) {
     setPreviewTarget(target);
+    setDesktopPreviewPosition(getDesktopFloatingPanelStart());
     setDesktopPreviewWindowOpen(true);
     setDesktopPreviewExpanded(true);
   }
 
+  function openDesktopSuggestedWindow() {
+    setDesktopSuggestedPosition(getDesktopFloatingPanelStart());
+    setDesktopSuggestedWindowOpen(true);
+    setDesktopSuggestedExpanded(true);
+  }
+
   function startDesktopPreviewDrag(event: ReactMouseEvent<HTMLDivElement>) {
-    if ((event.target as HTMLElement).closest("button")) return;
+    if ((event.target as HTMLElement).closest("button, input, textarea, select")) return;
     desktopPreviewDragOffsetRef.current = {
       x: event.clientX - desktopPreviewPosition.x,
       y: event.clientY - desktopPreviewPosition.y,
     };
     setDesktopPreviewDragging(true);
+  }
+
+  function startDesktopSuggestedDrag(event: ReactMouseEvent<HTMLDivElement>) {
+    if ((event.target as HTMLElement).closest("button, input, textarea, select")) return;
+    desktopSuggestedDragOffsetRef.current = {
+      x: event.clientX - desktopSuggestedPosition.x,
+      y: event.clientY - desktopSuggestedPosition.y,
+    };
+    setDesktopSuggestedDragging(true);
   }
 
   useEffect(() => {
@@ -930,6 +957,33 @@ export default function TenantSettingsForm({
       window.removeEventListener("mouseup", handleUp);
     };
   }, [desktopPreviewDragging]);
+
+  useEffect(() => {
+    if (!desktopSuggestedDragging) return;
+
+    function handleMove(event: MouseEvent) {
+      const nextX = Math.min(
+        Math.max(12, event.clientX - desktopSuggestedDragOffsetRef.current.x),
+        Math.max(12, window.innerWidth - 460),
+      );
+      const nextY = Math.min(
+        Math.max(12, event.clientY - desktopSuggestedDragOffsetRef.current.y),
+        Math.max(12, window.innerHeight - 180),
+      );
+      setDesktopSuggestedPosition({ x: nextX, y: nextY });
+    }
+
+    function handleUp() {
+      setDesktopSuggestedDragging(false);
+    }
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, [desktopSuggestedDragging]);
 
   const moneySettings = {
     currencyName:
@@ -1357,6 +1411,7 @@ export default function TenantSettingsForm({
     if (!/^#[0-9A-F]{6}$/i.test(next)) {
       setTone("error");
       setMessage("Enter a valid 6-digit hex colour, for example #FF6A3D.");
+      showToast("Enter a valid 6-digit hex colour, for example #FF6A3D.", "error");
       return;
     }
     setExtraSuggestedColours((current) =>
@@ -1364,6 +1419,31 @@ export default function TenantSettingsForm({
     );
     setTone("info");
     setMessage(`Added ${next} to suggested colours for this editing session.`);
+    showToast(`Added ${next} to suggested colours.`, "info");
+  }
+
+  async function copySuggestedColour(colour: string, closeMobile = false) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(colour);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = colour;
+        textArea.setAttribute("readonly", "true");
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      showToast(`Copied ${colour}. Paste it into any colour field.`, "info");
+      setTone("info");
+      setMessage(`Copied ${colour}. Paste it into any colour field.`);
+      if (closeMobile) setMobileThemeModal(null);
+    } catch {
+      showToast("Could not copy automatically. Select the code and copy it manually.", "error");
+    }
   }
 
   async function generateLogoPalette() {
@@ -1454,12 +1534,7 @@ export default function TenantSettingsForm({
       setMobileThemeModal("suggested");
       return;
     }
-    window.setTimeout(() => {
-      suggestedColoursRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    }, 50);
+    openDesktopSuggestedWindow();
   }
 
   function scrollToSettingsSection(id: string) {
@@ -1827,29 +1902,38 @@ export default function TenantSettingsForm({
           Suggested colours
         </p>
         <p className="mt-1.5 text-xs leading-5 text-orange-950/80">
-          Use these as reference colours while editing, or add your own hex
-          colour below.
+          Use these as reference colours while editing. Tap Copy, or select the
+          hex code in the field and copy it manually.
         </p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 grid gap-2">
           {suggestedColours.map((colour) => (
-            <button
+            <div
               key={colour}
-              type="button"
-              onClick={() => {
-                void navigator.clipboard?.writeText(colour);
-                setTone("info");
-                setMessage(`Copied ${colour}. Paste it into any colour field.`);
-                if (compact) setMobileThemeModal(null);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-sm"
-              title={`Copy ${colour}`}
+              className="grid grid-cols-[32px_1fr_auto] items-center gap-2 rounded-2xl border border-white/70 bg-white p-2 shadow-sm"
             >
-              <span
-                className="h-3.5 w-3.5 rounded-full border border-black/10"
+              <button
+                type="button"
+                onClick={() => void copySuggestedColour(colour, compact)}
+                className="h-8 w-8 rounded-full border border-black/10"
                 style={{ backgroundColor: colour }}
+                aria-label={`Copy ${colour}`}
+                title={`Copy ${colour}`}
               />
-              {colour}
-            </button>
+              <input
+                value={colour}
+                readOnly
+                onFocus={(event) => event.currentTarget.select()}
+                className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-300 focus:bg-white"
+                aria-label={`Suggested colour ${colour}`}
+              />
+              <button
+                type="button"
+                onClick={() => void copySuggestedColour(colour, compact)}
+                className="rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-slate-800"
+              >
+                Copy
+              </button>
+            </div>
           ))}
         </div>
         <div className="mt-3 grid grid-cols-[1fr_38px_auto] gap-2">
@@ -1858,6 +1942,7 @@ export default function TenantSettingsForm({
             onChange={(event) =>
               setCustomSuggestedHex(event.target.value.toUpperCase())
             }
+            onFocus={(event) => event.currentTarget.select()}
             className="rounded-xl border border-orange-200 bg-white px-3 py-1.5 text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-400"
             placeholder="#FF6A3D"
           />
@@ -2175,8 +2260,33 @@ export default function TenantSettingsForm({
           title="Per-item storefront colours"
           showSave={false}
         >
-          <div className="grid gap-5">
-            <div className="space-y-4">
+          <div className="lg:grid lg:grid-cols-[minmax(0,calc(50vw-5.5rem))_minmax(0,1fr)] lg:items-start lg:gap-8">
+            <div className="space-y-4 lg:max-w-[calc(50vw-5.5rem)]">
+              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">
+                  Colour editing workspace
+                </p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Colour controls stay on the left. Open the preview or suggested colours window and place it in the clear right-hand side of the screen.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openDesktopPreviewWindow(previewTarget)}
+                    className="hidden min-h-9 items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-900 transition hover:border-orange-300 hover:bg-orange-100 lg:inline-flex"
+                  >
+                    <span aria-hidden="true">👁</span> Open preview window
+                  </button>
+                  <button
+                    type="button"
+                    onClick={showSuggestedColours}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <span aria-hidden="true">🎨</span> Suggested colours
+                  </button>
+                </div>
+              </div>
+
               {THEME_GROUPS.map((group) => {
                 const isOpen = openThemeGroup === group.id;
                 return (
@@ -2187,9 +2297,14 @@ export default function TenantSettingsForm({
                     <button
                       type="button"
                       onClick={() => {
-                        setOpenThemeGroup((current) =>
-                          current === group.id ? null : group.id,
-                        );
+                        setOpenThemeGroup((current) => {
+                          const next = current === group.id ? null : group.id;
+                          if (!next) {
+                            setDesktopPreviewWindowOpen(false);
+                            setDesktopSuggestedWindowOpen(false);
+                          }
+                          return next;
+                        });
                         setPreviewTarget(group.id);
                       }}
                       className="flex w-full items-start justify-between gap-3 text-left"
@@ -2286,24 +2401,11 @@ export default function TenantSettingsForm({
                 );
               })}
             </div>
-            <div ref={suggestedColoursRef} className="hidden space-y-3 lg:block">
-              <button
-                type="button"
-                onClick={() =>
-                  setDesktopSuggestedColoursOpen((current) => !current)
-                }
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-bold text-orange-900 shadow-sm transition hover:border-orange-300 hover:bg-orange-100"
-                aria-expanded={desktopSuggestedColoursOpen}
-              >
-                <span aria-hidden="true">🎨</span>
-                {desktopSuggestedColoursOpen
-                  ? "Hide suggested colours"
-                  : "Show suggested colours"}
-              </button>
-              {desktopSuggestedColoursOpen
-                ? renderSuggestedColoursPanel()
-                : null}
-            </div>
+            <div
+              ref={suggestedColoursRef}
+              className="hidden min-h-[560px] rounded-[28px] border border-dashed border-slate-200 bg-slate-50/40 lg:block"
+              aria-hidden="true"
+            />
           </div>
         </Section>
 
@@ -4984,6 +5086,59 @@ export default function TenantSettingsForm({
                 logoUrl={form.logoUrl}
                 faviconUrl={form.faviconUrl}
               />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {desktopSuggestedWindowOpen ? (
+        <div
+          className="fixed z-[91] hidden w-[min(430px,calc(100vw-24px))] rounded-[24px] border border-orange-100 bg-white shadow-[0_24px_65px_rgba(15,23,42,0.22)] lg:block"
+          style={{
+            left: desktopSuggestedPosition.x,
+            top: desktopSuggestedPosition.y,
+          }}
+        >
+          <div
+            className={`cursor-move select-none border-b border-slate-100 p-4 ${desktopSuggestedDragging ? "bg-orange-50/60" : "bg-white"}`}
+            onMouseDown={startDesktopSuggestedDrag}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Suggested colours
+                </p>
+                <h3 className="mt-1 text-lg font-bold text-slate-900">
+                  Copy-friendly colour palette
+                </h3>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Drag this window into the clear right-hand side. Use Copy or select a hex code.
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDesktopSuggestedExpanded((current) => !current)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-sm font-bold text-slate-600 transition hover:bg-white"
+                  aria-label={desktopSuggestedExpanded ? "Collapse suggested colours" : "Expand suggested colours"}
+                >
+                  {desktopSuggestedExpanded ? "−" : "+"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDesktopSuggestedWindowOpen(false)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-bold text-slate-500 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-900"
+                  aria-label="Close suggested colours"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {desktopSuggestedExpanded ? (
+            <div className="max-h-[calc(100dvh-230px)] overflow-y-auto p-4">
+              {renderSuggestedColoursPanel()}
             </div>
           ) : null}
         </div>

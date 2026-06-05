@@ -1,3 +1,11 @@
+## Ver-0.232D — Theme editor workspace and suggested colours polish
+
+- Constrained the desktop per-item storefront colour controls to the left half of the settings workspace.
+- Left the right half clear for the draggable preview window.
+- Added a draggable desktop suggested colours window.
+- Made suggested colours easier to copy with selectable hex fields and explicit Copy buttons.
+- No Supabase SQL required.
+
 
 ## Ver-0.232C — Theme preview window correction
 
