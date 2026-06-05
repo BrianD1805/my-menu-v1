@@ -850,6 +850,7 @@ export default function TenantSettingsForm({
   const themePresetsRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
   const themeEditorWorkspaceRef = useRef<HTMLDivElement | null>(null);
+  const themeGroupRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [mobileThemeModal, setMobileThemeModal] = useState<
     null | "preview" | "suggested"
   >(null);
@@ -893,21 +894,27 @@ export default function TenantSettingsForm({
     form.footerNotice.trim() ||
     "Prices and availability may change without notice.";
 
-  function getDesktopFloatingPanelStart(panelWidth = 430) {
+  function getDesktopFloatingPanelStart(target: PreviewTarget | null = openThemeGroup || previewTarget, panelWidth = 430) {
     if (typeof window === "undefined") return { x: 740, y: 108 };
     const workspace = themeEditorWorkspaceRef.current?.getBoundingClientRect();
+    const targetElement = target ? themeGroupRefs.current[target] : null;
+    const targetRect = targetElement?.getBoundingClientRect();
+
     if (!workspace) {
       return {
         x: Math.min(Math.max(24, Math.round(window.innerWidth * 0.54)), Math.max(24, window.innerWidth - panelWidth - 24)),
-        y: 108,
+        y: targetRect ? Math.max(24, Math.round(targetRect.top)) : 108,
       };
     }
+
     const rightHalfStart = workspace.left + Math.max(24, Math.round(workspace.width * 0.52));
     const maxX = Math.max(workspace.left + 12, workspace.right - panelWidth - 12);
+    const rawY = targetRect ? targetRect.top : workspace.top + 24;
     const maxY = Math.max(workspace.top + 12, workspace.bottom - 220);
+
     return {
       x: Math.min(Math.max(workspace.left + 12, rightHalfStart), maxX),
-      y: Math.min(Math.max(workspace.top + 24, workspace.top + 24), maxY),
+      y: Math.min(Math.max(workspace.top + 12, Math.round(rawY)), maxY),
     };
   }
 
@@ -925,15 +932,15 @@ export default function TenantSettingsForm({
     };
   }
 
-  function openDesktopPreviewWindow(target: PreviewTarget = previewTarget) {
+  function openDesktopPreviewWindow(target: PreviewTarget = openThemeGroup || previewTarget) {
     setPreviewTarget(target);
-    setDesktopPreviewPosition(getDesktopFloatingPanelStart());
+    setDesktopPreviewPosition(getDesktopFloatingPanelStart(target));
     setDesktopPreviewWindowOpen(true);
     setDesktopPreviewExpanded(true);
   }
 
-  function openDesktopSuggestedWindow() {
-    setDesktopSuggestedPosition(getDesktopFloatingPanelStart());
+  function openDesktopSuggestedWindow(target: PreviewTarget | null = openThemeGroup || previewTarget) {
+    setDesktopSuggestedPosition(getDesktopFloatingPanelStart(target));
     setDesktopSuggestedWindowOpen(true);
     setDesktopSuggestedExpanded(true);
   }
@@ -1552,12 +1559,13 @@ export default function TenantSettingsForm({
     }, 50);
   }
 
-  function showSuggestedColours() {
+  function showSuggestedColours(target: PreviewTarget | null = openThemeGroup || previewTarget) {
+    if (target) setPreviewTarget(target);
     if (isMobileThemeEditor()) {
       setMobileThemeModal("suggested");
       return;
     }
-    openDesktopSuggestedWindow();
+    openDesktopSuggestedWindow(target);
   }
 
   function scrollToSettingsSection(id: string) {
@@ -2294,7 +2302,7 @@ export default function TenantSettingsForm({
                   Colour editing workspace
                 </p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Colour controls stay on the left. Open the preview or suggested colours window and place it in the clear right-hand side of the screen.
+                  Colour controls stay on the left. Preview and suggested colour windows open beside the panel you are editing.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
@@ -2306,7 +2314,7 @@ export default function TenantSettingsForm({
                   </button>
                   <button
                     type="button"
-                    onClick={showSuggestedColours}
+                    onClick={() => showSuggestedColours(openThemeGroup || previewTarget)}
                     className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                   >
                     <span aria-hidden="true">🎨</span> Suggested colours
@@ -2319,6 +2327,7 @@ export default function TenantSettingsForm({
                 return (
                   <div
                     key={group.id}
+                    ref={(node) => { themeGroupRefs.current[group.id] = node; }}
                     className="rounded-[22px] border border-slate-200 bg-white p-4"
                   >
                     <button
@@ -2372,7 +2381,7 @@ export default function TenantSettingsForm({
                           </button>
                           <button
                             type="button"
-                            onClick={showSuggestedColours}
+                            onClick={() => showSuggestedColours(group.id)}
                             className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                             title="Show suggested colours"
                           >
@@ -2430,12 +2439,9 @@ export default function TenantSettingsForm({
             </div>
             <div
               ref={suggestedColoursRef}
-              className="hidden min-h-[560px] rounded-[28px] border border-dashed border-slate-200 bg-slate-50/40 p-5 text-sm leading-6 text-slate-500 lg:block"
+              className="hidden min-h-[560px] bg-white lg:block"
               aria-hidden="true"
-            >
-              <p className="font-semibold text-slate-700">Clear preview area</p>
-              <p className="mt-2">Use the Preview or Suggested colours buttons and keep this side free while editing colour fields on the left.</p>
-            </div>
+            />
           </div>
         </Section>
 

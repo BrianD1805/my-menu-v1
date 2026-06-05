@@ -451,3 +451,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Reduced heavy title weights and toned down mixed structural colours.
 - Preserved the per-item colour editor workspace behaviour.
 - No SQL required.
+
+## Ver-0.232G — Theme preview placement correction
+
+- Removed the right-side “Clear preview area” instruction card and left the right half as plain white space.
+- Preview and Suggested Colours windows now open beside the currently expanded colour group rather than always opening near the first panel.
+- Floating preview/suggested windows remain constrained inside the Per-item storefront colours workspace.
+- No SQL required.
