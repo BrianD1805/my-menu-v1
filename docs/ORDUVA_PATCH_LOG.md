@@ -468,3 +468,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added global support for clear black outlines on open/active panels.
 - Preserved the Per-item storefront colours workspace and preview/suggested colour behaviour from Ver-0.232G.
 - No SQL required.
+
+
+## Ver-0.232I — Tenant Settings panel cleanup
+
+- Removed harsh black separator/outline behaviour from open settings panels.
+- Removed saved logo/favicon URL display blocks.
+- Fixed logo/favicon upload button text contrast.
+- No SQL required.

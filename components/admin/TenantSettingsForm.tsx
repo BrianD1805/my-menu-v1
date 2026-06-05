@@ -2125,12 +2125,6 @@ export default function TenantSettingsForm({
                   help="PNG, JPG, WebP or SVG. Max 3MB. Autosaves immediately."
                   onFile={(file) => uploadAsset(file, "logo")}
                 />
-                {form.logoUrl ? (
-                  <ReadOnlyAssetUrl
-                    label="Saved logo URL"
-                    value={form.logoUrl}
-                  />
-                ) : null}
               </div>
             </div>
 
@@ -2161,12 +2155,6 @@ export default function TenantSettingsForm({
                   help="ICO, PNG, SVG or WebP. Max 1MB. Autosaves immediately."
                   onFile={(file) => uploadAsset(file, "favicon")}
                 />
-                {form.faviconUrl ? (
-                  <ReadOnlyAssetUrl
-                    label="Saved favicon URL"
-                    value={form.faviconUrl}
-                  />
-                ) : null}
               </div>
             </div>
           </div>
@@ -6378,8 +6366,8 @@ function UploadField({
         htmlFor={inputId}
         className={`mt-3 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl px-4 py-2 text-xs font-bold transition ${
           busy
-            ? "pointer-events-none bg-slate-200 text-slate-500"
-            : "bg-slate-900 text-white hover:bg-slate-800"
+            ? "pointer-events-none bg-slate-200 !text-slate-500"
+            : "bg-slate-900 !text-white hover:bg-slate-800"
         }`}
       >
         {busy ? "Uploading..." : label}
@@ -6922,7 +6910,7 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-300 bg-white shadow-none transition open:border-2 open:border-slate-950 md:hover:border-slate-500 ${id === "per-item-storefront-colours" ? "lg:col-span-2" : "lg:col-span-1"}`}
+      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-300 bg-white shadow-none transition open:border-slate-500 open:ring-2 open:ring-slate-300 md:hover:border-slate-500 ${id === "per-item-storefront-colours" ? "lg:col-span-2" : "lg:col-span-1"}`}
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
@@ -6966,7 +6954,7 @@ function Section({
           +
         </span>
       </summary>
-      <div className="px-3 pb-4 sm:px-5 sm:pb-5">
+      <div className="border-t border-slate-100 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
         {children}
         {showSave ? (
           <div className="mt-4 flex justify-end pt-1">
