@@ -393,3 +393,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Root cause: base-product cart lines without a variant stored `variantPrice: null`, and the checkout variant price helper treated `null` as a real numeric zero.
 - Updated variant price helpers so null/empty fallback values do not override the real base product price.
 - Preserved standalone invoice payments and did not change payment provider configuration.
+
+## Ver-0.232 — Discount and rewards popup colour controls
+
+- Added tenant-configurable colour groups for Rewards popup and Discount popup.
+- Added header blend colour controls for both popup headers.
+- Applied tenant-selected colours to visible popup surfaces on storefront.
+- Preserved standard Orduva popup spacing and shell behaviour.
+- No Supabase SQL required.
+

@@ -211,6 +211,8 @@ type PreviewTarget =
   | "global"
   | "header"
   | "welcome"
+  | "rewards"
+  | "offers"
   | "products"
   | "favourites"
   | "footer";
@@ -319,22 +321,57 @@ const THEME_GROUPS: Array<{
         label: "Rewards/offers icon background",
       },
       { key: "welcomeActionBorder", label: "Rewards button edge" },
-      { key: "rewardsPopupBackground", label: "Rewards popup background" },
-      { key: "rewardsPopupHeaderBackground", label: "Rewards popup header" },
-      { key: "rewardsPopupHeaderText", label: "Rewards popup header text" },
-      { key: "rewardsPopupBodyText", label: "Rewards popup body text" },
-      { key: "rewardsPopupCardBackground", label: "Rewards popup card" },
-      { key: "rewardsPopupCardBorder", label: "Rewards popup card edge" },
-      { key: "rewardsPopupPillBackground", label: "Rewards popup pill" },
-      { key: "rewardsPopupPillText", label: "Rewards popup pill text" },
-      { key: "offersPopupBackground", label: "Offers popup background" },
-      { key: "offersPopupHeaderBackground", label: "Offers popup header" },
-      { key: "offersPopupHeaderText", label: "Offers popup header text" },
-      { key: "offersPopupBodyText", label: "Offers popup body text" },
-      { key: "offersPopupCardBackground", label: "Offers popup card" },
-      { key: "offersPopupCardBorder", label: "Offers popup card edge" },
-      { key: "offersPopupPillBackground", label: "Offers popup pill" },
-      { key: "offersPopupPillText", label: "Offers popup pill text" },
+    ],
+  },
+
+  {
+    id: "rewards",
+    title: "Rewards popup colours",
+    description: "Every visible surface used by the customer rewards popup.",
+    fields: [
+      { key: "rewardsPopupBackground", label: "Popup background" },
+      { key: "rewardsPopupTopEdge", label: "Top edge accent" },
+      { key: "rewardsPopupHeaderBackground", label: "Header background" },
+      { key: "rewardsPopupHeaderBlend", label: "Header blend colour" },
+      { key: "rewardsPopupHeaderText", label: "Header title text" },
+      { key: "rewardsPopupLabelText", label: "Small label text" },
+      { key: "rewardsPopupBodyText", label: "Body text" },
+      { key: "rewardsPopupCardBackground", label: "Info card background" },
+      { key: "rewardsPopupCardBorder", label: "Info card border" },
+      { key: "rewardsPopupPillBackground", label: "Reward pill background" },
+      { key: "rewardsPopupPillText", label: "Reward pill text" },
+      { key: "rewardsPopupProgressBackground", label: "Progress track" },
+      { key: "rewardsPopupProgressFill", label: "Progress fill" },
+      { key: "rewardsPopupFooterBackground", label: "Footer background" },
+      { key: "rewardsPopupFooterBorder", label: "Footer border" },
+      { key: "rewardsPopupButtonBackground", label: "Main button background" },
+      { key: "rewardsPopupButtonText", label: "Main button text" },
+      { key: "rewardsPopupCloseBackground", label: "Close button background" },
+      { key: "rewardsPopupCloseText", label: "Close button text" },
+    ],
+  },
+  {
+    id: "offers",
+    title: "Discount popup colours",
+    description: "Every visible surface used by the offers and discount-code popup.",
+    fields: [
+      { key: "offersPopupBackground", label: "Popup background" },
+      { key: "offersPopupTopEdge", label: "Top edge accent" },
+      { key: "offersPopupHeaderBackground", label: "Header background" },
+      { key: "offersPopupHeaderBlend", label: "Header blend colour" },
+      { key: "offersPopupHeaderText", label: "Header title text" },
+      { key: "offersPopupLabelText", label: "Small label text" },
+      { key: "offersPopupBodyText", label: "Body text" },
+      { key: "offersPopupCardBackground", label: "Offer card background" },
+      { key: "offersPopupCardBorder", label: "Offer card border" },
+      { key: "offersPopupPillBackground", label: "Discount pill background" },
+      { key: "offersPopupPillText", label: "Discount pill text" },
+      { key: "offersPopupFooterBackground", label: "Footer background" },
+      { key: "offersPopupFooterBorder", label: "Footer border" },
+      { key: "offersPopupButtonBackground", label: "Main button background" },
+      { key: "offersPopupButtonText", label: "Main button text" },
+      { key: "offersPopupCloseBackground", label: "Close button background" },
+      { key: "offersPopupCloseText", label: "Close button text" },
     ],
   },
   {

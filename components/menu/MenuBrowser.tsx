@@ -1179,6 +1179,11 @@ export default function MenuBrowser({
     brandAccent,
     0.78,
   );
+  const rewardsPopupHeaderBlend = softerPanelColor(
+    storefrontTheme?.rewardsPopupHeaderBlend,
+    brandSurface,
+    0.5,
+  );
   const rewardsPopupHeaderText = readableTextFor(
     rewardsPopupHeaderBackground,
     normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderText, brandPrimary),
@@ -1212,6 +1217,47 @@ export default function MenuBrowser({
     normalizeThemeColor(storefrontTheme?.rewardsPopupPillText, "#FFFFFF"),
     brandPrimary,
   );
+  const rewardsPopupTopEdge = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupTopEdge,
+    brandAccent,
+  );
+  const rewardsPopupLabelText = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupLabelText,
+    brandAccent,
+  );
+  const rewardsPopupProgressBackground = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupProgressBackground,
+    "#E5E7EB",
+  );
+  const rewardsPopupProgressFill = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupProgressFill,
+    brandAccent,
+  );
+  const rewardsPopupFooterBackground = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupFooterBackground,
+    rewardsPopupBackground,
+  );
+  const rewardsPopupFooterBorder = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupFooterBorder,
+    rewardsPopupCardBorder,
+  );
+  const rewardsPopupButtonBackground = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupButtonBackground,
+    rewardsPopupPillBackground,
+  );
+  const rewardsPopupButtonText = readableTextFor(
+    rewardsPopupButtonBackground,
+    normalizeThemeColor(storefrontTheme?.rewardsPopupButtonText, "#FFFFFF"),
+    brandPrimary,
+  );
+  const rewardsPopupCloseBackground = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupCloseBackground,
+    "#FFFFFF",
+  );
+  const rewardsPopupCloseText = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupCloseText,
+    brandPrimary,
+  );
   const offersPopupBackground = softerPanelColor(
     storefrontTheme?.offersPopupBackground,
     "#FFFDF8",
@@ -1221,6 +1267,11 @@ export default function MenuBrowser({
     storefrontTheme?.offersPopupHeaderBackground,
     brandAccent,
     0.78,
+  );
+  const offersPopupHeaderBlend = softerPanelColor(
+    storefrontTheme?.offersPopupHeaderBlend,
+    brandSurface,
+    0.5,
   );
   const offersPopupHeaderText = readableTextFor(
     offersPopupHeaderBackground,
@@ -1253,6 +1304,39 @@ export default function MenuBrowser({
   const offersPopupPillText = readableTextFor(
     offersPopupPillBackground,
     normalizeThemeColor(storefrontTheme?.offersPopupPillText, "#FFFFFF"),
+    brandPrimary,
+  );
+  const offersPopupTopEdge = normalizeThemeColor(
+    storefrontTheme?.offersPopupTopEdge,
+    brandAccent,
+  );
+  const offersPopupLabelText = normalizeThemeColor(
+    storefrontTheme?.offersPopupLabelText,
+    brandAccent,
+  );
+  const offersPopupFooterBackground = normalizeThemeColor(
+    storefrontTheme?.offersPopupFooterBackground,
+    offersPopupBackground,
+  );
+  const offersPopupFooterBorder = normalizeThemeColor(
+    storefrontTheme?.offersPopupFooterBorder,
+    offersPopupCardBorder,
+  );
+  const offersPopupButtonBackground = normalizeThemeColor(
+    storefrontTheme?.offersPopupButtonBackground,
+    offersPopupPillBackground,
+  );
+  const offersPopupButtonText = readableTextFor(
+    offersPopupButtonBackground,
+    normalizeThemeColor(storefrontTheme?.offersPopupButtonText, "#FFFFFF"),
+    brandPrimary,
+  );
+  const offersPopupCloseBackground = normalizeThemeColor(
+    storefrontTheme?.offersPopupCloseBackground,
+    "#FFFFFF",
+  );
+  const offersPopupCloseText = normalizeThemeColor(
+    storefrontTheme?.offersPopupCloseText,
     brandPrimary,
   );
   const footerBackground = normalizeThemeColor(
@@ -2565,20 +2649,44 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              style={{
+                backgroundColor: offersPopupBackground,
+                borderColor: offersPopupCardBorder,
+                color: offersPopupBodyText,
+              }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+              <div
+                className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6"
+                style={{
+                  background: `linear-gradient(135deg, ${offersPopupHeaderBackground}, ${offersPopupHeaderBlend})`,
+                  borderColor: offersPopupFooterBorder,
+                  color: offersPopupHeaderText,
+                }}
+              >
+                <div
+                  className="absolute inset-x-0 top-0 h-1"
+                  style={{ background: `linear-gradient(90deg, ${offersPopupTopEdge}, ${offersPopupHeaderBackground}, ${offersPopupTopEdge})` }}
+                />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                    <p
+                      className="text-[11px] font-semibold uppercase tracking-[0.24em]"
+                      style={{ color: offersPopupLabelText }}
+                    >
                       Offers & discount codes
                     </p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                    <h3
+                      className="mt-2 text-2xl font-semibold tracking-tight sm:text-[1.8rem]"
+                      style={{ color: offersPopupHeaderText }}
+                    >
                       {discountPopupTitle || "Today’s offers"}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p
+                      className="mt-2 text-sm leading-6"
+                      style={{ color: offersPopupBodyText }}
+                    >
                       {discountPopupMessage ||
                         "Apply an available offer at checkout."}
                     </p>
@@ -2586,7 +2694,12 @@ export default function MenuBrowser({
                   <button
                     type="button"
                     onClick={() => setDiscountsModalOpen(false)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl shadow-sm transition hover:-translate-y-[1px]"
+                    style={{
+                      backgroundColor: offersPopupCloseBackground,
+                      borderColor: offersPopupFooterBorder,
+                      color: offersPopupCloseText,
+                    }}
                     aria-label="Close discounts"
                   >
                     ×
@@ -2596,11 +2709,17 @@ export default function MenuBrowser({
 
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12 lg:pt-8 xl:px-8 xl:pb-14 xl:pt-8">
                 <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:items-start xl:gap-7">
-                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  <div
+                    className="rounded-[24px] border p-4 sm:p-5 lg:p-6"
+                    style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold uppercase tracking-[0.22em]"
+                      style={{ color: offersPopupLabelText }}
+                    >
                       How offers work
                     </p>
-                    <div className="mt-3 text-[15px] leading-7 text-slate-700">
+                    <div className="mt-3 text-[15px] leading-7" style={{ color: offersPopupBodyText }}>
                       <p>
                         Use a discount code at checkout, or tap an available
                         offer where the store allows quick apply.
@@ -2614,7 +2733,10 @@ export default function MenuBrowser({
 
                   <div className="space-y-4 xl:space-y-5">
                     {!visibleDiscountRules.length ? (
-                      <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 text-center text-sm leading-6 text-slate-600 sm:p-5 lg:p-6">
+                      <div
+                        className="rounded-[24px] border p-4 text-center text-sm leading-6 sm:p-5 lg:p-6"
+                        style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder, color: offersPopupBodyText }}
+                      >
                         No offers are currently available. Please check again
                         soon.
                       </div>
@@ -2622,34 +2744,38 @@ export default function MenuBrowser({
                     {visibleDiscountRules.map((rule) => (
                       <div
                         key={rule.id}
-                        className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6"
+                        className="rounded-[24px] border p-4 shadow-sm sm:p-5 lg:p-6"
+                        style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder, color: offersPopupBodyText }}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: offersPopupLabelText }}>
                               {rule.scope === "combo"
                                 ? "Bundle offer"
                                 : rule.scope === "product"
                                   ? "Product offer"
                                   : "Site-wide offer"}
                             </p>
-                            <h4 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
+                            <h4 className="mt-2 text-lg font-semibold tracking-tight" style={{ color: offersPopupHeaderText }}>
                               {rule.name}
                             </h4>
-                            <p className="mt-2 text-sm leading-6 text-slate-600">
+                            <p className="mt-2 text-sm leading-6" style={{ color: offersPopupBodyText }}>
                               {rule.code
                                 ? `Use code ${rule.code} at checkout.`
                                 : "Applies automatically when eligible."}
                             </p>
                           </div>
-                          <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                          <span
+                            className="inline-flex shrink-0 rounded-full px-4 py-2 text-sm font-semibold ring-1"
+                            style={{ backgroundColor: offersPopupPillBackground, color: offersPopupPillText, borderColor: offersPopupCardBorder }}
+                          >
                             {rule.type === "percentage"
                               ? `${rule.value}%`
                               : `${formatMoney(Number(rule.value || 0), moneySettings)}`}
                           </span>
                         </div>
                         {rule.popupMessage ? (
-                          <p className="mt-3 text-sm leading-6 text-slate-600">
+                          <p className="mt-3 text-sm leading-6" style={{ color: offersPopupBodyText }}>
                             {rule.popupMessage}
                           </p>
                         ) : null}
@@ -2659,12 +2785,20 @@ export default function MenuBrowser({
                 </div>
               </div>
 
-              <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
+              <div
+                className="sticky bottom-0 z-10 border-t px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8"
+                style={{ backgroundColor: offersPopupFooterBackground, borderColor: offersPopupFooterBorder }}
+              >
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                   <button
                     type="button"
                     onClick={() => setDiscountsModalOpen(false)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] lg:px-8"
+                    style={{
+                      backgroundColor: offersPopupButtonBackground,
+                      borderColor: offersPopupButtonBackground,
+                      color: offersPopupButtonText,
+                    }}
                   >
                     Back to menu
                   </button>
@@ -2684,23 +2818,47 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              style={{
+                backgroundColor: rewardsPopupBackground,
+                borderColor: rewardsPopupCardBorder,
+                color: rewardsPopupBodyText,
+              }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+              <div
+                className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6"
+                style={{
+                  background: `linear-gradient(135deg, ${rewardsPopupHeaderBackground}, ${rewardsPopupHeaderBlend})`,
+                  borderColor: rewardsPopupFooterBorder,
+                  color: rewardsPopupHeaderText,
+                }}
+              >
+                <div
+                  className="absolute inset-x-0 top-0 h-1"
+                  style={{ background: `linear-gradient(90deg, ${rewardsPopupTopEdge}, ${rewardsPopupHeaderBackground}, ${rewardsPopupTopEdge})` }}
+                />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                    <p
+                      className="text-[11px] font-semibold uppercase tracking-[0.24em]"
+                      style={{ color: rewardsPopupLabelText }}
+                    >
                       {rewardProgrammeName}
                     </p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                    <h3
+                      className="mt-2 text-2xl font-semibold tracking-tight sm:text-[1.8rem]"
+                      style={{ color: rewardsPopupHeaderText }}
+                    >
                       {customerAuthStatus === "signedIn"
                         ? `${rewardTier} member`
                         : "Join rewards"}
                     </h3>
                     <div className="mt-4">
-                      <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                      <span
+                        className="inline-flex rounded-full px-4 py-2 text-sm font-semibold ring-1"
+                        style={{ backgroundColor: rewardsPopupPillBackground, color: rewardsPopupPillText, borderColor: rewardsPopupCardBorder }}
+                      >
                         {customerAuthStatus === "signedIn"
                           ? `${rewardDiscount}% reward discount`
                           : "Automatic enrolment"}
@@ -2710,7 +2868,12 @@ export default function MenuBrowser({
                   <button
                     type="button"
                     onClick={() => setRewardsModalOpen(false)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl shadow-sm transition hover:-translate-y-[1px]"
+                    style={{
+                      backgroundColor: rewardsPopupCloseBackground,
+                      borderColor: rewardsPopupFooterBorder,
+                      color: rewardsPopupCloseText,
+                    }}
                     aria-label="Close rewards"
                   >
                     ×
@@ -2720,11 +2883,14 @@ export default function MenuBrowser({
 
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12 lg:pt-8 xl:px-8 xl:pb-14 xl:pt-8">
                 <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start xl:gap-7">
-                  <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  <div
+                    className="rounded-[24px] border p-4 sm:p-5 lg:p-6"
+                    style={{ backgroundColor: rewardsPopupCardBackground, borderColor: rewardsPopupCardBorder }}
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: rewardsPopupLabelText }}>
                       Reward status
                     </p>
-                    <div className="mt-3 text-[15px] leading-7 text-slate-700">
+                    <div className="mt-3 text-[15px] leading-7" style={{ color: rewardsPopupBodyText }}>
                       <p>
                         {customerAuthStatus === "signedIn"
                           ? `You currently receive ${rewardDiscount}% off eligible orders with this store.`
@@ -2742,40 +2908,49 @@ export default function MenuBrowser({
 
                   <div className="space-y-4 xl:space-y-5">
                     {customerAuthStatus === "signedIn" && customerRewards ? (
-                      <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                      <div
+                        className="rounded-[24px] border p-4 shadow-sm sm:p-5 lg:p-6"
+                        style={{ backgroundColor: rewardsPopupCardBackground, borderColor: rewardsPopupCardBorder, color: rewardsPopupBodyText }}
+                      >
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: rewardsPopupLabelText }}>
                           Qualifying spend
                         </p>
-                        <div className="mt-3 flex items-center justify-between gap-4 text-sm text-slate-700">
+                        <div className="mt-3 flex items-center justify-between gap-4 text-sm" style={{ color: rewardsPopupBodyText }}>
                           <span>Total qualifying spend</span>
-                          <strong className="text-slate-900">
+                          <strong style={{ color: rewardsPopupHeaderText }}>
                             {formatMoney(
                               customerRewards.qualifyingSpend,
                               moneySettings,
                             )}
                           </strong>
                         </div>
-                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className="mt-4 h-2 overflow-hidden rounded-full" style={{ backgroundColor: rewardsPopupProgressBackground }}>
                           <div
-                            className="h-full rounded-full bg-emerald-500"
-                            style={{ width: `${rewardProgress}%` }}
+                            className="h-full rounded-full"
+                            style={{ width: `${rewardProgress}%`, backgroundColor: rewardsPopupProgressFill }}
                           />
                         </div>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">
+                        <p className="mt-3 text-sm leading-6" style={{ color: rewardsPopupBodyText }}>
                           {rewardNextTier
                             ? `Spend ${formatMoney(rewardSpendToNext, moneySettings)} more to reach ${rewardNextTier}.`
                             : "You have reached the top tier. Very civilised indeed."}
                         </p>
                       </div>
                     ) : (
-                      <div className="rounded-[24px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 shadow-sm sm:p-5 lg:p-6">
+                      <div
+                        className="rounded-[24px] border p-4 text-sm leading-6 shadow-sm sm:p-5 lg:p-6"
+                        style={{ backgroundColor: rewardsPopupCardBackground, borderColor: rewardsPopupCardBorder, color: rewardsPopupBodyText }}
+                      >
                         Sign in or create an account to track your spend, unlock
                         tier discounts, and keep favourites and buy-again items
                         handy.
                       </div>
                     )}
-                    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    <div
+                      className="rounded-[24px] border p-4 shadow-sm sm:p-5 lg:p-6"
+                      style={{ backgroundColor: rewardsPopupCardBackground, borderColor: rewardsPopupCardBorder, color: rewardsPopupBodyText }}
+                    >
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: rewardsPopupLabelText }}>
                         Reward tiers
                       </p>
                       <div className="mt-4 grid gap-3">
@@ -2802,12 +2977,20 @@ export default function MenuBrowser({
                 </div>
               </div>
 
-              <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
+              <div
+                className="sticky bottom-0 z-10 border-t px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8"
+                style={{ backgroundColor: rewardsPopupFooterBackground, borderColor: rewardsPopupFooterBorder }}
+              >
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <button
                     type="button"
                     onClick={() => setRewardsModalOpen(false)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition hover:-translate-y-[1px] lg:px-7"
+                    style={{
+                      backgroundColor: rewardsPopupCloseBackground,
+                      borderColor: rewardsPopupFooterBorder,
+                      color: rewardsPopupCloseText,
+                    }}
                   >
                     Back to menu
                   </button>
@@ -2817,7 +3000,12 @@ export default function MenuBrowser({
                         ? "/checkout"
                         : "/account/signup"
                     }
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-7 py-3 text-sm font-semibold text-emerald-700 transition hover:-translate-y-[1px] hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-100 lg:px-8"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] lg:px-8"
+                    style={{
+                      backgroundColor: rewardsPopupButtonBackground,
+                      borderColor: rewardsPopupButtonBackground,
+                      color: rewardsPopupButtonText,
+                    }}
                   >
                     {customerAuthStatus === "signedIn"
                       ? "Go to checkout"
