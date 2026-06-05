@@ -849,6 +849,7 @@ export default function TenantSettingsForm({
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
   const themePresetsRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
+  const themeEditorWorkspaceRef = useRef<HTMLDivElement | null>(null);
   const [mobileThemeModal, setMobileThemeModal] = useState<
     null | "preview" | "suggested"
   >(null);
@@ -892,11 +893,35 @@ export default function TenantSettingsForm({
     form.footerNotice.trim() ||
     "Prices and availability may change without notice.";
 
-  function getDesktopFloatingPanelStart() {
+  function getDesktopFloatingPanelStart(panelWidth = 430) {
     if (typeof window === "undefined") return { x: 740, y: 108 };
+    const workspace = themeEditorWorkspaceRef.current?.getBoundingClientRect();
+    if (!workspace) {
+      return {
+        x: Math.min(Math.max(24, Math.round(window.innerWidth * 0.54)), Math.max(24, window.innerWidth - panelWidth - 24)),
+        y: 108,
+      };
+    }
+    const rightHalfStart = workspace.left + Math.max(24, Math.round(workspace.width * 0.52));
+    const maxX = Math.max(workspace.left + 12, workspace.right - panelWidth - 12);
+    const maxY = Math.max(workspace.top + 12, workspace.bottom - 220);
     return {
-      x: Math.min(Math.max(24, Math.round(window.innerWidth * 0.54)), Math.max(24, window.innerWidth - 470)),
-      y: 108,
+      x: Math.min(Math.max(workspace.left + 12, rightHalfStart), maxX),
+      y: Math.min(Math.max(workspace.top + 24, workspace.top + 24), maxY),
+    };
+  }
+
+  function clampDesktopFloatingPanelPosition(x: number, y: number, panelWidth = 430, panelHeight = 220) {
+    const workspace = themeEditorWorkspaceRef.current?.getBoundingClientRect();
+    if (!workspace) {
+      return {
+        x: Math.min(Math.max(12, x), Math.max(12, window.innerWidth - panelWidth - 12)),
+        y: Math.min(Math.max(12, y), Math.max(12, window.innerHeight - panelHeight)),
+      };
+    }
+    return {
+      x: Math.min(Math.max(workspace.left + 12, x), Math.max(workspace.left + 12, workspace.right - panelWidth - 12)),
+      y: Math.min(Math.max(workspace.top + 12, y), Math.max(workspace.top + 12, workspace.bottom - panelHeight)),
     };
   }
 
@@ -935,15 +960,14 @@ export default function TenantSettingsForm({
     if (!desktopPreviewDragging) return;
 
     function handleMove(event: MouseEvent) {
-      const nextX = Math.min(
-        Math.max(12, event.clientX - desktopPreviewDragOffsetRef.current.x),
-        Math.max(12, window.innerWidth - 460),
+      setDesktopPreviewPosition(
+        clampDesktopFloatingPanelPosition(
+          event.clientX - desktopPreviewDragOffsetRef.current.x,
+          event.clientY - desktopPreviewDragOffsetRef.current.y,
+          430,
+          desktopPreviewExpanded ? 360 : 150,
+        ),
       );
-      const nextY = Math.min(
-        Math.max(12, event.clientY - desktopPreviewDragOffsetRef.current.y),
-        Math.max(12, window.innerHeight - 180),
-      );
-      setDesktopPreviewPosition({ x: nextX, y: nextY });
     }
 
     function handleUp() {
@@ -962,15 +986,14 @@ export default function TenantSettingsForm({
     if (!desktopSuggestedDragging) return;
 
     function handleMove(event: MouseEvent) {
-      const nextX = Math.min(
-        Math.max(12, event.clientX - desktopSuggestedDragOffsetRef.current.x),
-        Math.max(12, window.innerWidth - 460),
+      setDesktopSuggestedPosition(
+        clampDesktopFloatingPanelPosition(
+          event.clientX - desktopSuggestedDragOffsetRef.current.x,
+          event.clientY - desktopSuggestedDragOffsetRef.current.y,
+          430,
+          desktopSuggestedExpanded ? 360 : 150,
+        ),
       );
-      const nextY = Math.min(
-        Math.max(12, event.clientY - desktopSuggestedDragOffsetRef.current.y),
-        Math.max(12, window.innerHeight - 180),
-      );
-      setDesktopSuggestedPosition({ x: nextX, y: nextY });
     }
 
     function handleUp() {
@@ -1902,14 +1925,13 @@ export default function TenantSettingsForm({
           Suggested colours
         </p>
         <p className="mt-1.5 text-xs leading-5 text-orange-950/80">
-          Use these as reference colours while editing. Tap Copy, or select the
-          hex code in the field and copy it manually.
+          Use these as reference colours while editing. Tap the copy icon inside a colour pill, or select the hex code and copy it manually.
         </p>
         <div className="mt-3 grid gap-2">
           {suggestedColours.map((colour) => (
             <div
               key={colour}
-              className="grid grid-cols-[32px_1fr_auto] items-center gap-2 rounded-2xl border border-white/70 bg-white p-2 shadow-sm"
+              className="grid grid-cols-[34px_1fr] items-center gap-2 rounded-2xl border border-white/70 bg-white p-2 shadow-sm"
             >
               <button
                 type="button"
@@ -1919,20 +1941,27 @@ export default function TenantSettingsForm({
                 aria-label={`Copy ${colour}`}
                 title={`Copy ${colour}`}
               />
-              <input
-                value={colour}
-                readOnly
-                onFocus={(event) => event.currentTarget.select()}
-                className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs font-bold uppercase text-slate-800 outline-none focus:border-orange-300 focus:bg-white"
-                aria-label={`Suggested colour ${colour}`}
-              />
-              <button
-                type="button"
-                onClick={() => void copySuggestedColour(colour, compact)}
-                className="rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-slate-800"
-              >
-                Copy
-              </button>
+              <div className="relative min-w-0">
+                <input
+                  value={colour}
+                  readOnly
+                  onFocus={(event) => event.currentTarget.select()}
+                  className="min-w-0 w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-3 pr-10 font-mono text-xs font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:bg-white"
+                  aria-label={`Suggested colour ${colour}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => void copySuggestedColour(colour, compact)}
+                  className="absolute right-1.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-900"
+                  aria-label={`Copy ${colour}`}
+                  title={`Copy ${colour}`}
+                >
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -2260,7 +2289,10 @@ export default function TenantSettingsForm({
           title="Per-item storefront colours"
           showSave={false}
         >
-          <div className="lg:grid lg:grid-cols-[minmax(0,calc(50vw-5.5rem))_minmax(0,1fr)] lg:items-start lg:gap-8">
+          <div
+            ref={themeEditorWorkspaceRef}
+            className="relative lg:grid lg:grid-cols-[minmax(0,calc(50vw-5.5rem))_minmax(0,1fr)] lg:items-start lg:gap-8"
+          >
             <div className="space-y-4 lg:max-w-[calc(50vw-5.5rem)]">
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">
@@ -2403,9 +2435,12 @@ export default function TenantSettingsForm({
             </div>
             <div
               ref={suggestedColoursRef}
-              className="hidden min-h-[560px] rounded-[28px] border border-dashed border-slate-200 bg-slate-50/40 lg:block"
+              className="hidden min-h-[560px] rounded-[28px] border border-dashed border-slate-200 bg-slate-50/40 p-5 text-sm leading-6 text-slate-500 lg:block"
               aria-hidden="true"
-            />
+            >
+              <p className="font-semibold text-slate-700">Clear preview area</p>
+              <p className="mt-2">Use the Preview or Suggested colours buttons and keep this side free while editing colour fields on the left.</p>
+            </div>
           </div>
         </Section>
 
@@ -5036,7 +5071,7 @@ export default function TenantSettingsForm({
                   {labelForPreview(previewTarget)}
                 </h3>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Drag this preview anywhere while editing colours. It only appears inside the colour editor.
+                  Drag this preview within the Per-item storefront colours area while editing.
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
@@ -5057,18 +5092,6 @@ export default function TenantSettingsForm({
                   ×
                 </button>
               </div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {THEME_GROUPS.map((group) => (
-                <button
-                  key={group.id}
-                  type="button"
-                  onClick={() => setPreviewTarget(group.id)}
-                  className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${previewTarget === group.id ? "border-orange-300 bg-orange-50 text-orange-900" : "border-slate-200 bg-white text-slate-600"}`}
-                >
-                  {group.title}
-                </button>
-              ))}
             </div>
           </div>
 
@@ -5112,7 +5135,7 @@ export default function TenantSettingsForm({
                   Copy-friendly colour palette
                 </h3>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Drag this window into the clear right-hand side. Use Copy or select a hex code.
+                  Drag this window inside the colour editor area. Use the copy icon inside each colour pill, or select a hex code manually.
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">

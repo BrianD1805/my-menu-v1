@@ -435,3 +435,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added a compact collapse/expand control to keep the editor usable on shorter screens.
 - Suggested colours remain hidden by default and accessible under the floating preview.
 - No Supabase SQL required.
+
+## Ver-0.232E — Theme preview and suggested colours polish
+
+- Removed the preview target/search pills from the desktop Theme Preview Window.
+- Constrained the desktop Preview and Suggested Colours windows to the Per-item storefront colours workspace.
+- Kept colour editing controls on the left side of the desktop workspace and left the right side clear for floating windows.
+- Reworked Suggested Colours so each colour has a softer copy icon inside the colour pill instead of a harsh Copy button.
+- No Supabase SQL required.
