@@ -443,3 +443,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept colour editing controls on the left side of the desktop workspace and left the right side clear for floating windows.
 - Reworked Suggested Colours so each colour has a softer copy icon inside the colour pill instead of a harsh Copy button.
 - No Supabase SQL required.
+
+## Ver-0.232F — Tenant Settings UX Polish
+- Polished Tenant Admin Settings into a calmer, more professional layout.
+- Added desktop two-column panel organisation.
+- Made open panels clearly visible with a 2px black border.
+- Reduced heavy title weights and toned down mixed structural colours.
+- Preserved the per-item colour editor workspace behaviour.
+- No SQL required.

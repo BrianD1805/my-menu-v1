@@ -2004,16 +2004,16 @@ export default function TenantSettingsForm({
     <div className="mx-auto w-full max-w-7xl">
       <form
         onSubmit={onSubmit}
-        className="mx-auto w-full max-w-6xl rounded-[30px] border border-emerald-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:p-6"
+        className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6 lg:grid-cols-2"
       >
-        <div ref={settingsTopRef} className="mb-6 scroll-mt-28">
-          <div className="mb-5 rounded-[24px] border border-orange-200/70 bg-gradient-to-br from-orange-50 via-white to-slate-50 p-4 shadow-[0_16px_38px_rgba(15,23,42,0.07)] sm:p-5">
+        <div ref={settingsTopRef} className="mb-1 scroll-mt-28 lg:col-span-2">
+          <div className="mb-5 rounded-[24px] border border-slate-300 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-700">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
                   Store workspace
                 </p>
-                <h2 className="mt-1 text-lg font-black text-slate-950 sm:text-xl">
+                <h2 className="mt-1 text-lg font-semibold text-slate-950 sm:text-xl">
                   Settings shortcuts
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
@@ -2024,9 +2024,9 @@ export default function TenantSettingsForm({
               <button
                 type="button"
                 onClick={() => setSettingsMenuOpen(true)}
-                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-white px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-orange-900 shadow-[0_12px_28px_rgba(255,106,61,0.12)] transition hover:-translate-y-[1px] hover:border-orange-300 hover:bg-orange-50"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-800 shadow-[0_10px_22px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] hover:border-slate-950 hover:bg-slate-50"
               >
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 text-sm text-orange-800">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-800">
                   ☰
                 </span>
                 Settings menu
@@ -2038,32 +2038,27 @@ export default function TenantSettingsForm({
             Tenant settings
           </p>
           <div className="mt-2">
-            <h2 className="text-2xl font-bold text-slate-900">
+            <h2 className="text-2xl font-semibold text-slate-900">
               Store settings workspace
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Desktop settings now use the full working width. The live preview
-              only appears inside the theme editor area, where it helps with
-              colour and storefront styling decisions.
+              Settings are organised into calmer two-column panels on desktop. Open panels use a clear black outline, and the theme preview only appears inside the colour editor.
             </p>
             <div className="mt-4 grid gap-3 lg:grid-cols-2">
-              <div className="rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
-                <p className="text-sm font-black text-slate-950">
-                  Theme editor with preview
+              <div className="rounded-[22px] border border-slate-300 bg-white p-4">
+                <p className="text-sm font-semibold text-slate-950">
+                  Theme editor
                 </p>
                 <p className="mt-1 text-xs leading-5 text-slate-600">
-                  Logo, wording, presets and per-item colours keep a local
-                  preview where it is useful.
+                  Logo, wording, presets and per-item colours stay grouped without overwhelming the rest of settings.
                 </p>
               </div>
-              <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/70 p-4">
-                <p className="text-sm font-black text-slate-950">
-                  Operational settings full width
+              <div className="rounded-[22px] border border-slate-300 bg-white p-4">
+                <p className="text-sm font-semibold text-slate-950">
+                  Operational settings
                 </p>
                 <p className="mt-1 text-xs leading-5 text-slate-600">
-                  Payments, rewards, discounts, contact and currency settings
-                  now get the full page width instead of being squeezed beside a
-                  preview.
+                  Payments, rewards, discounts, contact and currency settings use the same calmer panel style.
                 </p>
               </div>
             </div>
@@ -2077,7 +2072,7 @@ export default function TenantSettingsForm({
           saving={saving}
           defaultOpen
         >
-          <div className="rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
+          <div className="rounded-[22px] border border-slate-300 bg-white p-4">
             <ToggleRow
               label="Show new client setup checklist"
               help="Switch this off once the store owner no longer needs the launch checklist button in the tenant admin header. You can switch it back on here later."
@@ -2418,7 +2413,7 @@ export default function TenantSettingsForm({
                           <button
                             type="submit"
                             disabled={saving || !themeGroupDirty(group)}
-                            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
+                            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
                           >
                             {saving
                               ? "Saving..."
@@ -3213,7 +3208,7 @@ export default function TenantSettingsForm({
 
           <div className="mt-5 flex flex-col gap-3 rounded-[22px] border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-black text-slate-950">
+              <p className="text-sm font-semibold text-slate-950">
                 Discount rules
               </p>
               <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -3240,7 +3235,7 @@ export default function TenantSettingsForm({
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-slate-950">
+                      <p className="text-sm font-semibold text-slate-950">
                         {rule.name || `Discount ${index + 1}`}
                       </p>
                       <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -3960,7 +3955,7 @@ export default function TenantSettingsForm({
                 <div className="mt-4 rounded-2xl border border-emerald-100 bg-white p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-slate-950">
+                      <p className="text-sm font-semibold text-slate-950">
                         Yoco webhook setup
                       </p>
                       <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -4013,7 +4008,7 @@ export default function TenantSettingsForm({
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-slate-950">
+                      <p className="text-sm font-semibold text-slate-950">
                         Yoco live-mode readiness
                       </p>
                       <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -4272,7 +4267,7 @@ export default function TenantSettingsForm({
                 <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-slate-950">
+                      <p className="text-sm font-semibold text-slate-950">
                         M-Pesa live readiness
                       </p>
                       <p className="mt-1 text-xs leading-5 text-slate-600">
@@ -4343,7 +4338,7 @@ export default function TenantSettingsForm({
                 <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50/70 p-4 text-sm text-orange-950">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-black text-slate-950">
+                      <p className="text-sm font-semibold text-slate-950">
                         Pesapal recovery and diagnostics
                       </p>
                       <p className="mt-1 text-xs leading-5 text-slate-700">
@@ -6475,62 +6470,62 @@ const SETTINGS_SECTION_META: Record<
   "admin-workspace": {
     group: "Workspace",
     help: "Small controls that affect the tenant admin experience.",
-    accent: "bg-slate-900 text-white",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "logo-and-favicon": {
     group: "Brand",
     help: "Upload the public-facing logo and browser/app icon. Uploads autosave.",
-    accent: "bg-orange-100 text-orange-800",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "branding-and-wording": {
     group: "Brand",
     help: "Business name, admin label and customer-facing welcome wording.",
-    accent: "bg-orange-100 text-orange-800",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "theme-presets": {
     group: "Theme",
     help: "Start with a palette before fine-tuning individual storefront areas.",
-    accent: "bg-indigo-100 text-indigo-800",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "per-item-storefront-colours": {
     group: "Theme",
     help: "Detailed colour controls are tucked away until needed, especially on mobile.",
-    accent: "bg-indigo-100 text-indigo-800",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "business-contact-details": {
     group: "Contact",
     help: "Footer wording, contact details, referral advert and social links.",
-    accent: "bg-emerald-100 text-emerald-800",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "receipt-information": {
     group: "Receipts",
     help: "Customer receipt wording, tax details, optional business fields and footer note.",
-    accent: "bg-cyan-100 text-cyan-900",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "storefront-seo": {
     group: "SEO",
     help: "Search title, meta description, structured data, favicon and Google tracking.",
-    accent: "bg-blue-100 text-blue-900",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "customer-rewards-program": {
     group: "Rewards",
     help: "Customer loyalty tiers, thresholds and percentage discounts.",
-    accent: "bg-purple-100 text-purple-900",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "discounts-and-codes": {
     group: "Discounts",
     help: "Product, combo and site-wide discount codes and visible offers.",
-    accent: "bg-rose-100 text-rose-900",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "storefront-payment-options": {
     group: "Payments",
     help: "Cash, COD, Stripe and Yoco controls. Payment behaviour is unchanged.",
-    accent: "bg-amber-100 text-amber-900",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "advanced-currency-display": {
     group: "Payments",
     help: "Currency display formatting, including optional tenant-specific suffix.",
-    accent: "bg-amber-100 text-amber-900",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
 };
 
@@ -6553,7 +6548,7 @@ function SettingsMenuModal({
         <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-700">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
                 Settings menu
               </p>
               <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">
@@ -6709,7 +6704,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
                 key={step.title}
                 className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"
               >
-                <p className="text-sm font-black text-slate-950">
+                <p className="text-sm font-semibold text-slate-950">
                   {step.title}
                 </p>
                 <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -6921,35 +6916,35 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : "mb-4 sm:mb-5"} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-none transition open:border-slate-300 md:hover:border-orange-300 md:hover:ring-2 md:hover:ring-orange-100`}
+      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-300 bg-white shadow-none transition open:border-2 open:border-slate-950 md:hover:border-slate-500 ${id === "per-item-storefront-colours" ? "lg:col-span-2" : "lg:col-span-1"}`}
     >
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-orange-200 sm:px-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
           <span className="mb-2 flex flex-wrap items-center gap-2">
             {meta ? (
               <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${meta.accent}`}
+                className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${meta.accent}`}
               >
                 {meta.group}
               </span>
             ) : null}
             {dirty && showSave ? (
-              <span className="inline-flex rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-orange-800">
+              <span className="inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-red-700">
                 Unsaved
               </span>
             ) : null}
             {!dirty && showSave ? (
-              <span className="inline-flex rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-700">
+              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600">
                 Saved
               </span>
             ) : null}
             {!showSave ? (
-              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+              <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
                 Autosave / tools
               </span>
             ) : null}
           </span>
-          <span className="block text-base font-black text-slate-950 sm:text-lg">
+          <span className="block text-base font-semibold text-slate-950 sm:text-lg">
             {title}
           </span>
           {meta ? (
@@ -6959,7 +6954,7 @@ function Section({
           ) : null}
         </span>
         <span
-          className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-black text-slate-700 shadow-sm transition group-open:rotate-45 group-open:border-orange-300 group-open:text-orange-800"
+          className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-lg font-semibold text-slate-700 shadow-sm transition group-open:rotate-45 group-open:border-slate-950 group-open:bg-slate-950 group-open:text-white"
           aria-hidden="true"
         >
           +
@@ -6972,7 +6967,7 @@ function Section({
             <button
               type="submit"
               disabled={saving || !dirty}
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
             >
               {saving
                 ? "Saving..."
