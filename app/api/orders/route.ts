@@ -15,17 +15,21 @@ import { createTenantDarajaStkPushIntent } from "@/lib/storefront-daraja";
 import { calculateRewardDiscount, getCustomerRewardSummary } from "@/lib/rewards";
 import { calculateBestDiscount } from "@/lib/discounts";
 
+function hasNumberValue(value: unknown) {
+  return value !== null && value !== undefined && value !== "";
+}
+
 function getVariantPrice(basePrice: number, variant: any) {
-  const explicitPrice = Number(variant?.price);
+  const explicitPrice = hasNumberValue(variant?.price) ? Number(variant?.price) : Number.NaN;
   if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
-  const legacyDelta = Number(variant?.priceDelta);
+  const legacyDelta = hasNumberValue(variant?.priceDelta) ? Number(variant?.priceDelta) : Number.NaN;
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
 }
 
 function getVariantPriceDeltaForStorage(basePrice: number, variant: any, unitPrice: number) {
   // Ver-0.226: variants now use final selling prices. Keep the legacy column only for old
   // +/- variants that do not yet have an explicit final price.
-  const explicitPrice = Number(variant?.price);
+  const explicitPrice = hasNumberValue(variant?.price) ? Number(variant?.price) : Number.NaN;
   if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return 0;
   return Number((Number(unitPrice || 0) - Number(basePrice || 0)).toFixed(2));
 }

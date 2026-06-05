@@ -14,15 +14,19 @@ type ProductVariant = {
   isActive: boolean;
 };
 
+function hasNumberValue(value: unknown) {
+  return value !== null && value !== undefined && value !== "";
+}
+
 function getVariantPrice(basePrice: number, variant: ProductVariant | null | undefined) {
-  const explicitPrice = Number(variant?.price);
+  const explicitPrice = hasNumberValue(variant?.price) ? Number(variant?.price) : Number.NaN;
   if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
-  const legacyDelta = Number(variant?.priceDelta);
+  const legacyDelta = hasNumberValue(variant?.priceDelta) ? Number(variant?.priceDelta) : Number.NaN;
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
 }
 
 function getVariantPriceDeltaForCart(basePrice: number, variant: ProductVariant | null | undefined) {
-  const explicitPrice = Number(variant?.price);
+  const explicitPrice = hasNumberValue(variant?.price) ? Number(variant?.price) : Number.NaN;
   if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return 0;
   return Number((getVariantPrice(basePrice, variant) - Number(basePrice || 0)).toFixed(2));
 }

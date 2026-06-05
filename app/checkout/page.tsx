@@ -36,12 +36,19 @@ type ProductVariant = {
   isActive: boolean;
 };
 
+function hasNumberValue(value: unknown) {
+  return value !== null && value !== undefined && value !== "";
+}
+
 function getVariantPrice(basePrice: number, variant: ProductVariant | null | undefined, fallbackPrice?: number | null, fallbackDelta?: number | null) {
-  const explicitPrice = Number(variant?.price);
+  const explicitPrice = hasNumberValue(variant?.price) ? Number(variant?.price) : Number.NaN;
   if (Number.isFinite(explicitPrice) && explicitPrice >= 0) return explicitPrice;
-  const storedPrice = Number(fallbackPrice);
+
+  const storedPrice = hasNumberValue(fallbackPrice) ? Number(fallbackPrice) : Number.NaN;
   if (Number.isFinite(storedPrice) && storedPrice >= 0) return storedPrice;
-  const legacyDelta = Number(variant?.priceDelta ?? fallbackDelta);
+
+  const legacyDeltaRaw = hasNumberValue(variant?.priceDelta) ? variant?.priceDelta : fallbackDelta;
+  const legacyDelta = hasNumberValue(legacyDeltaRaw) ? Number(legacyDeltaRaw) : Number.NaN;
   return Math.max(0, Number(basePrice || 0) + (Number.isFinite(legacyDelta) ? legacyDelta : 0));
 }
 

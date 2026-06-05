@@ -385,3 +385,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Checkout falls back to the cart price snapshot if a product payload is stale or temporarily reports zero.
 - Checkout now removes stale customer-entered amount payment rows from the cart because invoice/deposit/balance payments are no longer cart items.
 - No database changes.
+
+
+## Ver-0.231G — Normal checkout base price zero fix
+
+- Fixed ordinary product checkout rows showing 0.00 after the invoice-payment work.
+- Root cause: base-product cart lines without a variant stored `variantPrice: null`, and the checkout variant price helper treated `null` as a real numeric zero.
+- Updated variant price helpers so null/empty fallback values do not override the real base product price.
+- Preserved standalone invoice payments and did not change payment provider configuration.
