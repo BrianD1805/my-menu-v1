@@ -202,3 +202,111 @@ body {
 .orduva-admin-refresh .oa-admin-primary-text {
   color: var(--oa-primary) !important;
 }
+
+
+/* Orduva Ver-0.232H — Global Tenant Admin UX polish
+   Applies the calmer settings rules across Tenant Admin surfaces without changing storefront/payment logic. */
+.orduva-admin-refresh .oa-admin-content > .grid {
+  gap: 1rem !important;
+}
+
+@media (min-width: 1024px) {
+  .orduva-admin-refresh .oa-admin-content > .grid:not(.oa-preserve-grid),
+  .orduva-admin-refresh .oa-admin-content > form > .grid:not(.oa-preserve-grid),
+  .orduva-admin-refresh .oa-admin-content > section > .grid:not(.oa-preserve-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+.orduva-admin-refresh h1,
+.orduva-admin-refresh h2,
+.orduva-admin-refresh h3 {
+  font-weight: 650 !important;
+  letter-spacing: -0.025em;
+}
+
+.orduva-admin-refresh h4,
+.orduva-admin-refresh h5,
+.orduva-admin-refresh h6,
+.orduva-admin-refresh legend {
+  font-weight: 600 !important;
+}
+
+.orduva-admin-refresh .font-black,
+.orduva-admin-refresh .font-extrabold {
+  font-weight: 650 !important;
+}
+
+.orduva-admin-refresh .text-orange-900,
+.orduva-admin-refresh .text-orange-800,
+.orduva-admin-refresh .text-orange-700,
+.orduva-admin-refresh .text-orange-600,
+.orduva-admin-refresh .text-purple-900,
+.orduva-admin-refresh .text-purple-800,
+.orduva-admin-refresh .text-yellow-900,
+.orduva-admin-refresh .text-yellow-800 {
+  color: var(--oa-slate) !important;
+}
+
+.orduva-admin-refresh .border-orange-100,
+.orduva-admin-refresh .border-orange-200,
+.orduva-admin-refresh .border-orange-300,
+.orduva-admin-refresh .border-purple-100,
+.orduva-admin-refresh .border-purple-200,
+.orduva-admin-refresh .border-yellow-100,
+.orduva-admin-refresh .border-yellow-200,
+.orduva-admin-refresh .border-blue-100,
+.orduva-admin-refresh .border-blue-200,
+.orduva-admin-refresh .border-emerald-100,
+.orduva-admin-refresh .border-emerald-200 {
+  border-color: var(--oa-line) !important;
+}
+
+.orduva-admin-refresh .bg-orange-50,
+.orduva-admin-refresh .bg-orange-50\/70,
+.orduva-admin-refresh .bg-orange-100,
+.orduva-admin-refresh .bg-purple-50,
+.orduva-admin-refresh .bg-purple-100,
+.orduva-admin-refresh .bg-yellow-50,
+.orduva-admin-refresh .bg-yellow-100,
+.orduva-admin-refresh .bg-blue-50,
+.orduva-admin-refresh .bg-blue-50\/80,
+.orduva-admin-refresh .bg-emerald-50,
+.orduva-admin-refresh .bg-emerald-50\/80 {
+  background-color: #ffffff !important;
+}
+
+.orduva-admin-refresh section,
+.orduva-admin-refresh article,
+.orduva-admin-refresh form,
+.orduva-admin-refresh aside,
+.orduva-admin-refresh [class*="rounded-[22px]"],
+.orduva-admin-refresh [class*="rounded-[24px]"],
+.orduva-admin-refresh [class*="rounded-[26px]"] {
+  border-color: var(--oa-line) !important;
+}
+
+.orduva-admin-refresh [aria-expanded="true"],
+.orduva-admin-refresh [data-state="open"],
+.orduva-admin-refresh details[open] > summary,
+.orduva-admin-refresh .oa-admin-open-panel {
+  border-color: #111827 !important;
+  box-shadow: 0 0 0 1px #111827 !important;
+}
+
+.orduva-admin-refresh .oa-admin-content a:not(.admin-pressable),
+.orduva-admin-refresh .oa-admin-content button:not(:disabled) {
+  font-weight: 600 !important;
+}
+
+.orduva-admin-refresh .oa-admin-content p,
+.orduva-admin-refresh .oa-admin-content label,
+.orduva-admin-refresh .oa-admin-content li {
+  color: var(--oa-slate);
+}
+
+.orduva-admin-refresh .oa-admin-content input,
+.orduva-admin-refresh .oa-admin-content textarea,
+.orduva-admin-refresh .oa-admin-content select {
+  border-width: 1px !important;
+}

@@ -237,7 +237,7 @@ export default function AdminShell({
           </div>
         </header>
 
-        <div className="mt-4 sm:mt-5">{children}</div>
+        <div className="oa-admin-content mt-4 sm:mt-5">{children}</div>
 
       </div>
 

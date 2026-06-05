@@ -458,3 +458,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Preview and Suggested Colours windows now open beside the currently expanded colour group rather than always opening near the first panel.
 - Floating preview/suggested windows remain constrained inside the Per-item storefront colours workspace.
 - No SQL required.
+
+## Ver-0.232H — Global Tenant Admin UX polish
+
+- Applied the calmer Tenant Admin Settings visual rules more broadly across Tenant Admin pages.
+- Added a global admin content wrapper so desktop admin panel grids can settle into a cleaner two-panel rhythm.
+- Standardised panel borders toward clear neutral lines and reduced mixed structural colour noise.
+- Reduced heavy heading/title weights across Tenant Admin surfaces.
+- Added global support for clear black outlines on open/active panels.
+- Preserved the Per-item storefront colours workspace and preview/suggested colour behaviour from Ver-0.232G.
+- No SQL required.
