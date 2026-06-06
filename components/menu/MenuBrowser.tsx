@@ -738,35 +738,57 @@ function getRewardTierPalette(name: string) {
     return {
       label: "Platinum",
       background: "#F8FAFC",
-      border: "#64748B",
-      text: "#0F172A",
-      badgeBackground: "#0F172A",
-      badgeText: "#F8FAFC",
-      gradientFrom: "#64748B",
-      gradientTo: "#0F172A",
+      border: "#D8D6D1",
+      text: "#111827",
+      badgeBackground: "#E5E4E2",
+      badgeText: "#111827",
+      gradientFrom: "#E5E4E2",
+      gradientTo: "#FFFFFF",
     };
   }
   if (key.includes("gold")) {
     return {
       label: "Gold",
       background: "#FFFBEB",
-      border: "#D97706",
-      text: "#78350F",
-      badgeBackground: "#92400E",
-      badgeText: "#FFF7ED",
-      gradientFrom: "#F59E0B",
-      gradientTo: "#92400E",
+      border: "#CCAD00",
+      text: "#3F2F00",
+      badgeBackground: "#CCAD00",
+      badgeText: "#1F1A00",
+      gradientFrom: "#CCAD00",
+      gradientTo: "#FFF7CC",
     };
   }
   return {
     label: "Silver",
-    background: "#F8FAFC",
-    border: "#64748B",
-    text: "#0F172A",
-    badgeBackground: "#334155",
-    badgeText: "#F8FAFC",
-    gradientFrom: "#64748B",
-    gradientTo: "#334155",
+    background: "#FAFAFA",
+    border: "#C0C0C0",
+    text: "#1F2937",
+    badgeBackground: "#6B7280",
+    badgeText: "#FFFFFF",
+    gradientFrom: "#C0C0C0",
+    gradientTo: "#F4F4F5",
+  };
+}
+
+function getRewardTierTheme(theme: StorefrontTheme | null | undefined, name: string) {
+  const key = String(name || "").toLowerCase();
+  const tier = key.includes("platinum") ? "Platinum" : key.includes("gold") ? "Gold" : "Silver";
+  const defaults = getRewardTierPalette(tier);
+  const prefix = `rewards${tier}` as const;
+  const value = (suffix: string, fallback: string) =>
+    normalizeThemeColor((theme as Record<string, string | undefined> | null | undefined)?.[`${prefix}${suffix}`], fallback);
+
+  return {
+    topEdge: value("TopEdge", defaults.gradientFrom),
+    headerBackground: value("HeaderBackground", defaults.gradientTo),
+    headerBlend: value("HeaderBlend", defaults.gradientFrom),
+    headerText: value("HeaderText", defaults.text),
+    labelText: value("LabelText", defaults.text),
+    currentPanelBackground: value("CurrentPanelBackground", defaults.background),
+    currentPanelBorder: value("CurrentPanelBorder", defaults.border),
+    currentPillBackground: value("CurrentPillBackground", defaults.badgeBackground),
+    currentPillText: value("CurrentPillText", defaults.badgeText),
+    progressFill: value("ProgressFill", defaults.gradientFrom),
   };
 }
 
@@ -1157,6 +1179,8 @@ export default function MenuBrowser({
     storefrontTheme?.welcomeActionText,
     welcomeHeadingColor,
   );
+  const rewardTier = customerRewards?.tierLabel || "Silver";
+  const rewardTierTheme = getRewardTierTheme(storefrontTheme, rewardTier);
   const welcomeActionIconText = normalizeThemeColor(
     storefrontTheme?.welcomeActionIconText,
     "#FFFFFF",
@@ -1175,18 +1199,18 @@ export default function MenuBrowser({
     0.55,
   );
   const rewardsPopupHeaderBackground = softerPanelColor(
-    storefrontTheme?.rewardsPopupHeaderBackground,
+    rewardTierTheme.headerBackground,
     brandAccent,
     0.78,
   );
   const rewardsPopupHeaderBlend = softerPanelColor(
-    storefrontTheme?.rewardsPopupHeaderBlend,
+    rewardTierTheme.headerBlend,
     brandSurface,
     0.5,
   );
   const rewardsPopupHeaderText = readableTextFor(
     rewardsPopupHeaderBackground,
-    normalizeThemeColor(storefrontTheme?.rewardsPopupHeaderText, brandPrimary),
+    rewardTierTheme.headerText,
     brandPrimary,
   );
   const rewardsPopupBodyText = readableTextFor(
@@ -1199,30 +1223,37 @@ export default function MenuBrowser({
     brandSurface,
     0.42,
   );
+  const rewardsPopupCurrentPanelBackground = softerPanelColor(
+    rewardTierTheme.currentPanelBackground,
+    brandSurface,
+    0.18,
+  );
   const rewardsPopupCardBorder = blendHex(
     normalizeThemeColor(storefrontTheme?.rewardsPopupCardBorder, brandBorder),
     "#FFFFFF",
     0.28,
   );
-  const rewardsPopupPillBackground = blendHex(
-    normalizeThemeColor(
-      storefrontTheme?.rewardsPopupPillBackground,
-      brandAccent,
-    ),
+  const rewardsPopupCurrentPanelBorder = blendHex(
+    rewardTierTheme.currentPanelBorder,
     "#FFFFFF",
-    0.18,
+    0.12,
+  );
+  const rewardsPopupPillBackground = blendHex(
+    rewardTierTheme.currentPillBackground,
+    "#FFFFFF",
+    0.08,
   );
   const rewardsPopupPillText = readableTextFor(
     rewardsPopupPillBackground,
-    normalizeThemeColor(storefrontTheme?.rewardsPopupPillText, "#FFFFFF"),
+    rewardTierTheme.currentPillText,
     brandPrimary,
   );
   const rewardsPopupTopEdge = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupTopEdge,
+    rewardTierTheme.topEdge,
     brandAccent,
   );
   const rewardsPopupLabelText = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupLabelText,
+    rewardTierTheme.labelText,
     brandAccent,
   );
   const rewardsPopupProgressBackground = normalizeThemeColor(
@@ -1230,7 +1261,7 @@ export default function MenuBrowser({
     "#E5E7EB",
   );
   const rewardsPopupProgressFill = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupProgressFill,
+    rewardTierTheme.progressFill,
     brandAccent,
   );
   const rewardsPopupFooterBackground = normalizeThemeColor(
@@ -1502,8 +1533,6 @@ export default function MenuBrowser({
     discountPopupSeen,
     popupDiscountRules.length,
   ]);
-  const rewardTier = customerRewards?.tierLabel || "Silver";
-  const rewardTierPalette = getRewardTierPalette(rewardTier);
   const rewardDiscount = Number(
     customerRewards?.discountPercent ||
       (rewardTier === "Platinum"
@@ -2885,7 +2914,7 @@ export default function MenuBrowser({
                 <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start xl:gap-7">
                   <div
                     className="rounded-[24px] border p-4 sm:p-5 lg:p-6"
-                    style={{ backgroundColor: rewardsPopupCardBackground, borderColor: rewardsPopupCardBorder }}
+                    style={{ backgroundColor: rewardsPopupCurrentPanelBackground, borderColor: rewardsPopupCurrentPanelBorder }}
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: rewardsPopupLabelText }}>
                       Reward status
@@ -2910,7 +2939,7 @@ export default function MenuBrowser({
                     {customerAuthStatus === "signedIn" && customerRewards ? (
                       <div
                         className="rounded-[24px] border p-4 shadow-sm sm:p-5 lg:p-6"
-                        style={{ backgroundColor: rewardsPopupCardBackground, borderColor: rewardsPopupCardBorder, color: rewardsPopupBodyText }}
+                        style={{ backgroundColor: rewardsPopupCurrentPanelBackground, borderColor: rewardsPopupCurrentPanelBorder, color: rewardsPopupBodyText }}
                       >
                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: rewardsPopupLabelText }}>
                           Qualifying spend
