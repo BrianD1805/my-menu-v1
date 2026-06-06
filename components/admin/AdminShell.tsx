@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import LogoutButton from "@/components/admin/LogoutButton";
 import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
@@ -108,7 +108,6 @@ function MenuCard({ item, closeMenu }: { item: NavItem; closeMenu: () => void })
 
 function TenantMegaMenu({
   activeGroup,
-  navGroups,
   closeMenu,
   storefrontUrl,
   tenantSlug,
@@ -116,7 +115,6 @@ function TenantMegaMenu({
   trialState,
 }: {
   activeGroup: NavGroup | null;
-  navGroups: NavGroup[];
   closeMenu: () => void;
   storefrontUrl: string;
   tenantSlug?: string | null;
@@ -128,93 +126,72 @@ function TenantMegaMenu({
   const isAccount = activeGroup.key === "account";
 
   return (
-    <>
-      <button
-        type="button"
-        className="fixed inset-0 z-[70] cursor-default bg-[#111827]/18 backdrop-blur-[2px]"
-        onClick={closeMenu}
-        aria-label="Close admin menu"
-      />
-      <section className="fixed inset-x-3 top-[76px] z-[80] max-h-[calc(100dvh-5.5rem)] overflow-hidden rounded-[28px] border border-[#DCE5E1] bg-white text-[#111827] shadow-[0_28px_90px_rgba(17,24,39,0.22)] sm:absolute sm:inset-auto sm:left-0 sm:right-0 sm:top-[calc(100%+0.72rem)] sm:max-h-[calc(100dvh-6.5rem)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[linear-gradient(90deg,#0F766E,#111827,#339933)]" />
-        <div className="grid max-h-[inherit] grid-rows-[auto_1fr]">
-          <div className="flex items-start justify-between gap-4 border-b border-[#DCE5E1] bg-white px-4 py-4 sm:px-6 sm:py-5">
-            <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">{activeGroup.label}</p>
-              <h2 className="mt-1 text-xl font-black tracking-tight text-[#111827] sm:text-2xl">{activeGroup.strapline}</h2>
-              <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-[#5F6B66]">{activeGroup.description}</p>
-            </div>
-            <button
-              type="button"
-              onClick={closeMenu}
-              className="admin-pressable inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#111827] text-2xl font-light leading-none text-white transition hover:bg-[#26313F]"
-              aria-label="Close menu"
-            >
-              ×
-            </button>
+    <section className="absolute left-0 right-0 top-[calc(100%+0.55rem)] z-[80] overflow-hidden rounded-[22px] border border-[#DCE5E1] bg-white text-[#111827] shadow-[0_18px_42px_rgba(17,24,39,0.16)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0F766E,#111827,#339933)]" />
+      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:p-6">
+        <div className="min-w-0">
+          <div className="mb-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#0F766E]">{activeGroup.label}</p>
+            <h2 className="mt-1 text-xl font-black tracking-tight text-[#111827]">{activeGroup.strapline}</h2>
+            <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-[#5F6B66]">{activeGroup.description}</p>
           </div>
-
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-6">
-            <div className={isConfigure || isAccount ? "grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]" : "grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]"}>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {activeGroup.items.map((item) => (
-                  <MenuCard key={item.href} item={item} closeMenu={closeMenu} />
-                ))}
-              </div>
-
-              <aside className="grid gap-3">
-                {isConfigure ? (
-                  <div className="rounded-[26px] border border-[#CFE1DD] bg-[#EAFBF5] p-4">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0F766E] shadow-sm">
-                        <AdminNavIcon icon="billing" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#0F766E]">Launch & billing</p>
-                        <p className="mt-1 text-sm font-bold leading-6 text-[#374151]">Checklist, trial status and active billing now live inside Configure.</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
-                    </div>
-                  </div>
-                ) : null}
-
-                {isAccount ? (
-                  <div className="rounded-[26px] border border-[#DCE5E1] bg-[#F8FAF9] p-4">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0F766E]">
-                        <AdminNavIcon icon="account" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#0F766E]">Signed in</p>
-                        <p className="mt-1 break-words text-sm font-black text-[#111827]">{signedInAs}</p>
-                      </div>
-                    </div>
-                    <LogoutButton className="admin-pressable mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
-                  </div>
-                ) : null}
-
-                <a
-                  href={storefrontUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="admin-pressable flex items-center gap-3 rounded-[24px] border border-[#DCE5E1] bg-white p-4 text-[#111827] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#F8FAF9]"
-                >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#F1F5F4] text-[#0F766E]">
-                    <AdminNavIcon icon="storefront" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-black">Open storefront</span>
-                    <span className="mt-0.5 block truncate text-xs font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
-                  </span>
-                </a>
-              </aside>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {activeGroup.items.map((item) => (
+              <MenuCard key={item.href} item={item} closeMenu={closeMenu} />
+            ))}
           </div>
         </div>
-      </section>
-    </>
+
+        <aside className="grid content-start gap-3">
+          {isConfigure ? (
+            <div className="rounded-[22px] border border-[#CFE1DD] bg-[#EAFBF5] p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0F766E] shadow-sm">
+                  <AdminNavIcon icon="billing" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Launch & billing</p>
+                  <p className="mt-1 text-sm font-bold leading-6 text-[#374151]">Checklist, trial status and active billing live here.</p>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
+              </div>
+            </div>
+          ) : null}
+
+          {isAccount ? (
+            <div className="rounded-[22px] border border-[#DCE5E1] bg-[#F8FAF9] p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0F766E]">
+                  <AdminNavIcon icon="account" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Signed in</p>
+                  <p className="mt-1 break-words text-sm font-black text-[#111827]">{signedInAs}</p>
+                </div>
+              </div>
+              <LogoutButton className="admin-pressable mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
+            </div>
+          ) : null}
+
+          <a
+            href={storefrontUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="admin-pressable flex items-center gap-3 rounded-[22px] border border-[#DCE5E1] bg-white p-4 text-[#111827] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#F8FAF9]"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#F1F5F4] text-[#0F766E]">
+              <AdminNavIcon icon="storefront" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-black">Open storefront</span>
+              <span className="mt-0.5 block truncate text-xs font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
+            </span>
+          </a>
+        </aside>
+      </div>
+    </section>
   );
 }
 
@@ -296,20 +273,6 @@ export default function AdminShell({
   const tenantInitial = tenantName.trim().slice(0, 1).toUpperCase() || "O";
   const identityIconUrl = faviconUrl || null;
 
-  useEffect(() => {
-    if (!activeKey) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActiveKey(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = original;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [activeKey]);
-
   return (
     <main className="orduva-admin-refresh relative min-h-screen overflow-x-clip bg-[#F6F8F7] px-3 py-4 text-[#111827] sm:px-6 sm:py-7">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(135deg,#F6F8F7_0%,#F1F5F4_58%,#FFFFFF_100%)]" />
@@ -339,48 +302,49 @@ export default function AdminShell({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveKey((value) => (value ? null : currentGroup))}
-                className="admin-pressable inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-[#0F766E]/25 bg-[#0F766E] px-3.5 py-2 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,118,110,0.22)] transition hover:-translate-y-[1px] hover:bg-[#0B5F59] lg:hidden"
-                aria-expanded={Boolean(activeKey)}
-                aria-controls="tenant-admin-mega-menu"
-              >
-                <MobileMenuIcon open={Boolean(activeKey)} />
-                <span>Menu</span>
-              </button>
-            </div>
+              <div className="flex shrink-0 items-center justify-end gap-2">
+                <nav className="hidden items-center gap-2 lg:flex" aria-label="Tenant admin sections">
+                  {navGroups.map((group) => {
+                    const selected = activeKey === group.key;
+                    const containsCurrent = currentGroup === group.key;
+                    return (
+                      <button
+                        key={group.key}
+                        type="button"
+                        onClick={() => setActiveKey((value) => (value === group.key ? null : group.key))}
+                        className={[
+                          "admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm font-black transition hover:-translate-y-[1px]",
+                          selected
+                            ? "border-[#0F766E] bg-[#0F766E] text-white shadow-[0_14px_30px_rgba(15,118,110,0.2)]"
+                            : containsCurrent
+                              ? "border-[#0F766E]/35 bg-[#EAFBF5] text-[#0F766E]"
+                              : "border-[#DCE5E1] bg-white text-[#374151] hover:border-[#0F766E]/30 hover:bg-[#F8FAF9] hover:text-[#0F766E]",
+                        ].join(" ")}
+                        aria-expanded={selected}
+                        aria-controls="tenant-admin-mega-menu"
+                      >
+                        {group.label}
+                      </button>
+                    );
+                  })}
+                </nav>
 
-            <nav className="mt-3 hidden items-center gap-2 lg:flex" aria-label="Tenant admin sections">
-              {navGroups.map((group) => {
-                const selected = activeKey === group.key;
-                const containsCurrent = currentGroup === group.key;
-                return (
-                  <button
-                    key={group.key}
-                    type="button"
-                    onClick={() => setActiveKey((value) => (value === group.key ? null : group.key))}
-                    className={[
-                      "admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm font-black transition hover:-translate-y-[1px]",
-                      selected
-                        ? "border-[#0F766E] bg-[#0F766E] text-white shadow-[0_14px_30px_rgba(15,118,110,0.2)]"
-                        : containsCurrent
-                          ? "border-[#0F766E]/35 bg-[#EAFBF5] text-[#0F766E]"
-                          : "border-[#DCE5E1] bg-white text-[#374151] hover:border-[#0F766E]/30 hover:bg-[#F8FAF9] hover:text-[#0F766E]",
-                    ].join(" ")}
-                    aria-expanded={selected}
-                    aria-controls="tenant-admin-mega-menu"
-                  >
-                    {group.label}
-                  </button>
-                );
-              })}
-            </nav>
+                <button
+                  type="button"
+                  onClick={() => setActiveKey((value) => (value ? null : currentGroup))}
+                  className="admin-pressable inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-[#0F766E]/25 bg-[#0F766E] px-3.5 py-2 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,118,110,0.22)] transition hover:-translate-y-[1px] hover:bg-[#0B5F59] lg:hidden"
+                  aria-expanded={Boolean(activeKey)}
+                  aria-controls="tenant-admin-mega-menu"
+                >
+                  <MobileMenuIcon open={Boolean(activeKey)} />
+                  <span>Menu</span>
+                </button>
+              </div>
+            </div>
 
             <div id="tenant-admin-mega-menu">
               <TenantMegaMenu
                 activeGroup={activeGroup}
-                navGroups={navGroups}
                 closeMenu={() => setActiveKey(null)}
                 storefrontUrl={storefrontUrl}
                 tenantSlug={tenantSlug}
