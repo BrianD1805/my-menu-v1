@@ -16,6 +16,7 @@ type NavItem = {
   detail: string;
   icon: NavIcon;
   current?: boolean;
+  external?: boolean;
 };
 
 type NavGroup = {
@@ -23,6 +24,7 @@ type NavGroup = {
   label: string;
   strapline: string;
   description: string;
+  eyebrow: string;
   items: NavItem[];
 };
 
@@ -82,76 +84,91 @@ function MobileMenuIcon({ open }: { open: boolean }) {
   );
 }
 
-function MenuCard({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) {
+function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) {
   return (
     <a
       href={item.href}
       onClick={closeMenu}
+      target={item.external ? "_blank" : undefined}
+      rel={item.external ? "noreferrer" : undefined}
       aria-current={item.current ? "page" : undefined}
-      className={[
-        "admin-pressable group flex min-h-[84px] items-center gap-4 rounded-[22px] border px-4 py-3 text-left transition hover:-translate-y-[1px]",
-        item.current
-          ? "border-[#0F766E] bg-[#0F766E] text-white shadow-[0_18px_38px_rgba(15,118,110,0.24)]"
-          : "border-[#DCE5E1] bg-white text-[#111827] hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]",
-      ].join(" ")}
+      className="admin-pressable group flex min-h-[108px] items-center gap-4 rounded-[24px] border border-[#E0E6E4] bg-white px-5 py-4 text-left text-[#111827] shadow-[0_12px_28px_rgba(17,24,39,0.06)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#FBFFFD]"
     >
-      <span className={["flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition", item.current ? "bg-white/16 text-white" : "bg-[#F1F5F4] text-[#0F766E] group-hover:bg-white"].join(" ")}>
+      <span className={["flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] transition", item.current ? "bg-[#0F766E] text-white" : "bg-[#EAFBF5] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")}>
         <AdminNavIcon icon={item.icon} />
       </span>
-      <span className="min-w-0">
-        <span className="block text-base font-black leading-tight">{item.label}</span>
-        <span className={item.current ? "mt-1 block text-sm font-semibold leading-5 text-white/82" : "mt-1 block text-sm font-semibold leading-5 text-[#5F6B66]"}>{item.detail}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-lg font-black leading-tight tracking-tight">{item.label}</span>
+        <span className="mt-1 block text-sm font-semibold leading-5 text-[#5F6B66]">{item.detail}</span>
+      </span>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F4] text-lg font-black text-[#5F6B66] transition group-hover:bg-[#0F766E] group-hover:text-white">
+        ↗
       </span>
     </a>
   );
 }
 
-function TenantMegaMenu({
-  activeGroup,
+function MegaFeatureCard({ group, tenantName }: { group: NavGroup; tenantName: string }) {
+  return (
+    <aside className="relative flex min-h-[25rem] overflow-hidden rounded-[28px] bg-[#111827] p-7 text-white shadow-[0_20px_45px_rgba(17,24,39,0.20)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_100%,rgba(15,118,110,0.55),transparent_38%),linear-gradient(145deg,#111827_0%,#162231_58%,#243126_100%)]" />
+      <div className="relative z-10 flex min-h-full flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
+            <p className="text-sm font-black uppercase tracking-[0.26em] text-white/84">{group.eyebrow}</p>
+          </div>
+          <h2 className="mt-16 text-3xl font-black leading-tight tracking-tight">{group.strapline}</h2>
+        </div>
+        <div>
+          <p className="text-lg font-bold leading-8 text-white/72">{group.description}</p>
+          <p className="mt-5 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white/78">{tenantName}</p>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function DesktopMegaDropdown({
+  group,
   closeMenu,
-  storefrontUrl,
+  tenantName,
   tenantSlug,
   signedInAs,
   trialState,
 }: {
-  activeGroup: NavGroup | null;
+  group: NavGroup | null;
   closeMenu: () => void;
-  storefrontUrl: string;
+  tenantName: string;
   tenantSlug?: string | null;
   signedInAs: string;
   trialState?: TenantTrialState | null;
 }) {
-  if (!activeGroup) return null;
-  const isConfigure = activeGroup.key === "configure";
-  const isAccount = activeGroup.key === "account";
+  if (!group) return null;
+
+  const isConfigure = group.key === "configure";
+  const isAccount = group.key === "account";
+  const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute left-0 right-0 top-[calc(100%+0.55rem)] z-[80] overflow-hidden rounded-[22px] border border-[#DCE5E1] bg-white text-[#111827] shadow-[0_18px_42px_rgba(17,24,39,0.16)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0F766E,#111827,#339933)]" />
-      <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:p-6">
-        <div className="min-w-0">
-          <div className="mb-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#0F766E]">{activeGroup.label}</p>
-            <h2 className="mt-1 text-xl font-black tracking-tight text-[#111827]">{activeGroup.strapline}</h2>
-            <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-[#5F6B66]">{activeGroup.description}</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {activeGroup.items.map((item) => (
-              <MenuCard key={item.href} item={item} closeMenu={closeMenu} />
-            ))}
-          </div>
-        </div>
+    <section className="absolute right-0 top-[calc(100%+0.85rem)] z-[80] hidden w-[min(66rem,calc(100vw-3rem))] overflow-hidden rounded-[32px] border border-[#DCE5E1] bg-white/96 p-7 text-[#111827] shadow-[0_28px_70px_rgba(17,24,39,0.18)] backdrop-blur-xl lg:block">
+      <div className="grid gap-5 lg:grid-cols-[25rem_minmax(0,1fr)]">
+        <MegaFeatureCard group={group} tenantName={tenantName} />
+        <div className="grid content-start gap-4">
+          {group.items.map((item) => (
+            <MenuItemCard key={item.href} item={item} closeMenu={closeMenu} />
+          ))}
 
-        <aside className="grid content-start gap-3">
           {isConfigure ? (
-            <div className="rounded-[22px] border border-[#CFE1DD] bg-[#EAFBF5] p-4">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0F766E] shadow-sm">
+            <div className="rounded-[24px] border border-[#CFE1DD] bg-[#EAFBF5] p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+              <div className="flex items-start gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] bg-white text-[#0F766E] shadow-sm">
                   <AdminNavIcon icon="billing" />
                 </span>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Launch & billing</p>
-                  <p className="mt-1 text-sm font-bold leading-6 text-[#374151]">Checklist, trial status and active billing live here.</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">Launch & billing</p>
+                  <p className="mt-1 text-base font-black leading-6 text-[#111827]">Checklist, trial status and active billing</p>
+                  <p className="mt-1 text-sm font-semibold leading-5 text-[#5F6B66]">Billing controls now live inside the Configure menu.</p>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -161,35 +178,87 @@ function TenantMegaMenu({
           ) : null}
 
           {isAccount ? (
-            <div className="rounded-[22px] border border-[#DCE5E1] bg-[#F8FAF9] p-4">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#0F766E]">
-                  <AdminNavIcon icon="account" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Signed in</p>
-                  <p className="mt-1 break-words text-sm font-black text-[#111827]">{signedInAs}</p>
-                </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[24px] border border-[#E0E6E4] bg-white p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">Signed in</p>
+                <p className="mt-2 break-words text-base font-black text-[#111827]">{signedInAs}</p>
+                <LogoutButton className="admin-pressable mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
               </div>
-              <LogoutButton className="admin-pressable mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
+              <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable rounded-[24px] border border-[#E0E6E4] bg-white p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#FBFFFD]">
+                <span className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#EAFBF5] text-[#0F766E]"><AdminNavIcon icon="storefront" /></span>
+                <span className="mt-4 block text-base font-black text-[#111827]">Open storefront</span>
+                <span className="mt-1 block truncate text-sm font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
+              </a>
             </div>
           ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
 
-          <a
-            href={storefrontUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="admin-pressable flex items-center gap-3 rounded-[22px] border border-[#DCE5E1] bg-white p-4 text-[#111827] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#F8FAF9]"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#F1F5F4] text-[#0F766E]">
-              <AdminNavIcon icon="storefront" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-black">Open storefront</span>
-              <span className="mt-0.5 block truncate text-xs font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
-            </span>
+function MobileMegaMenu({
+  open,
+  groups,
+  closeMenu,
+  tenantName,
+  tenantSlug,
+  signedInAs,
+  trialState,
+}: {
+  open: boolean;
+  groups: NavGroup[];
+  closeMenu: () => void;
+  tenantName: string;
+  tenantSlug?: string | null;
+  signedInAs: string;
+  trialState?: TenantTrialState | null;
+}) {
+  if (!open) return null;
+  const storefrontUrl = buildStorefrontUrl(tenantSlug);
+
+  return (
+    <section className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-[80] max-h-[calc(100dvh-7.5rem)] overflow-y-auto rounded-[28px] border border-[#DCE5E1] bg-white/96 p-4 text-[#111827] shadow-[0_24px_58px_rgba(17,24,39,0.18)] backdrop-blur-xl lg:hidden">
+      <div className="rounded-[24px] bg-[#111827] p-5 text-white">
+        <div className="flex items-center gap-3">
+          <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-white/82">Tenant admin menu</p>
+        </div>
+        <h2 className="mt-6 text-2xl font-black tracking-tight">{tenantName}</h2>
+        <p className="mt-2 text-sm font-semibold leading-6 text-white/70">All admin sections are available below.</p>
+      </div>
+
+      <div className="mt-4 grid gap-4">
+        {groups.map((group) => (
+          <div key={group.key} className="rounded-[24px] border border-[#E0E6E4] bg-[#F8FAF9] p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">{group.label}</p>
+            <p className="mt-1 text-lg font-black text-[#111827]">{group.strapline}</p>
+            <div className="mt-3 grid gap-3">
+              {group.items.map((item) => (
+                <MenuItemCard key={`${group.key}-${item.href}`} item={item} closeMenu={closeMenu} />
+              ))}
+            </div>
+            {group.key === "configure" ? (
+              <div className="mt-3 rounded-[20px] border border-[#CFE1DD] bg-[#EAFBF5] p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Launch & billing</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ))}
+
+        <div className="grid gap-3 rounded-[24px] border border-[#E0E6E4] bg-white p-4">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Signed in</p>
+            <p className="mt-1 break-words text-sm font-black text-[#111827]">{signedInAs}</p>
+          </div>
+          <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#DCE5E1] bg-[#F8FAF9] px-4 py-2 text-sm font-black text-[#111827] transition hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]">
+            Open storefront
           </a>
-        </aside>
+          <LogoutButton className="admin-pressable inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
+        </div>
       </div>
     </section>
   );
@@ -222,12 +291,14 @@ export default function AdminShell({
   trialState?: TenantTrialState | null;
   pageTone?: "default" | "white";
 }) {
+  const storefrontUrl = buildStorefrontUrl(tenantSlug);
   const navGroups: NavGroup[] = useMemo(() => [
     {
       key: "run",
       label: "Run the store",
-      strapline: "Daily store controls",
-      description: "Orders, products and catalogue areas grouped together for the day-to-day running of the store.",
+      eyebrow: "Store",
+      strapline: "Run the store",
+      description: "Daily order, product and catalogue tasks for keeping the store moving.",
       items: [
         { href: "/admin", label: "Home", detail: "Store overview", icon: "home", current: current === "home" },
         { href: "/admin/orders", label: "Orders", detail: "Receipts, status and fulfilment", icon: "orders", current: current === "orders" },
@@ -238,8 +309,9 @@ export default function AdminShell({
     {
       key: "grow",
       label: "Grow",
-      strapline: "Insights and referrals",
-      description: "Sales performance, product insight and referral tools without cluttering the main header.",
+      eyebrow: "Growth",
+      strapline: "Grow the store",
+      description: "Sales insight, product performance and referral tools for growing the customer base.",
       items: [
         { href: "/admin/analytics", label: "Analytics", detail: "Sales and product performance", icon: "analytics", current: current === "analytics" },
         { href: "/admin/referrals", label: "Referrals", detail: "Tenant referral dashboard", icon: "referrals", current: current === "referrals" },
@@ -248,28 +320,29 @@ export default function AdminShell({
     {
       key: "configure",
       label: "Configure",
-      strapline: "Store setup and billing",
-      description: "Branding, storefront settings, payment setup, trial status, launch checklist and active billing.",
+      eyebrow: "Setup",
+      strapline: "Configure the store",
+      description: "Branding, storefront settings, payments, launch checklist, trial status and billing.",
       items: [
         { href: "/admin/settings", label: "Settings", detail: "Branding, payments and storefront", icon: "settings", current: current === "settings" },
-        { href: "/admin/billing/activate", label: "Billing page", detail: "Open the full billing activation page", icon: "billing" },
+        { href: "/admin/billing/activate", label: "Billing page", detail: "Full billing activation page", icon: "billing" },
       ],
     },
     {
       key: "account",
       label: "Account",
-      strapline: "Session and storefront",
-      description: "Open the public storefront, check who is signed in or sign out safely.",
+      eyebrow: "Account",
+      strapline: "Account and storefront",
+      description: "Open the public storefront, check who is signed in, or sign out safely.",
       items: [
-        { href: buildStorefrontUrl(tenantSlug), label: "Open storefront", detail: tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable", icon: "storefront" },
+        { href: storefrontUrl, label: "Open storefront", detail: tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable", icon: "storefront", external: true },
       ],
     },
-  ], [current, tenantSlug]);
+  ], [current, storefrontUrl, tenantSlug]);
 
   const currentGroup = navGroups.find((group) => group.items.some((item) => item.current))?.key ?? "run";
   const [activeKey, setActiveKey] = useState<NavKey | null>(null);
   const activeGroup = navGroups.find((group) => group.key === activeKey) ?? null;
-  const storefrontUrl = buildStorefrontUrl(tenantSlug);
   const tenantInitial = tenantName.trim().slice(0, 1).toUpperCase() || "O";
   const identityIconUrl = faviconUrl || null;
 
@@ -291,7 +364,7 @@ export default function AdminShell({
                       {versionLabel()}
                     </span>
                   </div>
-                  <p className="truncate text-lg font-black leading-tight text-[#111827] sm:text-xl">{tenantName}</p>
+                  <p className="truncate text-lg font-black leading-tight text-[#111827] sm:text-xl">{tenantName} Admin</p>
                   {tenantSlug ? (
                     <a href={storefrontUrl} target="_blank" rel="noreferrer" className="mt-0.5 block truncate text-xs font-semibold text-[#374151] underline-offset-4 transition hover:text-[#0F766E] hover:underline" title="Open storefront">
                       {tenantSlug}.orduva.com
@@ -313,17 +386,21 @@ export default function AdminShell({
                         type="button"
                         onClick={() => setActiveKey((value) => (value === group.key ? null : group.key))}
                         className={[
-                          "admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm font-black transition hover:-translate-y-[1px]",
+                          "admin-pressable inline-flex min-h-11 items-center gap-3 rounded-full border px-4 py-2 text-sm font-black transition hover:-translate-y-[1px]",
                           selected
-                            ? "border-[#0F766E] bg-[#0F766E] text-white shadow-[0_14px_30px_rgba(15,118,110,0.2)]"
+                            ? "border-[#0F766E]/30 bg-[#EAFBF5] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_rgba(17,24,39,0.08)]"
                             : containsCurrent
-                              ? "border-[#0F766E]/35 bg-[#EAFBF5] text-[#0F766E]"
+                              ? "border-[#0F766E]/35 bg-white text-[#0F766E] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(17,24,39,0.06)]"
                               : "border-[#DCE5E1] bg-white text-[#374151] hover:border-[#0F766E]/30 hover:bg-[#F8FAF9] hover:text-[#0F766E]",
                         ].join(" ")}
                         aria-expanded={selected}
                         aria-controls="tenant-admin-mega-menu"
                       >
-                        {group.label}
+                        <span>{group.label}</span>
+                        <span className={[
+                          "flex h-8 w-8 items-center justify-center rounded-full text-xs transition",
+                          selected ? "bg-[#0F766E] text-white" : "bg-[#F1F5F4] text-[#5F6B66]",
+                        ].join(" ")}>⌄</span>
                       </button>
                     );
                   })}
@@ -332,7 +409,7 @@ export default function AdminShell({
                 <button
                   type="button"
                   onClick={() => setActiveKey((value) => (value ? null : currentGroup))}
-                  className="admin-pressable inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-[#0F766E]/25 bg-[#0F766E] px-3.5 py-2 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,118,110,0.22)] transition hover:-translate-y-[1px] hover:bg-[#0B5F59] lg:hidden"
+                  className="admin-pressable inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#0F766E]/25 bg-white px-4 py-2 text-sm font-black text-[#111827] shadow-[0_8px_18px_rgba(17,24,39,0.08)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#EAFBF5] lg:hidden"
                   aria-expanded={Boolean(activeKey)}
                   aria-controls="tenant-admin-mega-menu"
                 >
@@ -343,10 +420,19 @@ export default function AdminShell({
             </div>
 
             <div id="tenant-admin-mega-menu">
-              <TenantMegaMenu
-                activeGroup={activeGroup}
+              <DesktopMegaDropdown
+                group={activeGroup}
                 closeMenu={() => setActiveKey(null)}
-                storefrontUrl={storefrontUrl}
+                tenantName={tenantName}
+                tenantSlug={tenantSlug}
+                signedInAs={signedInAs}
+                trialState={trialState}
+              />
+              <MobileMegaMenu
+                open={Boolean(activeKey)}
+                groups={navGroups}
+                closeMenu={() => setActiveKey(null)}
+                tenantName={tenantName}
                 tenantSlug={tenantSlug}
                 signedInAs={signedInAs}
                 trialState={trialState}
