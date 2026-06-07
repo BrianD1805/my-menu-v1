@@ -174,7 +174,7 @@ function DesktopMegaDropdown({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute right-0 top-[calc(100%+0.65rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#DCE5E1] bg-white/96 p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block">
+    <section className="absolute right-0 top-[calc(100%+0.65rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#DCE5E1] bg-[#EEF3F1]/98 p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block">
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <MegaFeatureCard group={group} tenantName={tenantName} />
         <div className="grid content-start gap-3">
@@ -241,7 +241,7 @@ function MobileMegaMenu({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#DCE5E1] bg-white/96 p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
+    <section className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#DCE5E1] bg-[#EEF3F1]/98 p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
       <div className="rounded-[20px] bg-[#111827] p-4 text-white">
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
