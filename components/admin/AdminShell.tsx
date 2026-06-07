@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import LogoutButton from "@/components/admin/LogoutButton";
 import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
@@ -155,6 +155,8 @@ function MegaFeatureCard({ group, tenantName }: { group: NavGroup; tenantName: s
 function DesktopMegaDropdown({
   group,
   closeMenu,
+  keepMenuOpen,
+  scheduleMenuClose,
   tenantName,
   tenantSlug,
   signedInAs,
@@ -162,6 +164,8 @@ function DesktopMegaDropdown({
 }: {
   group: NavGroup | null;
   closeMenu: () => void;
+  keepMenuOpen: () => void;
+  scheduleMenuClose: () => void;
   tenantName: string;
   tenantSlug?: string | null;
   signedInAs: string;
@@ -174,7 +178,11 @@ function DesktopMegaDropdown({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute right-0 top-[calc(100%+0.35rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#BFD6CE] bg-[#D7E8E1] p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block">
+    <section
+      className="absolute right-0 top-[calc(100%+0.35rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#BFD6CE] bg-[#D7E8E1] p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block"
+      onMouseEnter={keepMenuOpen}
+      onMouseLeave={scheduleMenuClose}
+    >
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <MegaFeatureCard group={group} tenantName={tenantName} />
         <div className="grid content-start gap-3">
@@ -367,6 +375,35 @@ export default function AdminShell({
   const currentGroup = navGroups.find((group) => group.items.some((item) => item.current))?.key ?? "run";
   const [activeKey, setActiveKey] = useState<NavKey | null>(null);
   const activeGroup = navGroups.find((group) => group.key === activeKey) ?? null;
+  const closeTimerRef = useRef<number | null>(null);
+
+  const clearMenuCloseTimer = () => {
+    if (!closeTimerRef.current) return;
+    window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = null;
+  };
+
+  const openMenu = (key: NavKey) => {
+    clearMenuCloseTimer();
+    setActiveKey(key);
+  };
+
+  const closeMenu = () => {
+    clearMenuCloseTimer();
+    setActiveKey(null);
+  };
+
+  const scheduleMenuClose = () => {
+    clearMenuCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => {
+      setActiveKey(null);
+      closeTimerRef.current = null;
+    }, 220);
+  };
+
+  useEffect(() => {
+    return () => clearMenuCloseTimer();
+  }, []);
 
   useEffect(() => {
     if (!activeKey) return;
@@ -385,7 +422,7 @@ export default function AdminShell({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(135deg,#F6F8F7_0%,#F1F5F4_58%,#FFFFFF_100%)]" />
       <div className="mx-auto max-w-6xl">
         <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#DCE5E1] bg-white text-[#111827] sm:-mx-6 sm:mb-4">
-          <div className="relative mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3" onMouseLeave={() => setActiveKey(null)}>
+          <div className="relative mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3" onMouseEnter={clearMenuCloseTimer} onMouseLeave={scheduleMenuClose}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-[#DCE5E1] bg-[#EAFBF5] text-base font-black text-[#111827]">
@@ -418,8 +455,11 @@ export default function AdminShell({
                       <button
                         key={group.key}
                         type="button"
-                        onMouseEnter={() => setActiveKey(group.key)}
-                        onClick={() => setActiveKey((value) => (value === group.key ? null : group.key))}
+                        onMouseEnter={() => openMenu(group.key)}
+                        onClick={() => {
+                          clearMenuCloseTimer();
+                          setActiveKey((value) => (value === group.key ? null : group.key));
+                        }}
                         className={[
                           "admin-pressable inline-flex min-h-11 items-center gap-3 rounded-full border px-4 py-2 text-sm font-black transition hover:-translate-y-[1px]",
                           selected
@@ -443,7 +483,10 @@ export default function AdminShell({
 
                 <button
                   type="button"
-                  onClick={() => setActiveKey((value) => (value ? null : currentGroup))}
+                  onClick={() => {
+                    clearMenuCloseTimer();
+                    setActiveKey((value) => (value ? null : currentGroup));
+                  }}
                   className="admin-pressable inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#0F766E]/25 bg-white px-4 py-2 text-sm font-black text-[#111827] shadow-[0_8px_18px_rgba(17,24,39,0.08)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#EAFBF5] lg:hidden"
                   aria-expanded={Boolean(activeKey)}
                   aria-controls="tenant-admin-mega-menu"
@@ -457,7 +500,9 @@ export default function AdminShell({
             <div id="tenant-admin-mega-menu">
               <DesktopMegaDropdown
                 group={activeGroup}
-                closeMenu={() => setActiveKey(null)}
+                closeMenu={closeMenu}
+                keepMenuOpen={clearMenuCloseTimer}
+                scheduleMenuClose={scheduleMenuClose}
                 tenantName={tenantName}
                 tenantSlug={tenantSlug}
                 signedInAs={signedInAs}
@@ -466,7 +511,7 @@ export default function AdminShell({
               <MobileMegaMenu
                 open={Boolean(activeKey)}
                 groups={navGroups}
-                closeMenu={() => setActiveKey(null)}
+                closeMenu={closeMenu}
                 tenantName={tenantName}
                 tenantSlug={tenantSlug}
                 signedInAs={signedInAs}
