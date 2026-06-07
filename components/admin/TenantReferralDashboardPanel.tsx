@@ -98,7 +98,7 @@ function CopyLinkCard({ title, eyebrow, body, link, copied, onCopy }: { title: s
   );
 }
 
-export default function TenantReferralDashboardPanel() {
+export default function TenantReferralDashboardPanel({ mode = "referrals" }: { mode?: "referrals" | "affiliates" }) {
   const [payload, setPayload] = useState<DashboardPayload | null>(null);
   const [message, setMessage] = useState("Loading tenant referral dashboard...");
   const [loading, setLoading] = useState(true);
@@ -160,15 +160,19 @@ export default function TenantReferralDashboardPanel() {
   const affiliateSummary = payload.summaries.affiliateIntroductions;
   const currency = payload.tenant.currencyCode || "GBP";
 
+  const isAffiliates = mode === "affiliates";
+
   return (
     <section className="space-y-6">
       <div className="rounded-[34px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_28px_80px_rgba(14,14,16,0.11)] sm:p-7">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#FF6A3D]">Tenant rewards</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10] sm:text-3xl">Referral dashboard</h2>
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#FF6A3D]">{isAffiliates ? "Public affiliates" : "Tenant rewards"}</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight text-[#0E0E10] sm:text-3xl">{isAffiliates ? "Affiliate introductions" : "Tenant referral dashboard"}</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[#5C5F66]">
-              Share your tenant referral link with other businesses, or introduce people who want to become Orduva affiliates. Tenant referrals and approved affiliate introductions are tracked separately.
+              {isAffiliates
+                ? "Invite public affiliate applicants and track approved affiliate partners introduced from this tenant. This is separate from your direct tenant referral link."
+                : "Share your tenant referral link with other businesses and track store-owner referral rewards separately from public affiliate introductions."}
             </p>
           </div>
           <button type="button" onClick={() => void loadDashboard()} className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-5 py-3 text-sm font-black text-[#0E0E10] transition hover:bg-white">
@@ -178,126 +182,128 @@ export default function TenantReferralDashboardPanel() {
         {message ? <p className="mt-4 rounded-2xl border border-[#FF6A3D]/25 bg-[#FFF7F0] px-4 py-3 text-sm font-bold text-[#9A3412]">{message}</p> : null}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <CopyLinkCard
-          eyebrow="Tenant referral link"
-          title="Refer another business"
-          body={`You receive ${tenantSummary.rewardRatePercent || 15}% monthly commission on paid Orduva subscription sales captured through this tenant link.`}
-          link={payload.links.tenantReferralUrl}
-          copied={copiedKey === "tenant"}
-          onCopy={() => void copyLink("tenant", payload.links.tenantReferralUrl)}
-        />
-        <CopyLinkCard
-          eyebrow="Affiliate introduction link"
-          title="Invite an affiliate applicant"
-          body={`If this applicant is approved and their referrals become paid Orduva clients, you receive ${affiliateSummary.tenantRewardRatePercent || 5}% monthly commission from those paid sales.`}
-          link={payload.links.affiliateApplicationUrl}
-          copied={copiedKey === "affiliate"}
-          onCopy={() => void copyLink("affiliate", payload.links.affiliateApplicationUrl)}
-        />
-      </div>
+      <CopyLinkCard
+        eyebrow={isAffiliates ? "Affiliate application link" : "Tenant referral link"}
+        title={isAffiliates ? "Invite an affiliate applicant" : "Refer another business"}
+        body={isAffiliates
+          ? `If this applicant is approved and their referrals become paid Orduva clients, you receive ${affiliateSummary.tenantRewardRatePercent || 5}% monthly commission from those paid sales.`
+          : `You receive ${tenantSummary.rewardRatePercent || 15}% monthly commission on paid Orduva subscription sales captured through this tenant link.`}
+        link={isAffiliates ? payload.links.affiliateApplicationUrl : payload.links.tenantReferralUrl}
+        copied={copiedKey === (isAffiliates ? "affiliate" : "tenant")}
+        onCopy={() => void copyLink(isAffiliates ? "affiliate" : "tenant", isAffiliates ? payload.links.affiliateApplicationUrl : payload.links.tenantReferralUrl)}
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Tenant signups" value={tenantSummary.signupCount} hint="Stores captured from your tenant referral link." tone="dark" />
-        <StatCard label="Tenant estimate" value={totalsLabel(tenantSummary.estimatedByCurrency, currency)} hint="Estimated monthly tenant referral reward." tone="orange" />
-        <StatCard label="Affiliate applicants" value={affiliateSummary.applicationCount} hint={`${affiliateSummary.pendingApplicationCount} pending owner approval.`} tone="blue" />
-        <StatCard label="Affiliate tenant share" value={totalsLabel(affiliateSummary.estimatedByCurrency, currency)} hint="Your 5% tenant share from introduced approved affiliates." tone="green" />
-      </div>
+      {isAffiliates ? (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Affiliate applicants" value={affiliateSummary.applicationCount} hint={`${affiliateSummary.pendingApplicationCount} pending owner approval.`} tone="blue" />
+            <StatCard label="Approved partners" value={affiliateSummary.approvedPartnerCount} hint="Public affiliates approved from this tenant." tone="green" />
+            <StatCard label="Affiliate tenant share" value={totalsLabel(affiliateSummary.estimatedByCurrency, currency)} hint="Your tenant share from introduced approved affiliates." tone="orange" />
+            <StatCard label="Tenant share rate" value={`${affiliateSummary.tenantRewardRatePercent || 5}%`} hint="Current share on approved affiliate-led paid stores." tone="dark" />
+          </div>
 
-      {mixedCurrencies.length ? (
-        <p className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-bold leading-6 text-orange-900">
-          Some reward records are in {mixedCurrencies.join(", ")}. These may need manual conversion to {currency} until automatic FX conversion is added.
-        </p>
-      ) : null}
+          {mixedCurrencies.length ? (
+            <p className="rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-bold leading-6 text-orange-900">
+              Some reward records are in {mixedCurrencies.join(", ")}. These may need manual conversion to {currency} until automatic FX conversion is added.
+            </p>
+          ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Tenant referral activity</p>
-              <h3 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10]">Referred stores</h3>
+          <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Public affiliate activity</p>
+                <h3 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10]">Applicants and partners</h3>
+              </div>
+              <p className="rounded-full border border-[#0E0E10]/10 bg-[#F8FAFC] px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#5C5F66]">{affiliateSummary.tenantRewardRatePercent || 5}% tenant share</p>
             </div>
-            <p className="rounded-full border border-[#0E0E10]/10 bg-[#F8FAFC] px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#5C5F66]">{tenantSummary.rewardRatePercent || 15}% rate</p>
-          </div>
-          <div className="mt-5 space-y-3">
-            {payload.signups.map((signup) => (
-              <article key={signup.id} className="rounded-[22px] border border-[#0E0E10]/10 bg-[#FFFDF8] p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-base font-black text-[#0E0E10]">{signup.referredStore?.name || signup.referredStore?.slug || "Store pending"}</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#68707A]">{statusLabel(signup.status)} · {dateLabel(signup.createdAt)}</p>
+            <div className="mt-5 space-y-3">
+              {payload.applications.slice(0, 8).map((application) => (
+                <article key={application.id} className="rounded-[22px] border border-[#0E0E10]/10 bg-[#F8FAFC] p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-base font-black text-[#0E0E10]">{application.applicant_name || application.email || "Affiliate applicant"}</p>
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#68707A]">{statusLabel(application.status)} · {dateLabel(application.created_at)}</p>
+                    </div>
+                    <p className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-black text-[#0E0E10]">{application.payout_currency_code || "GBP"}</p>
                   </div>
-                  <p className="w-fit rounded-full bg-[#FFF7F0] px-3 py-1.5 text-xs font-black text-[#9A3412]">{signup.rewardRatePercent || tenantSummary.rewardRatePercent || 15}%</p>
-                </div>
-                <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Code {signup.referralCode || payload.links.tenantReferralCode} · Source {signup.refSource || "tenant link"}</p>
-              </article>
-            ))}
-            {!payload.signups.length ? <p className="rounded-2xl border border-dashed border-[#0E0E10]/15 bg-[#F8FAFC] px-4 py-4 text-sm font-bold text-[#5C5F66]">No tenant referral signups have been captured yet.</p> : null}
-          </div>
-        </section>
-
-        <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Affiliate introductions</p>
-              <h3 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10]">Applicants and partners</h3>
+                  {application.earning_region ? <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Target earning region: {application.earning_region}</p> : null}
+                </article>
+              ))}
+              {payload.affiliateSignups.slice(0, 8).map((signup) => (
+                <article key={`affiliate-signup-${signup.id}`} className="rounded-[22px] border border-amber-200 bg-[#FFFDF8] p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-base font-black text-[#0E0E10]">{signup.referredStore?.name || signup.referredStore?.slug || "Store pending"}</p>
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#68707A]">{statusLabel(signup.status)} · {dateLabel(signup.createdAt)}</p>
+                    </div>
+                    <p className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-black text-[#9A3412]">{signup.tenantRewardRatePercent || affiliateSummary.tenantRewardRatePercent || 5}% tenant share</p>
+                  </div>
+                  <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Store referred by an approved affiliate you introduced · Code {signup.referralCode || "affiliate link"} · Source {signup.refSource || "affiliate_partner"}</p>
+                </article>
+              ))}
+              {payload.partners.slice(0, 8).map((partner) => (
+                <article key={partner.id} className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-base font-black text-emerald-950">{partner.display_name || partner.email || "Approved affiliate"}</p>
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-emerald-800">{statusLabel(partner.status)} · {dateLabel(partner.created_at)}</p>
+                    </div>
+                    <p className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-black text-emerald-900">{partner.tenant_reward_rate_percent || affiliateSummary.tenantRewardRatePercent || 5}%</p>
+                  </div>
+                  {partner.tracking_code ? <p className="mt-3 break-all text-xs font-semibold leading-5 text-emerald-900">Affiliate code: {partner.tracking_code}</p> : null}
+                </article>
+              ))}
+              {!payload.applications.length && !payload.partners.length && !payload.affiliateSignups.length ? <p className="rounded-2xl border border-dashed border-[#0E0E10]/15 bg-[#F8FAFC] px-4 py-4 text-sm font-bold text-[#5C5F66]">No affiliate applicants or affiliate-led stores have been introduced from this tenant yet.</p> : null}
             </div>
-            <p className="rounded-full border border-[#0E0E10]/10 bg-[#F8FAFC] px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#5C5F66]">{affiliateSummary.tenantRewardRatePercent || 5}% tenant share</p>
-          </div>
-          <div className="mt-5 space-y-3">
-            {payload.applications.slice(0, 8).map((application) => (
-              <article key={application.id} className="rounded-[22px] border border-[#0E0E10]/10 bg-[#F8FAFC] p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-base font-black text-[#0E0E10]">{application.applicant_name || application.email || "Affiliate applicant"}</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#68707A]">{statusLabel(application.status)} · {dateLabel(application.created_at)}</p>
-                  </div>
-                  <p className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-black text-[#0E0E10]">{application.payout_currency_code || "GBP"}</p>
-                </div>
-                {application.earning_region ? <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Target earning region: {application.earning_region}</p> : null}
-              </article>
-            ))}
-            {payload.affiliateSignups.slice(0, 8).map((signup) => (
-              <article key={`affiliate-signup-${signup.id}`} className="rounded-[22px] border border-amber-200 bg-[#FFFDF8] p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-base font-black text-[#0E0E10]">{signup.referredStore?.name || signup.referredStore?.slug || "Store pending"}</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#68707A]">{statusLabel(signup.status)} · {dateLabel(signup.createdAt)}</p>
-                  </div>
-                  <p className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-black text-[#9A3412]">{signup.tenantRewardRatePercent || affiliateSummary.tenantRewardRatePercent || 5}% tenant share</p>
-                </div>
-                <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Store referred by an approved affiliate you introduced · Code {signup.referralCode || "affiliate link"} · Source {signup.refSource || "affiliate_partner"}</p>
-              </article>
-            ))}
-            {payload.partners.slice(0, 8).map((partner) => (
-              <article key={partner.id} className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-base font-black text-emerald-950">{partner.display_name || partner.email || "Approved affiliate"}</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-emerald-800">{statusLabel(partner.status)} · {dateLabel(partner.created_at)}</p>
-                  </div>
-                  <p className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-black text-emerald-900">{partner.tenant_reward_rate_percent || affiliateSummary.tenantRewardRatePercent || 5}%</p>
-                </div>
-                {partner.tracking_code ? <p className="mt-3 break-all text-xs font-semibold leading-5 text-emerald-900">Affiliate code: {partner.tracking_code}</p> : null}
-              </article>
-            ))}
-            {!payload.applications.length && !payload.partners.length && !payload.affiliateSignups.length ? <p className="rounded-2xl border border-dashed border-[#0E0E10]/15 bg-[#F8FAFC] px-4 py-4 text-sm font-bold text-[#5C5F66]">No affiliate applicants or affiliate-led stores have been introduced from this tenant yet.</p> : null}
-          </div>
-        </section>
-      </div>
+          </section>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-[26px] border border-[#0E0E10]/10 bg-white p-5 shadow-sm">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Tenant credits</p>
-          <p className="mt-2 text-sm font-bold leading-6 text-[#5C5F66]">Pending: <span className="text-[#0E0E10]">{totalsLabel(tenantSummary.pendingByCurrency, currency)}</span></p>
-          <p className="mt-1 text-sm font-bold leading-6 text-[#5C5F66]">Paid: <span className="text-[#0E0E10]">{totalsLabel(tenantSummary.paidByCurrency, currency)}</span></p>
-        </div>
-        <div className="rounded-[26px] border border-[#0E0E10]/10 bg-white p-5 shadow-sm">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Affiliate introduction credits</p>
-          <p className="mt-2 text-sm font-bold leading-6 text-[#5C5F66]">Pending: <span className="text-[#0E0E10]">{totalsLabel(affiliateSummary.pendingByCurrency, currency)}</span></p>
-          <p className="mt-1 text-sm font-bold leading-6 text-[#5C5F66]">Paid: <span className="text-[#0E0E10]">{totalsLabel(affiliateSummary.paidByCurrency, currency)}</span></p>
-        </div>
-      </div>
+          <div className="rounded-[26px] border border-[#0E0E10]/10 bg-white p-5 shadow-sm">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Affiliate introduction credits</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-[#5C5F66]">Pending: <span className="text-[#0E0E10]">{totalsLabel(affiliateSummary.pendingByCurrency, currency)}</span></p>
+            <p className="mt-1 text-sm font-bold leading-6 text-[#5C5F66]">Paid: <span className="text-[#0E0E10]">{totalsLabel(affiliateSummary.paidByCurrency, currency)}</span></p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Tenant signups" value={tenantSummary.signupCount} hint="Stores captured from your tenant referral link." tone="dark" />
+            <StatCard label="Trial stores" value={tenantSummary.trialCount} hint="Referred stores currently in trial." tone="blue" />
+            <StatCard label="Active rewards" value={tenantSummary.activeRewardCount} hint="Paid stores generating tenant rewards." tone="green" />
+            <StatCard label="Tenant estimate" value={totalsLabel(tenantSummary.estimatedByCurrency, currency)} hint="Estimated monthly tenant referral reward." tone="orange" />
+          </div>
+
+          <section className="rounded-[30px] border border-[#0E0E10]/10 bg-white p-5 shadow-[0_18px_50px_rgba(14,14,16,0.08)] sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">Tenant referral activity</p>
+                <h3 className="mt-1 text-2xl font-black tracking-tight text-[#0E0E10]">Referred stores</h3>
+              </div>
+              <p className="rounded-full border border-[#0E0E10]/10 bg-[#F8FAFC] px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#5C5F66]">{tenantSummary.rewardRatePercent || 15}% rate</p>
+            </div>
+            <div className="mt-5 space-y-3">
+              {payload.signups.map((signup) => (
+                <article key={signup.id} className="rounded-[22px] border border-[#0E0E10]/10 bg-[#FFFDF8] p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-base font-black text-[#0E0E10]">{signup.referredStore?.name || signup.referredStore?.slug || "Store pending"}</p>
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#68707A]">{statusLabel(signup.status)} · {dateLabel(signup.createdAt)}</p>
+                    </div>
+                    <p className="w-fit rounded-full bg-[#FFF7F0] px-3 py-1.5 text-xs font-black text-[#9A3412]">{signup.rewardRatePercent || tenantSummary.rewardRatePercent || 15}%</p>
+                  </div>
+                  <p className="mt-3 text-xs font-semibold leading-5 text-[#5C5F66]">Code {signup.referralCode || payload.links.tenantReferralCode} · Source {signup.refSource || "tenant link"}</p>
+                </article>
+              ))}
+              {!payload.signups.length ? <p className="rounded-2xl border border-dashed border-[#0E0E10]/15 bg-[#F8FAFC] px-4 py-4 text-sm font-bold text-[#5C5F66]">No tenant referral signups have been captured yet.</p> : null}
+            </div>
+          </section>
+
+          <div className="rounded-[26px] border border-[#0E0E10]/10 bg-white p-5 shadow-sm">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Tenant credits</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-[#5C5F66]">Pending: <span className="text-[#0E0E10]">{totalsLabel(tenantSummary.pendingByCurrency, currency)}</span></p>
+            <p className="mt-1 text-sm font-bold leading-6 text-[#5C5F66]">Paid: <span className="text-[#0E0E10]">{totalsLabel(tenantSummary.paidByCurrency, currency)}</span></p>
+          </div>
+        </>
+      )}
     </section>
   );
 }

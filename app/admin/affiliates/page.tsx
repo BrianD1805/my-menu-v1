@@ -4,7 +4,7 @@ import TenantReferralDashboardPanel from "@/components/admin/TenantReferralDashb
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { calculateTenantTrialState } from "@/lib/trial";
 
-export default async function AdminReferralsPage() {
+export default async function AdminAffiliatesPage() {
   const { tenant, user } = await requireAdminPageUser();
   const settings = await getTenantSettings(tenant.id);
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
@@ -15,15 +15,15 @@ export default async function AdminReferralsPage() {
       tenantName={branding.adminHeadingLabel}
       tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
-      current="referrals"
-      title="Referral rewards"
-      description="Copy your tenant referral link, refer other businesses to Orduva, and track tenant referral rewards separately from public affiliate introductions."
+      current="affiliates"
+      title="Public affiliates"
+      description="Invite public affiliate applicants and track approved affiliate introductions separately from your direct tenant referral programme."
       logoUrl={branding.logoUrl}
       faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
       trialState={trialState}
     >
-      <TenantReferralDashboardPanel mode="referrals" />
+      <TenantReferralDashboardPanel mode="affiliates" />
     </AdminShell>
   );
 }

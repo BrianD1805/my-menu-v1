@@ -179,7 +179,7 @@ function DesktopMegaDropdown({
 
   return (
     <section
-      className="absolute right-0 top-[calc(100%+0.35rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#BFD6CE] bg-[#D7E8E1] p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block"
+      className="absolute right-0 top-[calc(100%+5px)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#BFD6CE] bg-[#D7E8E1] p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block"
       onMouseEnter={keepMenuOpen}
       onMouseLeave={scheduleMenuClose}
     >
@@ -249,7 +249,7 @@ function MobileMegaMenu({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#BFD6CE] bg-[#D7E8E1] p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
+    <section className="absolute left-0 right-0 top-[calc(100%+5px)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#BFD6CE] bg-[#D7E8E1] p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
       <div className="rounded-[20px] bg-[#111827] p-4 text-white">
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
@@ -314,7 +314,7 @@ export default function AdminShell({
   signedInAs: string;
   title: string;
   description: string;
-  current: "home" | "orders" | "products" | "categories" | "settings" | "analytics" | "referrals";
+  current: "home" | "orders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "affiliates";
   children: ReactNode;
   logoUrl?: string | null;
   faviconUrl?: string | null;
@@ -342,11 +342,11 @@ export default function AdminShell({
       label: "Grow",
       eyebrow: "Growth",
       strapline: "Grow the store",
-      description: "Sales insight, product performance and referral tools for growing the customer base.",
+      description: "Sales insight, tenant referrals and public affiliate tools for growing the customer base.",
       items: [
         { href: "/admin/analytics", label: "Analytics", detail: "Sales and product performance", icon: "analytics", current: current === "analytics" },
-        { href: "/admin/referrals", label: "Referrals", detail: "Tenant referral dashboard", icon: "referrals", current: current === "referrals" },
-        { href: `https://www.orduva.com/affiliate/apply?ref_tenant=${encodeURIComponent(String(tenantSlug || ""))}&ref_source=tenant_admin_menu`, label: "Affiliate sign-up", detail: "Invite public affiliate applicants", icon: "referrals", external: true },
+        { href: "/admin/referrals", label: "Tenant referrals", detail: "Refer businesses to Orduva", icon: "referrals", current: current === "referrals" },
+        { href: "/admin/affiliates", label: "Public affiliates", detail: "Affiliate applicants and partner introductions", icon: "account", current: current === "affiliates" },
       ],
     },
     {
