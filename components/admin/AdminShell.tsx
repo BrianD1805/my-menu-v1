@@ -174,7 +174,7 @@ function DesktopMegaDropdown({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute right-0 top-[calc(100%+0.65rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#DCE5E1] bg-[#EEF3F1]/98 p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block">
+    <section className="absolute right-0 top-[calc(100%+0.35rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#BFD6CE] bg-[#D7E8E1] p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block">
       <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <MegaFeatureCard group={group} tenantName={tenantName} />
         <div className="grid content-start gap-3">
@@ -241,7 +241,7 @@ function MobileMegaMenu({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#DCE5E1] bg-[#EEF3F1]/98 p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
+    <section className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#BFD6CE] bg-[#D7E8E1] p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
       <div className="rounded-[20px] bg-[#111827] p-4 text-white">
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
@@ -253,7 +253,7 @@ function MobileMegaMenu({
 
       <div className="mt-2 grid gap-2">
         {groups.map((group) => (
-          <div key={group.key} className="rounded-[20px] border border-[#E0E6E4] bg-[#F8FAF9] p-3">
+          <div key={group.key} className="rounded-[20px] border border-[#E0E6E4] bg-[#D7E8E1] p-3">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">{group.label}</p>
             <p className="mt-1 text-base font-black text-[#111827]">{group.strapline}</p>
             <div className="mt-2 grid gap-2">
@@ -277,7 +277,7 @@ function MobileMegaMenu({
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Signed in</p>
             <p className="mt-1 break-words text-sm font-black text-[#111827]">{signedInAs}</p>
           </div>
-          <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#DCE5E1] bg-[#F8FAF9] px-4 py-2 text-sm font-black text-[#111827] transition hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]">
+          <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#DCE5E1] bg-[#D7E8E1] px-4 py-2 text-sm font-black text-[#111827] transition hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]">
             Open storefront
           </a>
           <LogoutButton className="admin-pressable inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
@@ -338,6 +338,7 @@ export default function AdminShell({
       items: [
         { href: "/admin/analytics", label: "Analytics", detail: "Sales and product performance", icon: "analytics", current: current === "analytics" },
         { href: "/admin/referrals", label: "Referrals", detail: "Tenant referral dashboard", icon: "referrals", current: current === "referrals" },
+        { href: `https://www.orduva.com/affiliate/apply?ref_tenant=${encodeURIComponent(String(tenantSlug || ""))}&ref_source=tenant_admin_menu`, label: "Affiliate sign-up", detail: "Invite public affiliate applicants", icon: "referrals", external: true },
       ],
     },
     {
@@ -384,7 +385,7 @@ export default function AdminShell({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(135deg,#F6F8F7_0%,#F1F5F4_58%,#FFFFFF_100%)]" />
       <div className="mx-auto max-w-6xl">
         <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#DCE5E1] bg-white text-[#111827] sm:-mx-6 sm:mb-4">
-          <div className="relative mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3">
+          <div className="relative mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3" onMouseLeave={() => setActiveKey(null)}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-[#DCE5E1] bg-[#EAFBF5] text-base font-black text-[#111827]">
@@ -417,11 +418,12 @@ export default function AdminShell({
                       <button
                         key={group.key}
                         type="button"
+                        onMouseEnter={() => setActiveKey(group.key)}
                         onClick={() => setActiveKey((value) => (value === group.key ? null : group.key))}
                         className={[
                           "admin-pressable inline-flex min-h-11 items-center gap-3 rounded-full border px-4 py-2 text-sm font-black transition hover:-translate-y-[1px]",
                           selected
-                            ? "border-[#0F766E]/30 bg-[#EAFBF5] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_rgba(17,24,39,0.08)]"
+                            ? "border-[#8CB9AC] bg-[#D7E8E1] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_rgba(17,24,39,0.08)]"
                             : containsCurrent
                               ? "border-[#0F766E]/35 bg-white text-[#0F766E] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(17,24,39,0.06)]"
                               : "border-[#DCE5E1] bg-white text-[#374151] hover:border-[#0F766E]/30 hover:bg-[#F8FAF9] hover:text-[#0F766E]",
@@ -432,7 +434,7 @@ export default function AdminShell({
                         <span>{group.label}</span>
                         <span className={[
                           "flex h-8 w-8 items-center justify-center rounded-full transition",
-                          selected ? "bg-[#0F766E] text-white" : "bg-[#F1F5F4] text-[#5F6B66]",
+                          selected ? "bg-[#0F766E] text-white" : "bg-[#D7E8E1] text-[#5F6B66]",
                         ].join(" ")}><AdminChevronIcon open={selected} /></span>
                       </button>
                     );
