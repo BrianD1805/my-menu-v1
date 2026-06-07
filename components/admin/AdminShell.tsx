@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import LogoutButton from "@/components/admin/LogoutButton";
 import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
@@ -84,6 +84,29 @@ function MobileMenuIcon({ open }: { open: boolean }) {
   );
 }
 
+
+function AdminChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={["h-4 w-4 transition", open ? "rotate-180" : ""].join(" ")}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+function adminDisplayName(tenantName: string) {
+  const cleanName = tenantName.trim() || "Orduva";
+  return /\badmin$/i.test(cleanName) ? cleanName : `${cleanName} Admin`;
+}
+
 function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) {
   return (
     <a
@@ -92,17 +115,17 @@ function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => voi
       target={item.external ? "_blank" : undefined}
       rel={item.external ? "noreferrer" : undefined}
       aria-current={item.current ? "page" : undefined}
-      className="admin-pressable group flex min-h-[108px] items-center gap-4 rounded-[24px] border border-[#E0E6E4] bg-white px-5 py-4 text-left text-[#111827] shadow-[0_12px_28px_rgba(17,24,39,0.06)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#FBFFFD]"
+      className={["admin-pressable group flex min-h-[78px] items-center gap-3 rounded-[18px] border px-4 py-3 text-left shadow-[0_10px_22px_rgba(17,24,39,0.05)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35", item.current ? "border-[#0F766E] bg-[#0F766E] text-white" : "border-[#E0E6E4] bg-white text-[#111827] hover:bg-[#FBFFFD]"].join(" ")}
     >
-      <span className={["flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] transition", item.current ? "bg-[#0F766E] text-white" : "bg-[#EAFBF5] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")}>
+      <span className={["flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] transition", item.current ? "bg-white/16 text-white" : "bg-[#EAFBF5] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")}>
         <AdminNavIcon icon={item.icon} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-lg font-black leading-tight tracking-tight">{item.label}</span>
-        <span className="mt-1 block text-sm font-semibold leading-5 text-[#5F6B66]">{item.detail}</span>
+        <span className="block text-base font-black leading-tight tracking-tight">{item.label}</span>
+        <span className={["mt-1 block text-xs font-bold leading-5", item.current ? "text-white/82" : "text-[#5F6B66]"].join(" ")}>{item.detail}</span>
       </span>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F1F5F4] text-lg font-black text-[#5F6B66] transition group-hover:bg-[#0F766E] group-hover:text-white">
-        ↗
+      <span className={["flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition", item.current ? "bg-white/14 text-white" : "bg-[#F1F5F4] text-[#5F6B66] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")} aria-hidden="true">
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M9 7h8v8" /></svg>
       </span>
     </a>
   );
@@ -110,7 +133,7 @@ function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => voi
 
 function MegaFeatureCard({ group, tenantName }: { group: NavGroup; tenantName: string }) {
   return (
-    <aside className="relative flex min-h-[25rem] overflow-hidden rounded-[28px] bg-[#111827] p-7 text-white shadow-[0_20px_45px_rgba(17,24,39,0.20)]">
+    <aside className="relative flex min-h-[17.5rem] overflow-hidden rounded-[24px] bg-[#111827] p-5 text-white shadow-[0_18px_38px_rgba(17,24,39,0.18)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_100%,rgba(15,118,110,0.55),transparent_38%),linear-gradient(145deg,#111827_0%,#162231_58%,#243126_100%)]" />
       <div className="relative z-10 flex min-h-full flex-col justify-between">
         <div>
@@ -118,10 +141,10 @@ function MegaFeatureCard({ group, tenantName }: { group: NavGroup; tenantName: s
             <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
             <p className="text-sm font-black uppercase tracking-[0.26em] text-white/84">{group.eyebrow}</p>
           </div>
-          <h2 className="mt-16 text-3xl font-black leading-tight tracking-tight">{group.strapline}</h2>
+          <h2 className="mt-10 text-2xl font-black leading-tight tracking-tight">{group.strapline}</h2>
         </div>
         <div>
-          <p className="text-lg font-bold leading-8 text-white/72">{group.description}</p>
+          <p className="text-sm font-bold leading-6 text-white/72">{group.description}</p>
           <p className="mt-5 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white/78">{tenantName}</p>
         </div>
       </div>
@@ -151,23 +174,23 @@ function DesktopMegaDropdown({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute right-0 top-[calc(100%+0.85rem)] z-[80] hidden w-[min(66rem,calc(100vw-3rem))] overflow-hidden rounded-[32px] border border-[#DCE5E1] bg-white/96 p-7 text-[#111827] shadow-[0_28px_70px_rgba(17,24,39,0.18)] backdrop-blur-xl lg:block">
-      <div className="grid gap-5 lg:grid-cols-[25rem_minmax(0,1fr)]">
+    <section className="absolute right-0 top-[calc(100%+0.65rem)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#DCE5E1] bg-white/96 p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block">
+      <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
         <MegaFeatureCard group={group} tenantName={tenantName} />
-        <div className="grid content-start gap-4">
+        <div className="grid content-start gap-3">
           {group.items.map((item) => (
             <MenuItemCard key={item.href} item={item} closeMenu={closeMenu} />
           ))}
 
           {isConfigure ? (
-            <div className="rounded-[24px] border border-[#CFE1DD] bg-[#EAFBF5] p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+            <div className="rounded-[20px] border border-[#CFE1DD] bg-[#EAFBF5] p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
               <div className="flex items-start gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] bg-white text-[#0F766E] shadow-sm">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] bg-white text-[#0F766E] shadow-sm">
                   <AdminNavIcon icon="billing" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">Launch & billing</p>
-                  <p className="mt-1 text-base font-black leading-6 text-[#111827]">Checklist, trial status and active billing</p>
+                  <p className="mt-1 text-sm font-black leading-5 text-[#111827]">Checklist, trial status and active billing</p>
                   <p className="mt-1 text-sm font-semibold leading-5 text-[#5F6B66]">Billing controls now live inside the Configure menu.</p>
                 </div>
               </div>
@@ -179,12 +202,12 @@ function DesktopMegaDropdown({
 
           {isAccount ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[24px] border border-[#E0E6E4] bg-white p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+              <div className="rounded-[20px] border border-[#E0E6E4] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
                 <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">Signed in</p>
                 <p className="mt-2 break-words text-base font-black text-[#111827]">{signedInAs}</p>
                 <LogoutButton className="admin-pressable mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
               </div>
-              <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable rounded-[24px] border border-[#E0E6E4] bg-white p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#FBFFFD]">
+              <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable rounded-[20px] border border-[#E0E6E4] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#FBFFFD]">
                 <span className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#EAFBF5] text-[#0F766E]"><AdminNavIcon icon="storefront" /></span>
                 <span className="mt-4 block text-base font-black text-[#111827]">Open storefront</span>
                 <span className="mt-1 block truncate text-sm font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
@@ -218,22 +241,22 @@ function MobileMegaMenu({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-[80] max-h-[calc(100dvh-7.5rem)] overflow-y-auto rounded-[28px] border border-[#DCE5E1] bg-white/96 p-4 text-[#111827] shadow-[0_24px_58px_rgba(17,24,39,0.18)] backdrop-blur-xl lg:hidden">
-      <div className="rounded-[24px] bg-[#111827] p-5 text-white">
+    <section className="absolute left-0 right-0 top-[calc(100%+0.6rem)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#DCE5E1] bg-white/96 p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
+      <div className="rounded-[20px] bg-[#111827] p-4 text-white">
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
           <p className="text-xs font-black uppercase tracking-[0.24em] text-white/82">Tenant admin menu</p>
         </div>
-        <h2 className="mt-6 text-2xl font-black tracking-tight">{tenantName}</h2>
+        <h2 className="mt-4 text-xl font-black tracking-tight">{tenantName}</h2>
         <p className="mt-2 text-sm font-semibold leading-6 text-white/70">All admin sections are available below.</p>
       </div>
 
-      <div className="mt-4 grid gap-4">
+      <div className="mt-2 grid gap-2">
         {groups.map((group) => (
-          <div key={group.key} className="rounded-[24px] border border-[#E0E6E4] bg-[#F8FAF9] p-4">
+          <div key={group.key} className="rounded-[20px] border border-[#E0E6E4] bg-[#F8FAF9] p-3">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">{group.label}</p>
-            <p className="mt-1 text-lg font-black text-[#111827]">{group.strapline}</p>
-            <div className="mt-3 grid gap-3">
+            <p className="mt-1 text-base font-black text-[#111827]">{group.strapline}</p>
+            <div className="mt-2 grid gap-2">
               {group.items.map((item) => (
                 <MenuItemCard key={`${group.key}-${item.href}`} item={item} closeMenu={closeMenu} />
               ))}
@@ -343,6 +366,16 @@ export default function AdminShell({
   const currentGroup = navGroups.find((group) => group.items.some((item) => item.current))?.key ?? "run";
   const [activeKey, setActiveKey] = useState<NavKey | null>(null);
   const activeGroup = navGroups.find((group) => group.key === activeKey) ?? null;
+
+  useEffect(() => {
+    if (!activeKey) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [activeKey]);
+
   const tenantInitial = tenantName.trim().slice(0, 1).toUpperCase() || "O";
   const identityIconUrl = faviconUrl || null;
 
@@ -364,7 +397,7 @@ export default function AdminShell({
                       {versionLabel()}
                     </span>
                   </div>
-                  <p className="truncate text-lg font-black leading-tight text-[#111827] sm:text-xl">{tenantName} Admin</p>
+                  <p className="truncate text-lg font-black leading-tight text-[#111827] sm:text-xl">{adminDisplayName(tenantName)}</p>
                   {tenantSlug ? (
                     <a href={storefrontUrl} target="_blank" rel="noreferrer" className="mt-0.5 block truncate text-xs font-semibold text-[#374151] underline-offset-4 transition hover:text-[#0F766E] hover:underline" title="Open storefront">
                       {tenantSlug}.orduva.com
@@ -398,9 +431,9 @@ export default function AdminShell({
                       >
                         <span>{group.label}</span>
                         <span className={[
-                          "flex h-8 w-8 items-center justify-center rounded-full text-xs transition",
+                          "flex h-8 w-8 items-center justify-center rounded-full transition",
                           selected ? "bg-[#0F766E] text-white" : "bg-[#F1F5F4] text-[#5F6B66]",
-                        ].join(" ")}>⌄</span>
+                        ].join(" ")}><AdminChevronIcon open={selected} /></span>
                       </button>
                     );
                   })}
