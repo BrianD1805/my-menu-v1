@@ -3804,6 +3804,8 @@ export default function MenuBrowser({
                   customAmountDisableDiscounts={
                     product.custom_amount_disable_discounts
                   }
+                  preorderEnabled={product.preorder_enabled}
+                  preorderWhenOutOfStock={product.preorder_when_out_of_stock}
                   moneySettings={moneySettings}
                   accentColor={accentColor}
                   primaryColor={primaryColor}
