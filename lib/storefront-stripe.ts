@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { buildWhatsAppOrderMessage } from "@/lib/whatsapp";
 import { enqueueNotificationEvent } from "@/lib/notifications";
-import { sendAdminPushForTenant } from "@/lib/web-push";
+import { sendAdminPushForTenant, sendCustomerPushForOrderWithFallback } from "@/lib/web-push";
 
 export type TenantStripeCustomerSettings = {
   tenant_id: string;
@@ -695,6 +695,12 @@ export async function createPaidOrderFromIntent(input: {
       title: "Payment received",
       body: "Your order has been paid and sent to the store.",
       payload: { orderId: order.id, status: "new" },
+    }),
+    sendCustomerPushForOrderWithFallback(tenant.id, order.id, {
+      title: "Payment received",
+      body: "Your order has been paid and sent to the store.",
+      url: "/account",
+      tag: `orduva-customer-${order.id}-paid`,
     }),
     sendAdminPushForTenant(tenant.id, {
       title: "Paid order received",

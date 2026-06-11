@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { buildWhatsAppOrderMessage } from "@/lib/whatsapp";
 import { enqueueNotificationEvent } from "@/lib/notifications";
-import { sendAdminPushForTenant } from "@/lib/web-push";
+import { sendAdminPushForTenant, sendCustomerPushForOrderWithFallback } from "@/lib/web-push";
 
 export type TenantDarajaCustomerSettings = {
   tenant_id: string;
@@ -697,6 +697,12 @@ export async function createPaidOrderFromDarajaIntent(input: {
       title: "Payment received",
       body: "Your M-Pesa payment has been received and the order has been sent to the store.",
       payload: { orderId: order.id, status: "new" },
+    }),
+    sendCustomerPushForOrderWithFallback(tenant.id, order.id, {
+      title: "Payment received",
+      body: "Your M-Pesa payment has been received and the order has been sent to the store.",
+      url: "/account",
+      tag: `orduva-customer-${order.id}-paid`,
     }),
     sendAdminPushForTenant(tenant.id, {
       title: "Paid order received",

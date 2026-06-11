@@ -5,7 +5,7 @@ import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 import { buildWhatsAppAppUrl, buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { enqueueNotificationEvent } from "@/lib/notifications";
-import { sendAdminPushForTenant } from "@/lib/web-push";
+import { sendAdminPushForTenant, sendCustomerPushForOrderWithFallback } from "@/lib/web-push";
 import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/trial";
 import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
 import { createTenantStripeOrderCheckoutIntent } from "@/lib/storefront-stripe";
@@ -695,6 +695,12 @@ export async function POST(req: Request) {
         title: "Order received",
         body: preorderFinancials.hasPreorder ? "Your pre-order has been received. Your balance will be requested when stock arrives." : selectedPayment.online ? "Your order has been received and is waiting for secure payment." : "Your order has been received and is waiting for confirmation.",
         payload: { orderId: order.id, status: "new" },
+      }),
+      sendCustomerPushForOrderWithFallback(tenant.id, order.id, {
+        title: "Order received",
+        body: preorderFinancials.hasPreorder ? "Your pre-order has been received. Your balance will be requested when stock arrives." : selectedPayment.online ? "Your order has been received and is waiting for secure payment." : "Your order has been received and is waiting for confirmation.",
+        url: "/account",
+        tag: `orduva-customer-${order.id}-received`,
       }),
       sendAdminPushForTenant(tenant.id, {
         title: "New order received",

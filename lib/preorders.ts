@@ -23,14 +23,15 @@ export function moneyRound(value: number) {
 export function isPreorderProduct(product: any, selectedVariant: any | null = null) {
   const isCustomAmountProduct = product?.product_type === "customer_amount" || product?.custom_amount_enabled === true;
   if (isCustomAmountProduct) return false;
-  if (product?.preorder_enabled === true) return true;
+  if (product?.preorder_enabled !== true) return false;
 
   const tracked = selectedVariant ? selectedVariant?.stockEnabled === true : product?.stock_enabled === true;
   const available = selectedVariant
     ? Math.floor(Number(selectedVariant?.stockQuantity || 0))
     : Math.floor(Number(product?.stock_quantity || 0));
 
-  return product?.preorder_when_out_of_stock === true && tracked && available <= 0;
+  if (tracked && available <= 0) return product?.preorder_when_out_of_stock === true;
+  return true;
 }
 
 export function calculatePreorderFinancials(input: {

@@ -102,6 +102,42 @@ async function logCustomerPushEvent(input: {
   }
 }
 
+async function logAdminPushEvent(input: {
+  tenantId: string;
+  eventType: string;
+  title: string;
+  body: string;
+  status: "sent" | "skipped" | "failed";
+  metadata: Record<string, unknown>;
+}) {
+  const now = new Date().toISOString();
+  const { error } = await db.from("notification_events").insert({
+    tenant_id: input.tenantId,
+    order_id: typeof input.metadata?.orderId === "string" ? String(input.metadata.orderId) : null,
+    audience: "admin",
+    channel: "push",
+    event_type: input.eventType,
+    title: input.title,
+    body: input.body,
+    status: input.status,
+    metadata: input.metadata || {},
+    processed_at: input.status === "sent" || input.status === "skipped" ? now : null,
+    failed_at: input.status === "failed" ? now : null,
+    error_message:
+      input.status === "failed" && typeof input.metadata?.error === "string"
+        ? String(input.metadata.error)
+        : null,
+  });
+
+  if (error) {
+    console.error("[Orduva push] Failed to log admin notification event", {
+      message: error.message,
+      eventType: input.eventType,
+      status: input.status,
+    });
+  }
+}
+
 async function linkRowsToCurrentOrder(tenantId: string, orderId: string, rows: CustomerSubscriptionRow[]) {
   const endpoints = Array.from(new Set(rows.map((row) => row.endpoint).filter(Boolean)));
   if (!endpoints.length) return;
@@ -164,8 +200,21 @@ async function sendRows(tenantId: string, rows: CustomerSubscriptionRow[], paylo
 }
 
 export async function sendAdminPushForTenant(tenantId: string, payload: PushPayload) {
+  const orderIdFromTag = typeof payload.tag === "string" && payload.tag.startsWith("orduva-order-")
+    ? payload.tag.replace("orduva-order-", "")
+    : null;
+
   if (!configureWebPush()) {
-    return { ok: false, reason: "missing_vapid" as const, sent: 0, failed: 0 };
+    const result = { ok: false, reason: "missing_vapid" as const, sent: 0, failed: 0 };
+    await logAdminPushEvent({
+      tenantId,
+      eventType: "admin_push_missing_vapid",
+      title: "Admin push not configured",
+      body: "Admin new-order push could not be sent because VAPID configuration is missing.",
+      status: "failed",
+      metadata: { ...result, orderId: orderIdFromTag, tag: payload.tag || null },
+    });
+    return result;
   }
 
   const { data, error } = await db
@@ -175,7 +224,16 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
     .eq("enabled", true);
 
   if (error) {
-    return { ok: false, reason: "query_failed" as const, sent: 0, failed: 0 };
+    const result = { ok: false, reason: "query_failed" as const, sent: 0, failed: 0 };
+    await logAdminPushEvent({
+      tenantId,
+      eventType: "admin_push_query_failed",
+      title: "Admin push lookup failed",
+      body: "Admin new-order push could not query enabled admin devices.",
+      status: "failed",
+      metadata: { ...result, orderId: orderIdFromTag, tag: payload.tag || null, error: error.message },
+    });
+    return result;
   }
 
   if (!data?.length) {
@@ -186,7 +244,7 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
       event_type: "admin_push_no_enabled_devices",
       title: "Admin push not active",
       body: "A new-order admin push could not be sent because no enabled admin push devices were found for this tenant.",
-      metadata: { route: "/admin", action: "enable_admin_push" },
+      metadata: { route: "/admin", action: "enable_admin_push", orderId: orderIdFromTag, tag: payload.tag || null },
       status: "skipped",
       processed_at: new Date().toISOString(),
     });
@@ -228,7 +286,19 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
     }
   }
 
-  return { ok: sent > 0, reason: sent > 0 ? null : "send_failed" as const, sent, failed };
+  const result = { ok: sent > 0, reason: sent > 0 ? null : "send_failed" as const, sent, failed };
+  await logAdminPushEvent({
+    tenantId,
+    eventType: result.ok ? "admin_push_sent" : "admin_push_failed",
+    title: result.ok ? "Admin push sent" : "Admin push failed",
+    body: result.ok
+      ? `Admin new-order push was sent to ${sent} device(s).`
+      : "Admin new-order push found enabled devices but could not deliver to any device.",
+    status: result.ok ? "sent" : "failed",
+    metadata: { ...result, orderId: orderIdFromTag, tag: payload.tag || null },
+  });
+
+  return result;
 }
 
 export async function sendCustomerPushForOrderWithFallback(

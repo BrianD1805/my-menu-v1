@@ -99,7 +99,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const availableStock = Math.max(0, Number(stockQuantity || 0));
   const isOutOfStock = trackedStock && availableStock <= 0;
   const isLowStock = trackedStock && availableStock > 0 && availableStock <= Math.max(0, Number(lowStockThreshold || 5));
-  const isPreorderAvailable = preorderEnabled === true || (preorderWhenOutOfStock === true && isOutOfStock);
+  const isPreorderAvailable = preorderEnabled === true && (!isOutOfStock || preorderWhenOutOfStock === true);
   const stockRibbonLabel = isPreorderAvailable ? "Pre-order" : isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
   const activeVariants = (Array.isArray(productVariants) ? productVariants : []).filter((variant) => variant && variant.isActive !== false && String(variant.name || "").trim());
   const shouldPickVariant = Boolean(variantsEnabled && activeVariants.length);
@@ -330,7 +330,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   function buttonLabel() {
     if (isPreorderAvailable) return "Pre-order";
-    if (isOutOfStock) return "Sold out";
+    if (isOutOfStock) return "Out of stock";
     if (buttonState === "adding") return "Adding";
     if (buttonState === "added") return "Added ✓";
     return isCustomerAmountProduct ? "Pay" : "Add";
@@ -451,17 +451,23 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               )}
             </div>
 
-            <button
-              type="button"
-              className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-not-allowed disabled:opacity-85 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
-              style={buttonState === "added"
-                ? { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }
-                : { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
-              onClick={() => void addToCart("card")}
-              disabled={buttonState === "adding" || (isOutOfStock && !isPreorderAvailable)}
-            >
-              {buttonLabel()}
-            </button>
+            {isOutOfStock && !isPreorderAvailable ? (
+              <span className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[0.8rem] font-semibold text-slate-500 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]">
+                Out of stock
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="inline-flex min-h-[38px] items-center justify-center whitespace-nowrap rounded-[14px] border bg-white px-2.5 py-1.5 text-[0.8rem] font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-wait disabled:opacity-85 sm:min-h-[42px] sm:px-3 sm:text-[0.84rem] lg:min-h-[46px] lg:rounded-[16px] lg:text-[0.88rem]"
+                style={buttonState === "added"
+                  ? { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }
+                  : { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
+                onClick={() => void addToCart("card")}
+                disabled={buttonState === "adding"}
+              >
+                {buttonLabel()}
+              </button>
+            )}
 
             <button
               type="button"
@@ -670,15 +676,21 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => { void addToCart("modal"); }}
-                    disabled={buttonState === "adding" || (isOutOfStock && !isPreorderAvailable)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-not-allowed disabled:opacity-70 lg:px-8"
-                    style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
-                  >
-                    {buttonState === "adding" ? "Adding..." : isPreorderAvailable ? "Pre-order" : isOutOfStock ? "Sold out" : "Add"}
-                  </button>
+                  {isOutOfStock && !isPreorderAvailable ? (
+                    <span className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-7 py-3 text-sm font-semibold text-slate-500 lg:px-8">
+                      Out of stock
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { void addToCart("modal"); }}
+                      disabled={buttonState === "adding"}
+                      className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-wait disabled:opacity-70 lg:px-8"
+                      style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
+                    >
+                      {buttonState === "adding" ? "Adding..." : isPreorderAvailable ? "Pre-order" : "Add"}
+                    </button>
+                  )}
                 </div>
                 {shareStatus !== "idle" ? (
                   <p className={`mt-3 text-center text-xs font-semibold ${shareStatus === "copied" ? "text-emerald-700" : "text-red-600"}`}>

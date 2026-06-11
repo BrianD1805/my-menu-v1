@@ -123,8 +123,9 @@ function variantStockState(
 }
 
 function isPreorderAvailableFor(product: Product | undefined, stockState: { outOfStock: boolean }) {
-  if (!product) return false;
-  return product.preorder_enabled === true || (product.preorder_when_out_of_stock === true && stockState.outOfStock);
+  if (!product || product.preorder_enabled !== true) return false;
+  if (stockState.outOfStock) return product.preorder_when_out_of_stock === true;
+  return true;
 }
 
 type Product = {
@@ -386,8 +387,11 @@ function FavouriteProductStripCard({
   const isOutOfStock = trackedStock && availableStock <= 0;
   const isLowStock =
     trackedStock && availableStock > 0 && availableStock <= lowStockThreshold;
+  const isPreorderAvailable =
+    product.preorder_enabled === true &&
+    (!isOutOfStock || product.preorder_when_out_of_stock === true);
   const stockRibbonLabel = isOutOfStock
-    ? (product.preorder_enabled === true || product.preorder_when_out_of_stock === true ? "Pre-order" : "Out of stock")
+    ? (isPreorderAvailable ? "Pre-order" : "Out of stock")
     : isLowStock
       ? `Only ${availableStock} left`
       : null;
@@ -508,26 +512,31 @@ function FavouriteProductStripCard({
           >
             {formatMoney(Number(product.price), money)}
           </span>
-          <button
-            type="button"
-            onClick={() =>
-              onAddToCart(product.id, {
-                sourceRect:
-                  imageFrameRef.current?.getBoundingClientRect() || null,
-                imageUrl: product.image_url,
-                name: product.name,
-              })
-            }
-            disabled={isOutOfStock}
-            className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-65"
-            style={{
-              backgroundColor: favouriteAddBackground,
-              borderColor: favouriteAddBorder,
-              color: favouriteAddText,
-            }}
-          >
-            {isOutOfStock ? "Sold out" : "Add"}
-          </button>
+          {isOutOfStock && !isPreorderAvailable ? (
+            <span className="inline-flex min-h-[34px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-500">
+              Out of stock
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                onAddToCart(product.id, {
+                  sourceRect:
+                    imageFrameRef.current?.getBoundingClientRect() || null,
+                  imageUrl: product.image_url,
+                  name: product.name,
+                })
+              }
+              className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
+              style={{
+                backgroundColor: favouriteAddBackground,
+                borderColor: favouriteAddBorder,
+                color: favouriteAddText,
+              }}
+            >
+              {isPreorderAvailable ? "Pre-order" : "Add"}
+            </button>
+          )}
         </div>
         <p
           className="mt-2 text-[9px] font-bold uppercase tracking-[0.14em]"
@@ -3539,12 +3548,16 @@ export default function MenuBrowser({
                       variantPickerProduct.product,
                       null,
                     );
+                    const basePreorderAvailable = isPreorderAvailableFor(
+                      variantPickerProduct.product,
+                      baseStock,
+                    );
                     return (
                       <button
                         type="button"
-                        disabled={baseStock.outOfStock}
+                        disabled={baseStock.outOfStock && !basePreorderAvailable}
                         onClick={() => {
-                          if (baseStock.outOfStock) return;
+                          if (baseStock.outOfStock && !basePreorderAvailable) return;
                           const current = variantPickerProduct;
                           setVariantPickerProduct(null);
                           void addCartLine(
@@ -3572,9 +3585,15 @@ export default function MenuBrowser({
                             shown on the menu.
                           </span>
                           {baseStock.outOfStock ? (
-                            <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
-                              Sold out
-                            </span>
+                            basePreorderAvailable ? (
+                              <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                                Pre-order available
+                              </span>
+                            ) : (
+                              <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
+                                Out of stock
+                              </span>
+                            )
                           ) : baseStock.lowStock ? (
                             <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
                               Only {baseStock.available} left
@@ -3632,9 +3651,15 @@ export default function MenuBrowser({
                               </span>
                             ) : null}
                             {stock.outOfStock ? (
-                              <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
-                                Sold out
-                              </span>
+                              isPreorderAvailableFor(variantPickerProduct.product, stock) ? (
+                                <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                                  Pre-order available
+                                </span>
+                              ) : (
+                                <span className="mt-2 inline-flex rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700">
+                                  Out of stock
+                                </span>
+                              )
                             ) : stock.lowStock ? (
                               <span className="mt-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
                                 Only {stock.available} left
@@ -4158,6 +4183,10 @@ export default function MenuBrowser({
                       );
                       const searchOutOfStock =
                         searchTrackedStock && searchAvailableStock <= 0;
+                      const searchPreorderAvailable = isPreorderAvailableFor(
+                        product,
+                        { outOfStock: searchOutOfStock },
+                      );
                       const searchLowStock =
                         searchTrackedStock &&
                         searchAvailableStock > 0 &&
@@ -4217,36 +4246,41 @@ export default function MenuBrowser({
                                       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${searchOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}
                                     >
                                       {searchOutOfStock
-                                        ? "Out of stock"
+                                        ? (searchPreorderAvailable ? "Pre-order available" : "Out of stock")
                                         : `Only ${searchAvailableStock} left`}
                                     </span>
                                   ) : null}
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const sourceRect =
-                                      document
-                                        .getElementById(thumbId)
-                                        ?.getBoundingClientRect() || null;
-                                    void addToCart(product.id, {
-                                      sourceRect,
-                                      imageUrl: product.image_url,
-                                      name: product.name,
-                                      destination: "search",
-                                    });
-                                  }}
-                                  disabled={searchOutOfStock}
-                                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  {searchOutOfStock
-                                    ? "Sold out"
-                                    : state === "adding"
+                                {searchOutOfStock && !searchPreorderAvailable ? (
+                                  <span className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-500">
+                                    Out of stock
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const sourceRect =
+                                        document
+                                          .getElementById(thumbId)
+                                          ?.getBoundingClientRect() || null;
+                                      void addToCart(product.id, {
+                                        sourceRect,
+                                        imageUrl: product.image_url,
+                                        name: product.name,
+                                        destination: "search",
+                                      });
+                                    }}
+                                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100"
+                                  >
+                                    {state === "adding"
                                       ? "Adding..."
                                       : state === "added"
                                         ? "Added ✓"
-                                        : "Add"}
-                                </button>
+                                        : searchPreorderAvailable
+                                          ? "Pre-order"
+                                          : "Add"}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
