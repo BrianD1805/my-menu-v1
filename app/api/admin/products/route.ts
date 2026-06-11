@@ -55,6 +55,10 @@ function normalizeStockEnabled(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1;
 }
 
+function normalizeBoolean(value: unknown) {
+  return value === true || value === "true" || value === "1" || value === 1;
+}
+
 
 function normalizeProductType(value: unknown) {
   const text = String(value || "standard").trim();
@@ -181,6 +185,8 @@ export async function POST(req: Request) {
     const customAmountHelpText = normalizeShortText(body?.customAmountHelpText, "Enter the amount shown on your invoice.");
     const customAmountDisableRewards = normalizeBooleanDefaultTrue(body?.customAmountDisableRewards);
     const customAmountDisableDiscounts = normalizeBooleanDefaultTrue(body?.customAmountDisableDiscounts);
+    const preorderEnabled = normalizeBoolean(body?.preorderEnabled);
+    const preorderWhenOutOfStock = normalizeBoolean(body?.preorderWhenOutOfStock);
 
     if (!name || !categoryId || price === null || stockQuantity === null) {
       return NextResponse.json(
@@ -240,9 +246,11 @@ export async function POST(req: Request) {
         custom_amount_help_text: customAmountHelpText,
         custom_amount_disable_rewards: customAmountDisableRewards,
         custom_amount_disable_discounts: customAmountDisableDiscounts,
+        preorder_enabled: preorderEnabled,
+        preorder_when_out_of_stock: preorderWhenOutOfStock,
       })
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts, preorder_enabled, preorder_when_out_of_stock",
       )
       .single();
 
@@ -292,6 +300,8 @@ export async function PATCH(req: Request) {
     const customAmountHelpText = normalizeShortText(body?.customAmountHelpText, "Enter the amount shown on your invoice.");
     const customAmountDisableRewards = normalizeBooleanDefaultTrue(body?.customAmountDisableRewards);
     const customAmountDisableDiscounts = normalizeBooleanDefaultTrue(body?.customAmountDisableDiscounts);
+    const preorderEnabled = normalizeBoolean(body?.preorderEnabled);
+    const preorderWhenOutOfStock = normalizeBoolean(body?.preorderWhenOutOfStock);
 
     if (
       !productId ||
@@ -359,11 +369,13 @@ export async function PATCH(req: Request) {
         custom_amount_help_text: customAmountHelpText,
         custom_amount_disable_rewards: customAmountDisableRewards,
         custom_amount_disable_discounts: customAmountDisableDiscounts,
+        preorder_enabled: preorderEnabled,
+        preorder_when_out_of_stock: preorderWhenOutOfStock,
       })
       .eq("id", productId)
       .eq("tenant_id", tenant.id)
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts, preorder_enabled, preorder_when_out_of_stock",
       )
       .single();
 

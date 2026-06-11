@@ -58,6 +58,8 @@ type ProductRow = {
   custom_amount_help_text?: string | null;
   custom_amount_disable_rewards?: boolean | null;
   custom_amount_disable_discounts?: boolean | null;
+  preorder_enabled?: boolean | null;
+  preorder_when_out_of_stock?: boolean | null;
 };
 
 type DraftState = {
@@ -84,6 +86,8 @@ type DraftState = {
   customAmountHelpText: string;
   customAmountDisableRewards: boolean;
   customAmountDisableDiscounts: boolean;
+  preorderEnabled: boolean;
+  preorderWhenOutOfStock: boolean;
 };
 
 function emptyDraft(defaultCategoryId: string): DraftState {
@@ -111,6 +115,8 @@ function emptyDraft(defaultCategoryId: string): DraftState {
     customAmountHelpText: "Enter the amount shown on your invoice.",
     customAmountDisableRewards: true,
     customAmountDisableDiscounts: true,
+    preorderEnabled: false,
+    preorderWhenOutOfStock: false,
   };
 }
 
@@ -386,6 +392,8 @@ export default function ProductManager({
       customAmountHelpText: draft.customAmountHelpText.trim(),
       customAmountDisableRewards: draft.customAmountDisableRewards === true,
       customAmountDisableDiscounts: draft.customAmountDisableDiscounts === true,
+      preorderEnabled: draft.preorderEnabled === true,
+      preorderWhenOutOfStock: draft.preorderWhenOutOfStock === true,
       variants: draft.variants.map((variant) => ({
         ...variant,
         name: variant.name.trim(),
@@ -505,6 +513,8 @@ export default function ProductManager({
         product.custom_amount_disable_rewards !== false,
       customAmountDisableDiscounts:
         product.custom_amount_disable_discounts !== false,
+      preorderEnabled: product.preorder_enabled === true,
+      preorderWhenOutOfStock: product.preorder_when_out_of_stock === true,
     };
     setEditingDraft(draft);
     setOriginalDraftSnapshot(normalizeDraftForCompare(draft));
@@ -571,6 +581,8 @@ export default function ProductManager({
           customAmountHelpText: newDraft.customAmountHelpText,
           customAmountDisableRewards: newDraft.customAmountDisableRewards,
           customAmountDisableDiscounts: newDraft.customAmountDisableDiscounts,
+          preorderEnabled: newDraft.preorderEnabled,
+          preorderWhenOutOfStock: newDraft.preorderWhenOutOfStock,
         }),
       });
       const payload = await response.json();
@@ -634,6 +646,8 @@ export default function ProductManager({
           product.custom_amount_disable_rewards !== false,
         customAmountDisableDiscounts:
           product.custom_amount_disable_discounts !== false,
+        preorderEnabled: product.preorder_enabled === true,
+        preorderWhenOutOfStock: product.preorder_when_out_of_stock === true,
       };
       setEditingDraft(createdDraft);
       setOriginalDraftSnapshot(normalizeDraftForCompare(createdDraft));
@@ -693,6 +707,8 @@ export default function ProductManager({
           customAmountDisableRewards: editingDraft.customAmountDisableRewards,
           customAmountDisableDiscounts:
             editingDraft.customAmountDisableDiscounts,
+          preorderEnabled: editingDraft.preorderEnabled,
+          preorderWhenOutOfStock: editingDraft.preorderWhenOutOfStock,
         }),
       });
       const payload = await response.json();
@@ -1642,6 +1658,50 @@ export default function ProductManager({
                         out of stock.
                       </p>
                     </div>
+
+
+
+                    {activeDraft.productType !== "customer_amount" ? (
+                      <div className="rounded-[24px] border border-amber-200 bg-amber-50/70 p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <FieldLabel>Pre-orders</FieldLabel>
+                            <p className="text-xs leading-5 text-slate-600">
+                              Take a deposit at checkout and keep stock untouched until the balance is paid.
+                            </p>
+                          </div>
+                          <span className="rounded-full border border-amber-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-700">
+                            Ver 0.235
+                          </span>
+                        </div>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <label className="flex min-h-[58px] items-start gap-3 rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={activeDraft.preorderEnabled}
+                              onChange={(event) => updateActiveDraft({ preorderEnabled: event.target.checked })}
+                              className="mt-1 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                            />
+                            <span>
+                              <span className="block font-semibold text-slate-950">Sell as a pre-order product</span>
+                              <span className="mt-1 block text-xs leading-5 text-slate-500">Customers pay the configured deposit first, then the balance when stock arrives.</span>
+                            </span>
+                          </label>
+                          <label className="flex min-h-[58px] items-start gap-3 rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm text-slate-700">
+                            <input
+                              type="checkbox"
+                              checked={activeDraft.preorderWhenOutOfStock}
+                              onChange={(event) => updateActiveDraft({ preorderWhenOutOfStock: event.target.checked })}
+                              className="mt-1 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                            />
+                            <span>
+                              <span className="block font-semibold text-slate-950">Allow pre-order when stock is depleted</span>
+                              <span className="mt-1 block text-xs leading-5 text-slate-500">Normal stock rules apply while stock is available; when stock reaches 0, customers may still pre-order.</span>
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
 
                     <div className="rounded-[24px] border border-indigo-100 bg-indigo-50/60 p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

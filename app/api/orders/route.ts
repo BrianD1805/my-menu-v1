@@ -14,6 +14,7 @@ import { createTenantPesapalOrderCheckoutIntent } from "@/lib/storefront-pesapal
 import { createTenantDarajaStkPushIntent } from "@/lib/storefront-daraja";
 import { calculateRewardDiscount, getCustomerRewardSummary } from "@/lib/rewards";
 import { calculateBestDiscount } from "@/lib/discounts";
+import { calculatePreorderFinancials, isPreorderProduct, moneyRound, normalizePreorderDepositPercent } from "@/lib/preorders";
 
 function hasNumberValue(value: unknown) {
   return value !== null && value !== undefined && value !== "";
@@ -148,6 +149,9 @@ export async function POST(req: Request) {
 
     const requestedQuantityBySellableLine = new Map<string, number>();
     for (const item of body.items) {
+      const product = products.find((p) => p.id === item.productId);
+      const selectedVariant = item.variantId ? findActiveVariant(product, item.variantId) : null;
+      if (isPreorderProduct(product, selectedVariant)) continue;
       const lineKey = `${item.productId}::${item.variantId || "base"}`;
       requestedQuantityBySellableLine.set(lineKey, (requestedQuantityBySellableLine.get(lineKey) || 0) + item.quantity);
     }
@@ -164,7 +168,8 @@ export async function POST(req: Request) {
       }
 
       const stock = getVariantStockState(product, selectedVariant);
-      if (stock.tracked && requestedQuantity > stock.available) {
+      const canPreorder = isPreorderProduct(product, selectedVariant);
+      if (!canPreorder && stock.tracked && requestedQuantity > stock.available) {
         const optionName = selectedVariant?.name ? `${product?.name || "This product"} - ${selectedVariant.name}` : product?.name || "This product";
         return NextResponse.json(
           { error: `${optionName} only has ${stock.available} in stock.` },
@@ -172,6 +177,9 @@ export async function POST(req: Request) {
         );
       }
     }
+
+    const settings = await getTenantSettings(tenant.id);
+    const preorderDepositPercent = normalizePreorderDepositPercent((settings as any)?.preorder_deposit_percent ?? 25);
 
     let subtotal = 0;
 
@@ -216,6 +224,7 @@ export async function POST(req: Request) {
       }
       const variantPriceDelta = selectedVariant ? getVariantPriceDeltaForStorage(basePrice, selectedVariant, unitPrice) : 0;
       const lineTotal = unitPrice * item.quantity;
+      const isLinePreorder = isPreorderProduct(product, selectedVariant);
       subtotal += lineTotal;
       const displayName = isCustomAmountProduct
         ? `${product.name}${customAmountReference ? ` (${String(product.custom_amount_reference_label || "Reference")}: ${customAmountReference})` : ""}`
@@ -234,10 +243,12 @@ export async function POST(req: Request) {
         customer_entered_amount: isCustomAmountProduct ? unitPrice : null,
         customer_reference: customAmountReference,
         customer_note: customAmountNote,
+        is_preorder: isLinePreorder,
+        preorder_deposit_amount: 0,
+        preorder_balance_amount: 0,
       };
     });
 
-    const settings = await getTenantSettings(tenant.id);
     const customerAccountId = body.customerAccountId?.trim() || null;
     const containsCustomAmountLines = orderItems.some((item: any) => item.customer_entered_amount !== null && item.customer_entered_amount !== undefined);
     const customAmountDisablesRewards = containsCustomAmountLines && products.some((product: any) => (product.product_type === "customer_amount" || product.custom_amount_enabled === true) && product.custom_amount_disable_rewards !== false);
@@ -256,6 +267,40 @@ export async function POST(req: Request) {
     const rewardDiscount = discountCalculation.applied && !discountCalculation.rewardAllowed ? calculateRewardDiscount(subtotal, 0) : initialRewardDiscount;
     const totalAfterRewards = Math.max(0, Math.round((subtotal - rewardDiscount.discountAmount) * 100) / 100);
     const total = discountCalculation.applied ? discountCalculation.totalAfterDiscount : totalAfterRewards;
+    const preorderSubtotal = orderItems.reduce((sum: number, item: any) => sum + (item.is_preorder ? Number(item.line_total || 0) : 0), 0);
+    const preorderFinancials = calculatePreorderFinancials({
+      lineSubtotal: total,
+      preorderSubtotal: Math.min(preorderSubtotal, total),
+      depositPercent: preorderDepositPercent,
+    });
+    const payableNowTotal = preorderFinancials.hasPreorder ? preorderFinancials.amountDueNow : total;
+    const orderItemsForStorage = orderItems.map((item: any) => {
+      if (!item.is_preorder || preorderFinancials.preorderSubtotal <= 0) return item;
+      const share = Number(item.line_total || 0) / preorderFinancials.preorderSubtotal;
+      const deposit = moneyRound(preorderFinancials.depositAmount * share);
+      return {
+        ...item,
+        preorder_deposit_amount: deposit,
+        preorder_balance_amount: moneyRound(Number(item.line_total || 0) - deposit),
+      };
+    });
+    const preorderMetadata = preorderFinancials.hasPreorder
+      ? {
+          order_flow: preorderFinancials.orderFlow,
+          preorder_status: "awaiting_stock",
+          preorder_deposit_percent: preorderFinancials.depositPercent,
+          preorder_deposit_amount: preorderFinancials.depositAmount,
+          preorder_balance_amount: preorderFinancials.balanceAmount,
+          preorder_balance_payment_status: preorderFinancials.balanceAmount > 0 ? "pending" : "not_applicable",
+        }
+      : {
+          order_flow: "standard",
+          preorder_status: null,
+          preorder_deposit_percent: null,
+          preorder_deposit_amount: 0,
+          preorder_balance_amount: 0,
+          preorder_balance_payment_status: "not_applicable",
+        };
     const rewardMetadata = rewardSummary.enabled && customerAccountId && rewardDiscount.discountAmount > 0
       ? {
           reward_tier: rewardSummary.tier,
@@ -328,8 +373,10 @@ export async function POST(req: Request) {
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
-          items: orderItems,
-          total,
+          items: orderItemsForStorage,
+          total: payableNowTotal,
+          orderTotal: total,
+          preorder: preorderFinancials.hasPreorder ? preorderMetadata : null,
           currencyCode: branding.currencyCode || settings?.currency_code || "GBP",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
@@ -343,7 +390,9 @@ export async function POST(req: Request) {
           customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
-          paymentStatus: "checkout_started",
+          paymentStatus: preorderFinancials.hasPreorder ? "preorder_deposit_checkout_started" : "checkout_started",
+          amountDueNow: payableNowTotal,
+          preorder: preorderFinancials,
           stripeCheckoutUrl: checkoutIntent.url,
           stripeCheckoutSessionId: checkoutIntent.sessionId,
         });
@@ -368,8 +417,10 @@ export async function POST(req: Request) {
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
-          items: orderItems,
-          total,
+          items: orderItemsForStorage,
+          total: payableNowTotal,
+          orderTotal: total,
+          preorder: preorderFinancials.hasPreorder ? preorderMetadata : null,
           currencyCode: branding.currencyCode || settings?.currency_code || "ZAR",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
@@ -383,7 +434,9 @@ export async function POST(req: Request) {
           customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
-          paymentStatus: "checkout_started",
+          paymentStatus: preorderFinancials.hasPreorder ? "preorder_deposit_checkout_started" : "checkout_started",
+          amountDueNow: payableNowTotal,
+          preorder: preorderFinancials,
           yocoCheckoutUrl: checkoutIntent.url,
           yocoCheckoutId: checkoutIntent.yocoCheckoutId,
         });
@@ -409,8 +462,10 @@ export async function POST(req: Request) {
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
-          items: orderItems,
-          total,
+          items: orderItemsForStorage,
+          total: payableNowTotal,
+          orderTotal: total,
+          preorder: preorderFinancials.hasPreorder ? preorderMetadata : null,
           currencyCode: branding.currencyCode || settings?.currency_code || "KES",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
@@ -424,7 +479,9 @@ export async function POST(req: Request) {
           customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
-          paymentStatus: "checkout_started",
+          paymentStatus: preorderFinancials.hasPreorder ? "preorder_deposit_checkout_started" : "checkout_started",
+          amountDueNow: payableNowTotal,
+          preorder: preorderFinancials,
           darajaCheckoutUrl: checkoutIntent.url,
           darajaMerchantRequestId: checkoutIntent.merchantRequestId,
           darajaCheckoutRequestId: checkoutIntent.checkoutRequestId,
@@ -453,8 +510,10 @@ export async function POST(req: Request) {
           customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
           orderType: body.orderType,
           notes: body.notes?.trim() || null,
-          items: orderItems,
-          total,
+          items: orderItemsForStorage,
+          total: payableNowTotal,
+          orderTotal: total,
+          preorder: preorderFinancials.hasPreorder ? preorderMetadata : null,
           currencyCode: branding.currencyCode || settings?.currency_code || "KES",
           paymentMethodLabel: selectedPayment.label,
           rewards: rewardMetadata,
@@ -468,7 +527,9 @@ export async function POST(req: Request) {
           customerAccountId,
           paymentProvider: selectedPayment.id,
           paymentMethodLabel: selectedPayment.label,
-          paymentStatus: "checkout_started",
+          paymentStatus: preorderFinancials.hasPreorder ? "preorder_deposit_checkout_started" : "checkout_started",
+          amountDueNow: payableNowTotal,
+          preorder: preorderFinancials,
           mpesaCheckoutUrl: checkoutIntent.url,
           pesapalOrderTrackingId: checkoutIntent.orderTrackingId,
           pesapalMerchantReference: checkoutIntent.merchantReference,
@@ -491,6 +552,7 @@ export async function POST(req: Request) {
         order_type: body.orderType,
         status: "new",
         total,
+        ...preorderMetadata,
         subtotal_total: rewardMetadata.subtotal_total,
         reward_tier: rewardMetadata.reward_tier,
         reward_discount_percent: rewardMetadata.reward_discount_percent,
@@ -519,7 +581,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
     }
 
-    const orderItemsWithOrderId = orderItems.map((item) => ({
+    const orderItemsWithOrderId = orderItemsForStorage.map((item) => ({
       ...item,
       order_id: order.id,
     }));
@@ -539,11 +601,14 @@ export async function POST(req: Request) {
       page_path: "/checkout",
       order_id: order.id,
       anonymous_session_id: customerAccountId,
-      metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, subtotal, total, rewardTier: rewardMetadata.reward_tier, rewardDiscountAmount: rewardMetadata.reward_discount_amount, discountCode: discountMetadata.discount_code, discountAmount: discountMetadata.discount_amount },
+      metadata: { orderType: body.orderType, paymentProvider: selectedPayment.id, subtotal, total, rewardTier: rewardMetadata.reward_tier, rewardDiscountAmount: rewardMetadata.reward_discount_amount, discountCode: discountMetadata.discount_code, discountAmount: discountMetadata.discount_amount, orderFlow: preorderMetadata.order_flow, preorderDepositAmount: preorderMetadata.preorder_deposit_amount, preorderBalanceAmount: preorderMetadata.preorder_balance_amount, amountDueNow: payableNowTotal },
     }).then(undefined, () => undefined);
 
     const quantityBySellableLine = new Map<string, number>();
     for (const item of body.items) {
+      const product = products.find((p) => p.id === item.productId);
+      const selectedVariant = item.variantId ? findActiveVariant(product, item.variantId) : null;
+      if (isPreorderProduct(product, selectedVariant)) continue;
       const lineKey = `${item.productId}::${item.variantId || "base"}`;
       quantityBySellableLine.set(lineKey, (quantityBySellableLine.get(lineKey) || 0) + item.quantity);
     }
@@ -592,7 +657,7 @@ export async function POST(req: Request) {
       tenantName: branding.displayName,
       order,
       ...branding,
-      items: orderItems.map((item) => ({
+      items: orderItemsForStorage.map((item) => ({
         product_name: item.product_name,
         quantity: item.quantity,
         line_total: item.line_total,
@@ -619,7 +684,7 @@ export async function POST(req: Request) {
         audience: "admin",
         eventType: "new_order",
         title: "New order received",
-        body: selectedPayment.online ? `${body.customerName.trim()} started a Stripe payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        body: preorderFinancials.hasPreorder ? `${body.customerName.trim()} placed a pre-order. Deposit due now: ${payableNowTotal}.` : selectedPayment.online ? `${body.customerName.trim()} started an online payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
         payload: { orderId: order.id, route: "/admin/orders" },
       }),
       enqueueNotificationEvent({
@@ -628,12 +693,12 @@ export async function POST(req: Request) {
         audience: "customer",
         eventType: "order_received",
         title: "Order received",
-        body: selectedPayment.online ? "Your order has been received and is waiting for secure card payment." : "Your order has been received and is waiting for confirmation.",
+        body: preorderFinancials.hasPreorder ? "Your pre-order has been received. Your balance will be requested when stock arrives." : selectedPayment.online ? "Your order has been received and is waiting for secure payment." : "Your order has been received and is waiting for confirmation.",
         payload: { orderId: order.id, status: "new" },
       }),
       sendAdminPushForTenant(tenant.id, {
         title: "New order received",
-        body: selectedPayment.online ? `${body.customerName.trim()} started a Stripe payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
+        body: preorderFinancials.hasPreorder ? `${body.customerName.trim()} placed a pre-order. Deposit due now: ${payableNowTotal}.` : selectedPayment.online ? `${body.customerName.trim()} started an online payment for a ${body.orderType} order.` : `${body.customerName.trim()} placed a new ${body.orderType} order.`,
         url: "/admin/orders",
         tag: `orduva-order-${order.id}`,
       }),
@@ -645,8 +710,10 @@ export async function POST(req: Request) {
       customerAccountId,
       paymentProvider: selectedPayment.id,
       paymentMethodLabel: selectedPayment.label,
-      paymentStatus: selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
+      paymentStatus: preorderFinancials.hasPreorder ? "preorder_deposit" : selectedPayment.online ? "pending_online_payment" : "pay_on_fulfilment",
       total,
+      amountDueNow: payableNowTotal,
+      preorder: preorderFinancials,
       reward: rewardMetadata,
       discount: discountMetadata,
       stripeCheckoutUrl,

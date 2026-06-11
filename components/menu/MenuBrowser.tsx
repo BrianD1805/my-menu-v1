@@ -122,6 +122,11 @@ function variantStockState(
   };
 }
 
+function isPreorderAvailableFor(product: Product | undefined, stockState: { outOfStock: boolean }) {
+  if (!product) return false;
+  return product.preorder_enabled === true || (product.preorder_when_out_of_stock === true && stockState.outOfStock);
+}
+
 type Product = {
   id: string;
   category_id: string;
@@ -147,6 +152,8 @@ type Product = {
   custom_amount_help_text?: string | null;
   custom_amount_disable_rewards?: boolean | null;
   custom_amount_disable_discounts?: boolean | null;
+  preorder_enabled?: boolean | null;
+  preorder_when_out_of_stock?: boolean | null;
 };
 
 type InvoicePaymentOption = {
@@ -380,7 +387,7 @@ function FavouriteProductStripCard({
   const isLowStock =
     trackedStock && availableStock > 0 && availableStock <= lowStockThreshold;
   const stockRibbonLabel = isOutOfStock
-    ? "Out of stock"
+    ? (product.preorder_enabled === true || product.preorder_when_out_of_stock === true ? "Pre-order" : "Out of stock")
     : isLowStock
       ? `Only ${availableStock} left`
       : null;
@@ -2102,7 +2109,8 @@ export default function MenuBrowser({
 
     const product = products.find((item) => item.id === productId);
     const stockState = variantStockState(product, variant);
-    if (stockState.outOfStock) return;
+    const preorderAvailable = isPreorderAvailableFor(product, stockState);
+    if (stockState.outOfStock && !preorderAvailable) return;
 
     const existing = readCart<StoredCartItem>(tenantSlug);
     const lineIdentity = { productId, variantId: variant?.id || null };
@@ -2112,7 +2120,7 @@ export default function MenuBrowser({
     const lineCurrentQuantity = found
       ? Math.max(0, Number(found.quantity || 0))
       : 0;
-    if (stockState.tracked && lineCurrentQuantity >= stockState.available) {
+    if (!preorderAvailable && stockState.tracked && lineCurrentQuantity >= stockState.available) {
       setButtonStateById((current) => ({ ...current, [productId]: "added" }));
       window.setTimeout(() => {
         setButtonStateById((current) => ({ ...current, [productId]: "idle" }));
@@ -2136,7 +2144,7 @@ export default function MenuBrowser({
       });
     }
 
-    const cappedNextQuantity = stockState.tracked
+    const cappedNextQuantity = !preorderAvailable && stockState.tracked
       ? stockState.available
       : Number.POSITIVE_INFINITY;
     const updated = found
@@ -2144,7 +2152,7 @@ export default function MenuBrowser({
           cartLineKey(item) === cartLineKey(lineIdentity)
             ? {
                 ...item,
-                quantity: stockState.tracked
+                quantity: !preorderAvailable && stockState.tracked
                   ? Math.min(item.quantity + 1, cappedNextQuantity)
                   : item.quantity + 1,
               }
@@ -3596,9 +3604,9 @@ export default function MenuBrowser({
                         <button
                           key={variant.id}
                           type="button"
-                          disabled={stock.outOfStock}
+                          disabled={stock.outOfStock && !isPreorderAvailableFor(variantPickerProduct.product, stock)}
                           onClick={() => {
-                            if (stock.outOfStock) return;
+                            if (stock.outOfStock && !isPreorderAvailableFor(variantPickerProduct.product, stock)) return;
                             const current = variantPickerProduct;
                             setVariantPickerProduct(null);
                             void addCartLine(

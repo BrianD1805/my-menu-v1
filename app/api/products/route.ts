@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     db
       .from("products")
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts, preorder_enabled, preorder_when_out_of_stock",
       )
       .eq("tenant_id", tenant.id)
       .eq("is_active", true)
@@ -193,6 +193,8 @@ export async function GET(req: Request) {
         settings?.invoice_payments_deposit_enabled !== false,
       invoicePaymentsBalanceEnabled:
         settings?.invoice_payments_balance_enabled !== false,
+      preordersEnabled: settings?.preorders_enabled !== false,
+      preorderDepositPercent: Number(settings?.preorder_deposit_percent || 25),
     },
   };
 

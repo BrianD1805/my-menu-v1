@@ -54,6 +54,8 @@ type Props = {
   customAmountHelpText?: string | null;
   customAmountDisableRewards?: boolean | null;
   customAmountDisableDiscounts?: boolean | null;
+  preorderEnabled?: boolean | null;
+  preorderWhenOutOfStock?: boolean | null;
   moneySettings?: MoneyFormatSettings;
   accentColor?: string | null;
   primaryColor?: string | null;
@@ -75,7 +77,7 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, variantsEnabled = false, variantLabel = "Choose an option", productVariants = [], productType = "standard", customAmountEnabled = false, customAmountLabel = "Amount to pay", customAmountReferenceLabel = "Invoice number", customAmountReferenceRequired = true, customAmountMin = 1, customAmountMax = null, customAmountHelpText = "Enter the amount shown on your invoice.", customAmountDisableRewards = true, customAmountDisableDiscounts = true, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, variantsEnabled = false, variantLabel = "Choose an option", productVariants = [], productType = "standard", customAmountEnabled = false, customAmountLabel = "Amount to pay", customAmountReferenceLabel = "Invoice number", customAmountReferenceRequired = true, customAmountMin = 1, customAmountMax = null, customAmountHelpText = "Enter the amount shown on your invoice.", customAmountDisableRewards = true, customAmountDisableDiscounts = true, preorderEnabled = false, preorderWhenOutOfStock = false, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [variantPickerOpen, setVariantPickerOpen] = useState(false);
@@ -97,7 +99,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const availableStock = Math.max(0, Number(stockQuantity || 0));
   const isOutOfStock = trackedStock && availableStock <= 0;
   const isLowStock = trackedStock && availableStock > 0 && availableStock <= Math.max(0, Number(lowStockThreshold || 5));
-  const stockRibbonLabel = isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
+  const isPreorderAvailable = preorderEnabled === true || (preorderWhenOutOfStock === true && isOutOfStock);
+  const stockRibbonLabel = isPreorderAvailable ? "Pre-order" : isOutOfStock ? "Out of stock" : isLowStock ? `Only ${availableStock} left` : null;
   const activeVariants = (Array.isArray(productVariants) ? productVariants : []).filter((variant) => variant && variant.isActive !== false && String(variant.name || "").trim());
   const shouldPickVariant = Boolean(variantsEnabled && activeVariants.length);
   const isCustomerAmountProduct = productType === "customer_amount" || customAmountEnabled === true;
@@ -205,7 +208,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   }
 
   async function addToCart(source: "card" | "modal" = "card", variant?: ProductVariant | null, allowBaseProduct = false) {
-    if (buttonState === "adding" || isOutOfStock) return;
+    if (buttonState === "adding" || (isOutOfStock && !isPreorderAvailable)) return;
 
     if (isCustomerAmountProduct && !allowBaseProduct) {
       setPendingAddSource(source);
@@ -326,6 +329,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   }
 
   function buttonLabel() {
+    if (isPreorderAvailable) return "Pre-order";
     if (isOutOfStock) return "Sold out";
     if (buttonState === "adding") return "Adding";
     if (buttonState === "added") return "Added ✓";
@@ -405,7 +409,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
               <div className="relative overflow-visible pt-2">
                 {stockRibbonLabel ? (
                   <div className="pointer-events-none absolute left-[10px] top-[10px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[12px] sm:top-[12px]"
-                    style={isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
+                    style={isPreorderAvailable ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FDE68A", color: "#92400E" } : isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
                   >
                     {stockRibbonLabel}
                   </div>
@@ -454,7 +458,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 ? { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }
                 : { borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
               onClick={() => void addToCart("card")}
-              disabled={buttonState === "adding" || isOutOfStock}
+              disabled={buttonState === "adding" || (isOutOfStock && !isPreorderAvailable)}
             >
               {buttonLabel()}
             </button>
@@ -584,7 +588,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       </span>
                       {trackedStock && (isOutOfStock || isLowStock) ? (
                         <span className={`ml-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
-                          {isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
+                          {isPreorderAvailable ? "Pre-order available" : isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
                         </span>
                       ) : null}
                     </div>
@@ -669,11 +673,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   <button
                     type="button"
                     onClick={() => { void addToCart("modal"); }}
-                    disabled={buttonState === "adding" || isOutOfStock}
+                    disabled={buttonState === "adding" || (isOutOfStock && !isPreorderAvailable)}
                     className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-not-allowed disabled:opacity-70 lg:px-8"
                     style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
                   >
-                    {buttonState === "adding" ? "Adding..." : isOutOfStock ? "Sold out" : "Add"}
+                    {buttonState === "adding" ? "Adding..." : isPreorderAvailable ? "Pre-order" : isOutOfStock ? "Sold out" : "Add"}
                   </button>
                 </div>
                 {shareStatus !== "idle" ? (

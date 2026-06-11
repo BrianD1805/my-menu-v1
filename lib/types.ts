@@ -51,6 +51,8 @@ export type Product = {
   custom_amount_help_text?: string | null;
   custom_amount_disable_rewards?: boolean | null;
   custom_amount_disable_discounts?: boolean | null;
+  preorder_enabled?: boolean | null;
+  preorder_when_out_of_stock?: boolean | null;
 };
 
 export type CartItemInput = {
@@ -151,6 +153,8 @@ export type TenantSettings = {
   rewards_gold_discount_percent?: number | null;
   rewards_platinum_min_spend?: number | null;
   rewards_platinum_discount_percent?: number | null;
+  preorders_enabled?: boolean | null;
+  preorder_deposit_percent?: number | null;
   discounts_enabled?: boolean | null;
   discount_popup_enabled?: boolean | null;
   discount_popup_title?: string | null;

@@ -7,7 +7,7 @@ import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
 import type { TenantTrialState } from "@/lib/trial";
 
-type NavIcon = "home" | "orders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "billing" | "storefront" | "account";
+type NavIcon = "home" | "orders" | "preorders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "billing" | "storefront" | "account";
 type NavKey = "run" | "grow" | "configure" | "account";
 
 type NavItem = {
@@ -45,6 +45,8 @@ function AdminNavIcon({ icon }: { icon: NavIcon }) {
       return <svg {...common}><path d="M3.5 11.5 12 4l8.5 7.5" /><path d="M5.5 10.5V20h13v-9.5" /><path d="M9.5 20v-5.5h5V20" /></svg>;
     case "orders":
       return <svg {...common}><path d="M7 4.75h10a1.75 1.75 0 0 1 1.75 1.75v13l-2.5-1.45-2.5 1.45-2.5-1.45-2.5 1.45-2.5-1.45v-11.55A1.75 1.75 0 0 1 7 4.75Z" /><path d="M8.75 9h6.5" /><path d="M8.75 12.25h6.5" /><path d="M8.75 15.5h3.75" /></svg>;
+    case "preorders":
+      return <svg {...common}><path d="M5.5 6.75h13" /><path d="M7.25 6.75l1 12.5h7.5l1-12.5" /><path d="M9 10.25h6" /><path d="M9.5 14h5" /><path d="M12 3.75v3" /></svg>;
     case "products":
       return <svg {...common}><path d="M12 3.75 20 8.2v7.6l-8 4.45-8-4.45V8.2l8-4.45Z" /><path d="m4.35 8.45 7.65 4.3 7.65-4.3" /><path d="M12 12.75v7.25" /></svg>;
     case "categories":
@@ -314,7 +316,7 @@ export default function AdminShell({
   signedInAs: string;
   title: string;
   description: string;
-  current: "home" | "orders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "affiliates";
+  current: "home" | "orders" | "preorders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "affiliates";
   children: ReactNode;
   logoUrl?: string | null;
   faviconUrl?: string | null;
@@ -333,6 +335,7 @@ export default function AdminShell({
       items: [
         { href: "/admin", label: "Home", detail: "Store overview", icon: "home", current: current === "home" },
         { href: "/admin/orders", label: "Orders", detail: "Receipts, status and fulfilment", icon: "orders", current: current === "orders" },
+        { href: "/admin/preorders", label: "Pre-orders", detail: "Deposits, arrivals and balances", icon: "preorders", current: current === "preorders" },
         { href: "/admin/products", label: "Products", detail: "Menu items, stock and variants", icon: "products", current: current === "products" },
         { href: "/admin/categories", label: "Categories", detail: "Store sections and sorting", icon: "categories", current: current === "categories" },
       ],

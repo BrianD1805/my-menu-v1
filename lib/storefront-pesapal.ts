@@ -49,6 +49,8 @@ type PendingOrderPayload = {
   orderType: "delivery" | "collection";
   notes: string | null;
   total: number;
+  amountDueNow?: number;
+  preorder?: Record<string, any> | null;
   currencyCode: string;
   paymentProvider: "mpesa";
   paymentMethodLabel: string;
@@ -284,6 +286,8 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
   notes: string | null;
   items: PendingOrderPayload["items"];
   total: number;
+  orderTotal?: number;
+  preorder?: Record<string, any> | null;
   currencyCode: string;
   paymentMethodLabel: string;
   rewards?: RewardOrderMetadata | null;
@@ -304,7 +308,9 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
     customerAddress: input.customerAddress,
     orderType: input.orderType,
     notes: input.notes,
-    total: input.total,
+    total: input.orderTotal ?? input.total,
+    amountDueNow: input.total,
+    preorder: input.preorder || null,
     currencyCode,
     paymentProvider: "mpesa",
     paymentMethodLabel: input.paymentMethodLabel,
@@ -324,6 +330,7 @@ export async function createTenantPesapalOrderCheckoutIntent(input: {
       customer_name: input.customerName,
       customer_phone: input.customerPhone,
       order_payload: payload,
+      preorder_payment_stage: input.preorder ? "deposit" : "full_payment",
     })
     .select("id")
     .single();
@@ -663,6 +670,12 @@ export async function createPaidOrderFromPesapalIntent(input: {
       order_type: payload.orderType,
       status: "new",
       total: payload.total,
+      order_flow: payload.preorder?.order_flow ?? "standard",
+      preorder_status: payload.preorder?.preorder_status ?? null,
+      preorder_deposit_percent: payload.preorder?.preorder_deposit_percent ?? null,
+      preorder_deposit_amount: payload.preorder?.preorder_deposit_amount ?? 0,
+      preorder_balance_amount: payload.preorder?.preorder_balance_amount ?? 0,
+      preorder_balance_payment_status: payload.preorder?.preorder_balance_payment_status ?? "not_applicable",
       subtotal_total: payload.rewards?.subtotal_total ?? payload.total,
       reward_tier: payload.rewards?.reward_tier ?? null,
       reward_discount_percent: payload.rewards?.reward_discount_percent ?? 0,
