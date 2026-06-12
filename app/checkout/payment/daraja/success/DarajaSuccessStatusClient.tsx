@@ -22,11 +22,30 @@ function cartKey(tenantSlug: string) {
   return `cart:${tenantSlug || "orduva"}`;
 }
 
+function clearAllOrduvaCarts() {
+  try {
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (key?.startsWith("cart:")) {
+        const keySlug = key.slice("cart:".length) || "orduva";
+        window.localStorage.removeItem(key);
+        window.dispatchEvent(new CustomEvent("orduva:cart-updated", { detail: { tenantSlug: keySlug, items: [] } }));
+      }
+    }
+  } catch {
+    // Cart clearing is best-effort only.
+  }
+}
+
 function clearTenantCart(tenantSlug: string) {
-  if (!tenantSlug) return;
+  if (!tenantSlug) {
+    clearAllOrduvaCarts();
+    return;
+  }
   try {
     window.localStorage.removeItem(cartKey(tenantSlug));
     window.dispatchEvent(new CustomEvent("orduva:cart-updated", { detail: { tenantSlug, items: [] } }));
+    clearAllOrduvaCarts();
   } catch {
     // Cart clearing is best-effort only.
   }
@@ -53,7 +72,7 @@ export default function DarajaSuccessStatusClient({ checkoutId, checkoutRequestI
         const data = await response.json().catch(() => ({}));
         if (!cancelled) {
           setStatus(data);
-          if (data?.paid && data?.tenantSlug) clearTenantCart(String(data.tenantSlug));
+          if (data?.paid) clearTenantCart(String(data?.tenantSlug || ""));
         }
 
         if (!cancelled && !data?.paid && attempt < 8) {

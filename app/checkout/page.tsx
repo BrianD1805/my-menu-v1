@@ -169,6 +169,10 @@ type SuccessState = {
   itemCount: number;
   paymentMethodLabel: string;
   paymentStatus: string;
+  hasPreorder?: boolean;
+  preorderDepositAmount?: number;
+  preorderBalanceAmount?: number;
+  preorderDepositPercent?: number;
   tenantSlug: string;
   whatsappPaused: boolean;
   whatsappUrl: string | null;
@@ -684,10 +688,14 @@ useEffect(() => {
         orderType,
         customerAddress: customerAddress.trim(),
         notes: notes.trim(),
-        total: amountDueNow,
+        total: preorderFinancials.hasPreorder ? totalAfterDiscounts : amountDueNow,
         itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
         paymentMethodLabel: data.paymentMethodLabel || selectedPaymentOption.label,
         paymentStatus: data.paymentStatus || "pay_on_fulfilment",
+        hasPreorder: preorderFinancials.hasPreorder,
+        preorderDepositAmount: preorderFinancials.depositAmount,
+        preorderBalanceAmount: preorderFinancials.balanceAmount,
+        preorderDepositPercent: preorderFinancials.depositPercent,
         tenantSlug,
         whatsappPaused: PAUSE_WHATSAPP_FOR_TESTING,
         whatsappUrl: data.whatsappUrl || null,
@@ -722,15 +730,29 @@ useEffect(() => {
                   Thanks, {successState.customerName}. Your order is in.
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-white/90 sm:text-base">
-                  We’ve received your order and sent it through to the team. {successState.paymentStatus === "pay_on_fulfilment" ? "Payment will be handled directly by the store." : "Your payment status has been recorded with the order."}
+                  {successState.hasPreorder
+                    ? `We’ve received your pre-order deposit and sent the order through to the team. The balance will be requested when stock arrives.`
+                    : `We’ve received your order and sent it through to the team. ${successState.paymentStatus === "pay_on_fulfilment" ? "Payment will be handled directly by the store." : "Your payment status has been recorded with the order."}`}
                 </p>
               </div>
 
               <div className="rounded-[26px] bg-white/14 p-4 text-sm ring-1 ring-white/20 backdrop-blur-sm">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-white/75">Total</span>
+                  <span className="text-white/75">{successState.hasPreorder ? "Order total" : "Total"}</span>
                   <span className="text-lg font-bold">{formatMoney(successState.total, tenantSettings)}</span>
                 </div>
+                {successState.hasPreorder ? (
+                  <>
+                    <div className="mt-3 flex items-center justify-between gap-4 border-t border-white/15 pt-3">
+                      <span className="text-white/75">Deposit paid</span>
+                      <span className="font-semibold">{formatMoney(successState.preorderDepositAmount || 0, tenantSettings)}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-4 border-t border-white/15 pt-3">
+                      <span className="text-white/75">Balance later</span>
+                      <span className="font-semibold">{formatMoney(successState.preorderBalanceAmount || 0, tenantSettings)}</span>
+                    </div>
+                  </>
+                ) : null}
                 <div className="mt-3 flex items-center justify-between gap-4 border-t border-white/15 pt-3">
                   <span className="text-white/75">Items</span>
                   <span className="font-semibold">{successState.itemCount}</span>
@@ -763,15 +785,15 @@ useEffect(() => {
                   <div className="flex gap-3">
                     <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }}>1</div>
                     <div>
-                      <p className="font-medium text-gray-900">The team reviews your order</p>
-                      <p className="text-sm leading-6 text-gray-600">You’ll be updated when it is accepted and being prepared.</p>
+                      <p className="font-medium text-gray-900">{successState.hasPreorder ? "The team manages your pre-order" : "The team reviews your order"}</p>
+                      <p className="text-sm leading-6 text-gray-600">{successState.hasPreorder ? "You’ll be updated when stock arrives and the balance is ready to pay." : "You’ll be updated when it is accepted and being prepared."}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold" style={{ backgroundColor: checkoutBackground, color: checkoutPrimary }}>2</div>
                     <div>
                       <p className="font-medium text-gray-900">Keep this page or your phone nearby</p>
-                      <p className="text-sm leading-6 text-gray-600">If you enable updates, this device can receive order status notifications.</p>
+                      <p className="text-sm leading-6 text-gray-600">If you enable updates, this device can receive order status notifications{successState.hasPreorder ? " and the balance payment link." : "."}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">

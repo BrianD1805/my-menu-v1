@@ -15,6 +15,9 @@ type PreOrderRow = {
   preorder_deposit_percent: number | string | null;
   total: number | string | null;
   created_at: string;
+  payment_checkout_session_id?: string | null;
+  payment_intent_id?: string | null;
+  payment_reference?: string | null;
 };
 
 type Props = {
@@ -31,8 +34,28 @@ function statusLabel(order: PreOrderRow) {
   return "Awaiting stock";
 }
 
+function formatPreOrderDate(value: string) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+  } catch {
+    return value;
+  }
+}
+
+function dedupePreOrderRows(rows: PreOrderRow[]) {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = String(row.payment_checkout_session_id || row.payment_intent_id || row.payment_reference || row.id || "").trim();
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export default function PreOrderManager({ orders: initialOrders, depositPercent, moneySettings }: Props) {
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState(() => dedupePreOrderRows(initialOrders));
   const [deposit, setDeposit] = useState(String(depositPercent));
   const [savingDeposit, setSavingDeposit] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -102,7 +125,7 @@ export default function PreOrderManager({ orders: initialOrders, depositPercent,
             <div key={order.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[1.2fr_1fr_auto] lg:items-center">
               <div>
                 <p className="text-base font-black text-slate-950">{order.customer_name || "Customer"}</p>
-                <p className="mt-1 text-sm text-slate-600">{order.customer_phone || "No phone"} · {new Date(order.created_at).toLocaleString()}</p>
+                <p className="mt-1 text-sm text-slate-600">{order.customer_phone || "No phone"} · {formatPreOrderDate(order.created_at)}</p>
                 <p className="mt-2 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-amber-700 ring-1 ring-amber-100">{statusLabel(order)}</p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-sm">

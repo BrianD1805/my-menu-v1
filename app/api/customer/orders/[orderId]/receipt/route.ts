@@ -45,6 +45,21 @@ function asMoney(value: unknown, currencyCode: string) {
   return `${currencyCode} ${amount.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function preOrderReceiptSummary(order: any) {
+  const flow = String(order?.order_flow || "standard").toLowerCase();
+  const isPreorder = flow === "preorder" || flow === "mixed" || Number(order?.preorder_deposit_amount || 0) > 0 || Number(order?.preorder_balance_amount || 0) > 0;
+  const orderTotal = Number(order?.total || 0);
+  const depositPaid = Math.max(0, Number(order?.preorder_deposit_amount || 0));
+  const balanceDue = Math.max(0, Number(order?.preorder_balance_amount || 0));
+  return {
+    isPreorder,
+    orderTotal,
+    depositPaid: isPreorder ? depositPaid : orderTotal,
+    balanceDue: isPreorder ? balanceDue : 0,
+    paidLabel: isPreorder ? "Deposit paid" : "Total paid",
+  };
+}
+
 function asPercent(value: unknown) {
   const amount = Number(value || 0);
   return amount.toLocaleString("en-GB", { minimumFractionDigits: amount % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
@@ -147,10 +162,12 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
   const rewardDiscount = Number(order?.reward_discount_amount || 0);
   const discountAmount = Number(order?.discount_amount || 0);
   const total = Number(order?.total || 0);
+  const preorderSummary = preOrderReceiptSummary(order);
+  const receiptPaidAmount = preorderSummary.isPreorder ? preorderSummary.depositPaid : total;
   const taxRatePercent = Number(receiptInfo.taxRatePercent || 0);
-  const vatIncludedAmount = receiptInfo.taxLabel === "VAT" && taxRatePercent > 0 ? includedTaxAmount(total, taxRatePercent) : 0;
+  const vatIncludedAmount = receiptInfo.taxLabel === "VAT" && taxRatePercent > 0 ? includedTaxAmount(receiptPaidAmount, taxRatePercent) : 0;
   const showGstRate = receiptInfo.taxLabel === "GST" && taxRatePercent > 0;
-  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total || vatIncludedAmount > 0;
+  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total || vatIncludedAmount > 0 || preorderSummary.isPreorder;
   const pageWidth = 595;
   const pageHeight = 842;
   const margin = 42;
@@ -318,10 +335,12 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
 
   const adjustmentRows = hasAdjustments
     ? [
+        ...(preorderSummary.isPreorder ? [["Order total", money(preorderSummary.orderTotal), "#334155", "#0f172a"] as const] : []),
         ["Subtotal", money(subtotal), "#334155", "#0f172a"] as const,
         ...(vatIncludedAmount > 0 ? [[`${receiptInfo.taxLabel} included (${asPercent(taxRatePercent)}%)`, money(vatIncludedAmount), "#334155", "#0f172a"] as const] : []),
         ...(rewardDiscount > 0 ? [[`Rewards discount${order?.reward_tier ? ` · ${order.reward_tier}` : ""}`, `-${money(rewardDiscount)}`, "#047857", "#047857"] as const] : []),
         ...(discountAmount > 0 ? [[order?.discount_name || order?.discount_code || "Discount", `-${money(discountAmount)}`, "#047857", "#047857"] as const] : []),
+        ...(preorderSummary.isPreorder && preorderSummary.balanceDue > 0 ? [["Balance due when stock arrives", money(preorderSummary.balanceDue), "#b45309", "#b45309"] as const] : []),
       ]
     : [];
   const totalsW = 230;
@@ -340,8 +359,8 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
     });
     line(totalsX + 14, ty + 8, totalsX + totalsW - 14, ty + 8);
   }
-  text("Total paid", totalsX + 14, totalsY + (showGstRate ? 30 : 15), 12, "#0f172a", "F2");
-  textRight(money(total), totalsRight, totalsY + (showGstRate ? 30 : 15), 12, "#0f172a", "F2");
+  text(preorderSummary.paidLabel, totalsX + 14, totalsY + (showGstRate ? 30 : 15), 12, "#0f172a", "F2");
+  textRight(money(receiptPaidAmount), totalsRight, totalsY + (showGstRate ? 30 : 15), 12, "#0f172a", "F2");
   if (showGstRate) {
     text(`${receiptInfo.taxLabel} rate`, totalsX + 14, totalsY + 14, 8.5, "#64748b");
     textRight(`${asPercent(taxRatePercent)}%`, totalsRight, totalsY + 14, 8.5, "#64748b", "F2");
@@ -434,10 +453,12 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
   const rewardDiscount = Number(order?.reward_discount_amount || 0);
   const discountAmount = Number(order?.discount_amount || 0);
   const total = Number(order?.total || 0);
+  const preorderSummary = preOrderReceiptSummary(order);
+  const receiptPaidAmount = preorderSummary.isPreorder ? preorderSummary.depositPaid : total;
   const taxRatePercent = Number(receiptInfo.taxRatePercent || 0);
-  const vatIncludedAmount = receiptInfo.taxLabel === "VAT" && taxRatePercent > 0 ? includedTaxAmount(total, taxRatePercent) : 0;
+  const vatIncludedAmount = receiptInfo.taxLabel === "VAT" && taxRatePercent > 0 ? includedTaxAmount(receiptPaidAmount, taxRatePercent) : 0;
   const showGstRate = receiptInfo.taxLabel === "GST" && taxRatePercent > 0;
-  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total || vatIncludedAmount > 0;
+  const hasAdjustments = rewardDiscount > 0 || discountAmount > 0 || subtotal !== total || vatIncludedAmount > 0 || preorderSummary.isPreorder;
   const safeLogoUrl = String(logoUrl || "").trim();
 
   const itemRows = items
@@ -459,10 +480,12 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
 
   const discountRows = hasAdjustments
     ? `
+      ${preorderSummary.isPreorder ? `<div class="totals-row subtle"><span>Order total</span><strong>${asMoney(preorderSummary.orderTotal, currencyCode)}</strong></div>` : ""}
       <div class="totals-row subtle"><span>Subtotal</span><strong>${asMoney(subtotal, currencyCode)}</strong></div>
       ${vatIncludedAmount > 0 ? `<div class="totals-row subtle"><span>${escapeHtml(receiptInfo.taxLabel)} included (${asPercent(taxRatePercent)}%)</span><strong>${asMoney(vatIncludedAmount, currencyCode)}</strong></div>` : ""}
       ${rewardDiscount > 0 ? `<div class="totals-row success"><span>Rewards discount${order?.reward_tier ? ` · ${escapeHtml(order.reward_tier)}` : ""}</span><strong>-${asMoney(rewardDiscount, currencyCode)}</strong></div>` : ""}
       ${discountAmount > 0 ? `<div class="totals-row success"><span>${escapeHtml(order?.discount_name || order?.discount_code || "Discount")}</span><strong>-${asMoney(discountAmount, currencyCode)}</strong></div>` : ""}
+      ${preorderSummary.isPreorder && preorderSummary.balanceDue > 0 ? `<div class="totals-row warning"><span>Balance due when stock arrives</span><strong>${asMoney(preorderSummary.balanceDue, currencyCode)}</strong></div>` : ""}
     `
     : "";
 
@@ -639,6 +662,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
     }
     .totals-row + .totals-row { border-top: 1px solid #e2e8f0; }
     .totals-row.success { color: #047857; }
+    .totals-row.warning { color: #b45309; }
     .totals-row.grand {
       color: #0f172a;
       font-size: 18px;
@@ -721,7 +745,7 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
 
       <section class="totals" aria-label="Receipt totals">
         ${discountRows}
-        <div class="totals-row grand"><span>Total paid</span><strong>${asMoney(total, currencyCode)}</strong></div>
+        <div class="totals-row grand"><span>${escapeHtml(preorderSummary.paidLabel)}</span><strong>${asMoney(receiptPaidAmount, currencyCode)}</strong></div>
         ${showGstRate ? `<div class="totals-row subtle"><span>${escapeHtml(receiptInfo.taxLabel)} rate</span><strong>${asPercent(taxRatePercent)}%</strong></div>` : ""}
       </section>
 
@@ -795,6 +819,12 @@ export async function GET(req: Request, context: ReceiptParams) {
       status,
       total,
       subtotal_total,
+      order_flow,
+      preorder_status,
+      preorder_deposit_percent,
+      preorder_deposit_amount,
+      preorder_balance_amount,
+      preorder_balance_payment_status,
       notes,
       created_at,
       payment_provider,

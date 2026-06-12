@@ -89,6 +89,22 @@ function getString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
 }
 
+async function findExistingPaidOrderByPaymentRefs(tenantId: string, refs: Array<string | null | undefined>) {
+  const cleanRefs = Array.from(new Set(refs.map((ref) => String(ref || "").trim()).filter(Boolean)));
+  for (const ref of cleanRefs) {
+    const { data, error } = await db
+      .from("orders")
+      .select("id")
+      .eq("tenant_id", tenantId)
+      .or(`payment_checkout_session_id.eq.${ref},payment_intent_id.eq.${ref},payment_reference.eq.${ref}`)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!error && data?.id) return String(data.id);
+  }
+  return null;
+}
+
 function configured(status: string | null | undefined) {
   return (
     status === "configured" || status === "connected" || status === "active"
@@ -406,6 +422,7 @@ async function reduceStockAfterPaidOrder(
 ) {
   const quantityBySellableLine = new Map<string, number>();
   for (const item of items) {
+    if ((item as any).is_preorder === true) continue;
     const productId = String(item.product_id || "");
     if (!productId) continue;
     const variantId = item.variant_id ? String(item.variant_id) : "base";
@@ -515,6 +532,23 @@ export async function createPaidOrderFromYocoIntent(input: {
   if (tenantError || !tenant)
     throw new Error("Tenant not found for Yoco checkout intent.");
 
+  const yocoCheckoutReference = input.intent.yoco_checkout_id || input.intent.id || null;
+  const yocoPaymentIntentId = input.paymentId || input.intent.yoco_payment_id || null;
+  const yocoPaymentReference = input.paymentReference || input.paymentId || input.intent.yoco_checkout_id || null;
+  const existingPaidOrderId = await findExistingPaidOrderByPaymentRefs(tenant.id, [
+    yocoCheckoutReference,
+    yocoPaymentIntentId,
+    yocoPaymentReference,
+  ]);
+  if (existingPaidOrderId) {
+    await db
+      .from("storefront_payment_intents")
+      .update({ order_id: existingPaidOrderId, status: "paid", updated_at: new Date().toISOString() })
+      .eq("id", input.intent.id)
+      .eq("tenant_id", tenant.id);
+    return existingPaidOrderId;
+  }
+
   const { data: order, error: orderError } = await db
     .from("orders")
     .insert({
@@ -558,14 +592,11 @@ export async function createPaidOrderFromYocoIntent(input: {
       payment_method_label: payload.paymentMethodLabel || "Yoco card payment",
       payment_status: "paid",
       payment_checkout_session_id:
-        input.intent.yoco_checkout_id || input.intent.id || null,
+        yocoCheckoutReference,
       payment_intent_id:
-        input.paymentId || input.intent.yoco_payment_id || null,
+        yocoPaymentIntentId,
       payment_reference:
-        input.paymentReference ||
-        input.paymentId ||
-        input.intent.yoco_checkout_id ||
-        null,
+        yocoPaymentReference,
       paid_at: input.paidAt || new Date().toISOString(),
     })
     .select()
