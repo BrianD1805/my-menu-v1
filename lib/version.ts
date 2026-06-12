@@ -1,2 +1,2 @@
-export const APP_VERSION = "0.235H";
-export const LIVE_VERSION = "Ver: 0.235H";
+export const APP_VERSION = "0.235I";
+export const LIVE_VERSION = "Ver: 0.235I";

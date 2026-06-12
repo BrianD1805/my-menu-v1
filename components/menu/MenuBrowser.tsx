@@ -1106,6 +1106,17 @@ export default function MenuBrowser({
       destination?: "header" | "search";
     };
   } | null>(null);
+  const [pendingPreorderCartLine, setPendingPreorderCartLine] = useState<{
+    productId: string;
+    variant: ProductVariant | null;
+    options?: {
+      sourceRect?: DOMRect | null;
+      imageUrl?: string | null;
+      name?: string;
+      targetRect?: DOMRect | null;
+      destination?: "header" | "search";
+    };
+  } | null>(null);
   const [cartPulseKey, setCartPulseKey] = useState(0);
   const [flyingItems, setFlyingItems] = useState<FlyingCartItem[]>([]);
   const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(
@@ -2113,6 +2124,7 @@ export default function MenuBrowser({
       targetRect?: DOMRect | null;
       destination?: "header" | "search";
     },
+    preorderConfirmed = false,
   ) {
     if (buttonStateById[productId] === "adding") return;
 
@@ -2120,6 +2132,10 @@ export default function MenuBrowser({
     const stockState = variantStockState(product, variant);
     const preorderAvailable = isPreorderAvailableFor(product, stockState);
     if (stockState.outOfStock && !preorderAvailable) return;
+    if (preorderAvailable && !preorderConfirmed) {
+      setPendingPreorderCartLine({ productId, variant, options });
+      return;
+    }
 
     const existing = readCart<StoredCartItem>(tenantSlug);
     const lineIdentity = { productId, variantId: variant?.id || null };
@@ -3326,6 +3342,37 @@ export default function MenuBrowser({
             </div>
           ) : null}
         </section>
+      ) : null}
+
+
+      {pendingPreorderCartLine ? (
+        <div className="fixed inset-0 z-[145] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]" role="dialog" aria-modal="true" onClick={() => setPendingPreorderCartLine(null)}>
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[26px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]" onClick={(event) => event.stopPropagation()}>
+              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-amber-50 to-emerald-50 px-5 pb-5 pt-5">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-slate-700 to-emerald-500" />
+                <button type="button" onClick={() => setPendingPreorderCartLine(null)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-xl text-slate-500 shadow-sm" aria-label="Close pre-order notice">×</button>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Pre-order</p>
+                <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight text-slate-950">Pre-order deposit</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">This item is being sold as a pre-order.</p>
+              </div>
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-950">
+                  You will pay the deposit at checkout now. The remaining balance will be requested when stock arrives, and the order will only be dispatched after the balance is paid.
+                </div>
+                <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
+                  <li>• Your original order and invoice stay in your account.</li>
+                  <li>• You will receive a notification with a balance-payment link when the stock arrives.</li>
+                  <li>• Stock is only reduced after the balance has been marked as paid.</li>
+                </ul>
+              </div>
+              <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:flex-row">
+                <button type="button" onClick={() => setPendingPreorderCartLine(null)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700">Cancel</button>
+                <button type="button" onClick={() => { const pending = pendingPreorderCartLine; setPendingPreorderCartLine(null); if (pending) void addCartLine(pending.productId, pending.variant, pending.options, true); }} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white" style={{ backgroundColor: brandPrimary }}>Add pre-order</button>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {customAmountPickerProduct ? (

@@ -87,6 +87,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const [customAmountNote, setCustomAmountNote] = useState("");
   const [customAmountError, setCustomAmountError] = useState("");
   const [pendingAddSource, setPendingAddSource] = useState<"card" | "modal">("card");
+  const [preorderConfirmOpen, setPreorderConfirmOpen] = useState(false);
+  const [pendingPreorderAdd, setPendingPreorderAdd] = useState<{ source: "card" | "modal"; variant?: ProductVariant | null; allowBaseProduct?: boolean } | null>(null);
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
   const [cartCount, setCartCount] = useState(0);
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
@@ -207,7 +209,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     }
   }
 
-  async function addToCart(source: "card" | "modal" = "card", variant?: ProductVariant | null, allowBaseProduct = false) {
+  async function addToCart(source: "card" | "modal" = "card", variant?: ProductVariant | null, allowBaseProduct = false, preorderConfirmed = false) {
     if (buttonState === "adding" || (isOutOfStock && !isPreorderAvailable)) return;
 
     if (isCustomerAmountProduct && !allowBaseProduct) {
@@ -222,13 +224,19 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       return;
     }
 
+    if (isPreorderAvailable && !preorderConfirmed) {
+      setPendingPreorderAdd({ source, variant: variant || null, allowBaseProduct });
+      setPreorderConfirmOpen(true);
+      return;
+    }
+
     const existing = readCart<StoredCartItem>(tenantSlug);
     const lineIdentity = { productId: id, variantId: variant?.id || null };
     const found = existing.find((item) => cartLineKey(item) === cartLineKey(lineIdentity));
     const productTotalQuantity = existing
       .filter((item) => item.productId === id)
       .reduce((sum, item) => sum + Math.max(0, Number(item.quantity || 0)), 0);
-    if (trackedStock && productTotalQuantity >= availableStock) {
+    if (!isPreorderAvailable && trackedStock && productTotalQuantity >= availableStock) {
       setButtonState("added");
       setTimeout(() => setButtonState("idle"), 1200);
       return;
@@ -241,11 +249,11 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
     const targetRect = source === "modal" ? modalCartButtonRef.current?.getBoundingClientRect() || null : null;
     onAddToCartAnimation?.({ imageUrl, name, sourceRect, targetRect });
 
-    const cappedNextQuantity = trackedStock ? Math.max(0, availableStock - (productTotalQuantity - (found?.quantity || 0))) : Number.POSITIVE_INFINITY;
+    const cappedNextQuantity = !isPreorderAvailable && trackedStock ? Math.max(0, availableStock - (productTotalQuantity - (found?.quantity || 0))) : Number.POSITIVE_INFINITY;
     const updated = found
       ? existing.map((item) =>
           cartLineKey(item) === cartLineKey(lineIdentity)
-            ? { ...item, quantity: trackedStock ? Math.min(item.quantity + 1, cappedNextQuantity) : item.quantity + 1 }
+            ? { ...item, quantity: !isPreorderAvailable && trackedStock ? Math.min(item.quantity + 1, cappedNextQuantity) : item.quantity + 1 }
             : item
         )
       : [
@@ -482,6 +490,37 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
           </div>
         </div>
       </div>
+
+
+      {preorderConfirmOpen ? (
+        <div className="fixed inset-0 z-[140] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]" role="dialog" aria-modal="true" onClick={() => setPreorderConfirmOpen(false)}>
+          <div className="flex min-h-full items-center justify-center">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[26px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]" onClick={(event) => event.stopPropagation()}>
+              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-amber-50 to-emerald-50 px-5 pb-5 pt-5">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-slate-700 to-emerald-500" />
+                <button type="button" onClick={() => setPreorderConfirmOpen(false)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-xl text-slate-500 shadow-sm" aria-label="Close pre-order notice">×</button>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Pre-order</p>
+                <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight text-slate-950">Pre-order deposit</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">This item is being sold as a pre-order.</p>
+              </div>
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-950">
+                  You will pay the store deposit at checkout now. The remaining balance will be requested when the stock arrives, and the order will only be dispatched after the balance is paid.
+                </div>
+                <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
+                  <li>• Your original order and invoice stay in your account.</li>
+                  <li>• You will receive a notification when the balance is ready to pay.</li>
+                  <li>• Stock is only reduced after the balance has been marked as paid.</li>
+                </ul>
+              </div>
+              <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:flex-row">
+                <button type="button" onClick={() => setPreorderConfirmOpen(false)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700">Cancel</button>
+                <button type="button" onClick={() => { const pending = pendingPreorderAdd; setPreorderConfirmOpen(false); setPendingPreorderAdd(null); if (pending) void addToCart(pending.source, pending.variant || null, pending.allowBaseProduct === true, true); }} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white" style={{ backgroundColor: brandPrimary }}>Add pre-order</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {variantPickerOpen ? (
         <div className="fixed inset-0 z-[120] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none" role="dialog" aria-modal="true" onClick={() => setVariantPickerOpen(false)}>

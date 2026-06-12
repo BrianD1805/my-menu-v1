@@ -6,6 +6,7 @@ import { resolveTenantSlugFromHost } from "@/lib/tenant";
 import { DEFAULT_MONEY_SETTINGS, formatMoney, type MoneyFormatSettings } from "@/lib/money";
 import CustomerPushNotificationsCard from "@/components/checkout/CustomerPushNotificationsCard";
 import { calculateBestDiscount, getApplicableDiscounts, normalizeDiscountRules, type DiscountRule } from "@/lib/discounts";
+import { calculatePreorderFinancials, isPreorderProduct, normalizePreorderDepositPercent } from "@/lib/preorders";
 
 type CartItem = {
   productId: string;
@@ -18,6 +19,7 @@ type CartItem = {
   variantPriceDelta?: number | null;
   variantPrice?: number | null;
   variantDescription?: string | null;
+  variantStockEnabled?: boolean | null;
   customAmount?: number | null;
   customAmountReference?: string | null;
   customAmountNote?: string | null;
@@ -81,6 +83,8 @@ type Product = {
   custom_amount_help_text?: string | null;
   custom_amount_disable_rewards?: boolean | null;
   custom_amount_disable_discounts?: boolean | null;
+  preorder_enabled?: boolean | null;
+  preorder_when_out_of_stock?: boolean | null;
 };
 
 type TenantTrialState = {
@@ -141,6 +145,8 @@ type TenantViewSettings = MoneyFormatSettings & {
   discountPopupTitle?: string;
   discountPopupMessage?: string;
   discountRules?: DiscountRule[];
+  preordersEnabled?: boolean;
+  preorderDepositPercent?: number | null;
 };
 
 type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "mpesa" | "daraja";
@@ -389,6 +395,16 @@ useEffect(() => {
         const productBasePrice = resolveProductLinePrice(Number(product.price || 0), item.unitPrice, item.basePrice);
         const unitPrice = isCustomAmountProduct ? Math.max(0, Number(item.customAmount || 0)) : getVariantPrice(productBasePrice, variant, item.variantPrice, item.variantPriceDelta);
         const lineTotal = unitPrice * item.quantity;
+        const selectedVariantForPreorder = variant || (item.variantId ? {
+          id: item.variantId,
+          name: item.variantName || "",
+          price: item.variantPrice ?? null,
+          priceDelta: item.variantPriceDelta ?? null,
+          stockEnabled: item.variantStockEnabled ?? null,
+          stockQuantity: null,
+          isActive: true,
+        } : null);
+        const isPreorder = !isCustomAmountProduct && tenantSettings.preordersEnabled !== false && isPreorderProduct(product, selectedVariantForPreorder);
 
         return {
           ...item,
@@ -401,6 +417,7 @@ useEffect(() => {
           lineTotal,
           stockEnabled: isCustomAmountProduct ? false : !!product.stock_enabled,
           stockQuantity: isCustomAmountProduct ? 999999 : Math.max(0, Number(product.stock_quantity || 0)),
+          isPreorder,
           isCustomAmountProduct,
           customAmountReference: item.customAmountReference || null,
           customAmountNote: item.customAmountNote || null,
@@ -427,6 +444,7 @@ useEffect(() => {
       customAmountLabel?: string | null;
       customAmountDisableRewards?: boolean;
       customAmountDisableDiscounts?: boolean;
+      isPreorder?: boolean;
     }>;
   }, [items, products]);
 
@@ -447,6 +465,14 @@ useEffect(() => {
   const discountResult = useMemo(() => customAmountDisablesDiscounts ? { applied: false, rewardAllowed: true, totalAfterDiscount: totalAfterRewards, name: null, code: null, amount: 0 } as any : calculateBestDiscount({ settings: tenantSettings, cartLines: discountCartLines, subtotal: total, code: discountCode, rewardDiscountAmount }), [customAmountDisablesDiscounts, tenantSettings, discountCartLines, total, discountCode, rewardDiscountAmount, totalAfterRewards]);
   const effectiveRewardDiscountAmount = discountResult.applied && !discountResult.rewardAllowed ? 0 : rewardDiscountAmount;
   const totalAfterDiscounts = discountResult.applied ? discountResult.totalAfterDiscount : totalAfterRewards;
+  const preorderFullSubtotal = useMemo(() => cartRows.reduce((sum, row) => sum + (row.isPreorder ? row.lineTotal : 0), 0), [cartRows]);
+  const preorderDepositPercent = normalizePreorderDepositPercent(tenantSettings.preorderDepositPercent ?? 25);
+  const preorderFinancials = useMemo(() => calculatePreorderFinancials({
+    lineSubtotal: totalAfterDiscounts,
+    preorderSubtotal: Math.min(preorderFullSubtotal, totalAfterDiscounts),
+    depositPercent: preorderDepositPercent,
+  }), [totalAfterDiscounts, preorderFullSubtotal, preorderDepositPercent]);
+  const amountDueNow = preorderFinancials.hasPreorder ? preorderFinancials.amountDueNow : totalAfterDiscounts;
 
   const checkoutPrimary = tenantSettings.primaryColor || "#7B1E22";
   const checkoutAccent = tenantSettings.accentColor || "#C7922F";
@@ -658,7 +684,7 @@ useEffect(() => {
         orderType,
         customerAddress: customerAddress.trim(),
         notes: notes.trim(),
-        total: totalAfterDiscounts,
+        total: amountDueNow,
         itemCount: cartRows.reduce((sum, row) => sum + row.quantity, 0),
         paymentMethodLabel: data.paymentMethodLabel || selectedPaymentOption.label,
         paymentStatus: data.paymentStatus || "pay_on_fulfilment",
@@ -1023,7 +1049,7 @@ useEffect(() => {
             disabled={loading || !cartRows.length || checkoutBlockedByTrial || !selectedPaymentOption}
             className="rounded-xl px-5 py-3 text-white disabled:opacity-50" style={{ backgroundColor: checkoutPrimary }}
           >
-            {checkoutBlockedByTrial ? "Checkout paused" : loading ? selectedPaymentOption?.online ? "Connecting to secure payment..." : "Placing order..." : selectedPaymentOption?.online ? "Continue to secure payment" : "Confirm order"}
+            {checkoutBlockedByTrial ? "Checkout paused" : loading ? selectedPaymentOption?.online ? "Connecting to secure payment..." : "Placing order..." : preorderFinancials.hasPreorder && selectedPaymentOption?.online ? "Pay deposit securely" : preorderFinancials.hasPreorder ? "Confirm pre-order deposit" : selectedPaymentOption?.online ? "Continue to secure payment" : "Confirm order"}
           </button>
 
           <p className="text-xs leading-5 text-gray-500">
@@ -1048,7 +1074,9 @@ useEffect(() => {
                       {row.isCustomAmountProduct && row.customAmountReference ? <p className="mt-1 text-xs font-semibold text-blue-700">Reference: {row.customAmountReference}</p> : null}
                       {row.isCustomAmountProduct && row.customAmountNote ? <p className="mt-1 text-xs leading-5 text-slate-500">{row.customAmountNote}</p> : null}
                       <p className="text-sm text-gray-600">{row.isCustomAmountProduct ? (row.customAmountLabel || "Amount") : formatMoney(row.unitPrice, tenantSettings) + " each"}</p>
-                      {row.stockEnabled ? (
+                      {row.isPreorder ? (
+                        <p className="mt-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Pre-order deposit at checkout</p>
+                      ) : row.stockEnabled ? (
                         <p className={`mt-1 text-xs font-semibold ${row.stockQuantity <= 0 ? "text-red-600" : row.quantity >= row.stockQuantity ? "text-orange-600" : "text-emerald-700"}`}>
                           {row.stockQuantity <= 0 ? "Out of stock" : `${row.stockQuantity} in stock`}
                         </p>
@@ -1069,7 +1097,7 @@ useEffect(() => {
                       <button
                         className="rounded border px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50" style={{ borderColor: checkoutBorder }}
                         onClick={() => updateQuantity(row, row.quantity + 1)}
-                        disabled={row.stockEnabled && row.quantity >= row.stockQuantity}
+                        disabled={!row.isPreorder && row.stockEnabled && row.quantity >= row.stockQuantity}
                       >
                         +
                       </button>
@@ -1099,9 +1127,25 @@ useEffect(() => {
                     <span>-{formatMoney(discountResult.amount, tenantSettings)}</span>
                   </div>
                 ) : null}
+                {preorderFinancials.hasPreorder ? (
+                  <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
+                    <div className="flex items-center justify-between gap-3">
+                      <span>Pre-order value</span>
+                      <span>{formatMoney(preorderFinancials.preorderSubtotal, tenantSettings)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-3 font-semibold">
+                      <span>Deposit due now ({preorderFinancials.depositPercent}%)</span>
+                      <span>{formatMoney(preorderFinancials.depositAmount, tenantSettings)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <span>Balance due when stock arrives</span>
+                      <span>{formatMoney(preorderFinancials.balanceAmount, tenantSettings)}</span>
+                    </div>
+                  </div>
+                ) : null}
                 <div className="flex items-center justify-between pt-2 text-base font-semibold">
-                  <span>Total</span>
-                  <span>{formatMoney(totalAfterDiscounts, tenantSettings)}</span>
+                  <span>{preorderFinancials.hasPreorder ? "Due now" : "Total"}</span>
+                  <span>{formatMoney(amountDueNow, tenantSettings)}</span>
                 </div>
               </div>
             </div>
