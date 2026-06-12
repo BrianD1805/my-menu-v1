@@ -105,13 +105,37 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, order: { id: orderId, preorder_balance_payment_status: "paid" } });
     }
 
+    const paidAt = new Date().toISOString();
+    const balanceAmount = Math.max(0, Number(existing.preorder_balance_amount || 0));
+
+    const { error: paymentEventError } = await db
+      .from("order_payment_events")
+      .upsert({
+        tenant_id: tenant.id,
+        order_id: orderId,
+        event_type: "preorder_balance_paid",
+        payment_stage: "balance",
+        payment_source: "tenant_admin_manual",
+        payment_status: "paid",
+        amount: balanceAmount,
+        payment_reference: `PREORDER-BALANCE-${String(orderId).slice(0, 8).toUpperCase()}`,
+        notes: "Balance marked paid in Tenant Admin Pre-orders.",
+        paid_at: paidAt,
+        created_at: paidAt,
+        updated_at: paidAt,
+      }, { onConflict: "order_id,event_type" });
+
+    if (paymentEventError) {
+      return NextResponse.json({ error: "Could not record the balance payment. Run the Ver-0.235K Supabase SQL and try again." }, { status: 500 });
+    }
+
     await reducePreOrderStock(tenant.id, orderId);
     const { data: order, error } = await db
       .from("orders")
       .update({
         preorder_status: "ready_for_dispatch",
         preorder_balance_payment_status: "paid",
-        preorder_balance_paid_at: new Date().toISOString(),
+        preorder_balance_paid_at: paidAt,
         status: "ready",
       })
       .eq("id", orderId)
@@ -127,7 +151,7 @@ export async function POST(req: Request) {
       eventType: "preorder_balance_paid",
       title: "Balance received",
       body: "Your pre-order balance has been received and the order is ready for dispatch.",
-      payload: { orderId, status: "ready" },
+      payload: { orderId, status: "ready", balanceAmount },
     });
     return NextResponse.json({ ok: true, order });
   } catch (error) {

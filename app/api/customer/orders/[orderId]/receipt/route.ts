@@ -50,12 +50,16 @@ function preOrderReceiptSummary(order: any) {
   const isPreorder = flow === "preorder" || flow === "mixed" || Number(order?.preorder_deposit_amount || 0) > 0 || Number(order?.preorder_balance_amount || 0) > 0;
   const orderTotal = Number(order?.total || 0);
   const depositPaid = Math.max(0, Number(order?.preorder_deposit_amount || 0));
-  const balanceDue = Math.max(0, Number(order?.preorder_balance_amount || 0));
+  const balancePaid = String(order?.preorder_balance_payment_status || "").toLowerCase() === "paid";
+  const balanceDue = balancePaid ? 0 : Math.max(0, Number(order?.preorder_balance_amount || 0));
+  const balancePaidAmount = balancePaid ? Math.max(0, Number(order?.preorder_balance_amount || 0)) : 0;
   return {
     isPreorder,
     orderTotal,
     depositPaid: isPreorder ? depositPaid : orderTotal,
     balanceDue: isPreorder ? balanceDue : 0,
+    balancePaidAmount: isPreorder ? balancePaidAmount : 0,
+    balancePaid,
     paidLabel: isPreorder ? "Deposit paid" : "Total paid",
   };
 }
@@ -340,7 +344,8 @@ function buildPremiumReceiptPdf({ tenantName, currencyCode, logo, order, receipt
         ...(vatIncludedAmount > 0 ? [[`${receiptInfo.taxLabel} included (${asPercent(taxRatePercent)}%)`, money(vatIncludedAmount), "#334155", "#0f172a"] as const] : []),
         ...(rewardDiscount > 0 ? [[`Rewards discount${order?.reward_tier ? ` · ${order.reward_tier}` : ""}`, `-${money(rewardDiscount)}`, "#047857", "#047857"] as const] : []),
         ...(discountAmount > 0 ? [[order?.discount_name || order?.discount_code || "Discount", `-${money(discountAmount)}`, "#047857", "#047857"] as const] : []),
-        ...(preorderSummary.isPreorder && preorderSummary.balanceDue > 0 ? [["Balance due when stock arrives", money(preorderSummary.balanceDue), "#b45309", "#b45309"] as const] : []),
+        ...(preorderSummary.isPreorder && preorderSummary.balanceDue > 0 ? [["Balance Due:", money(preorderSummary.balanceDue), "#b45309", "#b45309"] as const] : []),
+        ...(preorderSummary.isPreorder && preorderSummary.balancePaidAmount > 0 ? [["Balance paid", money(preorderSummary.balancePaidAmount), "#047857", "#047857"] as const] : []),
       ]
     : [];
   const totalsW = 230;
@@ -480,12 +485,13 @@ function buildReceiptHtml({ tenantName, currencyCode, logoUrl, order, receiptInf
 
   const discountRows = hasAdjustments
     ? `
-      ${preorderSummary.isPreorder ? `<div class="totals-row subtle"><span>Order total</span><strong>${asMoney(preorderSummary.orderTotal, currencyCode)}</strong></div>` : ""}
+      ${preorderSummary.isPreorder ? `<div class="totals-row subtle"><span>Total Due:</span><strong>${asMoney(preorderSummary.orderTotal, currencyCode)}</strong></div>` : ""}
       <div class="totals-row subtle"><span>Subtotal</span><strong>${asMoney(subtotal, currencyCode)}</strong></div>
       ${vatIncludedAmount > 0 ? `<div class="totals-row subtle"><span>${escapeHtml(receiptInfo.taxLabel)} included (${asPercent(taxRatePercent)}%)</span><strong>${asMoney(vatIncludedAmount, currencyCode)}</strong></div>` : ""}
       ${rewardDiscount > 0 ? `<div class="totals-row success"><span>Rewards discount${order?.reward_tier ? ` · ${escapeHtml(order.reward_tier)}` : ""}</span><strong>-${asMoney(rewardDiscount, currencyCode)}</strong></div>` : ""}
       ${discountAmount > 0 ? `<div class="totals-row success"><span>${escapeHtml(order?.discount_name || order?.discount_code || "Discount")}</span><strong>-${asMoney(discountAmount, currencyCode)}</strong></div>` : ""}
-      ${preorderSummary.isPreorder && preorderSummary.balanceDue > 0 ? `<div class="totals-row warning"><span>Balance due when stock arrives</span><strong>${asMoney(preorderSummary.balanceDue, currencyCode)}</strong></div>` : ""}
+      ${preorderSummary.isPreorder && preorderSummary.balanceDue > 0 ? `<div class="totals-row warning"><span>Balance Due:</span><strong>${asMoney(preorderSummary.balanceDue, currencyCode)}</strong></div>` : ""}
+      ${preorderSummary.isPreorder && preorderSummary.balancePaidAmount > 0 ? `<div class="totals-row success"><span>Balance paid</span><strong>${asMoney(preorderSummary.balancePaidAmount, currencyCode)}</strong></div>` : ""}
     `
     : "";
 

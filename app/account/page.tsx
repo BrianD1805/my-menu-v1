@@ -17,6 +17,12 @@ type AccountOrder = {
   paymentStatus?: string | null;
   paymentReference?: string | null;
   paidAt?: string | null;
+  orderFlow?: string | null;
+  preorderStatus?: string | null;
+  preorderDepositAmount?: number;
+  preorderBalanceAmount?: number;
+  preorderBalancePaymentStatus?: string | null;
+  preorderBalancePaidAt?: string | null;
   rewardTier?: string | null;
   rewardDiscountAmount?: number;
   discountCode?: string | null;
@@ -278,7 +284,8 @@ export default function CustomerAccountPage() {
                 <p><span className="font-semibold text-slate-900">Receipt:</span> {order.receiptNumber || `ORD-${order.id.slice(0, 8).toUpperCase()}`}</p>
                 {order.paymentMethodLabel ? <p><span className="font-semibold text-slate-900">Payment:</span> {order.paymentMethodLabel}</p> : null}
                 {order.paymentReference ? <p><span className="font-semibold text-slate-900">Reference:</span> {order.paymentReference}</p> : null}
-                {order.paidAt ? <p><span className="font-semibold text-slate-900">Paid:</span> {new Date(order.paidAt).toLocaleDateString()}</p> : null}
+                {order.paidAt ? <p><span className="font-semibold text-slate-900">{order.orderFlow === "preorder" || order.orderFlow === "mixed" ? "Deposit paid:" : "Paid:"}</span> {new Date(order.paidAt).toLocaleDateString("en-GB")}</p> : null}
+                {order.orderFlow === "preorder" || order.orderFlow === "mixed" ? <p><span className="font-semibold text-slate-900">Balance:</span> {order.preorderBalancePaymentStatus === "paid" ? "Paid" : "Due when stock arrives"}{order.preorderBalancePaidAt ? ` · ${new Date(order.preorderBalancePaidAt).toLocaleDateString("en-GB")}` : ""}</p> : null}
                 {order.rewardDiscountAmount ? <p><span className="font-semibold text-slate-900">Rewards saved:</span> {order.rewardDiscountAmount.toFixed(2)}</p> : null}
                 {order.discountAmount ? <p><span className="font-semibold text-slate-900">Discount saved:</span> {order.discountAmount.toFixed(2)}</p> : null}
               </div>

@@ -29,6 +29,29 @@ export default async function AdminPreOrdersPage() {
     .in("order_flow", ["preorder", "mixed"])
     .order("created_at", { ascending: false });
 
+  const orderRows = dedupePreOrders((orders || []) as any);
+  const orderIds = orderRows.map((order: any) => order.id).filter(Boolean);
+  const { data: orderItems } = orderIds.length
+    ? await db
+        .from("order_items")
+        .select("order_id,product_name,quantity,is_preorder")
+        .in("order_id", orderIds)
+        .eq("is_preorder", true)
+    : { data: [] as any[] };
+
+  const itemsByOrder = ((orderItems || []) as any[]).reduce<Record<string, string[]>>((acc, item) => {
+    if (!item.order_id) return acc;
+    if (!acc[item.order_id]) acc[item.order_id] = [];
+    const quantity = Math.max(1, Math.floor(Number(item.quantity || 1)));
+    acc[item.order_id].push(`${item.product_name || "Pre-order item"}${quantity > 1 ? ` × ${quantity}` : ""}`);
+    return acc;
+  }, {});
+
+  const preOrdersWithProducts = orderRows.map((order: any) => ({
+    ...order,
+    product_names: (itemsByOrder[order.id] || []).join(", "),
+  }));
+
   return (
     <AdminShell
       tenantName={branding.adminHeadingLabel}
@@ -43,7 +66,7 @@ export default async function AdminPreOrdersPage() {
       trialState={trialState}
     >
       <PreOrderManager
-        orders={dedupePreOrders((orders || []) as any)}
+        orders={preOrdersWithProducts as any}
         depositPercent={normalizePreorderDepositPercent((settings as any)?.preorder_deposit_percent ?? 25)}
         moneySettings={branding}
       />

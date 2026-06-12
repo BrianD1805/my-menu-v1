@@ -1129,14 +1129,14 @@ useEffect(() => {
               ))}
 
               <div className="space-y-2 border-t pt-4 text-sm">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <span>Subtotal</span>
-                  <span>{formatMoney(total, tenantSettings)}</span>
+                  <span className="min-w-[120px] text-right tabular-nums">{formatMoney(total, tenantSettings)}</span>
                 </div>
                 {rewardSummary && effectiveRewardDiscountAmount > 0 ? (
-                  <div className="flex items-center justify-between text-emerald-700">
+                  <div className="flex items-start justify-between gap-4 text-emerald-700">
                     <span>{rewardSummary.tierLabel} rewards discount</span>
-                    <span>-{formatMoney(effectiveRewardDiscountAmount, tenantSettings)}</span>
+                    <span className="min-w-[120px] text-right tabular-nums">-{formatMoney(effectiveRewardDiscountAmount, tenantSettings)}</span>
                   </div>
                 ) : rewardSummary && discountResult.applied && !discountResult.rewardAllowed ? (
                   <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Reward discount paused because this offer cannot be combined with rewards.</div>
@@ -1144,30 +1144,30 @@ useEffect(() => {
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">{rewardSummary.tierLabel} rewards member. Keep ordering to unlock higher tier discounts.</div>
                 ) : null}
                 {discountResult.applied ? (
-                  <div className="flex items-center justify-between text-rose-700">
+                  <div className="flex items-start justify-between gap-4 text-rose-700">
                     <span>{discountResult.name || "Discount"}{discountResult.code ? ` (${discountResult.code})` : ""}</span>
-                    <span>-{formatMoney(discountResult.amount, tenantSettings)}</span>
+                    <span className="min-w-[120px] text-right tabular-nums">-{formatMoney(discountResult.amount, tenantSettings)}</span>
                   </div>
                 ) : null}
                 {preorderFinancials.hasPreorder ? (
                   <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
-                    <div className="flex items-center justify-between gap-3">
-                      <span>Pre-order value</span>
-                      <span>{formatMoney(preorderFinancials.preorderSubtotal, tenantSettings)}</span>
+                    <div className="flex items-start justify-between gap-4">
+                      <span>Total Due:</span>
+                      <span className="min-w-[120px] text-right tabular-nums">{formatMoney(preorderFinancials.preorderSubtotal, tenantSettings)}</span>
                     </div>
-                    <div className="mt-2 flex items-center justify-between gap-3 font-semibold">
-                      <span>Deposit due now ({preorderFinancials.depositPercent}%)</span>
-                      <span>{formatMoney(preorderFinancials.depositAmount, tenantSettings)}</span>
+                    <div className="mt-2 flex items-start justify-between gap-4 font-semibold">
+                      <span>Deposit ({preorderFinancials.depositPercent}%)</span>
+                      <span className="min-w-[120px] text-right tabular-nums">{formatMoney(preorderFinancials.depositAmount, tenantSettings)}</span>
                     </div>
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <span>Balance due when stock arrives</span>
-                      <span>{formatMoney(preorderFinancials.balanceAmount, tenantSettings)}</span>
+                    <div className="mt-2 flex items-start justify-between gap-4">
+                      <span>Balance Due:</span>
+                      <span className="min-w-[120px] text-right tabular-nums">{formatMoney(preorderFinancials.balanceAmount, tenantSettings)}</span>
                     </div>
                   </div>
                 ) : null}
-                <div className="flex items-center justify-between pt-2 text-base font-semibold">
+                <div className="flex items-start justify-between gap-4 pt-2 text-base font-semibold">
                   <span>{preorderFinancials.hasPreorder ? "Due now" : "Total"}</span>
-                  <span>{formatMoney(amountDueNow, tenantSettings)}</span>
+                  <span className="min-w-[120px] text-right tabular-nums">{formatMoney(amountDueNow, tenantSettings)}</span>
                 </div>
               </div>
             </div>

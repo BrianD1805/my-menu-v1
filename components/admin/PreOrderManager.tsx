@@ -18,6 +18,7 @@ type PreOrderRow = {
   payment_checkout_session_id?: string | null;
   payment_intent_id?: string | null;
   payment_reference?: string | null;
+  product_names?: string | null;
 };
 
 type Props = {
@@ -79,7 +80,7 @@ export default function PreOrderManager({ orders: initialOrders, depositPercent,
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "Pre-order update failed");
       setOrders((current) => current.map((order) => order.id === orderId ? { ...order, ...payload.order } : order));
-      setMessage(action === "stock_arrived" ? "Customer balance push queued." : "Balance marked paid and pre-order stock deducted.");
+      setMessage(action === "stock_arrived" ? "Customer balance push queued." : "Balance marked paid, payment record saved and pre-order stock deducted.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Pre-order update failed");
     } finally {
@@ -126,6 +127,7 @@ export default function PreOrderManager({ orders: initialOrders, depositPercent,
               <div>
                 <p className="text-base font-black text-slate-950">{order.customer_name || "Customer"}</p>
                 <p className="mt-1 text-sm text-slate-600">{order.customer_phone || "No phone"} · {formatPreOrderDate(order.created_at)}</p>
+                <p className="mt-2 text-sm font-bold text-slate-800">{order.product_names || "Pre-order item"}</p>
                 <p className="mt-2 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-amber-700 ring-1 ring-amber-100">{statusLabel(order)}</p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-sm">
