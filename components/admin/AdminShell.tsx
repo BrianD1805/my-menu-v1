@@ -117,16 +117,16 @@ function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => voi
       target={item.external ? "_blank" : undefined}
       rel={item.external ? "noreferrer" : undefined}
       aria-current={item.current ? "page" : undefined}
-      className={["admin-pressable group flex min-h-[78px] items-center gap-3 rounded-[18px] border px-4 py-3 text-left shadow-[0_10px_22px_rgba(17,24,39,0.05)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35", item.current ? "border-[#0F766E] bg-[#0F766E] text-white" : "border-[#E0E6E4] bg-white text-[#111827] hover:bg-[#FBFFFD]"].join(" ")}
+      className={["admin-pressable group flex min-h-[62px] items-center gap-2.5 rounded-[15px] border px-3 py-2.5 text-left shadow-[0_8px_18px_rgba(17,24,39,0.045)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35", item.current ? "border-[#0F766E] bg-[#0F766E] text-white" : "border-[#E0E6E4] bg-white text-[#111827] hover:bg-[#FBFFFD]"].join(" ")}
     >
-      <span className={["flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] transition", item.current ? "bg-white/16 text-white" : "bg-[#EAFBF5] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")}>
+      <span className={["flex h-8 w-8 shrink-0 items-center justify-center rounded-[13px] transition", item.current ? "bg-white/16 text-white" : "bg-[#EAFBF5] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")}>
         <AdminNavIcon icon={item.icon} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-base font-black leading-tight tracking-tight">{item.label}</span>
-        <span className={["mt-1 block text-xs font-bold leading-5", item.current ? "text-white/82" : "text-[#5F6B66]"].join(" ")}>{item.detail}</span>
+        <span className="block text-sm font-black leading-tight tracking-tight">{item.label}</span>
+        <span className={["mt-0.5 block text-[11px] font-bold leading-4", item.current ? "text-white/82" : "text-[#5F6B66]"].join(" ")}>{item.detail}</span>
       </span>
-      <span className={["flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition", item.current ? "bg-white/14 text-white" : "bg-[#F1F5F4] text-[#5F6B66] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")} aria-hidden="true">
+      <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition", item.current ? "bg-white/14 text-white" : "bg-[#F1F5F4] text-[#5F6B66] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")} aria-hidden="true">
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M9 7h8v8" /></svg>
       </span>
     </a>
@@ -135,19 +135,19 @@ function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => voi
 
 function MegaFeatureCard({ group, tenantName }: { group: NavGroup; tenantName: string }) {
   return (
-    <aside className="relative flex min-h-[17.5rem] overflow-hidden rounded-[24px] bg-[#111827] p-5 text-white shadow-[0_18px_38px_rgba(17,24,39,0.18)]">
+    <aside className="relative flex min-h-[14rem] overflow-hidden rounded-[20px] bg-[#111827] p-4 text-white shadow-[0_14px_30px_rgba(17,24,39,0.16)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_100%,rgba(15,118,110,0.55),transparent_38%),linear-gradient(145deg,#111827_0%,#162231_58%,#243126_100%)]" />
       <div className="relative z-10 flex min-h-full flex-col justify-between">
         <div>
           <div className="flex items-center gap-3">
             <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
-            <p className="text-sm font-black uppercase tracking-[0.26em] text-white/84">{group.eyebrow}</p>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-white/84">{group.eyebrow}</p>
           </div>
-          <h2 className="mt-10 text-2xl font-black leading-tight tracking-tight">{group.strapline}</h2>
+          <h2 className="mt-7 text-xl font-black leading-tight tracking-tight">{group.strapline}</h2>
         </div>
         <div>
-          <p className="text-sm font-bold leading-6 text-white/72">{group.description}</p>
-          <p className="mt-5 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-white/78">{tenantName}</p>
+          <p className="text-xs font-bold leading-5 text-white/72">{group.description}</p>
+          <p className="mt-4 rounded-[16px] border border-white/10 bg-white/8 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-white/78">{tenantName}</p>
         </div>
       </div>
     </aside>
@@ -181,21 +181,21 @@ function DesktopMegaDropdown({
 
   return (
     <section
-      className="absolute right-0 top-[calc(100%+5px)] z-[80] hidden w-[min(54rem,calc(100vw-3rem))] overflow-hidden rounded-[26px] border border-[#BFD6CE] bg-[#D7E8E1] p-5 text-[#111827] shadow-[0_24px_56px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:block"
+      className="absolute right-0 top-[calc(100%+5px)] z-[80] hidden w-[min(43rem,calc(100vw-3rem))] overflow-hidden rounded-[22px] border border-[#BFD6CE] bg-[#D7E8E1] p-4 text-[#111827] shadow-[0_20px_44px_rgba(17,24,39,0.14)] backdrop-blur-xl lg:block"
       onMouseEnter={keepMenuOpen}
       onMouseLeave={scheduleMenuClose}
     >
-      <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="grid gap-3 lg:grid-cols-[14rem_minmax(0,1fr)]">
         <MegaFeatureCard group={group} tenantName={tenantName} />
-        <div className="grid content-start gap-3">
+        <div className="grid content-start gap-2.5">
           {group.items.map((item) => (
             <MenuItemCard key={item.href} item={item} closeMenu={closeMenu} />
           ))}
 
           {isConfigure ? (
-            <div className="rounded-[20px] border border-[#CFE1DD] bg-[#EAFBF5] p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+            <div className="rounded-[16px] border border-[#CFE1DD] bg-[#EAFBF5] p-3 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
               <div className="flex items-start gap-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] bg-white text-[#0F766E] shadow-sm">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[13px] bg-white text-[#0F766E] shadow-sm">
                   <AdminNavIcon icon="billing" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -218,9 +218,9 @@ function DesktopMegaDropdown({
                 <LogoutButton className="admin-pressable mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
               </div>
               <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable rounded-[20px] border border-[#E0E6E4] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#FBFFFD]">
-                <span className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-[#EAFBF5] text-[#0F766E]"><AdminNavIcon icon="storefront" /></span>
-                <span className="mt-4 block text-base font-black text-[#111827]">Open storefront</span>
-                <span className="mt-1 block truncate text-sm font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-[#EAFBF5] text-[#0F766E]"><AdminNavIcon icon="storefront" /></span>
+                <span className="mt-3 block text-sm font-black text-[#111827]">Open storefront</span>
+                <span className="mt-0.5 block truncate text-xs font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
               </a>
             </div>
           ) : null}
@@ -272,7 +272,7 @@ function MobileMegaMenu({
               ))}
             </div>
             {group.key === "configure" ? (
-              <div className="mt-3 rounded-[20px] border border-[#CFE1DD] bg-[#EAFBF5] p-4">
+              <div className="mt-3 rounded-[16px] border border-[#CFE1DD] bg-[#EAFBF5] p-3">
                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Launch & billing</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
@@ -473,7 +473,7 @@ export default function AdminShell({
                           setActiveKey((value) => (value === group.key ? null : group.key));
                         }}
                         className={[
-                          "admin-pressable inline-flex min-h-11 items-center gap-3 rounded-full border px-4 py-2 text-sm font-black transition hover:-translate-y-[1px]",
+                          "admin-pressable inline-flex min-h-10 items-center gap-2.5 rounded-full border px-3.5 py-1.5 text-[13px] font-black transition hover:-translate-y-[1px]",
                           selected
                             ? "border-[#8CB9AC] bg-[#D7E8E1] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_rgba(17,24,39,0.08)]"
                             : containsCurrent
@@ -485,7 +485,7 @@ export default function AdminShell({
                       >
                         <span>{group.label}</span>
                         <span className={[
-                          "flex h-8 w-8 items-center justify-center rounded-full transition",
+                          "flex h-7 w-7 items-center justify-center rounded-full transition",
                           selected ? "bg-[#0F766E] text-white" : "bg-[#D7E8E1] text-[#5F6B66]",
                         ].join(" ")}><AdminChevronIcon open={selected} /></span>
                       </button>
@@ -534,35 +534,53 @@ export default function AdminShell({
         </div>
 
         <header className="overflow-hidden rounded-[26px] border border-[#DCE5E1] bg-white/[0.98] backdrop-blur-xl oa-admin-surface">
-          <div className="border-b border-[#DCE5E1] px-4 py-4 sm:px-6 lg:px-7">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[#111827]">
-                <img src="/orduva-platform-icon-192.png" alt="Orduva Admin" className="h-full w-full object-cover" />
+          <div className="border-b border-[#DCE5E1] px-4 py-4 sm:px-6 lg:px-7 lg:py-3">
+            <div className="flex min-w-0 items-center gap-3 lg:items-start lg:justify-between lg:gap-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[#111827] lg:h-10 lg:w-10 lg:rounded-[14px]">
+                  <img src="/orduva-platform-icon-192.png" alt="Orduva Admin" className="h-full w-full object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-black tracking-tight text-[#111827] lg:text-base">Orduva Admin</p>
+                  <p className="mt-0.5 truncate text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E] lg:text-[10px]">Store workspace</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-lg font-black tracking-tight text-[#111827]">Orduva Admin</p>
-                <p className="mt-0.5 truncate text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Store workspace</p>
+
+              <div className="hidden min-w-0 flex-1 items-start justify-between gap-4 lg:flex">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex rounded-full border border-[#DCE5E1] bg-[#EAFBF5] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#0F766E]">
+                      {current} dashboard
+                    </span>
+                    <h1 className="truncate text-xl font-black leading-tight tracking-tight text-[#111827]">{title}</h1>
+                  </div>
+                  <p className="mt-1 max-w-4xl truncate text-xs font-semibold leading-5 text-[#5F6B66]">{description}</p>
+                </div>
+
+                <div className="shrink-0 rounded-[16px] border border-[#DCE5E1] bg-[#F1F5F4] px-3 py-2 oa-admin-soft text-xs leading-5 text-[#374151]">
+                  <span className="font-semibold text-[#5F6B66]">Signed in:</span>{" "}
+                  <span className="font-black text-[#111827]">{signedInAs}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="px-4 py-5 sm:px-6 lg:px-7 lg:py-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="px-4 py-5 sm:px-6 lg:hidden">
+            <div className="flex flex-col gap-4">
               <div className="min-w-0">
                 <p className="inline-flex w-fit rounded-full border border-[#DCE5E1] bg-[#EAFBF5] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-[#0F766E]">
                   {current} dashboard
                 </p>
-                <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-tight text-[#111827] sm:text-3xl lg:text-[2.35rem]">
+                <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-tight text-[#111827] sm:text-3xl">
                   {title}
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-[#374151]">{description}</p>
               </div>
 
-              <div className="rounded-[20px] border border-[#DCE5E1] bg-[#F1F5F4] p-3 oa-admin-soft text-sm leading-6 text-[#374151] lg:min-w-[16rem]">
+              <div className="rounded-[20px] border border-[#DCE5E1] bg-[#F1F5F4] p-3 oa-admin-soft text-sm leading-6 text-[#374151]">
                 <p>
                   Signed in as <span className="font-black text-[#111827]">{signedInAs}</span>
                 </p>
-                <p className="mt-1 text-xs font-semibold text-[#5F6B66]">Use the section buttons above for navigation, billing and account actions.</p>
               </div>
             </div>
           </div>

@@ -12,9 +12,12 @@ type PushPayload = {
 
 type AdminSubscriptionRow = {
   endpoint: string;
-  p256dh: string;
-  auth: string;
-  enabled: boolean;
+  p256dh?: string | null;
+  auth?: string | null;
+  enabled?: boolean | null;
+  p256dh_key?: string | null;
+  auth_key?: string | null;
+  is_active?: boolean | null;
 };
 
 type CustomerSubscriptionRow = {
@@ -219,9 +222,8 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
 
   const { data, error } = await db
     .from("admin_push_subscriptions")
-    .select("endpoint,p256dh,auth,enabled")
-    .eq("tenant_id", tenantId)
-    .eq("enabled", true);
+    .select("*")
+    .eq("tenant_id", tenantId);
 
   if (error) {
     const result = { ok: false, reason: "query_failed" as const, sent: 0, failed: 0 };
@@ -236,7 +238,16 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
     return result;
   }
 
-  if (!data?.length) {
+  const rows = ((data || []) as AdminSubscriptionRow[])
+    .map((row) => ({
+      endpoint: row.endpoint,
+      p256dh: row.p256dh || row.p256dh_key || null,
+      auth: row.auth || row.auth_key || null,
+      enabled: row.enabled !== undefined && row.enabled !== null ? row.enabled : row.is_active,
+    }))
+    .filter((row) => row.endpoint && row.p256dh && row.auth && row.enabled !== false);
+
+  if (!rows.length) {
     await db.from("notification_events").insert({
       tenant_id: tenantId,
       audience: "admin",
@@ -244,7 +255,7 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
       event_type: "admin_push_no_enabled_devices",
       title: "Admin push not active",
       body: "A new-order admin push could not be sent because no enabled admin push devices were found for this tenant.",
-      metadata: { route: "/admin", action: "enable_admin_push", orderId: orderIdFromTag, tag: payload.tag || null },
+      metadata: { route: "/admin", action: "enable_admin_push", orderId: orderIdFromTag, tag: payload.tag || null, savedRows: (data || []).length },
       status: "skipped",
       processed_at: new Date().toISOString(),
     });
@@ -255,10 +266,10 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
   let sent = 0;
   let failed = 0;
 
-  for (const row of data as AdminSubscriptionRow[]) {
+  for (const row of rows) {
     try {
       await webpush.sendNotification(
-        buildSubscription(row),
+        buildSubscription({ endpoint: row.endpoint!, p256dh: row.p256dh!, auth: row.auth! }),
         JSON.stringify({
           title: payload.title,
           body: payload.body,
@@ -277,6 +288,7 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
           .from("admin_push_subscriptions")
           .update({
             enabled: false,
+            is_active: false,
             updated_at: new Date().toISOString(),
             last_seen_at: new Date().toISOString(),
           })

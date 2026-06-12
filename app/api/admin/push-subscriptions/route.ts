@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await db
     .from("admin_push_subscriptions")
-    .select("id,enabled,updated_at,last_seen_at")
+    .select("*")
     .eq("tenant_id", auth.tenant.id);
 
   if (error) {
@@ -45,8 +45,9 @@ export async function GET(req: Request) {
   }
 
   const rows = data || [];
-  const activeSubscriptions = rows.filter((row) => row.enabled === true).length;
-  const disabledSubscriptions = rows.filter((row) => row.enabled === false).length;
+  const rowEnabled = (row: any) => row.enabled !== undefined && row.enabled !== null ? row.enabled === true : row.is_active === true;
+  const activeSubscriptions = rows.filter((row) => rowEnabled(row)).length;
+  const disabledSubscriptions = rows.filter((row) => !rowEnabled(row)).length;
   const totalSubscriptions = rows.length;
   const latestSeenAt = rows
     .map((row) => row.last_seen_at || row.updated_at)
@@ -93,9 +94,12 @@ export async function POST(req: Request) {
     endpoint: subscription.endpoint,
     p256dh: subscription.keys.p256dh,
     auth: subscription.keys.auth,
+    p256dh_key: subscription.keys.p256dh,
+    auth_key: subscription.keys.auth,
     user_agent: req.headers.get("user-agent") || null,
     device_label: "Installed admin PWA",
     enabled: true,
+    is_active: true,
     updated_at: new Date().toISOString(),
     last_seen_at: new Date().toISOString(),
   };
@@ -135,6 +139,7 @@ export async function DELETE(req: Request) {
     .from("admin_push_subscriptions")
     .update({
       enabled: false,
+      is_active: false,
       updated_at: new Date().toISOString(),
       last_seen_at: new Date().toISOString(),
     })
