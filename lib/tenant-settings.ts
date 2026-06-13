@@ -38,6 +38,29 @@ export type TenantSettings = {
   contact_email: string | null;
   contact_whatsapp: string | null;
   contact_address: string | null;
+  account_business_legal_name?: string | null;
+  account_contact_name?: string | null;
+  account_phone?: string | null;
+  account_email?: string | null;
+  account_address_line_1?: string | null;
+  account_address_line_2?: string | null;
+  account_city?: string | null;
+  account_region?: string | null;
+  account_postcode?: string | null;
+  account_country?: string | null;
+  ship_from_name?: string | null;
+  ship_from_address_line_1?: string | null;
+  ship_from_address_line_2?: string | null;
+  ship_from_city?: string | null;
+  ship_from_region?: string | null;
+  ship_from_postcode?: string | null;
+  ship_from_country?: string | null;
+  privacy_policy_title?: string | null;
+  privacy_policy_body?: string | null;
+  privacy_policy_show_on_storefront?: boolean | null;
+  terms_of_service_title?: string | null;
+  terms_of_service_body?: string | null;
+  terms_of_service_show_on_storefront?: boolean | null;
   footer_blurb: string | null;
   footer_notice: string | null;
   show_orduva_referral_ad: boolean | null;
@@ -238,7 +261,7 @@ export function normalizeSeparator(value: unknown) {
 }
 
 const SETTINGS_SELECT =
-  "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_shortcode, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, preorders_enabled, preorder_deposit_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_tax_rate_percent, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode, seo_page_name, seo_meta_description, seo_keywords, seo_canonical_url, seo_structured_data_enabled, google_tracking_id, google_tag_manager_id, invoice_payments_enabled, invoice_payments_section_title, invoice_payments_intro_text, invoice_payments_invoice_enabled, invoice_payments_deposit_enabled, invoice_payments_balance_enabled";
+  "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, account_business_legal_name, account_contact_name, account_phone, account_email, account_address_line_1, account_address_line_2, account_city, account_region, account_postcode, account_country, ship_from_name, ship_from_address_line_1, ship_from_address_line_2, ship_from_city, ship_from_region, ship_from_postcode, ship_from_country, privacy_policy_title, privacy_policy_body, privacy_policy_show_on_storefront, terms_of_service_title, terms_of_service_body, terms_of_service_show_on_storefront, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_shortcode, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, preorders_enabled, preorder_deposit_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_tax_rate_percent, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode, seo_page_name, seo_meta_description, seo_keywords, seo_canonical_url, seo_structured_data_enabled, google_tracking_id, google_tag_manager_id, invoice_payments_enabled, invoice_payments_section_title, invoice_payments_intro_text, invoice_payments_invoice_enabled, invoice_payments_deposit_enabled, invoice_payments_balance_enabled";
 
 export async function getTenantSettings(
   tenantId: string,
@@ -288,6 +311,29 @@ export async function getTenantSettings(
     contact_address: asStringOrNull(
       (data as Record<string, unknown>).contact_address,
     ),
+    account_business_legal_name: asStringOrNull((data as Record<string, unknown>).account_business_legal_name),
+    account_contact_name: asStringOrNull((data as Record<string, unknown>).account_contact_name),
+    account_phone: asStringOrNull((data as Record<string, unknown>).account_phone),
+    account_email: asStringOrNull((data as Record<string, unknown>).account_email),
+    account_address_line_1: asStringOrNull((data as Record<string, unknown>).account_address_line_1),
+    account_address_line_2: asStringOrNull((data as Record<string, unknown>).account_address_line_2),
+    account_city: asStringOrNull((data as Record<string, unknown>).account_city),
+    account_region: asStringOrNull((data as Record<string, unknown>).account_region),
+    account_postcode: asStringOrNull((data as Record<string, unknown>).account_postcode),
+    account_country: asStringOrNull((data as Record<string, unknown>).account_country),
+    ship_from_name: asStringOrNull((data as Record<string, unknown>).ship_from_name),
+    ship_from_address_line_1: asStringOrNull((data as Record<string, unknown>).ship_from_address_line_1),
+    ship_from_address_line_2: asStringOrNull((data as Record<string, unknown>).ship_from_address_line_2),
+    ship_from_city: asStringOrNull((data as Record<string, unknown>).ship_from_city),
+    ship_from_region: asStringOrNull((data as Record<string, unknown>).ship_from_region),
+    ship_from_postcode: asStringOrNull((data as Record<string, unknown>).ship_from_postcode),
+    ship_from_country: asStringOrNull((data as Record<string, unknown>).ship_from_country),
+    privacy_policy_title: asStringOrNull((data as Record<string, unknown>).privacy_policy_title),
+    privacy_policy_body: asStringOrNull((data as Record<string, unknown>).privacy_policy_body),
+    privacy_policy_show_on_storefront: asBooleanOrNull((data as Record<string, unknown>).privacy_policy_show_on_storefront),
+    terms_of_service_title: asStringOrNull((data as Record<string, unknown>).terms_of_service_title),
+    terms_of_service_body: asStringOrNull((data as Record<string, unknown>).terms_of_service_body),
+    terms_of_service_show_on_storefront: asBooleanOrNull((data as Record<string, unknown>).terms_of_service_show_on_storefront),
     footer_blurb: asStringOrNull(
       (data as Record<string, unknown>).footer_blurb,
     ),
@@ -644,6 +690,12 @@ function _buildTenantBranding(
     contactEmail: settings?.contact_email || null,
     contactWhatsApp: settings?.contact_whatsapp || null,
     contactAddress: settings?.contact_address || null,
+    privacyPolicyTitle: settings?.privacy_policy_title || "Privacy Policy",
+    privacyPolicyBody: settings?.privacy_policy_body || null,
+    privacyPolicyShowOnStorefront: settings?.privacy_policy_show_on_storefront !== false,
+    termsOfServiceTitle: settings?.terms_of_service_title || "Terms of Service",
+    termsOfServiceBody: settings?.terms_of_service_body || null,
+    termsOfServiceShowOnStorefront: settings?.terms_of_service_show_on_storefront !== false,
     footerBlurb: settings?.footer_blurb || "Thank you for ordering with us.",
     footerNotice:
       settings?.footer_notice ||

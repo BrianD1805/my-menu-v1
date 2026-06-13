@@ -195,6 +195,8 @@ export async function GET(req: Request) {
         settings?.invoice_payments_balance_enabled !== false,
       preordersEnabled: settings?.preorders_enabled !== false,
       preorderDepositPercent: Number(settings?.preorder_deposit_percent || 25),
+      privacyPolicyShowOnStorefront: settings?.privacy_policy_show_on_storefront !== false,
+      termsOfServiceShowOnStorefront: settings?.terms_of_service_show_on_storefront !== false,
     },
   };
 

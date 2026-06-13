@@ -316,7 +316,7 @@ export default function AdminShell({
   signedInAs: string;
   title: string;
   description: string;
-  current: "home" | "orders" | "preorders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "affiliates";
+  current: "home" | "orders" | "preorders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "affiliates" | "account";
   children: ReactNode;
   logoUrl?: string | null;
   faviconUrl?: string | null;
@@ -370,6 +370,7 @@ export default function AdminShell({
       strapline: "Account and storefront",
       description: "Open the public storefront, check who is signed in, or sign out safely.",
       items: [
+        { href: "/admin/account", label: "Tenant account", detail: "Login, password and dispatch details", icon: "account", current: current === "account" },
         { href: storefrontUrl, label: "Open storefront", detail: tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable", icon: "storefront", external: true },
       ],
     },

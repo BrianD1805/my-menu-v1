@@ -979,6 +979,8 @@ export default function MenuBrowser({
   invoicePaymentsInvoiceEnabled,
   invoicePaymentsDepositEnabled,
   invoicePaymentsBalanceEnabled,
+  privacyPolicyShowOnStorefront,
+  termsOfServiceShowOnStorefront,
   initialProductId,
   onFirstMeaningfulPaintReady,
 }: {
@@ -1043,6 +1045,8 @@ export default function MenuBrowser({
   invoicePaymentsInvoiceEnabled?: boolean | null;
   invoicePaymentsDepositEnabled?: boolean | null;
   invoicePaymentsBalanceEnabled?: boolean | null;
+  privacyPolicyShowOnStorefront?: boolean | null;
+  termsOfServiceShowOnStorefront?: boolean | null;
   initialProductId?: string | null;
   onFirstMeaningfulPaintReady?: () => void;
 }) {
@@ -3979,6 +3983,14 @@ export default function MenuBrowser({
             <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
               {version.replace("Ver: ", "V ")}
             </span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-600">
+            {privacyPolicyShowOnStorefront !== false ? (
+              <a href="/privacy-policy" className="underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900">Privacy Policy</a>
+            ) : null}
+            {termsOfServiceShowOnStorefront !== false ? (
+              <a href="/terms-of-service" className="underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900">Terms of Service</a>
+            ) : null}
           </div>
           <a
             href="/admin/login"

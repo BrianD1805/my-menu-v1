@@ -69,6 +69,8 @@ type StorefrontSettings = {
   invoicePaymentsInvoiceEnabled?: boolean | null;
   invoicePaymentsDepositEnabled?: boolean | null;
   invoicePaymentsBalanceEnabled?: boolean | null;
+  privacyPolicyShowOnStorefront?: boolean | null;
+  termsOfServiceShowOnStorefront?: boolean | null;
 };
 
 type StorefrontPayload = {
@@ -394,6 +396,8 @@ export default function StorefrontClientLoader({
         invoicePaymentsBalanceEnabled={
           settings.invoicePaymentsBalanceEnabled !== false
         }
+        privacyPolicyShowOnStorefront={settings.privacyPolicyShowOnStorefront !== false}
+        termsOfServiceShowOnStorefront={settings.termsOfServiceShowOnStorefront !== false}
         initialProductId={initialProductId}
         onFirstMeaningfulPaintReady={hideEarlyPreloader}
       />
