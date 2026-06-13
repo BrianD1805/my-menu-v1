@@ -2191,7 +2191,7 @@ export default function TenantSettingsForm({
             needed for this section.
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-[22px] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+            <div className="rounded-[22px] bg-[#9fbfdf]/35 p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
               <div className="flex flex-col gap-4">
                 {form.logoUrl ? (
                   <div className="flex min-h-28 w-full items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -2217,7 +2217,7 @@ export default function TenantSettingsForm({
               </div>
             </div>
 
-            <div className="rounded-[22px] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+            <div className="rounded-[22px] bg-[#9fbfdf]/35 p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
               <div className="flex flex-col gap-4">
                 {form.faviconUrl ? (
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs text-slate-600">
@@ -2371,7 +2371,7 @@ export default function TenantSettingsForm({
           defaultOpen={Boolean(focusSection)}
         >
           {!focusSection ? (
-            <div className="rounded-[22px] border border-emerald-100 bg-[#EAF3FA] p-4 sm:p-5">
+            <div className="rounded-[22px] bg-[#9fbfdf]/40 p-4 sm:p-5">
               <p className="text-sm font-black text-slate-950">Open the dedicated colour workspace</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 Per-item colour controls now open on their own page so the preview and suggested colour panels have room to breathe.
@@ -2389,7 +2389,7 @@ export default function TenantSettingsForm({
             className={`${!focusSection ? "hidden" : ""} relative grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-6`}
           >
             <div className="min-w-0 space-y-4">
-              <div className="rounded-[22px] bg-[#9fbfdf]/18 p-4">
+              <div className="rounded-[22px] bg-[#9fbfdf]/45 p-4">
                 <p className="text-sm font-semibold text-slate-900">
                   Colour editing workspace
                 </p>
@@ -2420,7 +2420,7 @@ export default function TenantSettingsForm({
                   <div
                     key={group.id}
                     ref={(node) => { themeGroupRefs.current[group.id] = node; }}
-                    className="rounded-[22px] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]"
+                    className="rounded-[22px] bg-[#9fbfdf]/35 p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]"
                   >
                     <button
                       type="button"
@@ -6913,7 +6913,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
             {steps.map((step) => (
               <div
                 key={step.title}
-                className="rounded-[22px] bg-[#9fbfdf]/18 p-4"
+                className="rounded-[22px] bg-[#9fbfdf]/45 p-4"
               >
                 <p className="text-sm font-semibold text-slate-950">
                   {step.title}
@@ -7127,7 +7127,7 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] bg-[#9fbfdf]/16 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition md:hover:bg-[#9fbfdf]/22 `}
+      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] bg-[#9fbfdf]/45 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition md:hover:bg-[#9fbfdf]/55 `}
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
@@ -7180,7 +7180,7 @@ function Section({
           </span>
         )}
       </summary>
-      <div className="bg-white/80 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
+      <div className="bg-[#9fbfdf]/24 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
         {children}
         {showSave ? (
           <div className="mt-4 flex justify-end pt-1">

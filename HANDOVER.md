@@ -1,9 +1,9 @@
-# Orduva Handover — Ver-0.238E
+# Orduva Ver-0.238F handover
 
-This patch continues the `/admin/settings` UX cleanup series.
+This patch fixes Settings panel styling complaints after Ver-0.238E.
 
 Touched files:
-- components/admin/AdminShell.tsx
+- app/globals.css
 - components/admin/TenantSettingsForm.tsx
 - lib/version.ts
 

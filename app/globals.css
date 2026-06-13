@@ -290,8 +290,7 @@ body {
 .orduva-admin-refresh [data-state="open"],
 .orduva-admin-refresh details[open] > summary,
 .orduva-admin-refresh .oa-admin-open-panel {
-  border-color: #94a3b8 !important;
-  box-shadow: 0 0 0 1px #cbd5e1 !important;
+  box-shadow: none !important;
 }
 
 .orduva-admin-refresh .oa-admin-content a:not(.admin-pressable),
