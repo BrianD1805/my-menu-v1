@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import {
   Fragment,
@@ -856,9 +857,11 @@ function normaliseTheme(
 export default function TenantSettingsForm({
   initial,
   tenantName,
+  focusSection,
 }: {
   initial: FormState;
   tenantName: string;
+  focusSection?: string;
 }) {
   const initialForm = useMemo(
     () => ({
@@ -935,6 +938,12 @@ export default function TenantSettingsForm({
     null,
   );
   const settingsTopRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!focusSection) return;
+    const target = document.getElementById(focusSection) as HTMLDetailsElement | null;
+    if (target && "open" in target) target.open = true;
+  }, [focusSection]);
 
   const theme = normaliseTheme(form.storefrontTheme, form);
   const previewName = form.businessDisplayName.trim() || tenantName;
@@ -2124,7 +2133,22 @@ export default function TenantSettingsForm({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl lg:max-w-none lg:px-[200px]">
+    <div className="mx-auto w-full max-w-7xl lg:max-w-none lg:px-[200px]" data-settings-focus={focusSection || undefined}>
+      <style>{`
+        [data-settings-focus="per-item-storefront-colours"] details:not(#per-item-storefront-colours) {
+          display: none;
+        }
+        [data-settings-focus="per-item-storefront-colours"] #per-item-storefront-colours > div {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 1.5rem;
+        }
+        @media (max-width: 1023px) {
+          [data-settings-focus="per-item-storefront-colours"] #per-item-storefront-colours > div {
+            display: block;
+          }
+        }
+      `}</style>
       <form
         data-tenant-settings-form="true"
         onSubmit={onSubmit}
@@ -2349,9 +2373,23 @@ export default function TenantSettingsForm({
           title="Per-item storefront colours"
           showSave={false}
         >
+          {!focusSection ? (
+            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50 p-4 sm:p-5">
+              <p className="text-sm font-black text-slate-950">Open the dedicated colour workspace</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Per-item colour controls now open on their own page so the preview and suggested colour panels have room to breathe.
+              </p>
+              <Link
+                href="/admin/settings/per-item-colours"
+                className="mt-4 inline-flex min-h-10 items-center justify-center rounded-2xl bg-slate-950 px-4 py-2 text-sm font-bold text-white transition hover:bg-slate-800"
+              >
+                Open colour workspace
+              </Link>
+            </div>
+          ) : null}
           <div
             ref={themeEditorWorkspaceRef}
-            className="relative lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start lg:gap-6"
+            className={`${!focusSection ? "hidden" : ""} relative lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start lg:gap-6`}
           >
             <div className="space-y-4">
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
@@ -5399,7 +5437,7 @@ function AdminToastBubble({
         >
           {icon}
         </span>
-        <p className="min-w-0 flex-1 text-sm leading-5">{toast.message}</p>
+        <p className="min-w-0 flex-1 text-sm font-semibold leading-5 text-white">{toast.message}</p>
         <button
           type="button"
           onClick={onClose}
@@ -6717,11 +6755,10 @@ function SettingsMenuModal({
         <div className="overflow-y-auto px-4 pb-7 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
           <div className="grid gap-3">
             {SETTINGS_MENU_ITEMS.map((item) => (
-              <button
+              <SettingsMenuItemButton
                 key={item.id}
-                type="button"
-                onClick={() => onSelect(item.id)}
-                className="group rounded-[22px] border border-emerald-900/10 bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-emerald-700/25 hover:bg-emerald-50"
+                item={item}
+                onSelect={onSelect}
               >
                 <span className="flex items-start justify-between gap-3">
                   <span>
@@ -6739,7 +6776,7 @@ function SettingsMenuModal({
                     ↓
                   </span>
                 </span>
-              </button>
+              </SettingsMenuItemButton>
             ))}
           </div>
 
@@ -6757,6 +6794,30 @@ function SettingsMenuModal({
         </div>
       </div>
     </div>
+  );
+}
+
+function SettingsMenuItemButton({
+  item,
+  onSelect,
+  children,
+}: {
+  item: (typeof SETTINGS_MENU_ITEMS)[number];
+  onSelect: (id: string) => void;
+  children: ReactNode;
+}) {
+  const className = "group rounded-[22px] border border-emerald-900/10 bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-emerald-700/25 hover:bg-emerald-50";
+  if (item.id === "per-item-storefront-colours") {
+    return (
+      <Link href="/admin/settings/per-item-colours" className={className}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={() => onSelect(item.id)} className={className}>
+      {children}
+    </button>
   );
 }
 

@@ -380,6 +380,7 @@ export default function AdminShell({
   const [activeKey, setActiveKey] = useState<NavKey | null>(null);
   const activeGroup = navGroups.find((group) => group.key === activeKey) ?? null;
   const closeTimerRef = useRef<number | null>(null);
+  const openTimerRef = useRef<number | null>(null);
 
   const clearMenuCloseTimer = () => {
     if (!closeTimerRef.current) return;
@@ -387,17 +388,35 @@ export default function AdminShell({
     closeTimerRef.current = null;
   };
 
+  const clearMenuOpenTimer = () => {
+    if (!openTimerRef.current) return;
+    window.clearTimeout(openTimerRef.current);
+    openTimerRef.current = null;
+  };
+
   const openMenu = (key: NavKey) => {
     clearMenuCloseTimer();
+    clearMenuOpenTimer();
+    openTimerRef.current = window.setTimeout(() => {
+      setActiveKey(key);
+      openTimerRef.current = null;
+    }, 1000);
+  };
+
+  const openMenuNow = (key: NavKey) => {
+    clearMenuCloseTimer();
+    clearMenuOpenTimer();
     setActiveKey(key);
   };
 
   const closeMenu = () => {
     clearMenuCloseTimer();
+    clearMenuOpenTimer();
     setActiveKey(null);
   };
 
   const scheduleMenuClose = () => {
+    clearMenuOpenTimer();
     clearMenuCloseTimer();
     closeTimerRef.current = window.setTimeout(() => {
       setActiveKey(null);
@@ -406,7 +425,10 @@ export default function AdminShell({
   };
 
   useEffect(() => {
-    return () => clearMenuCloseTimer();
+    return () => {
+      clearMenuCloseTimer();
+      clearMenuOpenTimer();
+    };
   }, []);
 
   useEffect(() => {
@@ -471,7 +493,11 @@ export default function AdminShell({
                         onMouseEnter={() => openMenu(group.key)}
                         onClick={() => {
                           clearMenuCloseTimer();
-                          setActiveKey((value) => (value === group.key ? null : group.key));
+                          if (activeKey === group.key) {
+                            closeMenu();
+                          } else {
+                            openMenuNow(group.key);
+                          }
                         }}
                         className={[
                           "admin-pressable inline-flex min-h-10 items-center gap-2.5 rounded-full border px-3.5 py-1.5 text-[13px] font-black transition hover:-translate-y-[1px]",
