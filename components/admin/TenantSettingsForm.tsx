@@ -1092,12 +1092,6 @@ export default function TenantSettingsForm({
     "contactWhatsApp",
     "contactEmail",
     "contactAddress",
-    "privacyPolicyTitle",
-    "privacyPolicyBody",
-    "privacyPolicyShowOnStorefront",
-    "termsOfServiceTitle",
-    "termsOfServiceBody",
-    "termsOfServiceShowOnStorefront",
     "footerBlurb",
     "footerNotice",
     "showOrduvaReferralAd",
@@ -1106,6 +1100,14 @@ export default function TenantSettingsForm({
     "socialTikTokUrl",
     "socialXUrl",
     "socialWebsiteUrl",
+  ]);
+  const legalPagesDirty = formValueChanged([
+    "privacyPolicyTitle",
+    "privacyPolicyBody",
+    "privacyPolicyShowOnStorefront",
+    "termsOfServiceTitle",
+    "termsOfServiceBody",
+    "termsOfServiceShowOnStorefront",
   ]);
   const adminWorkspaceDirty = formValueChanged(["showAdminLaunchChecklist"]);
   const currencyDirty = formValueChanged([
@@ -1275,6 +1277,7 @@ export default function TenantSettingsForm({
     brandingDirty ||
     themeDirty ||
     contactDirty ||
+    legalPagesDirty ||
     currencyDirty ||
     paymentDirty ||
     rewardsDirty ||
@@ -2534,48 +2537,6 @@ export default function TenantSettingsForm({
                 />
               </Field>
             </div>
-            <div className="md:col-span-2 rounded-[24px] border border-slate-200 bg-white p-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-sm font-black text-slate-950">Storefront legal pages</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">Edit the tenant privacy policy and terms shown on the public storefront footer.</p>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs font-bold">
-                  <a href="/privacy-policy" target="_blank" rel="noreferrer" className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 hover:bg-white">View privacy</a>
-                  <a href="/terms-of-service" target="_blank" rel="noreferrer" className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 hover:bg-white">View terms</a>
-                </div>
-              </div>
-              <div className="mt-4 grid gap-4">
-                <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
-                  <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-                    <Field label="Privacy policy title">
-                      <input value={form.privacyPolicyTitle} onChange={(e) => update("privacyPolicyTitle", e.target.value)} className="input" placeholder="Privacy Policy" />
-                    </Field>
-                    <label className="flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700">
-                      <input type="checkbox" checked={form.privacyPolicyShowOnStorefront} onChange={(e) => update("privacyPolicyShowOnStorefront", e.target.checked)} />
-                      Show on storefront
-                    </label>
-                  </div>
-                  <Field label="Privacy policy wording">
-                    <textarea value={form.privacyPolicyBody} onChange={(e) => update("privacyPolicyBody", e.target.value)} className="input min-h-[150px]" placeholder="Explain what customer data this store collects and how it is used." />
-                  </Field>
-                </div>
-                <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
-                  <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-                    <Field label="Terms of service title">
-                      <input value={form.termsOfServiceTitle} onChange={(e) => update("termsOfServiceTitle", e.target.value)} className="input" placeholder="Terms of Service" />
-                    </Field>
-                    <label className="flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700">
-                      <input type="checkbox" checked={form.termsOfServiceShowOnStorefront} onChange={(e) => update("termsOfServiceShowOnStorefront", e.target.checked)} />
-                      Show on storefront
-                    </label>
-                  </div>
-                  <Field label="Terms of service wording">
-                    <textarea value={form.termsOfServiceBody} onChange={(e) => update("termsOfServiceBody", e.target.value)} className="input min-h-[150px]" placeholder="Explain ordering, payment, delivery, refund and pre-order terms for this store." />
-                  </Field>
-                </div>
-              </div>
-            </div>
             <div className="md:col-span-2 rounded-[22px] border border-orange-100 bg-orange-50/70 p-4">
               <label className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <span>
@@ -2648,6 +2609,100 @@ export default function TenantSettingsForm({
                     onChange={(e) => update("socialWebsiteUrl", e.target.value)}
                     className="input"
                     placeholder="https://example.com"
+                  />
+                </Field>
+              </div>
+            </div>
+          </div>
+        </Section>
+
+        <Section
+          id="legal-pages"
+          title="Legal pages"
+          dirty={legalPagesDirty}
+          saving={saving}
+        >
+          <div className="rounded-[24px] border border-slate-200 bg-white p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-slate-950">Storefront legal pages</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  Edit the tenant Privacy Policy and Terms of Service shown on the public storefront.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs font-bold">
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 hover:bg-white"
+                >
+                  View privacy
+                </a>
+                <a
+                  href="/terms-of-service"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700 hover:bg-white"
+                >
+                  View terms
+                </a>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4 xl:grid-cols-2">
+              <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+                <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                  <Field label="Privacy Policy title">
+                    <input
+                      value={form.privacyPolicyTitle}
+                      onChange={(e) => update("privacyPolicyTitle", e.target.value)}
+                      className="input"
+                      placeholder="Privacy Policy"
+                    />
+                  </Field>
+                  <label className="flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={form.privacyPolicyShowOnStorefront}
+                      onChange={(e) => update("privacyPolicyShowOnStorefront", e.target.checked)}
+                    />
+                    Show on storefront
+                  </label>
+                </div>
+                <Field label="Privacy Policy wording">
+                  <textarea
+                    value={form.privacyPolicyBody}
+                    onChange={(e) => update("privacyPolicyBody", e.target.value)}
+                    className="input min-h-[260px]"
+                    placeholder="Explain what customer data this store collects and how it is used."
+                  />
+                </Field>
+              </div>
+              <div className="rounded-[20px] border border-slate-200 bg-slate-50 p-4">
+                <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                  <Field label="Terms of Service title">
+                    <input
+                      value={form.termsOfServiceTitle}
+                      onChange={(e) => update("termsOfServiceTitle", e.target.value)}
+                      className="input"
+                      placeholder="Terms of Service"
+                    />
+                  </Field>
+                  <label className="flex min-h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={form.termsOfServiceShowOnStorefront}
+                      onChange={(e) => update("termsOfServiceShowOnStorefront", e.target.checked)}
+                    />
+                    Show on storefront
+                  </label>
+                </div>
+                <Field label="Terms of Service wording">
+                  <textarea
+                    value={form.termsOfServiceBody}
+                    onChange={(e) => update("termsOfServiceBody", e.target.value)}
+                    className="input min-h-[260px]"
+                    placeholder="Explain ordering, payment, delivery, refund and pre-order terms for this store."
                   />
                 </Field>
               </div>
@@ -6496,6 +6551,12 @@ const SETTINGS_MENU_ITEMS = [
     group: "Contact",
     title: "Business contact details",
     help: "Phone, email, address, footer and social links.",
+  },
+  {
+    id: "legal-pages",
+    group: "Contact",
+    title: "Legal pages",
+    help: "Edit the storefront Privacy Policy and Terms of Service.",
   },
   {
     id: "invoice-payments",
