@@ -61,12 +61,6 @@ export default async function AdminSettingsPage() {
       accentColor={branding.accentColor}
       trialState={trialState}
     >
-      <div className="mb-6 rounded-[24px] border border-violet-100 bg-violet-50 p-4 text-sm text-violet-900">
-        This store-scoped settings layer covers branding, contact details,
-        storefront footer info, advanced currency display foundations, and
-        visual identity for this store.
-      </div>
-
       <TenantSettingsForm
         tenantName={tenant.name}
         initial={{

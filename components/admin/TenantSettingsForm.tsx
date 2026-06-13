@@ -275,6 +275,24 @@ const THEME_PRESETS: ThemePreset[] = [
     "#E8CDB7",
     "#35232B",
   ),
+  makePreset(
+    "Plum & Champagne",
+    "Elegant, rich and premium without feeling heavy.",
+    "#5B2A5F",
+    "#D7B56D",
+    "#FBF5FA",
+    "#DDC4E2",
+    "#241626",
+  ),
+  makePreset(
+    "Midnight & Mint",
+    "Calm, modern and polished for professional storefronts.",
+    "#102A43",
+    "#2DD4BF",
+    "#F2F8F7",
+    "#B7D8D2",
+    "#132026",
+  ),
 ];
 
 const THEME_GROUPS: Array<{
@@ -1286,6 +1304,44 @@ export default function TenantSettingsForm({
     seoDirty ||
     invoicePaymentsDirty ||
     adminWorkspaceDirty;
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      if (anchor.target === "_blank" || anchor.hasAttribute("download")) return;
+      const href = anchor.getAttribute("href") || "";
+      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+      const currentOrigin = window.location.origin;
+      const nextUrl = new URL(href, currentOrigin);
+      if (nextUrl.origin !== currentOrigin) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const shouldSave = window.confirm(
+        "You have unsaved settings. Press OK to save before leaving, or Cancel to stay on this page.",
+      );
+      if (!shouldSave) return;
+      const formElement = document.querySelector(
+        '[data-tenant-settings-form="true"]',
+      ) as HTMLFormElement | null;
+      formElement?.requestSubmit();
+      showToast("Saving changes. Use the link again after the save confirmation appears.", "info");
+    };
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => document.removeEventListener("click", handleDocumentClick, true);
+  }, [hasUnsavedChanges]);
+
   const themeGroupDirty = (group: (typeof THEME_GROUPS)[number]) =>
     group.fields.some(
       (field) =>
@@ -1393,6 +1449,20 @@ export default function TenantSettingsForm({
       if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!settingsMenuOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSettingsMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [settingsMenuOpen]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -2056,66 +2126,21 @@ export default function TenantSettingsForm({
   return (
     <div className="mx-auto w-full max-w-7xl lg:max-w-none lg:px-[200px]">
       <form
+        data-tenant-settings-form="true"
         onSubmit={onSubmit}
         className="mx-auto grid w-full grid-cols-1 gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6"
       >
-        <div ref={settingsTopRef} className="mb-1 scroll-mt-28">
-          <div className="mb-5 rounded-[24px] border border-slate-300 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                  Store workspace
-                </p>
-                <h2 className="mt-1 text-lg font-semibold text-slate-950 sm:text-xl">
-                  Settings shortcuts
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  Jump straight to the part of settings you want to work on,
-                  instead of scrolling through the full page.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSettingsMenuOpen(true)}
-                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-slate-800 shadow-[0_10px_22px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] hover:border-slate-950 hover:bg-slate-50"
-              >
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-800">
-                  ☰
-                </span>
-                Settings menu
-              </button>
-            </div>
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Tenant settings
-          </p>
-          <div className="mt-2">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Store settings workspace
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Settings now use one calm desktop column with accordion sections. Open the section you need, make changes, then save that section.
-            </p>
-            <div className="mt-4 grid gap-3 lg:grid-cols-2">
-              <div className="rounded-[22px] border border-slate-300 bg-white p-4">
-                <p className="text-sm font-semibold text-slate-950">
-                  Theme editor
-                </p>
-                <p className="mt-1 text-xs leading-5 text-slate-600">
-                  Logo, wording, presets and per-item colours stay grouped without overwhelming the rest of settings.
-                </p>
-              </div>
-              <div className="rounded-[22px] border border-slate-300 bg-white p-4">
-                <p className="text-sm font-semibold text-slate-950">
-                  Operational settings
-                </p>
-                <p className="mt-1 text-xs leading-5 text-slate-600">
-                  Payments, rewards, discounts, contact and currency settings use the same calmer panel style.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div ref={settingsTopRef} className="mb-1 flex justify-end scroll-mt-28">
+          <button
+            type="button"
+            onClick={() => setSettingsMenuOpen(true)}
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-800 shadow-[0_10px_22px_rgba(15,23,42,0.08)] transition hover:-translate-y-[1px] hover:border-slate-950 hover:bg-slate-50"
+          >
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-800">
+              ☰
+            </span>
+            Settings menu
+          </button>
         </div>
 
         <Section
@@ -2123,7 +2148,6 @@ export default function TenantSettingsForm({
           title="Admin workspace"
           dirty={adminWorkspaceDirty}
           saving={saving}
-          defaultOpen
         >
           <div className="rounded-[22px] border border-slate-300 bg-white p-4">
             <ToggleRow
@@ -5346,16 +5370,16 @@ function AdminToastBubble({
 
   const toneClass =
     toast.tone === "success"
-      ? "border-emerald-200/80 bg-white/95 text-emerald-900 shadow-[0_18px_46px_rgba(16,185,129,0.18)]"
+      ? "border-emerald-500/40 bg-emerald-950 text-white shadow-[0_18px_46px_rgba(6,78,59,0.35)]"
       : toast.tone === "error"
-        ? "border-rose-200/80 bg-white/95 text-rose-900 shadow-[0_18px_46px_rgba(244,63,94,0.18)]"
-        : "border-orange-200/80 bg-white/95 text-orange-950 shadow-[0_18px_46px_rgba(249,115,22,0.16)]";
+        ? "border-rose-400/40 bg-rose-950 text-white shadow-[0_18px_46px_rgba(136,19,55,0.35)]"
+        : "border-slate-600/40 bg-slate-950 text-white shadow-[0_18px_46px_rgba(15,23,42,0.35)]";
   const iconClass =
     toast.tone === "success"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
+      ? "bg-emerald-400/18 text-emerald-100 ring-emerald-300/35"
       : toast.tone === "error"
-        ? "bg-rose-50 text-rose-700 ring-rose-100"
-        : "bg-orange-50 text-orange-700 ring-orange-100";
+        ? "bg-rose-400/18 text-rose-100 ring-rose-300/35"
+        : "bg-white/12 text-white ring-white/20";
   const icon =
     toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i";
 
@@ -5379,7 +5403,7 @@ function AdminToastBubble({
         <button
           type="button"
           onClick={onClose}
-          className="-mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          className="-mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg leading-none text-white/70 transition hover:bg-white/10 hover:text-white"
           aria-label="Dismiss notification"
         >
           ×
@@ -6659,31 +6683,30 @@ function SettingsMenuModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[3px]"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
+        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-emerald-900/10 bg-[#F7FAF8] shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-emerald-900 before:via-emerald-600 before:to-teal-400"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="sticky top-0 z-10 shrink-0 border-b border-emerald-900/10 bg-[#F7FAF8]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-800">
                 Settings menu
               </p>
-              <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">
+              <h3 className="mt-1 text-xl font-semibold text-slate-950 sm:text-2xl">
                 What do you want to work on?
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Jump straight to the section you need, especially useful on
-                mobile where the settings page is longer.
+                Choose the settings section you want to edit.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50"
+              className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-2xl font-light leading-none text-white shadow-sm transition hover:bg-slate-800"
               aria-label="Close settings menu"
             >
               ×
@@ -6698,11 +6721,11 @@ function SettingsMenuModal({
                 key={item.id}
                 type="button"
                 onClick={() => onSelect(item.id)}
-                className="group rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:-translate-y-[1px] hover:border-orange-200 hover:bg-orange-50"
+                className="group rounded-[22px] border border-emerald-900/10 bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-emerald-700/25 hover:bg-emerald-50"
               >
                 <span className="flex items-start justify-between gap-3">
                   <span>
-                    <span className="mb-2 inline-flex rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 shadow-sm">
+                    <span className="mb-2 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-800 shadow-sm">
                       {item.group}
                     </span>
                     <span className="block text-sm font-black text-slate-950">
@@ -6712,7 +6735,7 @@ function SettingsMenuModal({
                       {item.help}
                     </span>
                   </span>
-                  <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-black text-orange-700 shadow-sm transition group-hover:bg-orange-100">
+                  <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-black text-emerald-800 shadow-sm transition group-hover:bg-emerald-100">
                     ↓
                   </span>
                 </span>
@@ -6724,7 +6747,7 @@ function SettingsMenuModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
             >
               Close menu
             </button>
@@ -6779,20 +6802,20 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[3px]"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]"
       onClick={onClose}
     >
       <div
         className="flex max-h-[calc(100dvh-150px)] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white/95 px-4 pb-4 pt-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="sticky top-0 z-10 shrink-0 border-b border-emerald-900/10 bg-[#F7FAF8]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">
                 Stripe setup guide
               </p>
-              <h3 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">
+              <h3 className="mt-1 text-xl font-semibold text-slate-950 sm:text-2xl">
                 Where do I find the tenant Stripe keys?
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -6803,7 +6826,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl font-bold text-slate-500 shadow-sm transition hover:bg-slate-50"
+              className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-2xl font-light leading-none text-white shadow-sm transition hover:bg-slate-800"
               aria-label="Close Stripe setup guide"
             >
               ×
@@ -6912,7 +6935,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 sm:w-auto"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
             >
               Close guide
             </button>

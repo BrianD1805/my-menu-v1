@@ -190,14 +190,6 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[30px] border border-[#0E0E10]/10 bg-[#0E0E10] p-5 text-white shadow-[0_24px_70px_rgba(14,14,16,0.18)] sm:p-6">
-        <p className="text-xs font-black uppercase tracking-[0.24em] text-[#FFB168]">Lightweight analytics</p>
-        <h2 className="mt-2 text-2xl font-black tracking-tight">Useful events only, no noisy tracking.</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-white/70">
-          This foundation records page views and key business actions such as product views, product shares, add-to-cart, checkout starts and orders. It does not record keystrokes, mouse movement, scroll depth or private form contents.
-        </p>
-      </section>
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Today" value={summary.totals.today} note="Events recorded since midnight." />
         <StatCard label="Last 7 days" value={summary.totals.sevenDays} note="Page views and key actions." />

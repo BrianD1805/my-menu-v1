@@ -20,6 +20,16 @@ function formatTrialDate(value?: string | null) {
   return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function billingCountdown(trial?: TenantTrialState | null) {
+  if (!trial) return "Billing date unavailable";
+  const base = trial.trialEndsAt ? new Date(trial.trialEndsAt) : new Date();
+  const due = Number.isFinite(base.getTime()) && base.getTime() > Date.now() ? base : new Date(Date.now() + 30 * 86400000);
+  const ms = Math.max(0, due.getTime() - Date.now());
+  const days = Math.floor(ms / 86400000);
+  const hours = Math.floor((ms % 86400000) / 3600000);
+  return `${days} days ${hours} hours`;
+}
+
 function trialShortLabel(trial?: TenantTrialState | null) {
   if (!trial) return "Trial";
   if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Active";
@@ -31,7 +41,7 @@ function trialShortLabel(trial?: TenantTrialState | null) {
 
 function trialStatusText(trial?: TenantTrialState | null) {
   if (!trial) return "Trial details are unavailable.";
-  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active — store open";
+  if (trial.subscriptionStatus === "active" || trial.trialStatus === "converted") return "Subscription active";
   if (trial.isTrialExpired) return "Trial ended — activate billing";
   if (trial.trialDaysRemaining === null) return "Trial active — choose a plan when ready";
   if (trial.trialDaysRemaining === 1) return "1 day left in trial";
@@ -153,7 +163,7 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
       {mounted && modal
         ? createPortal(
             <div
-              className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#0E0E10]/58 p-4 backdrop-blur-md sm:p-8"
+              className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#0E0E10]/55 px-[35px] py-[75px] backdrop-blur-[3px]"
               role="dialog"
               aria-modal="true"
             >
@@ -178,11 +188,11 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                   </div>
                 </section>
               ) : (
-              <section className="relative mx-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-[920px] flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] sm:max-h-[calc(100dvh-4rem)]">
-                <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#0E0E10]/10 px-5 py-4 sm:px-7 sm:py-5">
+              <section className="relative mx-auto flex max-h-[calc(100dvh-150px)] w-full max-w-[760px] flex-col overflow-hidden rounded-[30px] border border-emerald-900/10 bg-[#F7FAF8] text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-emerald-900 before:via-emerald-600 before:to-teal-400">
+                <div className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-emerald-900/10 bg-[#F7FAF8]/95 px-5 py-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-7">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#C84F2A]">{modal === "checklist" ? "Admin checklist" : trialModalLabel(trialState)}</p>
-                    <h2 className="mt-1 text-xl font-black tracking-tight text-[#0E0E10] sm:text-2xl">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-800">{modal === "checklist" ? "Admin checklist" : trialModalLabel(trialState)}</p>
+                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#0E0E10] sm:text-2xl">
                       {modal === "checklist" ? "Launch checklist" : trialStatusText(trialState)}
                     </h2>
                   </div>
@@ -200,27 +210,38 @@ export default function AdminHeaderTools({ tenantSlug, trialState }: { tenantSlu
                   {modal === "checklist" ? (
                     <AdminLaunchChecklist tenantSlug={tenantSlug || undefined} showSetupTools />
                   ) : (
-                    <div className="rounded-[26px] border border-[#0E0E10]/10 bg-[#F8FAFC] p-5 text-[#1F2328] sm:p-6">
+                    <div className="rounded-[26px] border border-emerald-900/10 bg-white p-5 text-[#1F2328] sm:p-6">
                       <div className="grid gap-4 sm:grid-cols-3">
                         <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
                           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Status</p>
-                          <p className="mt-2 text-lg font-black text-[#0E0E10]">{trialStatusText(trialState)}</p>
+                          <p className="mt-2 text-base font-semibold text-[#0E0E10]">{trialStatusText(trialState)}</p>
                         </div>
                         <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
                           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">{trialState?.isSubscriptionActive ? "Billing" : "Trial ends"}</p>
-                          <p className="mt-2 text-lg font-black text-[#0E0E10]">{trialState?.isSubscriptionActive ? "Open billing below" : formatTrialDate(trialState?.trialEndsAt)}</p>
+                          <p className="mt-2 text-base font-semibold text-[#0E0E10]">{trialState?.isSubscriptionActive ? "Open billing below" : formatTrialDate(trialState?.trialEndsAt)}</p>
                         </div>
                         <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
                           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">Plan</p>
-                          <p className="mt-2 text-lg font-black text-[#0E0E10]">{trialState?.planName || "orduva_trial"}</p>
+                          <p className="mt-2 text-base font-semibold text-[#0E0E10]">{trialState?.planName || "orduva_trial"}</p>
                         </div>
                       </div>
+                      {trialState?.isSubscriptionActive ? (
+                        <div className="mt-5 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-950">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-800">Next payment countdown</p>
+                          <p className="mt-2 text-2xl font-semibold tracking-tight">{billingCountdown(trialState)}</p>
+                          <p className="mt-1 text-sm leading-6 text-emerald-900/75">Estimated time remaining before the next subscription payment is due.</p>
+                        </div>
+                      ) : null}
                       {trialState?.isTrialExpired ? (
-                        <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold leading-6 text-red-800">
+                        <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-800">
                           The trial has ended and customer checkout is paused. Choose a paid plan below to reactivate the store immediately after Stripe confirms payment.
                         </p>
+                      ) : trialState?.isSubscriptionActive ? (
+                        <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-900">
+                          Subscription billing is active and the storefront remains open.
+                        </p>
                       ) : (
-                        <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold leading-6 text-emerald-900">
+                        <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-900">
                           The store remains open during the trial. When you are ready, choose a paid plan below and Stripe will activate billing securely.
                         </p>
                       )}
