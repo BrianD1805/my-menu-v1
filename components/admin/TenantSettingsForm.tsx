@@ -1415,7 +1415,7 @@ export default function TenantSettingsForm({
   );
   const messageClass = useMemo(() => {
     if (tone === "success")
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]";
     if (tone === "error") return "border-rose-200 bg-rose-50 text-rose-800";
     if (tone === "info")
       return "border-orange-200 bg-orange-50 text-orange-900";
@@ -2133,26 +2133,22 @@ export default function TenantSettingsForm({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl lg:max-w-none lg:px-[200px]" data-settings-focus={focusSection || undefined}>
+    <div className="mx-auto w-full max-w-7xl lg:max-w-none lg:px-[150px]" data-settings-focus={focusSection || undefined}>
       <style>{`
         [data-settings-focus="per-item-storefront-colours"] details:not(#per-item-storefront-colours) {
           display: none;
         }
-        [data-settings-focus="per-item-storefront-colours"] #per-item-storefront-colours > div {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-          gap: 1.5rem;
+        [data-settings-focus="per-item-storefront-colours"] {
+          max-width: none;
         }
-        @media (max-width: 1023px) {
-          [data-settings-focus="per-item-storefront-colours"] #per-item-storefront-colours > div {
-            display: block;
-          }
+        [data-settings-focus="per-item-storefront-colours"] #per-item-storefront-colours {
+          overflow: visible;
         }
       `}</style>
       <form
         data-tenant-settings-form="true"
         onSubmit={onSubmit}
-        className="mx-auto grid w-full grid-cols-1 gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6"
+        className="mx-auto grid w-full grid-cols-1 gap-5 rounded-[30px] border border-[#D7E7F2] bg-[#F4F9FD] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6"
       >
         <div ref={settingsTopRef} className="mb-1 flex justify-end scroll-mt-28">
           <button
@@ -2190,7 +2186,7 @@ export default function TenantSettingsForm({
           title="Logo and favicon"
           showSave={false}
         >
-          <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">
+          <div className="mb-3 rounded-2xl border border-emerald-100 bg-[#EAF3FA] px-4 py-3 text-xs leading-5 text-[#0F766E]">
             Logo and favicon uploads save automatically. No Save button is
             needed for this section.
           </div>
@@ -2372,9 +2368,10 @@ export default function TenantSettingsForm({
           id="per-item-storefront-colours"
           title="Per-item storefront colours"
           showSave={false}
+          defaultOpen={Boolean(focusSection)}
         >
           {!focusSection ? (
-            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50 p-4 sm:p-5">
+            <div className="rounded-[22px] border border-emerald-100 bg-[#EAF3FA] p-4 sm:p-5">
               <p className="text-sm font-black text-slate-950">Open the dedicated colour workspace</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 Per-item colour controls now open on their own page so the preview and suggested colour panels have room to breathe.
@@ -2389,15 +2386,15 @@ export default function TenantSettingsForm({
           ) : null}
           <div
             ref={themeEditorWorkspaceRef}
-            className={`${!focusSection ? "hidden" : ""} relative lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start lg:gap-6`}
+            className={`${!focusSection ? "hidden" : ""} relative grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-6`}
           >
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">
                   Colour editing workspace
                 </p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Colour controls stay on the left. Preview and suggested colour windows open beside the panel you are editing.
+                  Colour controls stay on the left. The right-hand half is reserved for preview and suggested colour panels.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
@@ -2534,9 +2531,18 @@ export default function TenantSettingsForm({
             </div>
             <div
               ref={suggestedColoursRef}
-              className="hidden min-h-[560px] bg-white lg:block"
+              className="hidden min-h-[560px] rounded-[24px] border border-[#D7E7F2] bg-[#F4F9FD] p-5 lg:block"
               aria-hidden="true"
-            />
+            >
+              <div className="flex h-full min-h-[520px] items-center justify-center rounded-[20px] border border-dashed border-[#BFD7EA] bg-white/55 p-6 text-center">
+                <div>
+                  <p className="text-sm font-black text-[#336699]">Preview workspace</p>
+                  <p className="mt-2 max-w-sm text-xs leading-5 text-slate-500">
+                    Open a preview or suggested colours from the left-hand colour controls. This side stays clear so the workspace does not crowd the edit panel.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </Section>
 
@@ -2885,7 +2891,7 @@ export default function TenantSettingsForm({
           dirty={receiptInfoDirty}
           saving={saving}
         >
-          <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-950">
+          <div className="rounded-[22px] border border-emerald-200 bg-[#EAF3FA]/80 p-4 text-sm leading-6 text-emerald-950">
             <p className="font-black text-slate-950">
               Receipt wording and business details
             </p>
@@ -3196,7 +3202,7 @@ export default function TenantSettingsForm({
           dirty={rewardsDirty}
           saving={saving}
         >
-          <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-950">
+          <div className="rounded-[22px] border border-emerald-200 bg-[#EAF3FA]/80 p-4 text-sm leading-6 text-emerald-950">
             <p className="font-black text-slate-950">
               Premium loyalty tiers for signed-in customers
             </p>
@@ -3334,7 +3340,7 @@ export default function TenantSettingsForm({
           dirty={discountsDirty}
           saving={saving}
         >
-          <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/80 p-4 text-sm leading-6 text-emerald-950">
+          <div className="rounded-[22px] border border-emerald-200 bg-[#EAF3FA]/80 p-4 text-sm leading-6 text-emerald-950">
             <p className="font-black text-slate-950">
               Premium offers for products, bundles and site-wide campaigns
             </p>
@@ -3846,7 +3852,7 @@ export default function TenantSettingsForm({
                       Help me find these keys
                     </button>
                     <span
-                      className={`w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}
+                      className={`w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${stripeCredentialReady ? "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]" : "border-slate-200 bg-slate-50 text-slate-600"}`}
                     >
                       {stripeCredentialReady
                         ? "credentials saved"
@@ -3977,7 +3983,7 @@ export default function TenantSettingsForm({
                     </span>
                   </label>
                   <label
-                    className={`flex items-start gap-3 rounded-2xl border p-3 text-sm ${stripeCredentialReady ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-slate-200 bg-slate-100 text-slate-500"}`}
+                    className={`flex items-start gap-3 rounded-2xl border p-3 text-sm ${stripeCredentialReady ? "border-emerald-200 bg-[#EAF3FA] text-emerald-900" : "border-slate-200 bg-slate-100 text-slate-500"}`}
                   >
                     <input
                       type="checkbox"
@@ -4037,7 +4043,7 @@ export default function TenantSettingsForm({
                     </p>
                   </div>
                   <span
-                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${yocoCredentialReady ? "border-emerald-200 bg-white text-emerald-800" : "border-slate-200 bg-white text-slate-500"}`}
+                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${yocoCredentialReady ? "border-emerald-200 bg-white text-[#0F766E]" : "border-slate-200 bg-white text-slate-500"}`}
                   >
                     {form.enableYocoCustomerPayments
                       ? form.yocoConnectionStatus
@@ -4122,7 +4128,7 @@ export default function TenantSettingsForm({
                       className="input"
                       autoComplete="off"
                     />
-                    <p className="mt-2 text-xs leading-5 text-emerald-800">
+                    <p className="mt-2 text-xs leading-5 text-[#0F766E]">
                       Webhook endpoint URL:{" "}
                       {form.yocoCustomerWebhookUrl ||
                         "https://www.orduva.com/api/storefront/yoco/webhook"}
@@ -4193,7 +4199,7 @@ export default function TenantSettingsForm({
                     </p>
                   ) : null}
                   {yocoWebhookReady ? (
-                    <p className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900">
+                    <p className="mt-3 rounded-2xl border border-emerald-200 bg-[#EAF3FA] px-3 py-2 text-xs font-bold text-emerald-900">
                       Webhook secret is saved for the current Yoco mode. Paid
                       orders can now be confirmed by webhook.
                     </p>
@@ -4213,7 +4219,7 @@ export default function TenantSettingsForm({
                       </p>
                     </div>
                     <span
-                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${yocoReadyForCheckout ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}
+                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${yocoReadyForCheckout ? "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]" : "border-amber-200 bg-amber-50 text-amber-800"}`}
                     >
                       {yocoReadyForCheckout
                         ? "checkout visible"
@@ -4224,7 +4230,7 @@ export default function TenantSettingsForm({
                     <p
                       className={
                         yocoCurrencyAllowed
-                          ? "text-emerald-800"
+                          ? "text-[#0F766E]"
                           : "text-amber-800"
                       }
                     >
@@ -4234,7 +4240,7 @@ export default function TenantSettingsForm({
                     <p
                       className={
                         yocoCredentialReady
-                          ? "text-emerald-800"
+                          ? "text-[#0F766E]"
                           : "text-amber-800"
                       }
                     >
@@ -4242,7 +4248,7 @@ export default function TenantSettingsForm({
                     </p>
                     <p
                       className={
-                        yocoWebhookReady ? "text-emerald-800" : "text-amber-800"
+                        yocoWebhookReady ? "text-[#0F766E]" : "text-amber-800"
                       }
                     >
                       ✓ Webhook:{" "}
@@ -4250,7 +4256,7 @@ export default function TenantSettingsForm({
                     </p>
                     <p
                       className={
-                        yocoLiveMode ? "text-emerald-800" : "text-slate-600"
+                        yocoLiveMode ? "text-[#0F766E]" : "text-slate-600"
                       }
                     >
                       ✓ Mode: {yocoLiveMode ? "Live" : "Test"}
@@ -4344,7 +4350,7 @@ export default function TenantSettingsForm({
                     </p>
                   </div>
                   <span
-                    className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${mpesaReadyForCheckout ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-slate-50 text-slate-600"}`}
+                    className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${mpesaReadyForCheckout ? "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]" : "border-slate-200 bg-slate-50 text-slate-600"}`}
                   >
                     {form.enableMpesaCustomerPayments
                       ? form.mpesaConnectionStatus
@@ -4442,7 +4448,7 @@ export default function TenantSettingsForm({
                       className="input"
                       autoComplete="off"
                     />
-                    <p className="mt-1 text-xs leading-5 text-emerald-800">
+                    <p className="mt-1 text-xs leading-5 text-[#0F766E]">
                       Use this IPN URL in Pesapal:
                       https://www.orduva.com/api/storefront/mpesa/ipn
                     </p>
@@ -4473,7 +4479,7 @@ export default function TenantSettingsForm({
                       </p>
                     </div>
                     <span
-                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${mpesaReadyForCheckout ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}
+                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${mpesaReadyForCheckout ? "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]" : "border-amber-200 bg-amber-50 text-amber-800"}`}
                     >
                       {mpesaReadyForCheckout
                         ? "checkout visible"
@@ -4484,7 +4490,7 @@ export default function TenantSettingsForm({
                     <p
                       className={
                         mpesaCurrencyAllowed
-                          ? "text-emerald-800"
+                          ? "text-[#0F766E]"
                           : "text-amber-800"
                       }
                     >
@@ -4494,7 +4500,7 @@ export default function TenantSettingsForm({
                     <p
                       className={
                         form.mpesaCustomerConsumerKey.trim()
-                          ? "text-emerald-800"
+                          ? "text-[#0F766E]"
                           : "text-amber-800"
                       }
                     >
@@ -4507,7 +4513,7 @@ export default function TenantSettingsForm({
                       className={
                         form.mpesaCustomerConsumerSecretSet ||
                         form.mpesaCustomerConsumerSecretInput.trim()
-                          ? "text-emerald-800"
+                          ? "text-[#0F766E]"
                           : "text-amber-800"
                       }
                     >
@@ -4520,7 +4526,7 @@ export default function TenantSettingsForm({
                     <p
                       className={
                         form.mpesaCustomerIpnId.trim()
-                          ? "text-emerald-800"
+                          ? "text-[#0F766E]"
                           : "text-amber-800"
                       }
                     >
@@ -4604,7 +4610,7 @@ export default function TenantSettingsForm({
 
                   {mpesaDiagnosticResult ? (
                     <div
-                      className={`mt-4 rounded-2xl border p-4 ${mpesaDiagnosticResult.error ? "border-rose-200 bg-rose-50 text-rose-900" : mpesaDiagnosticResult.safeToCreateOrder ? "border-emerald-200 bg-emerald-50 text-emerald-950" : "border-amber-200 bg-amber-50 text-amber-950"}`}
+                      className={`mt-4 rounded-2xl border p-4 ${mpesaDiagnosticResult.error ? "border-rose-200 bg-rose-50 text-rose-900" : mpesaDiagnosticResult.safeToCreateOrder ? "border-emerald-200 bg-[#EAF3FA] text-emerald-950" : "border-amber-200 bg-amber-50 text-amber-950"}`}
                     >
                       <p className="text-sm font-black">
                         {mpesaDiagnosticResult.error
@@ -4786,7 +4792,7 @@ export default function TenantSettingsForm({
                     </p>
                   </div>
                   <span
-                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${darajaCredentialReady ? "border-emerald-200 bg-white text-emerald-800" : "border-slate-200 bg-white text-slate-500"}`}
+                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${darajaCredentialReady ? "border-emerald-200 bg-white text-[#0F766E]" : "border-slate-200 bg-white text-slate-500"}`}
                   >
                     {form.darajaPaymentsLive
                       ? "checkout live"
@@ -4814,7 +4820,7 @@ export default function TenantSettingsForm({
                   </p>
                 </div>
 
-                <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-950">
+                <div className="mt-3 rounded-2xl border border-emerald-200 bg-[#EAF3FA] p-3 text-xs leading-5 text-emerald-950">
                   <p className="font-black">Live tenant checklist</p>
                   <p className="mt-1">
                     Before switching customer checkout on, confirm the tenant
@@ -5341,7 +5347,7 @@ export default function TenantSettingsForm({
 
       {mobileThemeModal ? (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[2px] md:hidden"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0F172A]/55 px-[35px] py-[75px] backdrop-blur-[2px] md:hidden"
           onClick={() => setMobileThemeModal(null)}
         >
           <div
@@ -6721,17 +6727,17 @@ function SettingsMenuModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-[#0F172A]/55 px-[35px] py-[75px] backdrop-blur-[3px]"
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-emerald-900/10 bg-[#F7FAF8] shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-emerald-900 before:via-emerald-600 before:to-teal-400"
+        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-[#BFD7EA] bg-[#F4F9FD] shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-[#336699] before:via-[#0F766E] before:to-[#5EEAD4]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-emerald-900/10 bg-[#F7FAF8]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="sticky top-0 z-10 shrink-0 border-b border-[#D7E7F2] bg-[#F4F9FD]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-800">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0F766E]">
                 Settings menu
               </p>
               <h3 className="mt-1 text-xl font-semibold text-slate-950 sm:text-2xl">
@@ -6762,7 +6768,7 @@ function SettingsMenuModal({
               >
                 <span className="flex items-start justify-between gap-3">
                   <span>
-                    <span className="mb-2 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-800 shadow-sm">
+                    <span className="mb-2 inline-flex rounded-full bg-[#EAF3FA] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#0F766E] shadow-sm">
                       {item.group}
                     </span>
                     <span className="block text-sm font-black text-slate-950">
@@ -6772,7 +6778,7 @@ function SettingsMenuModal({
                       {item.help}
                     </span>
                   </span>
-                  <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-black text-emerald-800 shadow-sm transition group-hover:bg-emerald-100">
+                  <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EAF3FA] text-sm font-black text-[#0F766E] shadow-sm transition group-hover:bg-[#DDEBF6]">
                     ↓
                   </span>
                 </span>
@@ -6806,7 +6812,7 @@ function SettingsMenuItemButton({
   onSelect: (id: string) => void;
   children: ReactNode;
 }) {
-  const className = "group rounded-[22px] border border-emerald-900/10 bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-emerald-700/25 hover:bg-emerald-50";
+  const className = "group rounded-[22px] border border-[#D7E7F2] bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-emerald-700/25 hover:bg-[#EAF3FA]";
   if (item.id === "per-item-storefront-colours") {
     return (
       <Link href="/admin/settings/per-item-colours" className={className}>
@@ -6863,14 +6869,14 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-[#0F172A]/55 px-[35px] py-[75px] backdrop-blur-[3px]"
       onClick={onClose}
     >
       <div
         className="flex max-h-[calc(100dvh-150px)] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-emerald-900/10 bg-[#F7FAF8]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="sticky top-0 z-10 shrink-0 border-b border-[#D7E7F2] bg-[#F4F9FD]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">
@@ -7059,7 +7065,7 @@ function PaymentGatewayCard({
 }) {
   const toneClass =
     tone === "ready"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      ? "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]"
       : tone === "warning"
         ? "border-amber-200 bg-amber-50 text-amber-800"
         : "border-slate-200 bg-slate-50 text-slate-600";
@@ -7121,7 +7127,7 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-300 bg-white shadow-none transition open:border-slate-500 open:ring-2 open:ring-slate-300 md:hover:border-slate-500 `}
+      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-[#D7E7F2] bg-[#F8FBFE] shadow-none transition open:border-[#336699]/45 open:ring-2 open:ring-[#D7E7F2] md:hover:border-[#336699]/35 `}
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
@@ -7165,7 +7171,7 @@ function Section({
           +
         </span>
       </summary>
-      <div className="border-t border-slate-100 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
+      <div className="border-t border-[#D7E7F2] bg-white/80 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
         {children}
         {showSave ? (
           <div className="mt-4 flex justify-end pt-1">
