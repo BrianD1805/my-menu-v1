@@ -181,7 +181,7 @@ function DesktopMegaDropdown({
 
   return (
     <section
-      className="absolute right-0 top-[calc(100%+5px)] z-[80] hidden w-[min(43rem,calc(100vw-3rem))] overflow-hidden rounded-[22px] border border-[#B7D0E5] bg-[#DDEBF6] p-4 text-[#111827] shadow-[0_20px_44px_rgba(17,24,39,0.14)] backdrop-blur-xl lg:block"
+      className="absolute right-0 top-[calc(100%+5px)] z-[80] hidden w-[min(43rem,calc(100vw-3rem))] overflow-hidden rounded-[22px] border border-[#9fbfdf] bg-[#9fbfdf] p-4 text-[#111827] shadow-[0_20px_44px_rgba(17,24,39,0.14)] backdrop-blur-xl lg:block"
       onMouseEnter={keepMenuOpen}
       onMouseLeave={scheduleMenuClose}
     >
@@ -251,7 +251,7 @@ function MobileMegaMenu({
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
 
   return (
-    <section className="absolute left-0 right-0 top-[calc(100%+5px)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#B7D0E5] bg-[#DDEBF6] p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
+    <section className="absolute left-0 right-0 top-[calc(100%+5px)] z-[80] max-h-[calc(100dvh-6.75rem)] overflow-y-auto rounded-[24px] border border-[#9fbfdf] bg-[#9fbfdf] p-3 text-[#111827] shadow-[0_22px_48px_rgba(17,24,39,0.16)] backdrop-blur-xl lg:hidden">
       <div className="rounded-[20px] bg-[#111827] p-4 text-white">
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
@@ -263,7 +263,7 @@ function MobileMegaMenu({
 
       <div className="mt-2 grid gap-2">
         {groups.map((group) => (
-          <div key={group.key} className="rounded-[20px] border border-[#E0E6E4] bg-[#DDEBF6] p-3">
+          <div key={group.key} className="rounded-[20px] border border-[#E0E6E4] bg-[#9fbfdf] p-3">
             <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">{group.label}</p>
             <p className="mt-1 text-base font-black text-[#111827]">{group.strapline}</p>
             <div className="mt-2 grid gap-2">
@@ -287,7 +287,7 @@ function MobileMegaMenu({
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Signed in</p>
             <p className="mt-1 break-words text-sm font-black text-[#111827]">{signedInAs}</p>
           </div>
-          <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#DCE5E1] bg-[#DDEBF6] px-4 py-2 text-sm font-black text-[#111827] transition hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]">
+          <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#DCE5E1] bg-[#9fbfdf] px-4 py-2 text-sm font-black text-[#111827] transition hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]">
             Open storefront
           </a>
           <LogoutButton className="admin-pressable inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
@@ -453,10 +453,10 @@ export default function AdminShell({
   const identityIconUrl = faviconUrl || null;
 
   return (
-    <main className="orduva-admin-refresh relative min-h-screen overflow-x-clip bg-[#F4F8FB] px-3 py-4 text-[#111827] sm:px-6 sm:py-7">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(135deg,#F4F8FB_0%,#EAF3FA_58%,#FFFFFF_100%)]" />
+    <main className="orduva-admin-refresh relative min-h-screen overflow-x-clip bg-[#9fbfdf] px-3 py-4 text-[#111827] sm:px-6 sm:py-7">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(135deg,#9fbfdf_0%,#9fbfdf_58%,#FFFFFF_100%)]" />
       <div className="mx-auto max-w-6xl">
-        <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#D7E7F2] bg-white text-[#111827] sm:-mx-6 sm:mb-4">
+        <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#9fbfdf] bg-white text-[#111827] sm:-mx-6 sm:mb-4">
           <div className="relative mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3" onMouseEnter={clearMenuCloseTimer} onMouseLeave={scheduleMenuClose}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
@@ -502,10 +502,10 @@ export default function AdminShell({
                         className={[
                           "admin-pressable inline-flex min-h-10 items-center gap-2.5 rounded-full border px-3.5 py-1.5 text-[13px] font-black transition hover:-translate-y-[1px]",
                           selected
-                            ? "border-[#8CB9AC] bg-[#DDEBF6] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_rgba(17,24,39,0.08)]"
+                            ? "border-[#8CB9AC] bg-[#9fbfdf] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_rgba(17,24,39,0.08)]"
                             : containsCurrent
                               ? "border-[#0F766E]/35 bg-white text-[#0F766E] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(17,24,39,0.06)]"
-                              : "border-[#D7E7F2] bg-white text-[#374151] hover:border-[#0F766E]/30 hover:bg-[#F8FAF9] hover:text-[#0F766E]",
+                              : "border-[#9fbfdf] bg-white text-[#374151] hover:border-[#0F766E]/30 hover:bg-[#F8FAF9] hover:text-[#0F766E]",
                         ].join(" ")}
                         aria-expanded={selected}
                         aria-controls="tenant-admin-mega-menu"
@@ -513,7 +513,7 @@ export default function AdminShell({
                         <span>{group.label}</span>
                         <span className={[
                           "flex h-7 w-7 items-center justify-center rounded-full transition",
-                          selected ? "bg-[#0F766E] text-white" : "bg-[#DDEBF6] text-[#5F6B66]",
+                          selected ? "bg-[#0F766E] text-white" : "bg-[#9fbfdf] text-[#5F6B66]",
                         ].join(" ")}><AdminChevronIcon open={selected} /></span>
                       </button>
                     );
@@ -560,7 +560,7 @@ export default function AdminShell({
           </div>
         </div>
 
-        <header className="overflow-hidden rounded-[26px] border border-[#D7E7F2] bg-white/[0.98] backdrop-blur-xl oa-admin-surface">
+        <header className="overflow-hidden rounded-[26px] border border-[#9fbfdf] bg-white/[0.98] backdrop-blur-xl oa-admin-surface">
           <div className="border-b border-[#DCE5E1] px-4 py-4 sm:px-6 lg:px-7 lg:py-3">
             <div className="flex min-w-0 items-center gap-3 lg:items-start lg:justify-between lg:gap-5">
               <div className="flex min-w-0 items-center gap-3">
@@ -584,7 +584,7 @@ export default function AdminShell({
                   <p className="mt-1 max-w-4xl truncate text-xs font-semibold leading-5 text-[#5F6B66]">{description}</p>
                 </div>
 
-                <div className="shrink-0 rounded-[16px] border border-[#C9DDED] bg-[#EAF3FA] px-3 py-2 oa-admin-soft text-xs leading-5 text-[#374151]">
+                <div className="shrink-0 rounded-[16px] border border-[#C9DDED] bg-[#9fbfdf] px-3 py-2 oa-admin-soft text-xs leading-5 text-[#374151]">
                   <span className="font-semibold text-[#5F6B66]">Signed in:</span>{" "}
                   <span className="font-black text-[#111827]">{signedInAs}</span>
                 </div>
@@ -604,7 +604,7 @@ export default function AdminShell({
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-[#374151]">{description}</p>
               </div>
 
-              <div className="rounded-[20px] border border-[#C9DDED] bg-[#EAF3FA] p-3 oa-admin-soft text-sm leading-6 text-[#374151]">
+              <div className="rounded-[20px] border border-[#C9DDED] bg-[#9fbfdf] p-3 oa-admin-soft text-sm leading-6 text-[#374151]">
                 <p>
                   Signed in as <span className="font-black text-[#111827]">{signedInAs}</span>
                 </p>

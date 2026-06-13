@@ -1,6 +1,6 @@
-# Orduva Ver-0.238D handover
+# Orduva Handover — Ver-0.238E
 
-Focused patch for Tenant Admin Settings UX.
+This patch continues the `/admin/settings` UX cleanup series.
 
 Touched files:
 - components/admin/AdminShell.tsx

@@ -1,11 +1,12 @@
-Orduva Patch Ver-0.238D — Admin Settings UX fixes
+# Orduva Patch Ver-0.238E
 
-Overwrite patch. Extract over the existing Orduva Program Files folder.
+Admin Settings UX fixes.
 
-Changes:
-- Tenant Admin desktop menu hover delay reduced to 0.5 seconds.
-- Fixed dedicated Per-item storefront colours workspace layout.
-- Settings desktop padding reduced from 200px to 150px left/right.
-- Added softer blue admin panel surfaces using #336699 as the supporting colour, while keeping the green admin accent.
+## Changes
+- `/admin/settings/per-item-colours` now uses 25px left and right padding so the colour editor and preview workspace have more room.
+- Removed the unwanted hard square grey/blue borders added around settings panels/workspaces.
+- Replaced the previous lighter blue admin panel tone with `#9fbfdf` while keeping the existing green admin accents.
+- The Per-item storefront colours back button now returns to `/admin/settings?section=per-item-storefront-colours`.
+- Version updated to Ver: 0.238E.
 
 No Supabase SQL required.

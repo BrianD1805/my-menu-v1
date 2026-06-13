@@ -2133,7 +2133,7 @@ export default function TenantSettingsForm({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl lg:max-w-none lg:px-[150px]" data-settings-focus={focusSection || undefined}>
+    <div className={`mx-auto w-full max-w-7xl lg:max-w-none ${focusSection === "per-item-storefront-colours" ? "px-[25px] lg:px-[25px]" : "lg:px-[150px]"}`} data-settings-focus={focusSection || undefined}>
       <style>{`
         [data-settings-focus="per-item-storefront-colours"] details:not(#per-item-storefront-colours) {
           display: none;
@@ -2148,7 +2148,7 @@ export default function TenantSettingsForm({
       <form
         data-tenant-settings-form="true"
         onSubmit={onSubmit}
-        className="mx-auto grid w-full grid-cols-1 gap-5 rounded-[30px] border border-[#D7E7F2] bg-[#F4F9FD] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6"
+        className={`mx-auto grid w-full grid-cols-1 gap-5 ${focusSection === "per-item-storefront-colours" ? "p-0" : "rounded-[30px] bg-[#9fbfdf]/18 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6"}`}
       >
         <div ref={settingsTopRef} className="mb-1 flex justify-end scroll-mt-28">
           <button
@@ -2191,7 +2191,7 @@ export default function TenantSettingsForm({
             needed for this section.
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-[22px] border border-slate-200 bg-white p-4">
+            <div className="rounded-[22px] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
               <div className="flex flex-col gap-4">
                 {form.logoUrl ? (
                   <div className="flex min-h-28 w-full items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -2217,7 +2217,7 @@ export default function TenantSettingsForm({
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-slate-200 bg-white p-4">
+            <div className="rounded-[22px] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
               <div className="flex flex-col gap-4">
                 {form.faviconUrl ? (
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs text-slate-600">
@@ -2389,7 +2389,7 @@ export default function TenantSettingsForm({
             className={`${!focusSection ? "hidden" : ""} relative grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-6`}
           >
             <div className="min-w-0 space-y-4">
-              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-[22px] bg-[#9fbfdf]/18 p-4">
                 <p className="text-sm font-semibold text-slate-900">
                   Colour editing workspace
                 </p>
@@ -2420,7 +2420,7 @@ export default function TenantSettingsForm({
                   <div
                     key={group.id}
                     ref={(node) => { themeGroupRefs.current[group.id] = node; }}
-                    className="rounded-[22px] border border-slate-200 bg-white p-4"
+                    className="rounded-[22px] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]"
                   >
                     <button
                       type="button"
@@ -2531,10 +2531,10 @@ export default function TenantSettingsForm({
             </div>
             <div
               ref={suggestedColoursRef}
-              className="hidden min-h-[560px] rounded-[24px] border border-[#D7E7F2] bg-[#F4F9FD] p-5 lg:block"
+              className="hidden min-h-[560px] rounded-[24px] bg-[#9fbfdf]/20 p-5 lg:block"
               aria-hidden="true"
             >
-              <div className="flex h-full min-h-[520px] items-center justify-center rounded-[20px] border border-dashed border-[#BFD7EA] bg-white/55 p-6 text-center">
+              <div className="flex h-full min-h-[520px] items-center justify-center rounded-[20px] bg-white/60 p-6 text-center">
                 <div>
                   <p className="text-sm font-black text-[#336699]">Preview workspace</p>
                   <p className="mt-2 max-w-sm text-xs leading-5 text-slate-500">
@@ -6731,10 +6731,10 @@ function SettingsMenuModal({
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-[#BFD7EA] bg-[#F4F9FD] shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-[#336699] before:via-[#0F766E] before:to-[#5EEAD4]"
+        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-[#9fbfdf] bg-[#9fbfdf] shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-[#336699] before:via-[#0F766E] before:to-[#5EEAD4]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-[#D7E7F2] bg-[#F4F9FD]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="sticky top-0 z-10 shrink-0 border-b border-[#9fbfdf] bg-[#9fbfdf]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0F766E]">
@@ -6812,7 +6812,7 @@ function SettingsMenuItemButton({
   onSelect: (id: string) => void;
   children: ReactNode;
 }) {
-  const className = "group rounded-[22px] border border-[#D7E7F2] bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-emerald-700/25 hover:bg-[#EAF3FA]";
+  const className = "group rounded-[22px] border border-[#9fbfdf] bg-white p-4 text-left transition hover:-translate-y-[1px] hover:border-emerald-700/25 hover:bg-[#EAF3FA]";
   if (item.id === "per-item-storefront-colours") {
     return (
       <Link href="/admin/settings/per-item-colours" className={className}>
@@ -6876,7 +6876,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
         className="flex max-h-[calc(100dvh-150px)] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-[#D7E7F2] bg-[#F4F9FD]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="sticky top-0 z-10 shrink-0 border-b border-[#9fbfdf] bg-[#9fbfdf]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">
@@ -6913,7 +6913,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
             {steps.map((step) => (
               <div
                 key={step.title}
-                className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"
+                className="rounded-[22px] bg-[#9fbfdf]/18 p-4"
               >
                 <p className="text-sm font-semibold text-slate-950">
                   {step.title}
@@ -7127,7 +7127,7 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-[#D7E7F2] bg-[#F8FBFE] shadow-none transition open:border-[#336699]/45 open:ring-2 open:ring-[#D7E7F2] md:hover:border-[#336699]/35 `}
+      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] bg-[#9fbfdf]/16 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition md:hover:bg-[#9fbfdf]/22 `}
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
@@ -7164,14 +7164,23 @@ function Section({
             </span>
           ) : null}
         </span>
-        <span
-          className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-lg font-semibold text-slate-700 shadow-sm transition group-open:rotate-45 group-open:border-slate-950 group-open:bg-slate-950 group-open:text-white"
-          aria-hidden="true"
-        >
-          +
-        </span>
+        {id === "per-item-storefront-colours" && defaultOpen ? (
+          <Link
+            href="/admin/settings?section=per-item-storefront-colours"
+            className="mt-1 inline-flex min-h-9 shrink-0 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-slate-800"
+          >
+            Back
+          </Link>
+        ) : (
+          <span
+            className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-lg font-semibold text-slate-700 shadow-sm transition group-open:rotate-45 group-open:bg-slate-950 group-open:text-white"
+            aria-hidden="true"
+          >
+            +
+          </span>
+        )}
       </summary>
-      <div className="border-t border-[#D7E7F2] bg-white/80 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
+      <div className="bg-white/80 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
         {children}
         {showSave ? (
           <div className="mt-4 flex justify-end pt-1">
