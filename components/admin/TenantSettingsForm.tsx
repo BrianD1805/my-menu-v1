@@ -2054,12 +2054,12 @@ export default function TenantSettingsForm({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl">
+    <div className="mx-auto w-full max-w-7xl lg:max-w-none lg:px-[200px]">
       <form
         onSubmit={onSubmit}
-        className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6 lg:grid-cols-2"
+        className="mx-auto grid w-full grid-cols-1 gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6"
       >
-        <div ref={settingsTopRef} className="mb-1 scroll-mt-28 lg:col-span-2">
+        <div ref={settingsTopRef} className="mb-1 scroll-mt-28">
           <div className="mb-5 rounded-[24px] border border-slate-300 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
@@ -2095,7 +2095,7 @@ export default function TenantSettingsForm({
               Store settings workspace
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Settings are organised into calmer two-column panels on desktop. Open panels use a clear black outline, and the theme preview only appears inside the colour editor.
+              Settings now use one calm desktop column with accordion sections. Open the section you need, make changes, then save that section.
             </p>
             <div className="mt-4 grid gap-3 lg:grid-cols-2">
               <div className="rounded-[22px] border border-slate-300 bg-white p-4">
@@ -2327,9 +2327,9 @@ export default function TenantSettingsForm({
         >
           <div
             ref={themeEditorWorkspaceRef}
-            className="relative lg:grid lg:grid-cols-[minmax(0,calc(50vw-5.5rem))_minmax(0,1fr)] lg:items-start lg:gap-8"
+            className="relative lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-start lg:gap-6"
           >
-            <div className="space-y-4 lg:max-w-[calc(50vw-5.5rem)]">
+            <div className="space-y-4">
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm font-semibold text-slate-900">
                   Colour editing workspace
@@ -2455,7 +2455,7 @@ export default function TenantSettingsForm({
                           <button
                             type="submit"
                             disabled={saving || !themeGroupDirty(group)}
-                            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
+                            className={`inline-flex min-h-10 w-full items-center justify-center rounded-xl border px-4 py-2.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-100 sm:w-auto ${themeGroupDirty(group) ? "border-red-200 bg-red-100 text-red-800 hover:bg-red-200" : "border-slate-950 bg-slate-950 text-white"}`}
                           >
                             {saving
                               ? "Saving..."
@@ -5126,24 +5126,6 @@ export default function TenantSettingsForm({
           </div>
         ) : null}
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-500">
-            Use the settings menu to jump between sections. Theme previews now
-            live inside the colour editor only, and operational settings use the
-            full desktop width.
-          </p>
-          <button
-            type="submit"
-            disabled={saving || !hasUnsavedChanges}
-            className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100"
-          >
-            {saving
-              ? "Saving..."
-              : hasUnsavedChanges
-                ? "Save settings"
-                : "Nothing to save"}
-          </button>
-        </div>
       </form>
 
       <AdminToastBubble toast={toast} onClose={() => setToast(null)} />
@@ -7055,7 +7037,7 @@ function Section({
     <details
       id={id}
       open={defaultOpen || undefined}
-      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-300 bg-white shadow-none transition open:border-slate-500 open:ring-2 open:ring-slate-300 md:hover:border-slate-500 ${id === "per-item-storefront-colours" ? "lg:col-span-2" : "lg:col-span-1"}`}
+      className={`${compact ? "mb-0" : ""} group mx-auto w-full scroll-mt-28 overflow-hidden rounded-[24px] border border-slate-300 bg-white shadow-none transition open:border-slate-500 open:ring-2 open:ring-slate-300 md:hover:border-slate-500 `}
     >
       <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
@@ -7106,7 +7088,7 @@ function Section({
             <button
               type="submit"
               disabled={saving || !dirty}
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100 sm:w-auto"
+              className={`inline-flex min-h-10 w-full items-center justify-center rounded-xl border px-4 py-2.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-100 sm:w-auto ${dirty ? "border-red-200 bg-red-100 text-red-800 hover:bg-red-200" : "border-slate-950 bg-slate-950 text-white"}`}
             >
               {saving
                 ? "Saving..."
