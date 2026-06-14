@@ -1,4 +1,11 @@
 
+## Ver-0.238K — Per-item colours panel match and preview border polish
+
+- Matched the Per-item storefront colours expandable panel styling to the approved `/admin/settings` blue-panel/white-content pattern.
+- Removed the extra Colour editing workspace block because preview/suggested buttons already appear inside each expanded item.
+- Added a stronger 2px black border to the Theme Preview Window.
+- Kept the mobile settings/menu background white.
+
 ## Ver-0.238J — Admin settings container/dropdown panel balance
 
 - Restored the main Settings container to white with a soft shadow.

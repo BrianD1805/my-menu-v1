@@ -2389,38 +2389,13 @@ export default function TenantSettingsForm({
             className={`${!focusSection ? "hidden" : ""} relative grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-6`}
           >
             <div className="min-w-0 space-y-4">
-              <div className="rounded-[22px] border border-[#DCE5E1] bg-white p-4">
-                <p className="text-sm font-semibold text-slate-900">
-                  Colour editing workspace
-                </p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Colour controls stay on the left. The right-hand half is reserved for preview and suggested colour panels.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openDesktopPreviewWindow(previewTarget)}
-                    className="hidden min-h-9 items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-900 transition hover:border-orange-300 hover:bg-orange-100 lg:inline-flex"
-                  >
-                    <span aria-hidden="true">👁</span> Open preview window
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => showSuggestedColours(openThemeGroup || previewTarget)}
-                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                  >
-                    <span aria-hidden="true">🎨</span> Suggested colours
-                  </button>
-                </div>
-              </div>
-
               {THEME_GROUPS.map((group) => {
                 const isOpen = openThemeGroup === group.id;
                 return (
                   <div
                     key={group.id}
                     ref={(node) => { themeGroupRefs.current[group.id] = node; }}
-                    className="rounded-[22px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]"
+                    className="overflow-hidden rounded-[24px] bg-[#9fbfdf]/45 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition md:hover:bg-[#9fbfdf]/55"
                   >
                     <button
                       type="button"
@@ -2435,7 +2410,7 @@ export default function TenantSettingsForm({
                         });
                         setPreviewTarget(group.id);
                       }}
-                      className="flex w-full items-start justify-between gap-3 text-left"
+                      className="flex w-full items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5"
                       aria-expanded={isOpen}
                     >
                       <span>
@@ -2455,8 +2430,8 @@ export default function TenantSettingsForm({
                     </button>
 
                     {isOpen ? (
-                      <>
-                        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                      <div className="bg-white px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
+                        <div className="flex flex-wrap items-center justify-center gap-2">
                           <button
                             type="button"
                             onClick={() => {
@@ -2523,7 +2498,7 @@ export default function TenantSettingsForm({
                                 : "Nothing to save"}
                           </button>
                         </div>
-                      </>
+                      </div>
                     ) : null}
                   </div>
                 );
@@ -5221,7 +5196,7 @@ export default function TenantSettingsForm({
       {desktopPreviewWindowOpen ? (
         <div
           ref={previewPanelRef}
-          className="fixed z-[90] hidden w-[min(430px,calc(100vw-24px))] rounded-[24px] border border-orange-100 bg-white shadow-[0_24px_65px_rgba(15,23,42,0.22)] lg:block"
+          className="fixed z-[90] hidden w-[min(430px,calc(100vw-24px))] rounded-[18px] border-2 border-black bg-white shadow-[0_24px_65px_rgba(15,23,42,0.22)] lg:block"
           style={{
             left: desktopPreviewPosition.x,
             top: desktopPreviewPosition.y,
