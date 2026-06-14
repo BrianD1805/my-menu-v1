@@ -303,6 +303,7 @@ type FavouriteProductStripCardProps = {
     },
   ) => void;
   onRemoveFavourite?: (productId: string) => void;
+  getCartTargetRect?: () => DOMRect | null;
 };
 
 function FavouriteProductStripCard({
@@ -315,6 +316,7 @@ function FavouriteProductStripCard({
   stripKind = "favourite",
   onAddToCart,
   onRemoveFavourite,
+  getCartTargetRect,
 }: FavouriteProductStripCardProps) {
   const imageFrameRef = useRef<HTMLDivElement | null>(null);
   const money = buildMoneySettings(moneySettings);
@@ -525,6 +527,7 @@ function FavouriteProductStripCard({
                     imageFrameRef.current?.getBoundingClientRect() || null,
                   imageUrl: product.image_url,
                   name: product.name,
+                  targetRect: getCartTargetRect?.() ?? null,
                 })
               }
               className="inline-flex min-h-[34px] items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-black shadow-[0_11px_22px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px]"
@@ -1067,6 +1070,8 @@ export default function MenuBrowser({
   const searchCartIndicatorRef = useRef<HTMLButtonElement | null>(null);
   const favouritesStripRef = useRef<HTMLDivElement | null>(null);
   const buyAgainStripRef = useRef<HTMLDivElement | null>(null);
+  const favouritesPopupCartButtonRef = useRef<HTMLButtonElement | null>(null);
+  const buyAgainPopupCartButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     try {
@@ -2717,7 +2722,7 @@ export default function MenuBrowser({
           aria-modal="true"
           onClick={() => setDiscountsModalOpen(false)}
         >
-          <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
+          <div className="flex min-h-full items-center justify-center lg:-translate-y-[17px]">
             <div
               className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               style={{
@@ -2886,7 +2891,7 @@ export default function MenuBrowser({
           aria-modal="true"
           onClick={() => setRewardsModalOpen(false)}
         >
-          <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
+          <div className="flex min-h-full items-center justify-center lg:-translate-y-[17px]">
             <div
               className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               style={{
@@ -3102,14 +3107,34 @@ export default function MenuBrowser({
               className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               onClick={(event) => event.stopPropagation()}
             >
-              <button
-                type="button"
-                onClick={() => setFavouritesVisible(false)}
-                className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/95 text-2xl font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white"
-                aria-label="Close favourites"
-              >
-                ×
-              </button>
+              <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
+                <button
+                  ref={favouritesPopupCartButtonRef}
+                  type="button"
+                  onClick={() => {
+                    setFavouritesVisible(false);
+                    if (typeof window !== "undefined") window.location.assign("/checkout");
+                  }}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/75 bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white hover:text-slate-950"
+                  aria-label={`Go to checkout with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
+                  title="Go to checkout"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="9" cy="20" r="1" />
+                    <circle cx="18" cy="20" r="1" />
+                    <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" />
+                  </svg>
+                  <span>{cartCount}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFavouritesVisible(false)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/95 text-2xl font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white"
+                  aria-label="Close favourites"
+                >
+                  ×
+                </button>
+              </div>
         <section
           id="customer-favourites-section"
           className="relative flex min-h-[228px] w-full flex-col overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
@@ -3233,6 +3258,9 @@ export default function MenuBrowser({
                     onRemoveFavourite={(productId) =>
                       void toggleFavourite(productId)
                     }
+                    getCartTargetRect={() =>
+                      favouritesPopupCartButtonRef.current?.getBoundingClientRect() || null
+                    }
                   />
                 ))}
               </div>
@@ -3258,14 +3286,34 @@ export default function MenuBrowser({
               className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               onClick={(event) => event.stopPropagation()}
             >
-              <button
-                type="button"
-                onClick={() => setBuyAgainVisible(false)}
-                className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/95 text-2xl font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white"
-                aria-label="Close buy again"
-              >
-                ×
-              </button>
+              <div className="absolute right-4 top-4 z-30 flex items-center gap-2">
+                <button
+                  ref={buyAgainPopupCartButtonRef}
+                  type="button"
+                  onClick={() => {
+                    setBuyAgainVisible(false);
+                    if (typeof window !== "undefined") window.location.assign("/checkout");
+                  }}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/75 bg-white/95 px-3 py-2 text-sm font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white hover:text-slate-950"
+                  aria-label={`Go to checkout with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
+                  title="Go to checkout"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="9" cy="20" r="1" />
+                    <circle cx="18" cy="20" r="1" />
+                    <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7" />
+                  </svg>
+                  <span>{cartCount}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBuyAgainVisible(false)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/95 text-2xl font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white"
+                  aria-label="Close buy again"
+                >
+                  ×
+                </button>
+              </div>
         <section
           id="customer-buy-again-section"
           className="relative flex min-h-[228px] w-full flex-col overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
@@ -3388,6 +3436,9 @@ export default function MenuBrowser({
                     isBusy={false}
                     onAddToCart={(productId, options) =>
                       void addToCart(productId, options)
+                    }
+                    getCartTargetRect={() =>
+                      buyAgainPopupCartButtonRef.current?.getBoundingClientRect() || null
                     }
                   />
                 ))}

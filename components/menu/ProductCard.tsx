@@ -702,10 +702,6 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       />
                     </div>
 
-                    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Order note</p>
-                      <p className="mt-3 text-sm leading-6 text-slate-600">Add this item now, or close this window and continue browsing the menu.</p>
-                    </div>
                   </div>
                 </div>
               </div>

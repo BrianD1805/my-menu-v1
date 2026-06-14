@@ -9,7 +9,7 @@ Touched files:
 
 No Supabase SQL required.
 
-## Ver-0.241 patch note
+## Ver-0.241AA patch note
 
 - Desktop storefront popup correction only.
 - Product details popup was moved up 10px on desktop.

@@ -11,6 +11,6 @@ Overwrite patch for Orduva Tenant Admin Settings UX corrections.
 ## SQL
 No Supabase SQL required.
 
-## Ver-0.241
+## Ver-0.241AA
 
 Desktop storefront popup correction. No Supabase SQL required.

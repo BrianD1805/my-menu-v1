@@ -543,3 +543,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept Favourites and Buy Again internal layouts unchanged, including the swipe/strip behaviour, while fixing the popup wrapper so the page scrollbar no longer appears outside the panel.
 - Preserved internal scroll behaviour inside popup bodies where applicable.
 - No SQL required.
+
+## Ver-0.241A — Storefront popup cart controls and content cleanup
+
+- Added cart buttons to the Favourites and Buy Again popup headers on desktop and mobile.
+- Add-to-cart animations from Favourites and Buy Again now target the popup cart button while the popup is open, not the storefront header cart.
+- Moved Offers & discount codes and Rewards Club popups up by a further 7px on desktop only.
+- Removed the Order note panel and helper text from the product details popup on desktop and mobile.
+- No SQL required.
