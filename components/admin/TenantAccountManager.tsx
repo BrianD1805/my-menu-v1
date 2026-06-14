@@ -53,7 +53,7 @@ export default function TenantAccountManager({ initial }: { initial: AccountStat
     event.preventDefault();
     setSaving(true);
     setTone("info");
-    setMessage("Saving tenant account details...");
+    setMessage("Saving account details...");
     try {
       const response = await fetch("/api/admin/account", {
         method: "PATCH",
@@ -61,14 +61,14 @@ export default function TenantAccountManager({ initial }: { initial: AccountStat
         body: JSON.stringify(form),
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Failed to save tenant account details");
+      if (!response.ok) throw new Error(payload.error || "Failed to save account details");
       setSavedEmail(form.email);
       setForm((current) => ({ ...current, currentPasswordForEmail: "" }));
       setTone("success");
-      setMessage("Tenant account details saved.");
+      setMessage("Account details saved.");
     } catch (error) {
       setTone("error");
-      setMessage(error instanceof Error ? error.message : "Failed to save tenant account details");
+      setMessage(error instanceof Error ? error.message : "Failed to save account details");
     } finally {
       setSaving(false);
     }
@@ -111,9 +111,9 @@ export default function TenantAccountManager({ initial }: { initial: AccountStat
         <div className={["rounded-[22px] border px-4 py-3 text-sm font-bold", tone === "error" ? "border-red-200 bg-red-50 text-red-800" : tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-white text-slate-700"].join(" ")}>{message}</div>
       ) : null}
 
-      <form onSubmit={saveAccount} className="grid gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6">
+      <form onSubmit={saveAccount} className="oa-admin-stack-panel grid gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 sm:p-6">
         <section className="rounded-[26px] border border-slate-200 bg-white p-4 sm:p-5">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">Tenant account</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">My Account</p>
           <h2 className="mt-1 text-xl font-black text-slate-950">Personal and login details</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Field label="Full name"><input className={inputClass} value={form.fullName} onChange={(e) => update("fullName", e.target.value)} /></Field>
@@ -158,7 +158,7 @@ export default function TenantAccountManager({ initial }: { initial: AccountStat
         </div>
       </form>
 
-      <form onSubmit={changePassword} className="rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6">
+      <form onSubmit={changePassword} className="oa-admin-stack-panel rounded-[30px] border border-slate-200 bg-white p-4 sm:p-6">
         <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">Security</p>
         <h2 className="mt-1 text-xl font-black text-slate-950">Change password</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-3">

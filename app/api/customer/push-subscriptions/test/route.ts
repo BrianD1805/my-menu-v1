@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
   const tenantId = orderLookup.data?.tenant_id;
   if (!tenantId) {
-    return NextResponse.json({ error: "Could not resolve tenant for this order." }, { status: 400 });
+    return NextResponse.json({ error: "Could not resolve store for this order." }, { status: 400 });
   }
 
   const result = await sendCustomerPushForOrderWithFallback(tenantId, orderId, {

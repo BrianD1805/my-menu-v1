@@ -255,7 +255,7 @@ function MobileMegaMenu({
       <div className="rounded-[20px] bg-[#111827] p-4 text-white">
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-white/82">Tenant admin menu</p>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-white/82">Admin menu</p>
         </div>
         <h2 className="mt-4 text-xl font-black tracking-tight">{tenantName}</h2>
         <p className="mt-2 text-sm font-semibold leading-6 text-white/70">All admin sections are available below.</p>
@@ -345,10 +345,10 @@ export default function AdminShell({
       label: "Grow",
       eyebrow: "Growth",
       strapline: "Grow the store",
-      description: "Sales insight, tenant referrals and public affiliate tools for growing the customer base.",
+      description: "Sales insight, store referrals and public affiliate tools for growing the customer base.",
       items: [
         { href: "/admin/analytics", label: "Analytics", detail: "Sales and product performance", icon: "analytics", current: current === "analytics" },
-        { href: "/admin/referrals", label: "Tenant referrals", detail: "Refer businesses to Orduva", icon: "referrals", current: current === "referrals" },
+        { href: "/admin/referrals", label: "Store referrals", detail: "Refer businesses to Orduva", icon: "referrals", current: current === "referrals" },
         { href: "/admin/affiliates", label: "Public affiliates", detail: "Affiliate applicants and partner introductions", icon: "account", current: current === "affiliates" },
       ],
     },
@@ -370,7 +370,7 @@ export default function AdminShell({
       strapline: "Account and storefront",
       description: "Open the public storefront, check who is signed in, or sign out safely.",
       items: [
-        { href: "/admin/account", label: "Tenant account", detail: "Login, password and dispatch details", icon: "account", current: current === "account" },
+        { href: "/admin/account", label: "My Account", detail: "Login, password and dispatch details", icon: "account", current: current === "account" },
         { href: storefrontUrl, label: "Open storefront", detail: tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable", icon: "storefront", external: true },
       ],
     },
@@ -482,7 +482,7 @@ export default function AdminShell({
               </div>
 
               <div className="flex shrink-0 items-center justify-end gap-2">
-                <nav className="hidden items-center gap-2 lg:flex" aria-label="Tenant admin sections">
+                <nav className="hidden items-center gap-2 lg:flex" aria-label="Admin sections">
                   {navGroups.map((group) => {
                     const selected = activeKey === group.key;
                     const containsCurrent = currentGroup === group.key;

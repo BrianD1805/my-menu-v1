@@ -16,15 +16,16 @@ export default async function AdminAccountPage() {
       tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="account"
-      title="Tenant account"
-      description="Manage tenant account details, login email, password and optional dispatch address information."
+      title="My Account"
+      description="Manage your account details, login email, password and optional dispatch address information."
       logoUrl={branding.logoUrl}
       faviconUrl={branding.faviconUrl}
       accentColor={branding.accentColor}
       trialState={trialState}
     >
-      <TenantAccountManager
-        initial={{
+      <div className="oa-admin-account-page">
+        <TenantAccountManager
+          initial={{
           fullName: user.full_name || "",
           email: user.email || "",
           legalBusinessName: settings?.account_business_legal_name || tenant.name || "",
@@ -46,7 +47,8 @@ export default async function AdminAccountPage() {
           shipFromCountry: settings?.ship_from_country || "",
           currentPasswordForEmail: "",
         }}
-      />
+        />
+      </div>
     </AdminShell>
   );
 }

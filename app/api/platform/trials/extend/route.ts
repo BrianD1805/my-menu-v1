@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       .eq("id", tenantId)
       .single();
 
-    if (tenantError || !tenant) return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+    if (tenantError || !tenant) return NextResponse.json({ error: "Store not found" }, { status: 404 });
 
     const nextTrialEndsAt = calculateExtendedTrialEnd(tenant.trial_ends_at, additionalDays);
     const { data: updated, error: updateError } = await db

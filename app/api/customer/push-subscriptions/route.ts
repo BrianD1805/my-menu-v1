@@ -113,7 +113,7 @@ export async function POST(req: Request) {
 
   const resolvedTenantId = await resolveTenantId(orderId, tenantId);
   if (!resolvedTenantId) {
-    return NextResponse.json({ error: "Could not resolve tenant for customer push registration" }, { status: 400 });
+    return NextResponse.json({ error: "Could not resolve store for customer push registration" }, { status: 400 });
   }
 
   const endpoint = subscription.endpoint;
@@ -168,7 +168,7 @@ export async function DELETE(req: Request) {
 
   const resolvedTenantId = await resolveTenantId(orderId, tenantId);
   if (!resolvedTenantId) {
-    return NextResponse.json({ error: "Could not resolve tenant for customer push removal" }, { status: 400 });
+    return NextResponse.json({ error: "Could not resolve store for customer push removal" }, { status: 400 });
   }
 
   const { error } = await db
