@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     const requestTenantSlug = resolveTenantSlugFromRequest(req);
     if (!requestTenantSlug)
       return NextResponse.json(
-        { error: "Store could not be resolved from request" },
+        { error: "Tenant could not be resolved from request" },
         { status: 400 },
       );
 
@@ -128,7 +128,7 @@ export async function POST(req: Request) {
       .eq("slug", requestTenantSlug)
       .single();
     if (tenantError || !tenant)
-      return NextResponse.json({ error: "Store not found" }, { status: 404 });
+      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
 
     const trialState = calculateTenantTrialState(tenant);
     if (trialState.checkoutBlocked) {

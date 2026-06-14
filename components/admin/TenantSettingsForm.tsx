@@ -1887,8 +1887,8 @@ export default function TenantSettingsForm({
       setForm(savedPayload);
       setSavedForm(savedPayload);
       setTone("success");
-      setMessage("Settings saved.");
-      showToast("Settings saved.", "success");
+      setMessage("Tenant settings saved.");
+      showToast("Tenant settings saved.", "success");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to save settings";
@@ -5414,40 +5414,40 @@ function AdminToastBubble({
 
   const toneClass =
     toast.tone === "success"
-      ? "border-[#0F766E]/20 bg-[#033F32] text-[#F8FFFC]"
+      ? "border-emerald-500/40 bg-emerald-950 text-white shadow-[0_18px_46px_rgba(6,78,59,0.35)]"
       : toast.tone === "error"
-        ? "border-[#B91C1C]/20 bg-[#7F1D1D] text-[#FFF7F7]"
-        : "border-[#2563EB]/20 bg-[#123A63] text-[#F8FBFF]";
+        ? "border-rose-400/40 bg-rose-950 text-white shadow-[0_18px_46px_rgba(136,19,55,0.35)]"
+        : "border-slate-600/40 bg-slate-950 text-white shadow-[0_18px_46px_rgba(15,23,42,0.35)]";
   const iconClass =
     toast.tone === "success"
-      ? "bg-white/12 text-[#EAFBF5] ring-white/25"
+      ? "bg-emerald-400/18 text-emerald-100 ring-emerald-300/35"
       : toast.tone === "error"
-        ? "bg-white/12 text-[#FFE4E6] ring-white/25"
-        : "bg-white/12 text-[#EEF6FF] ring-white/25";
+        ? "bg-rose-400/18 text-rose-100 ring-rose-300/35"
+        : "bg-white/12 text-white ring-white/20";
   const icon =
     toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i";
 
   return (
     <div
-      className="pointer-events-none fixed right-4 top-4 z-[120] w-[calc(100vw-2rem)] max-w-[31rem] sm:right-6 sm:top-6"
+      className="pointer-events-none fixed right-4 top-4 z-[120] w-[calc(100vw-2rem)] max-w-sm sm:right-6 sm:top-6"
       role="status"
       aria-live="polite"
     >
       <div
         key={toast.id}
-        className={`pointer-events-auto flex items-start gap-4 rounded-[28px] border px-6 py-4 text-base leading-6 backdrop-blur transition ${toneClass}`}
+        className={`pointer-events-auto flex items-start gap-3 rounded-[22px] border px-4 py-3 text-sm leading-5 backdrop-blur transition ${toneClass}`}
       >
         <span
-          className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ring-1 ${iconClass}`}
+          className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm ring-1 ${iconClass}`}
           aria-hidden="true"
         >
           {icon}
         </span>
-        <p className="min-w-0 flex-1 text-base font-semibold leading-6 text-[#F8FFFC]">{toast.message}</p>
+        <p className="min-w-0 flex-1 text-sm font-semibold leading-5 text-white">{toast.message}</p>
         <button
           type="button"
           onClick={onClose}
-          className="-mr-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-2xl leading-none text-[#EAFBF5] transition hover:bg-white/10 hover:text-white"
+          className="-mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg leading-none text-white/70 transition hover:bg-white/10 hover:text-white"
           aria-label="Dismiss notification"
         >
           ×

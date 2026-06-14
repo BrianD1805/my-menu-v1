@@ -52,18 +52,6 @@ For each new Orduva patch:
 
 ## Patch entries
 
-### Ver-0.238G — Admin settings/account UX polish
-
-**Purpose:** Apply the new blue admin panel styling standard globally, improve toast visibility/size, rename Tenant account to My Account, and remove customer-facing tenant wording where it appeared in admin navigation/account messaging.
-
-**Changed:**
-- Recoloured and enlarged admin toast notifications.
-- Renamed `/admin/account` page title and navigation label to My Account.
-- Forced My Account into a single-column admin layout with 200px desktop side padding.
-- Added the global Orduva Admin Blue Panel Standard CSS override for admin surfaces.
-
-**SQL:** No Supabase SQL required.
-
 ### Ver-0.225D — Documentation tidy and rolling patch log
 
 **Purpose:** Clean up the project root by moving historical Markdown patch notes into an archive folder and starting a single rolling Orduva patch log.
@@ -488,18 +476,3 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Removed saved logo/favicon URL display blocks.
 - Fixed logo/favicon upload button text contrast.
 - No SQL required.
-
-## Ver-0.238H — Outer admin container correction
-
-- Restored outer admin content containers to the original white panel colour.
-- Kept the Orduva blue panel tone for inner cards/panels only.
-- Added a soft shadow to the outer admin containers so they sit clearly above the page background without harsh borders.
-- No SQL required.
-## Ver-0.238I — Admin background and dropdown colour correction
-
-- Restored the Tenant Admin page background to the neutral original-style app background instead of the blue panel colour.
-- Kept outer admin containers white with a soft shadow.
-- Changed the admin dropdown/mega menu backgrounds back to white, including the mobile dropdown menu.
-- Reduced over-applied nested blue panel styling so the blue tone is reserved for inner content panels rather than the page/menu background.
-- No Supabase SQL required.
-

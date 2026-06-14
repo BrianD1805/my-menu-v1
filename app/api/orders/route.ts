@@ -68,11 +68,11 @@ export async function POST(req: Request) {
     const requestTenantSlug = resolveTenantSlugFromRequest(req);
 
     if (!requestTenantSlug) {
-      return NextResponse.json({ error: "Store could not be resolved from request" }, { status: 400 });
+      return NextResponse.json({ error: "Tenant could not be resolved from request" }, { status: 400 });
     }
 
     if (!body.tenantSlug?.trim()) {
-      return NextResponse.json({ error: "Missing store address" }, { status: 400 });
+      return NextResponse.json({ error: "Missing tenant slug" }, { status: 400 });
     }
 
     const submittedTenantSlug = body.tenantSlug.trim();
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
 
     if (submittedTenantSlug !== requestTenantSlug) {
       return NextResponse.json(
-        { error: "Order store mismatch" },
+        { error: "Order tenant mismatch" },
         { status: 400 }
       );
     }
@@ -108,12 +108,12 @@ export async function POST(req: Request) {
       .single();
 
     if (tenantError || !tenant) {
-      return NextResponse.json({ error: "Store not found" }, { status: 404 });
+      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
     if (!tenant.whatsapp_number) {
       return NextResponse.json(
-        { error: "Store WhatsApp number not configured" },
+        { error: "Tenant WhatsApp number not configured" },
         { status: 400 }
       );
     }
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
 
     if (products.length !== productIds.length) {
       return NextResponse.json(
-        { error: "One or more products do not belong to this store or are inactive" },
+        { error: "One or more products do not belong to this tenant or are inactive" },
         { status: 400 }
       );
     }

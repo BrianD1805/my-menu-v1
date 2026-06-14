@@ -35,7 +35,7 @@ async function getTenant(tenantSlug: string) {
   }
 
   return {
-    error: NextResponse.json({ error: "Store not found" }, { status: 404 }),
+    error: NextResponse.json({ error: "Tenant not found" }, { status: 404 }),
   };
 }
 
