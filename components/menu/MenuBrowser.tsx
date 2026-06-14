@@ -2712,14 +2712,14 @@ export default function MenuBrowser({
 
       {discountsModalOpen ? (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none lg:px-6 lg:py-6 xl:p-8"
           role="dialog"
           aria-modal="true"
           onClick={() => setDiscountsModalOpen(false)}
         >
-          <div className="flex min-h-full items-center justify-center">
+          <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               style={{
                 backgroundColor: offersPopupBackground,
                 borderColor: offersPopupCardBorder,
@@ -2881,14 +2881,14 @@ export default function MenuBrowser({
 
       {rewardsModalOpen ? (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none lg:px-6 lg:py-6 xl:p-8"
           role="dialog"
           aria-modal="true"
           onClick={() => setRewardsModalOpen(false)}
         >
-          <div className="flex min-h-full items-center justify-center">
+          <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               style={{
                 backgroundColor: rewardsPopupBackground,
                 borderColor: rewardsPopupCardBorder,
@@ -3090,16 +3090,16 @@ export default function MenuBrowser({
 
       {shouldRenderFavouritesArea ? (
         <div
-          className="fixed inset-0 z-[130] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          className="fixed inset-0 z-[130] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none lg:px-6 lg:py-6 xl:p-8"
           style={{ backgroundColor: "rgba(15,23,42,0.54)" }}
           role="dialog"
           aria-modal="true"
           aria-label="Favourite products"
           onClick={() => setFavouritesVisible(false)}
         >
-          <div className="flex min-h-full items-center justify-center">
+          <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
             <div
-              className="relative max-h-[calc(100dvh-150px)] w-full max-w-[1120px] overflow-y-auto rounded-[28px]"
+              className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               onClick={(event) => event.stopPropagation()}
             >
               <button
@@ -3112,7 +3112,7 @@ export default function MenuBrowser({
               </button>
         <section
           id="customer-favourites-section"
-          className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
+          className="relative flex min-h-[228px] w-full flex-col overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
           style={{
             backgroundColor: favouritesBackground,
             borderColor: favouritesBorder,
@@ -3246,16 +3246,16 @@ export default function MenuBrowser({
 
       {shouldRenderBuyAgainArea ? (
         <div
-          className="fixed inset-0 z-[130] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          className="fixed inset-0 z-[130] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none lg:px-6 lg:py-6 xl:p-8"
           style={{ backgroundColor: "rgba(15,23,42,0.54)" }}
           role="dialog"
           aria-modal="true"
           aria-label="Buy again products"
           onClick={() => setBuyAgainVisible(false)}
         >
-          <div className="flex min-h-full items-center justify-center">
+          <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
             <div
-              className="relative max-h-[calc(100dvh-150px)] w-full max-w-[1120px] overflow-y-auto rounded-[28px]"
+              className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               onClick={(event) => event.stopPropagation()}
             >
               <button
@@ -3268,7 +3268,7 @@ export default function MenuBrowser({
               </button>
         <section
           id="customer-buy-again-section"
-          className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
+          className="relative flex min-h-[228px] w-full flex-col overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
           style={{
             backgroundColor: favouritesBackground,
             borderColor: favouritesBorder,

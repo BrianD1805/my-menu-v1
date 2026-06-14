@@ -535,3 +535,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added stored uploaded-logo colours to the Suggested Colours panel, shown first so store owners can copy/pick from the real logo palette while editing.
 - Updated logo palette wording to explain that Suggested Colours is where each extracted logo colour can be used deliberately.
 - No SQL required.
+
+## Ver-0.241 — Storefront desktop popup sizing correction
+
+- Moved the desktop product details popup up by 10px so it sits closer to visual centre.
+- Matched desktop Rewards, Offers, Favourites and Buy Again popup sizing to the product details popup standard.
+- Kept Favourites and Buy Again internal layouts unchanged, including the swipe/strip behaviour, while fixing the popup wrapper so the page scrollbar no longer appears outside the panel.
+- Preserved internal scroll behaviour inside popup bodies where applicable.
+- No SQL required.
