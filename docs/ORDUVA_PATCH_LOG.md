@@ -1,3 +1,11 @@
+## Ver-0.239 — Storefront favourites and Buy Again popup panels
+
+- Changed storefront Favourites and Buy Again from inline page sections into popup panels.
+- Preserved the existing Favourites and Buy Again section/card layout inside each popup.
+- Added only a top-right close icon to each popup.
+- Locked background scrolling while either popup is open.
+- No SQL required.
+
 ## Ver-0.238M — Logo palette and toast colour correction
 
 - Reworked the uploaded-logo colour extraction so the generated logo palette prioritises actual visible logo colours, including vivid red/yellow/green/blue and meaningful dark tones, while ignoring white/background noise.

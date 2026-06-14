@@ -2001,6 +2001,8 @@ export default function MenuBrowser({
       searchOpen ||
       rewardsModalOpen ||
       discountsModalOpen ||
+      favouritesVisible ||
+      buyAgainVisible ||
       favouriteLoginPromptOpen;
     if (!hasBlockingOverlay) return;
 
@@ -2021,6 +2023,8 @@ export default function MenuBrowser({
     searchOpen,
     rewardsModalOpen,
     discountsModalOpen,
+    favouritesVisible,
+    buyAgainVisible,
     favouriteLoginPromptOpen,
   ]);
 
@@ -3085,6 +3089,27 @@ export default function MenuBrowser({
       ) : null}
 
       {shouldRenderFavouritesArea ? (
+        <div
+          className="fixed inset-0 z-[130] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          style={{ backgroundColor: "rgba(15,23,42,0.54)" }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Favourite products"
+          onClick={() => setFavouritesVisible(false)}
+        >
+          <div className="flex min-h-full items-center justify-center">
+            <div
+              className="relative max-h-[calc(100dvh-150px)] w-full max-w-[1120px] overflow-y-auto rounded-[28px]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setFavouritesVisible(false)}
+                className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/95 text-2xl font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white"
+                aria-label="Close favourites"
+              >
+                ×
+              </button>
         <section
           id="customer-favourites-section"
           className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
@@ -3214,9 +3239,33 @@ export default function MenuBrowser({
             </div>
           ) : null}
         </section>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {shouldRenderBuyAgainArea ? (
+        <div
+          className="fixed inset-0 z-[130] px-[35px] py-[75px] backdrop-blur-[2px] overscroll-none"
+          style={{ backgroundColor: "rgba(15,23,42,0.54)" }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Buy again products"
+          onClick={() => setBuyAgainVisible(false)}
+        >
+          <div className="flex min-h-full items-center justify-center">
+            <div
+              className="relative max-h-[calc(100dvh-150px)] w-full max-w-[1120px] overflow-y-auto rounded-[28px]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setBuyAgainVisible(false)}
+                className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/75 bg-white/95 text-2xl font-semibold text-slate-700 shadow-[0_16px_34px_rgba(15,23,42,0.22)] transition hover:-translate-y-[1px] hover:bg-white"
+                aria-label="Close buy again"
+              >
+                ×
+              </button>
         <section
           id="customer-buy-again-section"
           className="relative min-h-[228px] overflow-hidden rounded-[26px] border px-3 py-4 shadow-[0_20px_56px_rgba(120,53,15,0.22)] ring-1 ring-white/35 sm:min-h-[242px] sm:px-4 sm:py-5 lg:min-h-[248px] lg:px-5"
@@ -3346,6 +3395,9 @@ export default function MenuBrowser({
             </div>
           ) : null}
         </section>
+            </div>
+          </div>
+        </div>
       ) : null}
 
 
