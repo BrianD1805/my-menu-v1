@@ -937,6 +937,7 @@ export default function TenantSettingsForm({
   const [openThemeGroup, setOpenThemeGroup] = useState<PreviewTarget | null>(
     null,
   );
+  const [openThemeGroups, setOpenThemeGroups] = useState<PreviewTarget[]>([]);
   const settingsTopRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -957,7 +958,7 @@ export default function TenantSettingsForm({
     form.footerNotice.trim() ||
     "Prices and availability may change without notice.";
 
-  function getDesktopFloatingPanelStart(target: PreviewTarget | null = openThemeGroup || previewTarget, panelWidth = 430) {
+  function getDesktopFloatingPanelStart(target: PreviewTarget | null = openThemeGroup || previewTarget, panelWidth = 430, panelHeight = 520) {
     if (typeof window === "undefined") return { x: 740, y: 108 };
     const workspace = themeEditorWorkspaceRef.current?.getBoundingClientRect();
     const targetElement = target ? themeGroupRefs.current[target] : null;
@@ -973,7 +974,7 @@ export default function TenantSettingsForm({
     const rightHalfStart = workspace.left + Math.max(24, Math.round(workspace.width * 0.52));
     const maxX = Math.max(workspace.left + 12, workspace.right - panelWidth - 12);
     const rawY = targetRect ? targetRect.top : workspace.top + 24;
-    const maxY = Math.max(workspace.top + 12, workspace.bottom - 220);
+    const maxY = Math.max(workspace.top + 12, workspace.bottom - panelHeight - 12);
 
     return {
       x: Math.min(Math.max(workspace.left + 12, rightHalfStart), maxX),
@@ -997,13 +998,13 @@ export default function TenantSettingsForm({
 
   function openDesktopPreviewWindow(target: PreviewTarget = openThemeGroup || previewTarget) {
     setPreviewTarget(target);
-    setDesktopPreviewPosition(getDesktopFloatingPanelStart(target));
+    setDesktopPreviewPosition(getDesktopFloatingPanelStart(target, 430, 520));
     setDesktopPreviewWindowOpen(true);
     setDesktopPreviewExpanded(true);
   }
 
   function openDesktopSuggestedWindow(target: PreviewTarget | null = openThemeGroup || previewTarget) {
-    setDesktopSuggestedPosition(getDesktopFloatingPanelStart(target));
+    setDesktopSuggestedPosition(getDesktopFloatingPanelStart(target, 430, 520));
     setDesktopSuggestedWindowOpen(true);
     setDesktopSuggestedExpanded(true);
   }
@@ -1035,7 +1036,7 @@ export default function TenantSettingsForm({
           event.clientX - desktopPreviewDragOffsetRef.current.x,
           event.clientY - desktopPreviewDragOffsetRef.current.y,
           430,
-          desktopPreviewExpanded ? 360 : 150,
+          desktopPreviewExpanded ? 520 : 150,
         ),
       );
     }
@@ -1061,7 +1062,7 @@ export default function TenantSettingsForm({
           event.clientX - desktopSuggestedDragOffsetRef.current.x,
           event.clientY - desktopSuggestedDragOffsetRef.current.y,
           430,
-          desktopSuggestedExpanded ? 360 : 150,
+          desktopSuggestedExpanded ? 520 : 150,
         ),
       );
     }
@@ -2050,7 +2051,7 @@ export default function TenantSettingsForm({
         className={
           compact
             ? "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950"
-            : "rounded-[24px] border border-orange-100 bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4"
+            : "rounded-[8px] border-2 border-black bg-orange-50 p-4 text-sm leading-5 text-orange-950 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-4"
         }
       >
         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-900">
@@ -2059,7 +2060,7 @@ export default function TenantSettingsForm({
         <p className="mt-1.5 text-xs leading-5 text-orange-950/80">
           Use these as reference colours while editing. Tap the copy icon inside a colour pill, or select the hex code and copy it manually.
         </p>
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {suggestedColours.map((colour) => (
             <div
               key={colour}
@@ -2068,7 +2069,7 @@ export default function TenantSettingsForm({
               <button
                 type="button"
                 onClick={() => void copySuggestedColour(colour, compact)}
-                className="h-8 w-8 rounded-full border border-black/10"
+                className="h-8 w-8 rounded-md border border-black/10"
                 style={{ backgroundColor: colour }}
                 aria-label={`Copy ${colour}`}
                 title={`Copy ${colour}`}
@@ -2084,7 +2085,7 @@ export default function TenantSettingsForm({
                 <button
                   type="button"
                   onClick={() => void copySuggestedColour(colour, compact)}
-                  className="absolute right-1.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-900"
+                  className="absolute right-1.5 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-900"
                   aria-label={`Copy ${colour}`}
                   title={`Copy ${colour}`}
                 >
@@ -2390,7 +2391,7 @@ export default function TenantSettingsForm({
           >
             <div className="min-w-0 space-y-4">
               {THEME_GROUPS.map((group) => {
-                const isOpen = openThemeGroup === group.id;
+                const isOpen = openThemeGroups.includes(group.id);
                 return (
                   <div
                     key={group.id}
@@ -2400,14 +2401,12 @@ export default function TenantSettingsForm({
                     <button
                       type="button"
                       onClick={() => {
-                        setOpenThemeGroup((current) => {
-                          const next = current === group.id ? null : group.id;
-                          if (!next) {
-                            setDesktopPreviewWindowOpen(false);
-                            setDesktopSuggestedWindowOpen(false);
-                          }
-                          return next;
-                        });
+                        setOpenThemeGroup(group.id);
+                        setOpenThemeGroups((current) =>
+                          current.includes(group.id)
+                            ? current.filter((id) => id !== group.id)
+                            : [...current, group.id],
+                        );
                         setPreviewTarget(group.id);
                       }}
                       className="flex w-full items-start justify-between gap-3 px-3 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-5"
@@ -2431,7 +2430,7 @@ export default function TenantSettingsForm({
 
                     {isOpen ? (
                       <div className="bg-white px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
-                        <div className="flex flex-wrap items-center justify-center gap-2">
+                        <div className="flex flex-wrap items-center justify-start gap-2">
                           <button
                             type="button"
                             onClick={() => {
@@ -5196,7 +5195,7 @@ export default function TenantSettingsForm({
       {desktopPreviewWindowOpen ? (
         <div
           ref={previewPanelRef}
-          className="fixed z-[90] hidden w-[min(430px,calc(100vw-24px))] rounded-[18px] border-2 border-black bg-white shadow-[0_24px_65px_rgba(15,23,42,0.22)] lg:block"
+          className="fixed z-[90] hidden w-[min(430px,calc(100vw-24px))] overflow-hidden rounded-[8px] border-2 border-black bg-white shadow-[0_24px_65px_rgba(15,23,42,0.22)] lg:block"
           style={{
             left: desktopPreviewPosition.x,
             top: desktopPreviewPosition.y,
@@ -5214,9 +5213,6 @@ export default function TenantSettingsForm({
                 <h3 className="mt-1 text-lg font-bold text-slate-900">
                   {labelForPreview(previewTarget)}
                 </h3>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Drag this preview within the Per-item storefront colours area while editing.
-                </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <button
@@ -5260,7 +5256,7 @@ export default function TenantSettingsForm({
 
       {desktopSuggestedWindowOpen ? (
         <div
-          className="fixed z-[91] hidden w-[min(430px,calc(100vw-24px))] rounded-[24px] border border-orange-100 bg-white shadow-[0_24px_65px_rgba(15,23,42,0.22)] lg:block"
+          className="fixed z-[91] hidden w-[min(430px,calc(100vw-24px))] overflow-hidden rounded-[8px] border-2 border-black bg-white shadow-[0_24px_65px_rgba(15,23,42,0.22)] lg:block"
           style={{
             left: desktopSuggestedPosition.x,
             top: desktopSuggestedPosition.y,

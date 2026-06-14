@@ -1,10 +1,14 @@
 
-## Ver-0.238K — Per-item colours panel match and preview border polish
+## Ver-0.238L — Desktop per-item colours window polish
 
-- Matched the Per-item storefront colours expandable panel styling to the approved `/admin/settings` blue-panel/white-content pattern.
-- Removed the extra Colour editing workspace block because preview/suggested buttons already appear inside each expanded item.
-- Added a stronger 2px black border to the Theme Preview Window.
-- Kept the mobile settings/menu background white.
+- Fixed the desktop Theme Preview Window border/corner treatment and removed the helper drag text from its header.
+- Changed Per-item storefront colour dropdowns so opening one panel no longer closes the previously opened panel.
+- Added a 2px black border and stronger corner treatment to the desktop Suggested Colours window.
+- Set Suggested Colours to display two colour entries per row on desktop.
+- Squared off the suggested colour copy controls so they no longer use circular icon edges.
+- Constrained the draggable Theme Preview and Suggested Colours windows to the colour editor container.
+- Left-aligned the Preview and Suggested buttons inside each expanded dropdown panel.
+- No Supabase SQL required.
 
 ## Ver-0.238J — Admin settings container/dropdown panel balance
 
