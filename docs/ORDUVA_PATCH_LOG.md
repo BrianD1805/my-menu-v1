@@ -527,3 +527,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Replaced store-owner-facing “Tenant” wording with clearer “Store”, “Store Admin” or “My Account” wording where relevant.
 - Kept developer/internal tenant naming in code identifiers and database fields unchanged.
 - No SQL required.
+
+## Ver-0.240 — Logo palette lockdown and suggested colours picker
+
+- Reworked the logo palette preset so one loud colour from the logo does not flood the whole storefront.
+- Logo-generated themes now keep structural areas white/neutral and distribute logo colours across primary, accent, secondary and strong-accent uses.
+- Added stored uploaded-logo colours to the Suggested Colours panel, shown first so store owners can copy/pick from the real logo palette while editing.
+- Updated logo palette wording to explain that Suggested Colours is where each extracted logo colour can be used deliberately.
+- No SQL required.

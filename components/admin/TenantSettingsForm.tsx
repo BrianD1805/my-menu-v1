@@ -597,47 +597,50 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
     new Set(
       colours.map((colour) => normalizeThemeColor(colour, "")).filter(Boolean),
     ),
-  );
-  const sortedByDark = [...unique].sort(
-    (a, b) => colourLuminance(a) - colourLuminance(b),
-  );
-  const sortedByLight = [...unique].sort(
-    (a, b) => colourLuminance(b) - colourLuminance(a),
-  );
-  const sortedBySaturation = [...unique].sort(
-    (a, b) => colourSaturation(b) - colourSaturation(a),
-  );
-  const vividColours = sortedBySaturation.filter(
-    (colour) => colourSaturation(colour) > 0.18,
-  );
-  const primaryColor =
-    vividColours.find(
-      (colour) => colourLuminance(colour) > 0.08 && colourLuminance(colour) < 0.62,
-    ) ||
-    sortedByDark.find((colour) => colourLuminance(colour) > 0.04) ||
-    unique[0] ||
-    "#0F172A";
-  const accentColor =
-    vividColours.find(
-      (colour) =>
-        colour !== primaryColor &&
-        colourLuminance(colour) > 0.14 &&
-        colourLuminance(colour) < 0.86,
-    ) ||
-    unique.find((colour) => colour !== primaryColor) ||
-    "#FF6A3D";
-  const lightBase =
-    sortedByLight.find(
-      (colour) => colour !== primaryColor && colour !== accentColor,
-    ) || accentColor;
-  const textColor = sortedByDark[0] || primaryColor;
-  const backgroundTint = blendHex(lightBase, "#FFFFFF", 0.9);
-  const borderColor = blendHex(accentColor, "#FFFFFF", 0.42);
+  ).slice(0, 12);
+
+  const byDark = [...unique].sort((a, b) => colourLuminance(a) - colourLuminance(b));
+  const bySaturation = [...unique].sort((a, b) => colourSaturation(b) - colourSaturation(a));
+  const colourInfo = unique.map((colour) => {
+    const rgb = hexToRgb(colour);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    return {
+      colour,
+      hue: hsl.h,
+      saturation: hsl.s,
+      lightness: hsl.l,
+      luminance: colourLuminance(colour),
+    };
+  });
+
+  const findLogoColour = (matcher: (item: (typeof colourInfo)[number]) => boolean) =>
+    colourInfo
+      .filter(matcher)
+      .sort((a, b) => b.saturation - a.saturation || a.luminance - b.luminance)[0]
+      ?.colour;
+
+  const darkLogoColour = byDark[0] || "#111827";
+  const blueLogoColour = findLogoColour((item) => item.hue >= 195 && item.hue <= 260 && item.saturation > 0.18);
+  const greenLogoColour = findLogoColour((item) => item.hue >= 75 && item.hue <= 170 && item.saturation > 0.18);
+  const redLogoColour = findLogoColour((item) => (item.hue <= 18 || item.hue >= 342) && item.saturation > 0.2);
+  const orangeLogoColour = findLogoColour((item) => item.hue > 18 && item.hue <= 48 && item.saturation > 0.2);
+  const yellowLogoColour = findLogoColour((item) => item.hue > 48 && item.hue <= 75 && item.saturation > 0.18);
+  // A logo can contain one very loud colour. Do not let that one colour flood the whole storefront.
+  // Use a darker brand colour for structure, then reserve brighter colours for accents and suggestions.
+  const primaryColor = blueLogoColour || greenLogoColour || darkLogoColour || bySaturation[0] || "#0F172A";
+  const accentColor = orangeLogoColour || yellowLogoColour || redLogoColour || greenLogoColour || bySaturation.find((colour) => colour !== primaryColor) || "#FF6A3D";
+  const secondaryAccent = greenLogoColour || blueLogoColour || accentColor;
+  const warningAccent = yellowLogoColour || orangeLogoColour || accentColor;
+  const strongAccent = redLogoColour || orangeLogoColour || accentColor;
+  const backgroundTint = "#FFFFFF";
+  const borderColor = blendHex(accentColor, "#FFFFFF", 0.35);
+  const textColor = darkLogoColour || "#111827";
+  const softTint = warningAccent ? blendHex(warningAccent, "#FFFFFF", 0.88) : "#FFFBEB";
 
   return {
     name: LOGO_PALETTE_PRESET_NAME,
     description:
-      "Generated from the uploaded logo. Review it, then save if it suits this store.",
+      "Generated from the uploaded logo. Logo colours are kept available in Suggested colours so you can choose where each one belongs.",
     primaryColor,
     accentColor,
     backgroundTint,
@@ -652,25 +655,59 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
         textColor,
         presetName: LOGO_PALETTE_PRESET_NAME,
       }),
-      logoPaletteColours: unique.slice(0, 12),
+      logoPaletteColours: unique,
       selectedPreset: LOGO_PALETTE_PRESET_NAME,
       customised: false,
-      headerBackground: backgroundTint,
+      globalPageBackground: "#FFFFFF",
+      globalText: textColor,
+      globalSoftText: textColor,
+      globalBorder: blendHex(primaryColor, "#FFFFFF", 0.72),
+      headerBackground: "#FFFFFF",
+      headerText: textColor,
+      headerButtonBorder: primaryColor,
+      welcomeBackground: "#FFFFFF",
       welcomeLabel: accentColor,
       welcomeHeading: primaryColor,
+      welcomeBody: textColor,
+      welcomeBorder: blendHex(accentColor, "#FFFFFF", 0.42),
       welcomeShadow: accentColor,
-      addButtonBorder: accentColor,
-      moreButtonBorder: accentColor,
-      productHeartTickedBackground: "#FEF3C7",
-      productHeartTickedText: accentColor,
+      welcomeActionText: primaryColor,
+      welcomeActionIconBackground: secondaryAccent,
+      welcomeActionBorder: blendHex(primaryColor, "#FFFFFF", 0.65),
+      rewardsPopupTopEdge: secondaryAccent,
+      rewardsPopupHeaderBlend: softTint,
+      rewardsPopupHeaderText: primaryColor,
+      rewardsPopupLabelText: secondaryAccent,
+      rewardsPopupPillBackground: secondaryAccent,
+      rewardsPopupButtonBackground: primaryColor,
+      offersPopupTopEdge: strongAccent,
+      offersPopupHeaderBlend: softTint,
+      offersPopupHeaderText: primaryColor,
+      offersPopupLabelText: strongAccent,
+      offersPopupPillBackground: strongAccent,
+      offersPopupButtonBackground: strongAccent,
+      productCardBackground: "#FFFFFF",
+      productCardBorder: blendHex(primaryColor, "#FFFFFF", 0.72),
+      productTitle: primaryColor,
+      productHeartTickedBackground: softTint,
+      productHeartTickedText: strongAccent,
       productHeartUntickedBackground: "#FFFFFF",
       productHeartUntickedText: textColor,
+      priceBoxBackground: "#FFFFFF",
+      priceBoxBorder: accentColor,
+      priceText: primaryColor,
+      addButtonBackground: "#FFFFFF",
+      addButtonBorder: secondaryAccent,
+      addButtonText: primaryColor,
+      moreButtonBackground: "#FFFFFF",
+      moreButtonBorder: accentColor,
+      moreButtonText: primaryColor,
       favouritesBackground: primaryColor,
       favouritesBorder: accentColor,
       favouritesText: "#FFFFFF",
       favouritesLabelText: accentColor,
       favouritesCardBackground: "#FFFFFF",
-      favouritesCardBorder: borderColor,
+      favouritesCardBorder: blendHex(primaryColor, "#FFFFFF", 0.72),
       favouritesCardShadow: accentColor,
       favouritesCardShadowEnabled: true,
       favouritesCardTitle: primaryColor,
@@ -681,8 +718,10 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
       favouritesAddBorder: accentColor,
       favouritesAddText: "#FFFFFF",
       favouritesRemoveBackground: "#FFFFFF",
-      favouritesRemoveText: accentColor,
-      favouritesSwipeText: accentColor,
+      favouritesRemoveText: strongAccent,
+      favouritesSwipeText: strongAccent,
+      footerBackground: "#FFFFFF",
+      footerText: textColor,
       footerBadgeBackground: accentColor,
     },
   };
@@ -1384,7 +1423,17 @@ export default function TenantSettingsForm({
     );
 
   const suggestedColours = useMemo(() => {
+    const logoColours = Array.isArray(theme.logoPaletteColours)
+      ? theme.logoPaletteColours
+      : [];
     const base = [
+      // Logo colours come first so the Suggested Colours panel works as a picker for the uploaded logo palette.
+      ...logoColours,
+      form.primaryColor,
+      form.accentColor,
+      form.backgroundTint,
+      form.borderColor,
+      form.textColor,
       theme.globalPageBackground,
       theme.globalText,
       theme.globalSoftText,
@@ -1405,18 +1454,13 @@ export default function TenantSettingsForm({
       theme.favouritesAddBackground,
       theme.favouritesRemoveBackground,
       theme.footerBadgeBackground,
-      form.primaryColor,
-      form.accentColor,
-      form.backgroundTint,
-      form.borderColor,
-      form.textColor,
       ...extraSuggestedColours,
     ]
       .map((colour) => normalizeThemeColor(String(colour || ""), ""))
       .filter((colour) => /^#[0-9A-F]{6}$/i.test(colour));
     return Array.from(
       new Set(base.map((colour) => colour.toUpperCase())),
-    ).slice(0, 18);
+    ).slice(0, 24);
   }, [
     theme,
     form.primaryColor,
@@ -2077,7 +2121,7 @@ export default function TenantSettingsForm({
           Suggested colours
         </p>
         <p className="mt-1.5 text-xs leading-5 text-orange-950/80">
-          Use these as reference colours while editing. Tap the copy icon inside a colour pill, or select the hex code and copy it manually.
+          Logo palette colours appear first when available. Tap the copy icon inside a colour pill, or select the hex code and copy it manually.
         </p>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {suggestedColours.map((colour) => (
