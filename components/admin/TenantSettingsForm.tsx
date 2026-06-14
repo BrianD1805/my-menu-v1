@@ -2148,7 +2148,7 @@ export default function TenantSettingsForm({
       <form
         data-tenant-settings-form="true"
         onSubmit={onSubmit}
-        className={`mx-auto grid w-full grid-cols-1 gap-5 ${focusSection === "per-item-storefront-colours" ? "p-0" : "rounded-[30px] bg-[#9fbfdf]/18 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6"}`}
+        className={`mx-auto grid w-full grid-cols-1 gap-5 ${focusSection === "per-item-storefront-colours" ? "p-0" : "rounded-[30px] bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.10)] sm:p-6"}`}
       >
         <div ref={settingsTopRef} className="mb-1 flex justify-end scroll-mt-28">
           <button
@@ -2191,7 +2191,7 @@ export default function TenantSettingsForm({
             needed for this section.
           </div>
           <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-[22px] bg-[#9fbfdf]/35 p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+            <div className="rounded-[22px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
               <div className="flex flex-col gap-4">
                 {form.logoUrl ? (
                   <div className="flex min-h-28 w-full items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4">
@@ -2217,7 +2217,7 @@ export default function TenantSettingsForm({
               </div>
             </div>
 
-            <div className="rounded-[22px] bg-[#9fbfdf]/35 p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+            <div className="rounded-[22px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
               <div className="flex flex-col gap-4">
                 {form.faviconUrl ? (
                   <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs text-slate-600">
@@ -2371,7 +2371,7 @@ export default function TenantSettingsForm({
           defaultOpen={Boolean(focusSection)}
         >
           {!focusSection ? (
-            <div className="rounded-[22px] bg-[#9fbfdf]/40 p-4 sm:p-5">
+            <div className="rounded-[22px] border border-[#DCE5E1] bg-white p-4 sm:p-5">
               <p className="text-sm font-black text-slate-950">Open the dedicated colour workspace</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 Per-item colour controls now open on their own page so the preview and suggested colour panels have room to breathe.
@@ -2389,7 +2389,7 @@ export default function TenantSettingsForm({
             className={`${!focusSection ? "hidden" : ""} relative grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-6`}
           >
             <div className="min-w-0 space-y-4">
-              <div className="rounded-[22px] bg-[#9fbfdf]/45 p-4">
+              <div className="rounded-[22px] border border-[#DCE5E1] bg-white p-4">
                 <p className="text-sm font-semibold text-slate-900">
                   Colour editing workspace
                 </p>
@@ -2420,7 +2420,7 @@ export default function TenantSettingsForm({
                   <div
                     key={group.id}
                     ref={(node) => { themeGroupRefs.current[group.id] = node; }}
-                    className="rounded-[22px] bg-[#9fbfdf]/35 p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]"
+                    className="rounded-[22px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]"
                   >
                     <button
                       type="button"
@@ -2531,18 +2531,9 @@ export default function TenantSettingsForm({
             </div>
             <div
               ref={suggestedColoursRef}
-              className="hidden min-h-[560px] rounded-[24px] bg-[#9fbfdf]/20 p-5 lg:block"
+              className="hidden min-h-[560px] rounded-[24px] bg-white lg:block"
               aria-hidden="true"
-            >
-              <div className="flex h-full min-h-[520px] items-center justify-center rounded-[20px] bg-white/60 p-6 text-center">
-                <div>
-                  <p className="text-sm font-black text-[#336699]">Preview workspace</p>
-                  <p className="mt-2 max-w-sm text-xs leading-5 text-slate-500">
-                    Open a preview or suggested colours from the left-hand colour controls. This side stays clear so the workspace does not crowd the edit panel.
-                  </p>
-                </div>
-              </div>
-            </div>
+            />
           </div>
         </Section>
 
@@ -6731,10 +6722,10 @@ function SettingsMenuModal({
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-[#9fbfdf] bg-[#9fbfdf] shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-[#336699] before:via-[#0F766E] before:to-[#5EEAD4]"
+        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-[#DCE5E1] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-[#336699] before:via-[#0F766E] before:to-[#5EEAD4]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-[#9fbfdf] bg-[#9fbfdf]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="sticky top-0 z-10 shrink-0 border-b border-[#DCE5E1] bg-white px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0F766E]">
@@ -6913,7 +6904,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
             {steps.map((step) => (
               <div
                 key={step.title}
-                className="rounded-[22px] bg-[#9fbfdf]/45 p-4"
+                className="rounded-[22px] border border-[#DCE5E1] bg-white p-4"
               >
                 <p className="text-sm font-semibold text-slate-950">
                   {step.title}
@@ -7180,7 +7171,7 @@ function Section({
           </span>
         )}
       </summary>
-      <div className="bg-[#9fbfdf]/24 px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
+      <div className="bg-white px-3 pb-4 pt-4 sm:px-5 sm:pb-5">
         {children}
         {showSave ? (
           <div className="mt-4 flex justify-end pt-1">

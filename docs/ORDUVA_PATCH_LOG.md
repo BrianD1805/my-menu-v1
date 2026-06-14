@@ -1,3 +1,13 @@
+
+## Ver-0.238J — Admin settings container/dropdown panel balance
+
+- Restored the main Settings container to white with a soft shadow.
+- Kept blue only on the inner dropdown section panels so they separate cleanly.
+- Changed open panel/data content areas to white to avoid blue-on-blue styling.
+- Changed the mobile admin menu background back to white.
+- Removed the Per-item colours preview workspace wording and blue placeholder panel.
+- No Supabase SQL required.
+
 ## Ver-0.232D — Theme editor workspace and suggested colours polish
 
 - Constrained the desktop per-item storefront colour controls to the left half of the settings workspace.
