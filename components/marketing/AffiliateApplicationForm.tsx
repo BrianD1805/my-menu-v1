@@ -113,7 +113,7 @@ export default function AffiliateApplicationForm() {
         </label>
         <p className="md:col-span-2 rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-xs font-bold leading-5 text-[#5C5F66]">If a referred client pays in a different currency from your payout currency, the commission will need converting manually for now. Automatic exchange-rate conversion can be added later once we choose a reliable provider.</p>
         <input className="hidden" tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => updateField("website", e.target.value)} />
-        {refTenant ? <p className="md:col-span-2 rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm font-bold text-[#9A3412]">Application source: tenant storefront referral.</p> : null}
+        {refTenant ? <p className="md:col-span-2 rounded-2xl border border-[#FF6A3D]/20 bg-[#FFF7F0] px-4 py-3 text-sm font-bold text-[#9A3412]">Application source: store referral.</p> : null}
         {message ? <p className={`md:col-span-2 rounded-2xl border px-4 py-3 text-sm font-bold ${status === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-[#FF6A3D]/25 bg-[#FFF7F0] text-[#C84F2A]"}`}>{message}</p> : null}
         <button type="submit" disabled={status === "busy"} className="md:col-span-2 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#FF6A3D] px-5 py-3 text-sm font-black text-white shadow-[0_18px_40px_rgba(255,106,61,0.28)] transition hover:bg-[#e65f36] disabled:cursor-not-allowed disabled:opacity-60">
           {status === "busy" ? "Submitting..." : "Submit affiliate application"}

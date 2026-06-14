@@ -506,3 +506,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Removed saved logo/favicon URL display blocks.
 - Fixed logo/favicon upload button text contrast.
 - No SQL required.
+
+## Ver-0.238N — Admin toast contrast and store-owner wording
+
+- Updated admin toast notifications to a higher-contrast Orduva admin scheme: deep green background, orange border/accent, and white text/icons.
+- Replaced store-owner-facing “Tenant” wording with clearer “Store”, “Store Admin” or “My Account” wording where relevant.
+- Kept developer/internal tenant naming in code identifiers and database fields unchanged.
+- No SQL required.

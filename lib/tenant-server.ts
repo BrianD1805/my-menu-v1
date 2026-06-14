@@ -45,5 +45,5 @@ export async function getTenantBySlug(slug: string) {
     }
   }
 
-  throw new Error(`Tenant not found for slug: ${slug}`);
+  throw new Error(`Store not found for address: ${slug}`);
 }

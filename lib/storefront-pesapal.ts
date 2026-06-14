@@ -245,11 +245,11 @@ export function assertTenantPesapalReady(
       "M-Pesa customer payments are not live for this store yet.",
     );
   if (!getString(settings.mpesa_customer_consumer_key))
-    throw new Error("Tenant Pesapal consumer key is missing.");
+    throw new Error("Store Pesapal consumer key is missing.");
   if (!getString(settings.mpesa_customer_consumer_secret))
-    throw new Error("Tenant Pesapal consumer secret is missing.");
+    throw new Error("Store Pesapal consumer secret is missing.");
   if (!getString(settings.mpesa_customer_ipn_id))
-    throw new Error("Tenant Pesapal IPN notification ID is missing.");
+    throw new Error("Store Pesapal IPN notification ID is missing.");
   if (
     isPesapalSandboxMode(settings.mpesa_customer_mode) &&
     !allowPesapalSandboxHostedCheckout()
@@ -485,7 +485,7 @@ export async function fetchPesapalTransactionStatusDetail(input: {
       paymentMethod: null as string | null,
       confirmationCode: null as string | null,
       raw: null as PesapalStatusResponse | null,
-      errorMessage: "Tenant M-Pesa/Pesapal settings could not be loaded.",
+      errorMessage: "Store M-Pesa/Pesapal settings could not be loaded.",
     };
   }
 
@@ -671,7 +671,7 @@ export async function createPaidOrderFromPesapalIntent(input: {
     .eq("id", input.intent.tenant_id)
     .maybeSingle();
   if (tenantError || !tenant)
-    throw new Error("Tenant not found for M-Pesa checkout intent.");
+    throw new Error("Store not found for M-Pesa checkout intent.");
 
   const pesapalCheckoutReference = input.intent.pesapal_order_tracking_id || input.intent.id || null;
   const pesapalPaymentIntentId = input.paymentId || input.intent.pesapal_order_tracking_id || null;

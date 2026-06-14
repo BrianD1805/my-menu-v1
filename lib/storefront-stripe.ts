@@ -138,11 +138,11 @@ export function assertTenantStripeReady(
       "Stripe customer payments are not live for this store yet.",
     );
   if (!getString(settings.stripe_customer_publishable_key))
-    throw new Error("Tenant Stripe publishable key is missing.");
+    throw new Error("Store Stripe publishable key is missing.");
   if (!getString(settings.stripe_customer_secret_key))
-    throw new Error("Tenant Stripe secret key is missing.");
+    throw new Error("Store Stripe secret key is missing.");
   if (!getString(settings.stripe_customer_webhook_secret))
-    throw new Error("Tenant Stripe webhook secret is missing.");
+    throw new Error("Store Stripe webhook secret is missing.");
 }
 
 function originFromRequest(req: Request) {
@@ -281,7 +281,7 @@ export async function createTenantStripeOrderCheckoutIntent(input: {
       .eq("tenant_id", input.tenantId);
     throw new Error(
       data?.error?.message ||
-        `Tenant Stripe checkout failed with status ${response.status}`,
+        `Store Stripe checkout failed with status ${response.status}`,
     );
   }
 
@@ -367,7 +367,7 @@ export async function verifyAndParseTenantStripeWebhook(
       stripeSettings?.stripe_customer_webhook_secret,
     );
     if (!webhookSecret)
-      throw new Error("Tenant Stripe webhook secret is not configured.");
+      throw new Error("Store Stripe webhook secret is not configured.");
     verifyStripeSignature(rawBody, signatureHeader, webhookSecret);
     return unverified;
   }
@@ -593,7 +593,7 @@ export async function createPaidOrderFromIntent(input: {
     .eq("id", input.intent.tenant_id)
     .maybeSingle();
   if (tenantError || !tenant)
-    throw new Error("Tenant not found for Stripe checkout intent.");
+    throw new Error("Store not found for Stripe checkout intent.");
 
   const existingPaidOrderId = await findExistingPaidOrderByPaymentRefs(tenant.id, [
     finalSessionId,

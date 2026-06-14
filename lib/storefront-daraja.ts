@@ -589,7 +589,7 @@ export async function createPaidOrderFromDarajaIntent(input: {
     .eq("id", input.intent.tenant_id)
     .maybeSingle();
   if (tenantError || !tenant)
-    throw new Error("Tenant not found for direct M-Pesa checkout intent.");
+    throw new Error("Store not found for direct M-Pesa checkout intent.");
 
   const mpesaReceipt = getString(input.intent.daraja_mpesa_receipt_number);
   const darajaCheckoutReference = input.intent.daraja_checkout_request_id || input.intent.id || null;

@@ -228,12 +228,12 @@ export default function AdminPushNotificationsCard() {
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Step 2</p>
           <p className="mt-2 text-base font-semibold text-slate-900">Save subscription</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">The device endpoint is saved against the current tenant for real push delivery.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">The device endpoint is saved against the current store for real push delivery.</p>
         </div>
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Step 3</p>
           <p className="mt-2 text-base font-semibold text-slate-900">Receive new order pushes</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">New orders now attempt a real push to the installed admin devices for this tenant.</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">New orders now attempt a real push to the installed admin devices for this store.</p>
         </div>
       </div>
 

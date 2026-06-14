@@ -65,7 +65,7 @@ export default function TenantAccountManager({ initial }: { initial: AccountStat
       setSavedEmail(form.email);
       setForm((current) => ({ ...current, currentPasswordForEmail: "" }));
       setTone("success");
-      setMessage("Tenant account details saved.");
+      setMessage("My Account details saved.");
     } catch (error) {
       setTone("error");
       setMessage(error instanceof Error ? error.message : "Failed to save tenant account details");
@@ -113,7 +113,7 @@ export default function TenantAccountManager({ initial }: { initial: AccountStat
 
       <form onSubmit={saveAccount} className="grid gap-5 rounded-[30px] border border-slate-200 bg-slate-50/80 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-6">
         <section className="rounded-[26px] border border-slate-200 bg-white p-4 sm:p-5">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">Tenant account</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">My Account</p>
           <h2 className="mt-1 text-xl font-black text-slate-950">Personal and login details</h2>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <Field label="Full name"><input className={inputClass} value={form.fullName} onChange={(e) => update("fullName", e.target.value)} /></Field>

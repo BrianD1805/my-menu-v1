@@ -105,7 +105,7 @@ export async function sendPasswordResetEmail(input: {
     return { ok: false, skipped: true, error: "RESEND_API_KEY is not configured" };
   }
 
-  const audience = input.scope === "tenant_admin" ? "Tenant Admin" : "customer account";
+  const audience = input.scope === "tenant_admin" ? "Store Admin" : "customer account";
   const safeStore = escapeHtml(input.storeName);
   const safeResetUrl = escapeHtml(input.resetUrl);
   const subject = `Reset your ${input.storeName} ${audience} password`;

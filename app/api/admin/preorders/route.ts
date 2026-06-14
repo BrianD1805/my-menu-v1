@@ -119,7 +119,7 @@ export async function POST(req: Request) {
         payment_status: "paid",
         amount: balanceAmount,
         payment_reference: `PREORDER-BALANCE-${String(orderId).slice(0, 8).toUpperCase()}`,
-        notes: "Balance marked paid in Tenant Admin Pre-orders.",
+        notes: "Balance marked paid in Store Admin Pre-orders.",
         paid_at: paidAt,
         created_at: paidAt,
         updated_at: paidAt,

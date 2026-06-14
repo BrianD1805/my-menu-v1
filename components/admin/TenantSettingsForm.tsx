@@ -1907,8 +1907,8 @@ export default function TenantSettingsForm({
       setForm(savedPayload);
       setSavedForm(savedPayload);
       setTone("success");
-      setMessage("Tenant settings saved.");
-      showToast("Tenant settings saved.", "success");
+      setMessage("Store settings saved.");
+      showToast("Store settings saved.", "success");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to save settings";
@@ -3863,7 +3863,7 @@ export default function TenantSettingsForm({
                       }
                       className="input"
                     >
-                      <option value="manual_keys">Tenant Stripe keys</option>
+                      <option value="manual_keys">Store Stripe keys</option>
                       <option value="stripe_connect">
                         Stripe Connect - later
                       </option>
@@ -3879,7 +3879,7 @@ export default function TenantSettingsForm({
                       className="input"
                     />
                   </Field>
-                  <Field label="Tenant Stripe publishable key">
+                  <Field label="Store Stripe publishable key">
                     <input
                       value={form.stripeCustomerPublishableKey}
                       onChange={(e) =>
@@ -3893,8 +3893,8 @@ export default function TenantSettingsForm({
                   <Field
                     label={
                       form.stripeCustomerSecretKeySet
-                        ? `Tenant secret key saved (${form.stripeCustomerSecretKeyHint || "saved"})`
-                        : "Tenant Stripe secret key"
+                        ? `Store secret key saved (${form.stripeCustomerSecretKeyHint || "saved"})`
+                        : "Store Stripe secret key"
                     }
                   >
                     <input
@@ -3914,8 +3914,8 @@ export default function TenantSettingsForm({
                   <Field
                     label={
                       form.stripeCustomerWebhookSecretSet
-                        ? `Tenant webhook secret saved (${form.stripeCustomerWebhookSecretHint || "saved"})`
-                        : "Tenant Stripe webhook secret"
+                        ? `Store webhook secret saved (${form.stripeCustomerWebhookSecretHint || "saved"})`
+                        : "Store Stripe webhook secret"
                     }
                   >
                     <input
@@ -3945,7 +3945,7 @@ export default function TenantSettingsForm({
                       onChange={(e) =>
                         update("stripeCustomerSetupNotes", e.target.value)
                       }
-                      placeholder="Example: Tenant live Stripe account added by owner"
+                      placeholder="Example: Store live Stripe account added by owner"
                       className="input"
                     />
                   </Field>
@@ -4398,7 +4398,7 @@ export default function TenantSettingsForm({
                       onChange={(e) =>
                         update("mpesaCustomerConsumerKey", e.target.value)
                       }
-                      placeholder="Tenant Pesapal consumer key"
+                      placeholder="Store Pesapal consumer key"
                       className="input"
                       autoComplete="off"
                     />
@@ -4421,7 +4421,7 @@ export default function TenantSettingsForm({
                       placeholder={
                         form.mpesaCustomerConsumerSecretSet
                           ? "Leave blank to keep saved Pesapal secret"
-                          : "Tenant Pesapal consumer secret"
+                          : "Store Pesapal consumer secret"
                       }
                       className="input"
                       autoComplete="off"
@@ -5399,8 +5399,8 @@ function AdminToastBubble({
   if (!toast) return null;
 
   const toneClass =
-    "border-[#336699] bg-[#336699] text-white shadow-[0_18px_46px_rgba(51,102,153,0.35)]";
-  const iconClass = "bg-white/12 text-white ring-white/25";
+    "border-[#FF6A3D] bg-[#003F33] text-white shadow-[0_20px_56px_rgba(0,63,51,0.42)]";
+  const iconClass = "bg-[#FF6A3D] text-white ring-white/30";
   const icon =
     toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i";
 
@@ -6816,11 +6816,11 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
     },
     {
       title: "3. Find the publishable key",
-      body: "In Stripe, go to Developers, then API keys. Copy the key that starts with pk_test_ or pk_live_ and paste it into Tenant Stripe publishable key.",
+      body: "In Stripe, go to Developers, then API keys. Copy the key that starts with pk_test_ or pk_live_ and paste it into Store Stripe publishable key.",
     },
     {
       title: "4. Create or reveal the secret key",
-      body: "Still under API keys, create or reveal the secret key. It starts with sk_test_ or sk_live_. Copy it once and paste it into Tenant Stripe secret key. Stripe may only show live secret keys once, so store it safely.",
+      body: "Still under API keys, create or reveal the secret key. It starts with sk_test_ or sk_live_. Copy it once and paste it into Store Stripe secret key. Stripe may only show live secret keys once, so store it safely.",
     },
     {
       title: "5. Prepare the webhook destination",
@@ -6836,7 +6836,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
     },
     {
       title: "8. Reveal the webhook signing secret",
-      body: "After the endpoint has been created in Stripe, open it and click Reveal signing secret. Copy the value that starts with whsec_ and paste it into Tenant Stripe webhook secret. Do not paste the webhook endpoint ID.",
+      body: "After the endpoint has been created in Stripe, open it and click Reveal signing secret. Copy the value that starts with whsec_ and paste it into Store Stripe webhook secret. Do not paste the webhook endpoint ID.",
     },
     {
       title: "9. Save, then enable Stripe later",

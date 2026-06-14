@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     const requestTenantSlug = resolveTenantSlugFromRequest(req);
 
     if (!requestTenantSlug) {
-      return NextResponse.json({ error: "Tenant could not be resolved from request" }, { status: 400 });
+      return NextResponse.json({ error: "Store could not be resolved from request" }, { status: 400 });
     }
 
     if (!body.tenantSlug?.trim()) {
@@ -108,12 +108,12 @@ export async function POST(req: Request) {
       .single();
 
     if (tenantError || !tenant) {
-      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+      return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
     if (!tenant.whatsapp_number) {
       return NextResponse.json(
-        { error: "Tenant WhatsApp number not configured" },
+        { error: "Store WhatsApp number not configured" },
         { status: 400 }
       );
     }

@@ -124,7 +124,7 @@ export async function GET(req: Request) {
 
   const tenant = session.tenant;
   const slug = String(tenant.slug || "").trim().toLowerCase();
-  if (!slug) return jsonNoStore({ error: "Tenant slug is unavailable." }, { status: 400 });
+  if (!slug) return jsonNoStore({ error: "Store address is unavailable." }, { status: 400 });
 
   try {
     const referralCode = buildTenantReferralCode(slug);

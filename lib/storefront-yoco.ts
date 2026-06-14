@@ -191,7 +191,7 @@ export function assertTenantYocoReady(
   if (settings.yoco_customer_payments_live !== true)
     throw new Error("Yoco customer payments are not live for this store yet.");
   if (!getString(settings.yoco_customer_secret_key))
-    throw new Error("Tenant Yoco secret key is missing.");
+    throw new Error("Store Yoco secret key is missing.");
 }
 
 export async function createTenantYocoOrderCheckoutIntent(input: {
@@ -313,7 +313,7 @@ export async function createTenantYocoOrderCheckoutIntent(input: {
     throw new Error(
       data?.error?.message ||
         data?.message ||
-        `Tenant Yoco checkout failed with status ${response.status}`,
+        `Store Yoco checkout failed with status ${response.status}`,
     );
   }
 
@@ -530,7 +530,7 @@ export async function createPaidOrderFromYocoIntent(input: {
     .eq("id", input.intent.tenant_id)
     .maybeSingle();
   if (tenantError || !tenant)
-    throw new Error("Tenant not found for Yoco checkout intent.");
+    throw new Error("Store not found for Yoco checkout intent.");
 
   const yocoCheckoutReference = input.intent.yoco_checkout_id || input.intent.id || null;
   const yocoPaymentIntentId = input.paymentId || input.intent.yoco_payment_id || null;
@@ -903,7 +903,7 @@ async function loadYocoWebhookSecretForEvent(event: YocoWebhookEnvelope) {
     const settings = await loadTenantYocoCustomerSettings(refs.tenantId);
     const secret = getString(settings?.yoco_customer_webhook_secret);
     if (!secret)
-      throw new Error("Tenant Yoco webhook secret is not configured.");
+      throw new Error("Store Yoco webhook secret is not configured.");
     return { secret, tenantId: refs.tenantId, refs };
   }
 
@@ -920,7 +920,7 @@ async function loadYocoWebhookSecretForEvent(event: YocoWebhookEnvelope) {
     );
     const secret = getString(settings?.yoco_customer_webhook_secret);
     if (!secret)
-      throw new Error("Tenant Yoco webhook secret is not configured.");
+      throw new Error("Store Yoco webhook secret is not configured.");
     return {
       secret,
       tenantId: String(intent.tenant_id),

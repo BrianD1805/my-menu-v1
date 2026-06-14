@@ -221,7 +221,7 @@ export default function AnalyticsDashboardPanel({ mode }: Props) {
 
       <AccordionSection
         title={mode === "owner" ? "Traffic, pages and subdomains" : "Traffic and pages"}
-        note={mode === "owner" ? "Owner view includes platform areas, hosts, subdomains and top pages." : "Tenant view keeps the page and event breakdown focused on this store only."}
+        note={mode === "owner" ? "Owner view includes platform areas, hosts, subdomains and top pages." : "Store view keeps the page and event breakdown focused on this store only."}
         open={openAnalyticsSection === "traffic"}
         onToggle={() => setOpenAnalyticsSection((current) => current === "traffic" ? null : "traffic")}
       >

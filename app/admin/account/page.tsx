@@ -16,7 +16,7 @@ export default async function AdminAccountPage() {
       tenantSlug={tenant.slug}
       signedInAs={user.full_name || user.email || "Owner"}
       current="account"
-      title="Tenant account"
+      title="My Account"
       description="Manage tenant account details, login email, password and optional dispatch address information."
       logoUrl={branding.logoUrl}
       faviconUrl={branding.faviconUrl}
