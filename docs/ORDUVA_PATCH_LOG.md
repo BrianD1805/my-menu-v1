@@ -1,3 +1,9 @@
+## Ver-0.239A — Admin toast contrast correction
+
+- Corrected admin toast contrast after Ver-0.238N/0.239 carried dark toast text into the visible UI.
+- Toasts now use a blue admin background, orange border accent, and forced white text/icon/close colours.
+- Kept this patch scoped to toast presentation and version references only.
+
 ## Ver-0.239 — Storefront favourites and Buy Again popup panels
 
 - Changed storefront Favourites and Buy Again from inline page sections into popup panels.

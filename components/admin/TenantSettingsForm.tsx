@@ -5399,8 +5399,8 @@ function AdminToastBubble({
   if (!toast) return null;
 
   const toneClass =
-    "border-[#FF6A3D] bg-[#003F33] text-white shadow-[0_20px_56px_rgba(0,63,51,0.42)]";
-  const iconClass = "bg-[#FF6A3D] text-white ring-white/30";
+    "border-2 border-[#FF6A3D] bg-[#336699] shadow-[0_20px_56px_rgba(51,102,153,0.42)]";
+  const iconClass = "text-white";
   const icon =
     toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i";
 
@@ -5415,16 +5415,18 @@ function AdminToastBubble({
         className={`pointer-events-auto flex items-start gap-4 rounded-[28px] border px-6 py-5 text-base leading-6 backdrop-blur transition ${toneClass}`}
       >
         <span
-          className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center text-base ring-1 ${iconClass}`}
+          className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center text-xl font-black ${iconClass}`}
+          style={{ color: "#FFFFFF" }}
           aria-hidden="true"
         >
           {icon}
         </span>
-        <p className="min-w-0 flex-1 text-base font-semibold leading-6 text-white">{toast.message}</p>
+        <p className="min-w-0 flex-1 text-base font-bold leading-6" style={{ color: "#FFFFFF" }}>{toast.message}</p>
         <button
           type="button"
           onClick={onClose}
-          className="-mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center text-xl leading-none text-white transition hover:bg-white/10"
+          className="-mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center text-2xl font-black leading-none transition hover:bg-white/10"
+          style={{ color: "#FFFFFF" }}
           aria-label="Dismiss notification"
         >
           ×
