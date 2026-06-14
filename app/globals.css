@@ -311,12 +311,14 @@ body {
 }
 
 
-/* Orduva Ver-0.238G — global admin panel and toast polish.
-   Future command: Apply the Orduva Admin Blue Panel Standard globally. */
+/* Orduva Ver-0.238H — admin outer container colour/shadow correction plus panel/toast polish.
+   Future command: Apply the Orduva Admin Panel Standard: outer containers stay original white with a soft shadow; inner panels use the Orduva blue panel tone. */
 .orduva-admin-refresh {
   --oa-panel-blue: #cfdeed;
+  --oa-panel-blue-inner: #bfd6ec;
   --oa-panel-blue-border: #cfdeed;
   --oa-pill-bg: rgba(255,255,255,0.82);
+  --oa-container-shadow: 0 18px 44px rgba(17,24,39,0.10);
 }
 
 .orduva-admin-refresh .oa-admin-content > section,
@@ -327,22 +329,29 @@ body {
 .orduva-admin-refresh .oa-admin-content > div > article,
 .orduva-admin-refresh .oa-admin-content > div > form,
 .orduva-admin-refresh .oa-admin-content > div > aside,
-.orduva-admin-refresh .oa-admin-stack-panel,
-.orduva-admin-refresh .oa-admin-surface,
-.orduva-admin-refresh .oa-admin-soft {
-  background: var(--oa-panel-blue) !important;
-  border-color: var(--oa-panel-blue-border) !important;
+.orduva-admin-refresh .oa-admin-surface {
+  background: var(--oa-panel) !important;
+  border-color: var(--oa-line-soft) !important;
   border-radius: 34px !important;
-  box-shadow: none !important;
+  box-shadow: var(--oa-container-shadow) !important;
 }
 
 .orduva-admin-refresh .oa-admin-content section > section,
 .orduva-admin-refresh .oa-admin-content form > section,
-.orduva-admin-refresh .oa-admin-content article > section {
-  background: rgba(255,255,255,0.55) !important;
-  border-color: rgba(255,255,255,0.56) !important;
+.orduva-admin-refresh .oa-admin-content article > section,
+.orduva-admin-refresh .oa-admin-stack-panel,
+.orduva-admin-refresh .oa-admin-soft {
+  background: var(--oa-panel-blue) !important;
+  border-color: var(--oa-panel-blue-border) !important;
   border-radius: 28px !important;
   box-shadow: none !important;
+}
+
+.orduva-admin-refresh .oa-admin-content section > section section,
+.orduva-admin-refresh .oa-admin-content form > section section,
+.orduva-admin-refresh .oa-admin-content article > section section {
+  background: var(--oa-panel-blue-inner) !important;
+  border-color: rgba(255,255,255,0.58) !important;
 }
 
 .orduva-admin-refresh .oa-admin-content [class*="uppercase"][class*="tracking"],

@@ -488,3 +488,10 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Removed saved logo/favicon URL display blocks.
 - Fixed logo/favicon upload button text contrast.
 - No SQL required.
+
+## Ver-0.238H — Outer admin container correction
+
+- Restored outer admin content containers to the original white panel colour.
+- Kept the Orduva blue panel tone for inner cards/panels only.
+- Added a soft shadow to the outer admin containers so they sit clearly above the page background without harsh borders.
+- No SQL required.
