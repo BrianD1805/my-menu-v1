@@ -607,16 +607,22 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
   const sortedBySaturation = [...unique].sort(
     (a, b) => colourSaturation(b) - colourSaturation(a),
   );
+  const vividColours = sortedBySaturation.filter(
+    (colour) => colourSaturation(colour) > 0.18,
+  );
   const primaryColor =
-    sortedByDark.find((colour) => colourLuminance(colour) < 0.58) ||
+    vividColours.find(
+      (colour) => colourLuminance(colour) > 0.08 && colourLuminance(colour) < 0.62,
+    ) ||
+    sortedByDark.find((colour) => colourLuminance(colour) > 0.04) ||
     unique[0] ||
     "#0F172A";
   const accentColor =
-    sortedBySaturation.find(
+    vividColours.find(
       (colour) =>
         colour !== primaryColor &&
-        colourLuminance(colour) > 0.18 &&
-        colourLuminance(colour) < 0.82,
+        colourLuminance(colour) > 0.14 &&
+        colourLuminance(colour) < 0.86,
     ) ||
     unique.find((colour) => colour !== primaryColor) ||
     "#FF6A3D";
@@ -625,8 +631,8 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
       (colour) => colour !== primaryColor && colour !== accentColor,
     ) || accentColor;
   const textColor = sortedByDark[0] || primaryColor;
-  const backgroundTint = blendHex(lightBase, "#FFFFFF", 0.86);
-  const borderColor = blendHex(accentColor, "#FFFFFF", 0.55);
+  const backgroundTint = blendHex(lightBase, "#FFFFFF", 0.9);
+  const borderColor = blendHex(accentColor, "#FFFFFF", 0.42);
 
   return {
     name: LOGO_PALETTE_PRESET_NAME,
@@ -744,13 +750,12 @@ async function extractLogoColours(logoUrl: string): Promise<string[]> {
       const sat = max === 0 ? 0 : (max - min) / max;
       const hsl = rgbToHsl(r, g, b);
 
-      const isNearWhite = lum > 0.94 && sat < 0.28;
-      const isWashedCream = lum > 0.82 && sat < 0.18;
-      const isNearBlack = lum < 0.035;
-      const isTooNeutral = sat < 0.055;
-      if (isNearWhite || isWashedCream || isNearBlack || isTooNeutral) continue;
+      const isNearWhite = lum > 0.95 && sat < 0.22;
+      const isWashedBackground = lum > 0.88 && sat < 0.1;
+      const isTooNeutral = sat < 0.04 && lum > 0.08;
+      if (isNearWhite || isWashedBackground || isTooNeutral) continue;
 
-      const quantiseBy = sat > 0.35 ? 18 : 28;
+      const quantiseBy = lum < 0.08 ? 12 : sat > 0.35 ? 16 : 24;
       const key = rgbToHex(
         Math.round(r / quantiseBy) * quantiseBy,
         Math.round(g / quantiseBy) * quantiseBy,
@@ -758,9 +763,10 @@ async function extractLogoColours(logoUrl: string): Promise<string[]> {
       );
       const existing = buckets.get(key);
       const midToneBoost = 1 - Math.min(Math.abs(lum - 0.52) * 1.35, 0.58);
-      const saturationBoost = 0.45 + sat * 1.8;
-      const vividBoost = hsl.s > 0.38 ? 1.22 : 1;
-      const pixelScore = saturationBoost * (0.62 + midToneBoost) * vividBoost;
+      const saturationBoost = 0.5 + sat * 2.2;
+      const vividBoost = hsl.s > 0.38 ? 1.35 : 1;
+      const darkLogoBoost = lum < 0.08 ? 1.25 : 1;
+      const pixelScore = saturationBoost * (0.62 + midToneBoost) * vividBoost * darkLogoBoost;
 
       buckets.set(key, {
         count: (existing?.count || 0) + 1,
@@ -796,7 +802,7 @@ async function extractLogoColours(logoUrl: string): Promise<string[]> {
     }
 
     function addDistinctColour(colour: string, distanceThreshold: number) {
-      if (selected.length >= 8) return false;
+      if (selected.length >= 10) return false;
       if (
         selected.some(
           (existing) => colourDistance(existing, colour) < distanceThreshold,
@@ -807,20 +813,33 @@ async function extractLogoColours(logoUrl: string): Promise<string[]> {
       return true;
     }
 
+    const logoFamilies = [
+      (item: (typeof ranked)[number]) => item.luminance < 0.08,
+      (item: (typeof ranked)[number]) => item.hue <= 18 || item.hue >= 342,
+      (item: (typeof ranked)[number]) => item.hue > 18 && item.hue <= 58,
+      (item: (typeof ranked)[number]) => item.hue > 58 && item.hue <= 175,
+      (item: (typeof ranked)[number]) => item.hue > 175 && item.hue <= 260,
+    ];
+
+    for (const matcher of logoFamilies) {
+      const candidate = ranked.find(matcher);
+      if (candidate) addDistinctColour(candidate.colour, 34);
+    }
+
     for (const candidate of ranked) {
-      if (selected.length >= 8) break;
+      if (selected.length >= 10) break;
       if (usedHueFamilies.has(candidate.hueFamily)) continue;
       if (addDistinctColour(candidate.colour, 48))
         usedHueFamilies.add(candidate.hueFamily);
     }
 
     for (const candidate of ranked) {
-      if (selected.length >= 8) break;
+      if (selected.length >= 10) break;
       addDistinctColour(candidate.colour, 64);
     }
 
     for (const candidate of ranked) {
-      if (selected.length >= 8) break;
+      if (selected.length >= 10) break;
       addDistinctColour(candidate.colour, 38);
     }
 
@@ -2328,17 +2347,22 @@ export default function TenantSettingsForm({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        {[
-                          preset.primaryColor,
-                          preset.accentColor,
-                          preset.backgroundTint,
-                          preset.borderColor,
-                          preset.textColor,
-                        ].map((color) => (
+                        {(preset.name === LOGO_PALETTE_PRESET_NAME &&
+                        preset.theme.logoPaletteColours?.length
+                          ? preset.theme.logoPaletteColours.slice(0, 7)
+                          : [
+                              preset.primaryColor,
+                              preset.accentColor,
+                              preset.backgroundTint,
+                              preset.borderColor,
+                              preset.textColor,
+                            ]
+                        ).map((color) => (
                           <span
                             key={color}
                             className="h-4 w-4 rounded-full border border-black/5"
                             style={{ backgroundColor: color }}
+                            title={color}
                           />
                         ))}
                       </div>
@@ -5375,41 +5399,32 @@ function AdminToastBubble({
   if (!toast) return null;
 
   const toneClass =
-    toast.tone === "success"
-      ? "border-emerald-500/40 bg-emerald-950 text-white shadow-[0_18px_46px_rgba(6,78,59,0.35)]"
-      : toast.tone === "error"
-        ? "border-rose-400/40 bg-rose-950 text-white shadow-[0_18px_46px_rgba(136,19,55,0.35)]"
-        : "border-slate-600/40 bg-slate-950 text-white shadow-[0_18px_46px_rgba(15,23,42,0.35)]";
-  const iconClass =
-    toast.tone === "success"
-      ? "bg-emerald-400/18 text-emerald-100 ring-emerald-300/35"
-      : toast.tone === "error"
-        ? "bg-rose-400/18 text-rose-100 ring-rose-300/35"
-        : "bg-white/12 text-white ring-white/20";
+    "border-[#336699] bg-[#336699] text-white shadow-[0_18px_46px_rgba(51,102,153,0.35)]";
+  const iconClass = "bg-white/12 text-white ring-white/25";
   const icon =
     toast.tone === "success" ? "✓" : toast.tone === "error" ? "!" : "i";
 
   return (
     <div
-      className="pointer-events-none fixed right-4 top-4 z-[120] w-[calc(100vw-2rem)] max-w-sm sm:right-6 sm:top-6"
+      className="pointer-events-none fixed right-4 top-4 z-[120] w-[calc(100vw-2rem)] max-w-md sm:right-6 sm:top-6"
       role="status"
       aria-live="polite"
     >
       <div
         key={toast.id}
-        className={`pointer-events-auto flex items-start gap-3 rounded-[22px] border px-4 py-3 text-sm leading-5 backdrop-blur transition ${toneClass}`}
+        className={`pointer-events-auto flex items-start gap-4 rounded-[28px] border px-6 py-5 text-base leading-6 backdrop-blur transition ${toneClass}`}
       >
         <span
-          className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm ring-1 ${iconClass}`}
+          className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center text-base ring-1 ${iconClass}`}
           aria-hidden="true"
         >
           {icon}
         </span>
-        <p className="min-w-0 flex-1 text-sm font-semibold leading-5 text-white">{toast.message}</p>
+        <p className="min-w-0 flex-1 text-base font-semibold leading-6 text-white">{toast.message}</p>
         <button
           type="button"
           onClick={onClose}
-          className="-mr-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg leading-none text-white/70 transition hover:bg-white/10 hover:text-white"
+          className="-mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center text-xl leading-none text-white transition hover:bg-white/10"
           aria-label="Dismiss notification"
         >
           ×

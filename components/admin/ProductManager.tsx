@@ -2240,10 +2240,7 @@ export default function ProductManager({
       ) : null}
 
       {toast ? (
-        <div className="fixed right-4 top-4 z-[70] max-w-sm rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-700 shadow-[0_18px_45px_rgba(15,23,42,0.18)]">
-          <div
-            className={`absolute inset-x-0 top-0 h-1 rounded-t-2xl ${toast.tone === "error" ? "bg-red-400" : "bg-emerald-400"}`}
-          />
+        <div className="fixed right-4 top-4 z-[70] max-w-md rounded-[28px] border border-[#336699] bg-[#336699] px-6 py-5 text-base font-semibold leading-6 text-white shadow-[0_18px_46px_rgba(51,102,153,0.35)]">
           {toast.message}
         </div>
       ) : null}

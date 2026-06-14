@@ -1,3 +1,12 @@
+## Ver-0.238M — Logo palette and toast colour correction
+
+- Reworked the uploaded-logo colour extraction so the generated logo palette prioritises actual visible logo colours, including vivid red/yellow/green/blue and meaningful dark tones, while ignoring white/background noise.
+- Updated the Logo palette preset swatches to display the extracted logo colours instead of only the derived theme core colours.
+- Kept the generated preset review-and-save flow unchanged.
+- Changed Tenant Admin toast notifications to the requested #336699 background with white message text and white close icon.
+- Matched product-manager admin toast styling to the same #336699 notification standard.
+- No Supabase SQL required.
+
 
 ## Ver-0.238L — Desktop per-item colours window polish
 
