@@ -311,11 +311,11 @@ body {
 }
 
 
-/* Orduva Ver-0.238H — admin outer container colour/shadow correction plus panel/toast polish.
-   Future command: Apply the Orduva Admin Panel Standard: outer containers stay original white with a soft shadow; inner panels use the Orduva blue panel tone. */
+/* Orduva Ver-0.238I — admin background/menu correction.
+   Future command: Apply the Orduva Admin Panel Standard: page background stays neutral, outer containers stay white with a soft shadow, dropdown menus stay white, and inner content panels may use the Orduva blue panel tone only where requested. */
 .orduva-admin-refresh {
   --oa-panel-blue: #cfdeed;
-  --oa-panel-blue-inner: #bfd6ec;
+  --oa-panel-blue-inner: #d8e7f5;
   --oa-panel-blue-border: #cfdeed;
   --oa-pill-bg: rgba(255,255,255,0.82);
   --oa-container-shadow: 0 18px 44px rgba(17,24,39,0.10);
@@ -350,8 +350,8 @@ body {
 .orduva-admin-refresh .oa-admin-content section > section section,
 .orduva-admin-refresh .oa-admin-content form > section section,
 .orduva-admin-refresh .oa-admin-content article > section section {
-  background: var(--oa-panel-blue-inner) !important;
-  border-color: rgba(255,255,255,0.58) !important;
+  background: rgba(255,255,255,0.72) !important;
+  border-color: rgba(224,230,228,0.82) !important;
 }
 
 .orduva-admin-refresh .oa-admin-content [class*="uppercase"][class*="tracking"],

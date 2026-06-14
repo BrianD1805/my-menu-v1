@@ -495,3 +495,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept the Orduva blue panel tone for inner cards/panels only.
 - Added a soft shadow to the outer admin containers so they sit clearly above the page background without harsh borders.
 - No SQL required.
+## Ver-0.238I — Admin background and dropdown colour correction
+
+- Restored the Tenant Admin page background to the neutral original-style app background instead of the blue panel colour.
+- Kept outer admin containers white with a soft shadow.
+- Changed the admin dropdown/mega menu backgrounds back to white, including the mobile dropdown menu.
+- Reduced over-applied nested blue panel styling so the blue tone is reserved for inner content panels rather than the page/menu background.
+- No Supabase SQL required.
+
