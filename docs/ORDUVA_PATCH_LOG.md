@@ -570,3 +570,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added live billing-status refresh while the Active Billing popup is open so the next payment information can populate and update.
 - Kept the change scoped to the Active Billing popup and version references only.
 - No SQL required.
+
+## Ver-0.242B — Active Billing popup actual desktop size fix
+
+- Increased the desktop Active Billing popup panel cap so it actually uses the extra room created by the reduced overlay padding.
+- Kept mobile popup sizing unchanged.
+- Kept the 180px desktop Close button from Ver-0.242A.
+- Scoped the change to the Active Billing popup sizing and version references only.
+- No SQL required.
+

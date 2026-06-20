@@ -331,7 +331,9 @@ export default function AdminHeaderTools({
                   </div>
                 </section>
               ) : (
-                <section className="relative mx-auto flex max-h-[calc(100dvh-150px)] w-full max-w-[760px] flex-col overflow-hidden rounded-[30px] border border-emerald-900/10 bg-[#F7FAF8] text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-emerald-900 before:via-emerald-600 before:to-teal-400">
+                <section
+                  className={`relative mx-auto flex max-h-[calc(100dvh-150px)] w-full max-w-[760px] flex-col overflow-hidden rounded-[30px] border border-emerald-900/10 bg-[#F7FAF8] text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-emerald-900 before:via-emerald-600 before:to-teal-400 ${isActiveBillingPopup ? "sm:max-h-[calc(100dvh-50px)] sm:max-w-[1040px]" : ""}`}
+                >
                   <div className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-emerald-900/10 bg-[#F7FAF8]/95 px-5 py-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-7">
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-800">

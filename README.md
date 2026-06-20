@@ -11,10 +11,14 @@ Overwrite patch for Orduva Tenant Admin Settings UX corrections.
 ## SQL
 No Supabase SQL required.
 
-## Ver-0.242A
+## Ver-0.242B
 
 Desktop storefront popup correction. No Supabase SQL required.
 
 
-## Ver-0.242A note
+## Ver-0.242B note
 Active Billing popup close-button sizing, desktop spacing, and Stripe next-payment countdown fixes. No SQL required.
+
+## Ver-0.242B note
+
+Active Billing popup desktop sizing cap increased so the modal can use the reduced desktop overlay padding. No SQL required.

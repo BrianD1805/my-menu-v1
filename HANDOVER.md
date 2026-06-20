@@ -9,7 +9,7 @@ Touched files:
 
 No Supabase SQL required.
 
-## Ver-0.242A patch note
+## Ver-0.242B patch note
 
 - Desktop storefront popup correction only.
 - Product details popup was moved up 10px on desktop.
@@ -18,5 +18,9 @@ No Supabase SQL required.
 - No Supabase SQL required.
 
 
-## Ver-0.242A note
+## Ver-0.242B note
 Active Billing popup close-button sizing, desktop spacing, and Stripe next-payment countdown fixes. No SQL required.
+
+## Ver-0.242B patch note
+
+Active Billing popup desktop max width and max height were increased while keeping mobile unchanged and preserving the 180px desktop Close button. No SQL required.
