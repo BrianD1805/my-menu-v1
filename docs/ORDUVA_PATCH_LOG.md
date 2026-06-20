@@ -551,3 +551,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Moved Offers & discount codes and Rewards Club popups up by a further 7px on desktop only.
 - Removed the Order note panel and helper text from the product details popup on desktop and mobile.
 - No SQL required.
+
+## Ver-0.242 — Owner platform trial and billing controls
+
+- Added visible trial extension tools to the Owner Platform Selected list when viewing Trial expired stores.
+- Moved the active billing popup control out of the Configure menu and into the Account menu, while leaving checklist controls in Configure.
+- Added a bottom Close button to the active billing popup using the existing popup pattern.
+- Updated the active billing countdown to refresh while the popup is open.
+- Removed the duplicate Open storefront control from the Account mobile menu footer; the Account menu item remains available once.
+- No SQL required.

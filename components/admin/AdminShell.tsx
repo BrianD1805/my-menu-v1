@@ -7,7 +7,18 @@ import AdminHeaderTools from "@/components/admin/AdminHeaderTools";
 import { LIVE_VERSION } from "@/lib/version";
 import type { TenantTrialState } from "@/lib/trial";
 
-type NavIcon = "home" | "orders" | "preorders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "billing" | "storefront" | "account";
+type NavIcon =
+  | "home"
+  | "orders"
+  | "preorders"
+  | "products"
+  | "categories"
+  | "settings"
+  | "analytics"
+  | "referrals"
+  | "billing"
+  | "storefront"
+  | "account";
 type NavKey = "run" | "grow" | "configure" | "account";
 
 type NavItem = {
@@ -42,32 +53,108 @@ function AdminNavIcon({ icon }: { icon: NavIcon }) {
 
   switch (icon) {
     case "home":
-      return <svg {...common}><path d="M3.5 11.5 12 4l8.5 7.5" /><path d="M5.5 10.5V20h13v-9.5" /><path d="M9.5 20v-5.5h5V20" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M3.5 11.5 12 4l8.5 7.5" />
+          <path d="M5.5 10.5V20h13v-9.5" />
+          <path d="M9.5 20v-5.5h5V20" />
+        </svg>
+      );
     case "orders":
-      return <svg {...common}><path d="M7 4.75h10a1.75 1.75 0 0 1 1.75 1.75v13l-2.5-1.45-2.5 1.45-2.5-1.45-2.5 1.45-2.5-1.45v-11.55A1.75 1.75 0 0 1 7 4.75Z" /><path d="M8.75 9h6.5" /><path d="M8.75 12.25h6.5" /><path d="M8.75 15.5h3.75" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M7 4.75h10a1.75 1.75 0 0 1 1.75 1.75v13l-2.5-1.45-2.5 1.45-2.5-1.45-2.5 1.45-2.5-1.45v-11.55A1.75 1.75 0 0 1 7 4.75Z" />
+          <path d="M8.75 9h6.5" />
+          <path d="M8.75 12.25h6.5" />
+          <path d="M8.75 15.5h3.75" />
+        </svg>
+      );
     case "preorders":
-      return <svg {...common}><path d="M5.5 6.75h13" /><path d="M7.25 6.75l1 12.5h7.5l1-12.5" /><path d="M9 10.25h6" /><path d="M9.5 14h5" /><path d="M12 3.75v3" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M5.5 6.75h13" />
+          <path d="M7.25 6.75l1 12.5h7.5l1-12.5" />
+          <path d="M9 10.25h6" />
+          <path d="M9.5 14h5" />
+          <path d="M12 3.75v3" />
+        </svg>
+      );
     case "products":
-      return <svg {...common}><path d="M12 3.75 20 8.2v7.6l-8 4.45-8-4.45V8.2l8-4.45Z" /><path d="m4.35 8.45 7.65 4.3 7.65-4.3" /><path d="M12 12.75v7.25" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M12 3.75 20 8.2v7.6l-8 4.45-8-4.45V8.2l8-4.45Z" />
+          <path d="m4.35 8.45 7.65 4.3 7.65-4.3" />
+          <path d="M12 12.75v7.25" />
+        </svg>
+      );
     case "categories":
-      return <svg {...common}><path d="M5.25 5.25h5.25v5.25H5.25z" /><path d="M13.5 5.25h5.25v5.25H13.5z" /><path d="M5.25 13.5h5.25v5.25H5.25z" /><path d="M13.5 13.5h5.25v5.25H13.5z" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M5.25 5.25h5.25v5.25H5.25z" />
+          <path d="M13.5 5.25h5.25v5.25H13.5z" />
+          <path d="M5.25 13.5h5.25v5.25H5.25z" />
+          <path d="M13.5 13.5h5.25v5.25H13.5z" />
+        </svg>
+      );
     case "settings":
-      return <svg {...common}><path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z" /><path d="M19.25 12a7.3 7.3 0 0 0-.08-1.06l2.03-1.58-2-3.46-2.39.96a7.7 7.7 0 0 0-1.84-1.06L14.6 3.25h-4l-.37 2.55a7.7 7.7 0 0 0-1.84 1.06L6 5.9l-2 3.46 2.03 1.58a7.33 7.33 0 0 0 0 2.12L4 14.64l2 3.46 2.39-.96c.56.45 1.18.81 1.84 1.06l.37 2.55h4l.37-2.55a7.7 7.7 0 0 0 1.84-1.06l2.39.96 2-3.46-2.03-1.58c.05-.35.08-.7.08-1.06Z" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z" />
+          <path d="M19.25 12a7.3 7.3 0 0 0-.08-1.06l2.03-1.58-2-3.46-2.39.96a7.7 7.7 0 0 0-1.84-1.06L14.6 3.25h-4l-.37 2.55a7.7 7.7 0 0 0-1.84 1.06L6 5.9l-2 3.46 2.03 1.58a7.33 7.33 0 0 0 0 2.12L4 14.64l2 3.46 2.39-.96c.56.45 1.18.81 1.84 1.06l.37 2.55h4l.37-2.55a7.7 7.7 0 0 0 1.84-1.06l2.39.96 2-3.46-2.03-1.58c.05-.35.08-.7.08-1.06Z" />
+        </svg>
+      );
     case "analytics":
-      return <svg {...common}><path d="M4.75 19.25h14.5" /><path d="M7 16.5V10" /><path d="M12 16.5V5.75" /><path d="M17 16.5v-8" /><path d="M5.75 5.75h12.5" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M4.75 19.25h14.5" />
+          <path d="M7 16.5V10" />
+          <path d="M12 16.5V5.75" />
+          <path d="M17 16.5v-8" />
+          <path d="M5.75 5.75h12.5" />
+        </svg>
+      );
     case "referrals":
-      return <svg {...common}><path d="M12 4.75v15" /><path d="M6.75 8.5h10.5a2 2 0 0 1 2 2v7.25a2 2 0 0 1-2 2H6.75a2 2 0 0 1-2-2V10.5a2 2 0 0 1 2-2Z" /><path d="M4.75 12.25h14.5" /><path d="M9.25 8.5c-1.7-.15-2.75-.95-2.75-2.1 0-1.05.82-1.9 1.95-1.9 1.75 0 2.72 2.1 3.55 4" /><path d="M14.75 8.5c1.7-.15 2.75-.95 2.75-2.1 0-1.05-.82-1.9-1.95-1.9-1.75 0-2.72 2.1-3.55 4" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M12 4.75v15" />
+          <path d="M6.75 8.5h10.5a2 2 0 0 1 2 2v7.25a2 2 0 0 1-2 2H6.75a2 2 0 0 1-2-2V10.5a2 2 0 0 1 2-2Z" />
+          <path d="M4.75 12.25h14.5" />
+          <path d="M9.25 8.5c-1.7-.15-2.75-.95-2.75-2.1 0-1.05.82-1.9 1.95-1.9 1.75 0 2.72 2.1 3.55 4" />
+          <path d="M14.75 8.5c1.7-.15 2.75-.95 2.75-2.1 0-1.05-.82-1.9-1.95-1.9-1.75 0-2.72 2.1-3.55 4" />
+        </svg>
+      );
     case "billing":
-      return <svg {...common}><path d="M4.75 7.5A2.75 2.75 0 0 1 7.5 4.75h9A2.75 2.75 0 0 1 19.25 7.5v9A2.75 2.75 0 0 1 16.5 19.25h-9A2.75 2.75 0 0 1 4.75 16.5v-9Z" /><path d="M4.75 9.25h14.5" /><path d="M8.25 14.75h3" /><path d="M14.5 14.75h1.25" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M4.75 7.5A2.75 2.75 0 0 1 7.5 4.75h9A2.75 2.75 0 0 1 19.25 7.5v9A2.75 2.75 0 0 1 16.5 19.25h-9A2.75 2.75 0 0 1 4.75 16.5v-9Z" />
+          <path d="M4.75 9.25h14.5" />
+          <path d="M8.25 14.75h3" />
+          <path d="M14.5 14.75h1.25" />
+        </svg>
+      );
     case "storefront":
-      return <svg {...common}><path d="M5 9.25 6.1 4.75h11.8L19 9.25" /><path d="M5.25 9.25h13.5v10H5.25z" /><path d="M9 19.25v-5.5h6v5.5" /><path d="M4.75 9.25c.2 1.3 1.2 2.25 2.5 2.25s2.3-.95 2.5-2.25c.2 1.3 1.2 2.25 2.5 2.25s2.3-.95 2.5-2.25c.2 1.3 1.2 2.25 2.5 2.25s2.3-.95 2.5-2.25" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M5 9.25 6.1 4.75h11.8L19 9.25" />
+          <path d="M5.25 9.25h13.5v10H5.25z" />
+          <path d="M9 19.25v-5.5h6v5.5" />
+          <path d="M4.75 9.25c.2 1.3 1.2 2.25 2.5 2.25s2.3-.95 2.5-2.25c.2 1.3 1.2 2.25 2.5 2.25s2.3-.95 2.5-2.25c.2 1.3 1.2 2.25 2.5 2.25s2.3-.95 2.5-2.25" />
+        </svg>
+      );
     case "account":
-      return <svg {...common}><path d="M12 12.5a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" /><path d="M5.25 20.25c.65-3.55 3.15-5.5 6.75-5.5s6.1 1.95 6.75 5.5" /></svg>;
+      return (
+        <svg {...common}>
+          <path d="M12 12.5a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" />
+          <path d="M5.25 20.25c.65-3.55 3.15-5.5 6.75-5.5s6.1 1.95 6.75 5.5" />
+        </svg>
+      );
   }
 }
 
 function buildStorefrontUrl(tenantSlug?: string | null) {
-  const slug = String(tenantSlug || "").trim().toLowerCase();
+  const slug = String(tenantSlug || "")
+    .trim()
+    .toLowerCase();
   if (!slug) return "/";
   return `https://${slug}.orduva.com`;
 }
@@ -79,13 +166,27 @@ function versionLabel() {
 function MobileMenuIcon({ open }: { open: boolean }) {
   return (
     <span className="relative block h-5 w-5" aria-hidden="true">
-      <span className={["absolute left-0 top-[4px] h-[2px] w-5 rounded-full bg-current transition", open ? "translate-y-[6px] rotate-45" : ""].join(" ")} />
-      <span className={["absolute left-0 top-[10px] h-[2px] w-5 rounded-full bg-current transition", open ? "opacity-0" : ""].join(" ")} />
-      <span className={["absolute left-0 top-[16px] h-[2px] w-5 rounded-full bg-current transition", open ? "-translate-y-[6px] -rotate-45" : ""].join(" ")} />
+      <span
+        className={[
+          "absolute left-0 top-[4px] h-[2px] w-5 rounded-full bg-current transition",
+          open ? "translate-y-[6px] rotate-45" : "",
+        ].join(" ")}
+      />
+      <span
+        className={[
+          "absolute left-0 top-[10px] h-[2px] w-5 rounded-full bg-current transition",
+          open ? "opacity-0" : "",
+        ].join(" ")}
+      />
+      <span
+        className={[
+          "absolute left-0 top-[16px] h-[2px] w-5 rounded-full bg-current transition",
+          open ? "-translate-y-[6px] -rotate-45" : "",
+        ].join(" ")}
+      />
     </span>
   );
 }
-
 
 function AdminChevronIcon({ open }: { open: boolean }) {
   return (
@@ -109,7 +210,13 @@ function adminDisplayName(tenantName: string) {
   return /\badmin$/i.test(cleanName) ? cleanName : `${cleanName} Admin`;
 }
 
-function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => void }) {
+function MenuItemCard({
+  item,
+  closeMenu,
+}: {
+  item: NavItem;
+  closeMenu: () => void;
+}) {
   return (
     <a
       href={item.href}
@@ -117,23 +224,69 @@ function MenuItemCard({ item, closeMenu }: { item: NavItem; closeMenu: () => voi
       target={item.external ? "_blank" : undefined}
       rel={item.external ? "noreferrer" : undefined}
       aria-current={item.current ? "page" : undefined}
-      className={["admin-pressable group flex min-h-[62px] items-center gap-2.5 rounded-[15px] border px-3 py-2.5 text-left shadow-[0_8px_18px_rgba(17,24,39,0.045)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35", item.current ? "border-[#0F766E] bg-[#0F766E] text-white" : "border-[#E0E6E4] bg-white text-[#111827] hover:bg-[#FBFFFD]"].join(" ")}
+      className={[
+        "admin-pressable group flex min-h-[62px] items-center gap-2.5 rounded-[15px] border px-3 py-2.5 text-left shadow-[0_8px_18px_rgba(17,24,39,0.045)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35",
+        item.current
+          ? "border-[#0F766E] bg-[#0F766E] text-white"
+          : "border-[#E0E6E4] bg-white text-[#111827] hover:bg-[#FBFFFD]",
+      ].join(" ")}
     >
-      <span className={["flex h-8 w-8 shrink-0 items-center justify-center rounded-[13px] transition", item.current ? "bg-white/16 text-white" : "bg-[#EAFBF5] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")}>
+      <span
+        className={[
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-[13px] transition",
+          item.current
+            ? "bg-white/16 text-white"
+            : "bg-[#EAFBF5] text-[#0F766E] group-hover:bg-[#0F766E] group-hover:text-white",
+        ].join(" ")}
+      >
         <AdminNavIcon icon={item.icon} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-black leading-tight tracking-tight">{item.label}</span>
-        <span className={["mt-0.5 block text-[11px] font-bold leading-4", item.current ? "text-white/82" : "text-[#5F6B66]"].join(" ")}>{item.detail}</span>
+        <span className="block text-sm font-black leading-tight tracking-tight">
+          {item.label}
+        </span>
+        <span
+          className={[
+            "mt-0.5 block text-[11px] font-bold leading-4",
+            item.current ? "text-white/82" : "text-[#5F6B66]",
+          ].join(" ")}
+        >
+          {item.detail}
+        </span>
       </span>
-      <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition", item.current ? "bg-white/14 text-white" : "bg-[#F1F5F4] text-[#5F6B66] group-hover:bg-[#0F766E] group-hover:text-white"].join(" ")} aria-hidden="true">
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M9 7h8v8" /></svg>
+      <span
+        className={[
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition",
+          item.current
+            ? "bg-white/14 text-white"
+            : "bg-[#F1F5F4] text-[#5F6B66] group-hover:bg-[#0F766E] group-hover:text-white",
+        ].join(" ")}
+        aria-hidden="true"
+      >
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M7 17 17 7" />
+          <path d="M9 7h8v8" />
+        </svg>
       </span>
     </a>
   );
 }
 
-function MegaFeatureCard({ group, tenantName }: { group: NavGroup; tenantName: string }) {
+function MegaFeatureCard({
+  group,
+  tenantName,
+}: {
+  group: NavGroup;
+  tenantName: string;
+}) {
   return (
     <aside className="relative flex min-h-[14rem] overflow-hidden rounded-[20px] bg-[#111827] p-4 text-white shadow-[0_14px_30px_rgba(17,24,39,0.16)]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_100%,rgba(15,118,110,0.55),transparent_38%),linear-gradient(145deg,#111827_0%,#162231_58%,#243126_100%)]" />
@@ -141,13 +294,21 @@ function MegaFeatureCard({ group, tenantName }: { group: NavGroup; tenantName: s
         <div>
           <div className="flex items-center gap-3">
             <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-white/84">{group.eyebrow}</p>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-white/84">
+              {group.eyebrow}
+            </p>
           </div>
-          <h2 className="mt-7 text-xl font-black leading-tight tracking-tight">{group.strapline}</h2>
+          <h2 className="mt-7 text-xl font-black leading-tight tracking-tight">
+            {group.strapline}
+          </h2>
         </div>
         <div>
-          <p className="text-xs font-bold leading-5 text-white/72">{group.description}</p>
-          <p className="mt-4 rounded-[16px] border border-white/10 bg-white/8 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-white/78">{tenantName}</p>
+          <p className="text-xs font-bold leading-5 text-white/72">
+            {group.description}
+          </p>
+          <p className="mt-4 rounded-[16px] border border-white/10 bg-white/8 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-white/78">
+            {tenantName}
+          </p>
         </div>
       </div>
     </aside>
@@ -199,13 +360,23 @@ function DesktopMegaDropdown({
                   <AdminNavIcon icon="billing" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">Launch & billing</p>
-                  <p className="mt-1 text-sm font-black leading-5 text-[#111827]">Checklist, trial status and active billing</p>
-                  <p className="mt-1 text-sm font-semibold leading-5 text-[#5F6B66]">Billing controls now live inside the Configure menu.</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">
+                    Launch checklist
+                  </p>
+                  <p className="mt-1 text-sm font-black leading-5 text-[#111827]">
+                    Launch checklist and setup progress
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-5 text-[#5F6B66]">
+                    Billing controls now live inside Account.
+                  </p>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
+                <AdminHeaderTools
+                  tenantSlug={tenantSlug}
+                  trialState={trialState}
+                  mode="checklist"
+                />
               </div>
             </div>
           ) : null}
@@ -213,15 +384,29 @@ function DesktopMegaDropdown({
           {isAccount ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-[20px] border border-[#E0E6E4] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">Signed in</p>
-                <p className="mt-2 break-words text-base font-black text-[#111827]">{signedInAs}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">
+                  Signed in
+                </p>
+                <p className="mt-2 break-words text-base font-black text-[#111827]">
+                  {signedInAs}
+                </p>
                 <LogoutButton className="admin-pressable mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
               </div>
-              <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable rounded-[20px] border border-[#E0E6E4] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] transition hover:-translate-y-[1px] hover:border-[#0F766E]/35 hover:bg-[#FBFFFD]">
-                <span className="flex h-9 w-9 items-center justify-center rounded-[14px] bg-[#EAFBF5] text-[#0F766E]"><AdminNavIcon icon="storefront" /></span>
-                <span className="mt-3 block text-sm font-black text-[#111827]">Open storefront</span>
-                <span className="mt-0.5 block truncate text-xs font-semibold text-[#5F6B66]">{tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable"}</span>
-              </a>
+              <div className="rounded-[20px] border border-[#E0E6E4] bg-white p-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">
+                  Active billing
+                </p>
+                <p className="mt-2 text-sm font-semibold leading-5 text-[#5F6B66]">
+                  Open billing status, trial details and payment controls.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <AdminHeaderTools
+                    tenantSlug={tenantSlug}
+                    trialState={trialState}
+                    mode="billing"
+                  />
+                </div>
+              </div>
             </div>
           ) : null}
         </div>
@@ -255,27 +440,48 @@ function MobileMegaMenu({
       <div className="rounded-[20px] bg-[#111827] p-4 text-white">
         <div className="flex items-center gap-3">
           <span className="h-[3px] w-9 rounded-full bg-[#0F766E]" />
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-white/82">Store admin menu</p>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-white/82">
+            Store admin menu
+          </p>
         </div>
         <h2 className="mt-4 text-xl font-black tracking-tight">{tenantName}</h2>
-        <p className="mt-2 text-sm font-semibold leading-6 text-white/70">All admin sections are available below.</p>
+        <p className="mt-2 text-sm font-semibold leading-6 text-white/70">
+          All admin sections are available below.
+        </p>
       </div>
 
       <div className="mt-2 grid gap-2">
         {groups.map((group) => (
-          <div key={group.key} className="rounded-[20px] border border-[#E0E6E4] bg-white p-3">
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">{group.label}</p>
-            <p className="mt-1 text-base font-black text-[#111827]">{group.strapline}</p>
+          <div
+            key={group.key}
+            className="rounded-[20px] border border-[#E0E6E4] bg-white p-3"
+          >
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0F766E]">
+              {group.label}
+            </p>
+            <p className="mt-1 text-base font-black text-[#111827]">
+              {group.strapline}
+            </p>
             <div className="mt-2 grid gap-2">
               {group.items.map((item) => (
-                <MenuItemCard key={`${group.key}-${item.href}`} item={item} closeMenu={closeMenu} />
+                <MenuItemCard
+                  key={`${group.key}-${item.href}`}
+                  item={item}
+                  closeMenu={closeMenu}
+                />
               ))}
             </div>
             {group.key === "configure" ? (
               <div className="mt-3 rounded-[16px] border border-[#CFE1DD] bg-[#EAFBF5] p-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Launch & billing</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">
+                  Launch checklist
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <AdminHeaderTools tenantSlug={tenantSlug} trialState={trialState} />
+                  <AdminHeaderTools
+                    tenantSlug={tenantSlug}
+                    trialState={trialState}
+                    mode="checklist"
+                  />
                 </div>
               </div>
             ) : null}
@@ -284,12 +490,25 @@ function MobileMegaMenu({
 
         <div className="grid gap-3 rounded-[24px] border border-[#E0E6E4] bg-white p-4">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Signed in</p>
-            <p className="mt-1 break-words text-sm font-black text-[#111827]">{signedInAs}</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">
+              Signed in
+            </p>
+            <p className="mt-1 break-words text-sm font-black text-[#111827]">
+              {signedInAs}
+            </p>
           </div>
-          <a href={storefrontUrl} target="_blank" rel="noreferrer" className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-[#DCE5E1] bg-white px-4 py-2 text-sm font-black text-[#111827] transition hover:border-[#0F766E]/35 hover:bg-[#EAFBF5]">
-            Open storefront
-          </a>
+          <div className="rounded-[18px] border border-[#DCE5E1] bg-[#F8FAFC] p-3">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E]">
+              Active billing
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <AdminHeaderTools
+                tenantSlug={tenantSlug}
+                trialState={trialState}
+                mode="billing"
+              />
+            </div>
+          </div>
           <LogoutButton className="admin-pressable inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-[#CFE1DD] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#EAFBF5] disabled:cursor-not-allowed disabled:opacity-60" />
         </div>
       </div>
@@ -316,7 +535,17 @@ export default function AdminShell({
   signedInAs: string;
   title: string;
   description: string;
-  current: "home" | "orders" | "preorders" | "products" | "categories" | "settings" | "analytics" | "referrals" | "affiliates" | "account";
+  current:
+    | "home"
+    | "orders"
+    | "preorders"
+    | "products"
+    | "categories"
+    | "settings"
+    | "analytics"
+    | "referrals"
+    | "affiliates"
+    | "account";
   children: ReactNode;
   logoUrl?: string | null;
   faviconUrl?: string | null;
@@ -325,60 +554,143 @@ export default function AdminShell({
   pageTone?: "default" | "white";
 }) {
   const storefrontUrl = buildStorefrontUrl(tenantSlug);
-  const navGroups: NavGroup[] = useMemo(() => [
-    {
-      key: "run",
-      label: "Run the store",
-      eyebrow: "Store",
-      strapline: "Run the store",
-      description: "Daily order, product and catalogue tasks for keeping the store moving.",
-      items: [
-        { href: "/admin", label: "Home", detail: "Store overview", icon: "home", current: current === "home" },
-        { href: "/admin/orders", label: "Orders", detail: "Receipts, status and fulfilment", icon: "orders", current: current === "orders" },
-        { href: "/admin/preorders", label: "Pre-orders", detail: "Deposits, arrivals and balances", icon: "preorders", current: current === "preorders" },
-        { href: "/admin/products", label: "Products", detail: "Menu items, stock and variants", icon: "products", current: current === "products" },
-        { href: "/admin/categories", label: "Categories", detail: "Store sections and sorting", icon: "categories", current: current === "categories" },
-      ],
-    },
-    {
-      key: "grow",
-      label: "Grow",
-      eyebrow: "Growth",
-      strapline: "Grow the store",
-      description: "Sales insight, store referrals and public affiliate tools for growing the customer base.",
-      items: [
-        { href: "/admin/analytics", label: "Analytics", detail: "Sales and product performance", icon: "analytics", current: current === "analytics" },
-        { href: "/admin/referrals", label: "Store referrals", detail: "Refer businesses to Orduva", icon: "referrals", current: current === "referrals" },
-        { href: "/admin/affiliates", label: "Public affiliates", detail: "Affiliate applicants and partner introductions", icon: "account", current: current === "affiliates" },
-      ],
-    },
-    {
-      key: "configure",
-      label: "Configure",
-      eyebrow: "Setup",
-      strapline: "Configure the store",
-      description: "Branding, storefront settings, payments, launch checklist, trial status and billing.",
-      items: [
-        { href: "/admin/settings", label: "Settings", detail: "Branding, payments and storefront", icon: "settings", current: current === "settings" },
-        { href: "/admin/billing/activate", label: "Billing page", detail: "Full billing activation page", icon: "billing" },
-      ],
-    },
-    {
-      key: "account",
-      label: "Account",
-      eyebrow: "Account",
-      strapline: "Account and storefront",
-      description: "Open the public storefront, check who is signed in, or sign out safely.",
-      items: [
-        { href: "/admin/account", label: "My Account", detail: "Login, password and dispatch details", icon: "account", current: current === "account" },
-        { href: storefrontUrl, label: "Open storefront", detail: tenantSlug ? `${tenantSlug}.orduva.com` : "Store address unavailable", icon: "storefront", external: true },
-      ],
-    },
-  ], [current, storefrontUrl, tenantSlug]);
+  const navGroups: NavGroup[] = useMemo(
+    () => [
+      {
+        key: "run",
+        label: "Run the store",
+        eyebrow: "Store",
+        strapline: "Run the store",
+        description:
+          "Daily order, product and catalogue tasks for keeping the store moving.",
+        items: [
+          {
+            href: "/admin",
+            label: "Home",
+            detail: "Store overview",
+            icon: "home",
+            current: current === "home",
+          },
+          {
+            href: "/admin/orders",
+            label: "Orders",
+            detail: "Receipts, status and fulfilment",
+            icon: "orders",
+            current: current === "orders",
+          },
+          {
+            href: "/admin/preorders",
+            label: "Pre-orders",
+            detail: "Deposits, arrivals and balances",
+            icon: "preorders",
+            current: current === "preorders",
+          },
+          {
+            href: "/admin/products",
+            label: "Products",
+            detail: "Menu items, stock and variants",
+            icon: "products",
+            current: current === "products",
+          },
+          {
+            href: "/admin/categories",
+            label: "Categories",
+            detail: "Store sections and sorting",
+            icon: "categories",
+            current: current === "categories",
+          },
+        ],
+      },
+      {
+        key: "grow",
+        label: "Grow",
+        eyebrow: "Growth",
+        strapline: "Grow the store",
+        description:
+          "Sales insight, store referrals and public affiliate tools for growing the customer base.",
+        items: [
+          {
+            href: "/admin/analytics",
+            label: "Analytics",
+            detail: "Sales and product performance",
+            icon: "analytics",
+            current: current === "analytics",
+          },
+          {
+            href: "/admin/referrals",
+            label: "Store referrals",
+            detail: "Refer businesses to Orduva",
+            icon: "referrals",
+            current: current === "referrals",
+          },
+          {
+            href: "/admin/affiliates",
+            label: "Public affiliates",
+            detail: "Affiliate applicants and partner introductions",
+            icon: "account",
+            current: current === "affiliates",
+          },
+        ],
+      },
+      {
+        key: "configure",
+        label: "Configure",
+        eyebrow: "Setup",
+        strapline: "Configure the store",
+        description:
+          "Branding, storefront settings, payments and launch checklist.",
+        items: [
+          {
+            href: "/admin/settings",
+            label: "Settings",
+            detail: "Branding, payments and storefront",
+            icon: "settings",
+            current: current === "settings",
+          },
+          {
+            href: "/admin/billing/activate",
+            label: "Billing page",
+            detail: "Full billing activation page",
+            icon: "billing",
+          },
+        ],
+      },
+      {
+        key: "account",
+        label: "Account",
+        eyebrow: "Account",
+        strapline: "Account and storefront",
+        description:
+          "Open the public storefront, check who is signed in, or sign out safely.",
+        items: [
+          {
+            href: "/admin/account",
+            label: "My Account",
+            detail: "Login, password and dispatch details",
+            icon: "account",
+            current: current === "account",
+          },
+          {
+            href: storefrontUrl,
+            label: "Open storefront",
+            detail: tenantSlug
+              ? `${tenantSlug}.orduva.com`
+              : "Store address unavailable",
+            icon: "storefront",
+            external: true,
+          },
+        ],
+      },
+    ],
+    [current, storefrontUrl, tenantSlug],
+  );
 
-  const currentGroup = navGroups.find((group) => group.items.some((item) => item.current))?.key ?? "run";
+  const currentGroup =
+    navGroups.find((group) => group.items.some((item) => item.current))?.key ??
+    "run";
   const [activeKey, setActiveKey] = useState<NavKey | null>(null);
-  const activeGroup = navGroups.find((group) => group.key === activeKey) ?? null;
+  const activeGroup =
+    navGroups.find((group) => group.key === activeKey) ?? null;
   const closeTimerRef = useRef<number | null>(null);
   const openTimerRef = useRef<number | null>(null);
 
@@ -436,7 +748,8 @@ export default function AdminShell({
 
     const previousOverflow = document.body.style.overflow;
     const previousPaddingRight = document.body.style.paddingRight;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
 
     document.body.style.overflow = "hidden";
     if (scrollbarWidth > 0) {
@@ -457,32 +770,59 @@ export default function AdminShell({
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[#F6F8F7]" />
       <div className="mx-auto max-w-6xl">
         <div className="sticky top-0 z-50 -mx-3 mb-3 border-b border-[#9fbfdf] bg-white text-[#111827] sm:-mx-6 sm:mb-4">
-          <div className="relative mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3" onMouseEnter={clearMenuCloseTimer} onMouseLeave={scheduleMenuClose}>
+          <div
+            className="relative mx-auto max-w-6xl px-3 py-2 sm:px-6 sm:py-3"
+            onMouseEnter={clearMenuCloseTimer}
+            onMouseLeave={scheduleMenuClose}
+          >
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-[#CFE1DD] bg-[#EAFBF5] text-base font-black text-[#111827]">
-                  {identityIconUrl ? <img src={identityIconUrl} alt={`${tenantName} favicon`} className="h-full w-full object-contain p-1" /> : tenantInitial}
+                  {identityIconUrl ? (
+                    <img
+                      src={identityIconUrl}
+                      alt={`${tenantName} favicon`}
+                      className="h-full w-full object-contain p-1"
+                    />
+                  ) : (
+                    tenantInitial
+                  )}
                 </div>
                 <div className="min-w-0">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F766E]">Active store</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F766E]">
+                      Active store
+                    </p>
                     <span className="rounded-full border border-[#CFE1DD] bg-[#EAFBF5] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#0F766E]">
                       {versionLabel()}
                     </span>
                   </div>
-                  <p className="truncate text-lg font-black leading-tight text-[#111827] sm:text-xl">{adminDisplayName(tenantName)}</p>
+                  <p className="truncate text-lg font-black leading-tight text-[#111827] sm:text-xl">
+                    {adminDisplayName(tenantName)}
+                  </p>
                   {tenantSlug ? (
-                    <a href={storefrontUrl} target="_blank" rel="noreferrer" className="mt-0.5 block truncate text-xs font-semibold text-[#374151] underline-offset-4 transition hover:text-[#0F766E] hover:underline" title="Open storefront">
+                    <a
+                      href={storefrontUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-0.5 block truncate text-xs font-semibold text-[#374151] underline-offset-4 transition hover:text-[#0F766E] hover:underline"
+                      title="Open storefront"
+                    >
                       {tenantSlug}.orduva.com
                     </a>
                   ) : (
-                    <p className="mt-0.5 truncate text-xs font-semibold text-[#374151]">Store address unavailable</p>
+                    <p className="mt-0.5 truncate text-xs font-semibold text-[#374151]">
+                      Store address unavailable
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="flex shrink-0 items-center justify-end gap-2">
-                <nav className="hidden items-center gap-2 lg:flex" aria-label="Store admin sections">
+                <nav
+                  className="hidden items-center gap-2 lg:flex"
+                  aria-label="Store admin sections"
+                >
                   {navGroups.map((group) => {
                     const selected = activeKey === group.key;
                     const containsCurrent = currentGroup === group.key;
@@ -511,10 +851,16 @@ export default function AdminShell({
                         aria-controls="tenant-admin-mega-menu"
                       >
                         <span>{group.label}</span>
-                        <span className={[
-                          "flex h-7 w-7 items-center justify-center rounded-full transition",
-                          selected ? "bg-[#0F766E] text-white" : "bg-[#9fbfdf] text-[#5F6B66]",
-                        ].join(" ")}><AdminChevronIcon open={selected} /></span>
+                        <span
+                          className={[
+                            "flex h-7 w-7 items-center justify-center rounded-full transition",
+                            selected
+                              ? "bg-[#0F766E] text-white"
+                              : "bg-[#9fbfdf] text-[#5F6B66]",
+                          ].join(" ")}
+                        >
+                          <AdminChevronIcon open={selected} />
+                        </span>
                       </button>
                     );
                   })}
@@ -565,11 +911,19 @@ export default function AdminShell({
             <div className="flex min-w-0 items-center gap-3 lg:items-start lg:justify-between lg:gap-5">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[#111827] lg:h-10 lg:w-10 lg:rounded-[14px]">
-                  <img src="/orduva-platform-icon-192.png" alt="Orduva Admin" className="h-full w-full object-cover" />
+                  <img
+                    src="/orduva-platform-icon-192.png"
+                    alt="Orduva Admin"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-lg font-black tracking-tight text-[#111827] lg:text-base">Orduva Admin</p>
-                  <p className="mt-0.5 truncate text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E] lg:text-[10px]">Store workspace</p>
+                  <p className="truncate text-lg font-black tracking-tight text-[#111827] lg:text-base">
+                    Orduva Admin
+                  </p>
+                  <p className="mt-0.5 truncate text-[11px] font-black uppercase tracking-[0.2em] text-[#0F766E] lg:text-[10px]">
+                    Store workspace
+                  </p>
                 </div>
               </div>
 
@@ -579,14 +933,22 @@ export default function AdminShell({
                     <span className="inline-flex rounded-full border border-[#CFE1DD] bg-[#EAFBF5] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#0F766E]">
                       {current} dashboard
                     </span>
-                    <h1 className="truncate text-xl font-black leading-tight tracking-tight text-[#111827]">{title}</h1>
+                    <h1 className="truncate text-xl font-black leading-tight tracking-tight text-[#111827]">
+                      {title}
+                    </h1>
                   </div>
-                  <p className="mt-1 max-w-4xl truncate text-xs font-semibold leading-5 text-[#5F6B66]">{description}</p>
+                  <p className="mt-1 max-w-4xl truncate text-xs font-semibold leading-5 text-[#5F6B66]">
+                    {description}
+                  </p>
                 </div>
 
                 <div className="shrink-0 rounded-[16px] border border-[#C9DDED] bg-[#9fbfdf] px-3 py-2 oa-admin-soft text-xs leading-5 text-[#374151]">
-                  <span className="font-semibold text-[#5F6B66]">Signed in:</span>{" "}
-                  <span className="font-black text-[#111827]">{signedInAs}</span>
+                  <span className="font-semibold text-[#5F6B66]">
+                    Signed in:
+                  </span>{" "}
+                  <span className="font-black text-[#111827]">
+                    {signedInAs}
+                  </span>
                 </div>
               </div>
             </div>
@@ -601,12 +963,17 @@ export default function AdminShell({
                 <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight tracking-tight text-[#111827] sm:text-3xl">
                   {title}
                 </h1>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-[#374151]">{description}</p>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-[#374151]">
+                  {description}
+                </p>
               </div>
 
               <div className="rounded-[20px] border border-[#C9DDED] bg-[#9fbfdf] p-3 oa-admin-soft text-sm leading-6 text-[#374151]">
                 <p>
-                  Signed in as <span className="font-black text-[#111827]">{signedInAs}</span>
+                  Signed in as{" "}
+                  <span className="font-black text-[#111827]">
+                    {signedInAs}
+                  </span>
                 </p>
               </div>
             </div>
