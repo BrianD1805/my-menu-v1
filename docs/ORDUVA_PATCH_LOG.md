@@ -1,3 +1,14 @@
+# Orduva Patch Log
+
+## Ver-0.243A — Tenant admin popup close icon and billing wording fixes
+
+- Re-anchored Tenant Admin popup close icons to the right-hand side using the shared popup rule set.
+- Updated the Active Billing / Trial details wording to remove store-owner-facing Stripe references.
+- Reduced heavy font weights in the billing popup detail cards and step titles.
+- Simplified currency options to show currency codes only, for example ZAR instead of ZAR South Africa.
+- Removed the “No Stripe subscription is linked yet...” billing status message from the popup.
+- No Supabase SQL required.
+
 ## Ver-0.239A — Admin toast contrast correction
 
 - Corrected admin toast contrast after Ver-0.238N/0.239 carried dark toast text into the visible UI.

@@ -241,7 +241,7 @@ export default function AdminHeaderTools({
     billingStatus?.stripeSubscription?.currentPeriodEnd ||
     billingStatus?.stripeSubscription?.cancelAt ||
     null;
-  const stripeSubscriptionStatus = billingStatus?.stripeSubscription?.status || null;
+  const subscriptionStatus = billingStatus?.stripeSubscription?.status || null;
 
   return (
     <>
@@ -341,7 +341,7 @@ export default function AdminHeaderTools({
                           ? "Admin checklist"
                           : trialModalLabel(trialState)}
                       </p>
-                      <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#0E0E10] sm:text-2xl">
+                      <h2 className="mt-1 text-xl font-medium tracking-tight text-[#0E0E10] sm:text-2xl">
                         {modal === "checklist"
                           ? "Launch checklist"
                           : trialStatusText(trialState)}
@@ -367,70 +367,70 @@ export default function AdminHeaderTools({
                       <div className="rounded-[26px] border border-emerald-900/10 bg-white p-5 text-[#1F2328] sm:p-6">
                         <div className="grid gap-4 sm:grid-cols-3">
                           <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#68707A]">
                               Status
                             </p>
-                            <p className="mt-2 text-base font-semibold text-[#0E0E10]">
+                            <p className="mt-2 text-base font-medium text-[#0E0E10]">
                               {trialStatusText(trialState)}
                             </p>
                           </div>
                           <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#68707A]">
                               {trialState?.isSubscriptionActive
                                 ? "Billing"
                                 : "Trial ends"}
                             </p>
-                            <p className="mt-2 text-base font-semibold text-[#0E0E10]">
+                            <p className="mt-2 text-base font-medium text-[#0E0E10]">
                               {trialState?.isSubscriptionActive
                                 ? formatBillingDateTime(nextBillingDate)
                                 : formatTrialDate(trialState?.trialEndsAt)}
                             </p>
                           </div>
                           <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#0E0E10]/10">
-                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#68707A]">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#68707A]">
                               Plan
                             </p>
-                            <p className="mt-2 text-base font-semibold text-[#0E0E10]">
+                            <p className="mt-2 text-base font-medium text-[#0E0E10]">
                               {trialState?.planName || "orduva_trial"}
                             </p>
                           </div>
                         </div>
                         {trialState?.isSubscriptionActive ? (
                           <div className="mt-5 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-4 text-emerald-950">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-800">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-800">
                               Next payment countdown
                             </p>
-                            <p className="mt-2 text-2xl font-semibold tracking-tight">
+                            <p className="mt-2 text-2xl font-medium tracking-tight">
                               {billingStatusLoading && !nextBillingDate
-                                ? "Checking Stripe billing..."
+                                ? "Checking billing..."
                                 : billingCountdown(nextBillingDate, now)}
                             </p>
                             <p className="mt-1 text-sm leading-6 text-emerald-900/75">
                               {nextBillingDate
                                 ? `Next billing date: ${formatBillingDateTime(nextBillingDate)}.`
-                                : "Stripe has not returned the next billing date yet. Use Check billing status below to refresh the Stripe link."}
+                                : "The next billing date is not available yet. Use Refresh status below to update the billing link."}
                             </p>
                           </div>
                         ) : null}
                         {trialState?.isTrialExpired ? (
                           <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-800">
-                            The trial has ended and customer checkout is paused.
+                            Your trial has ended and customer checkout is paused.
                             Choose a paid plan below to reactivate the store
-                            immediately after Stripe confirms payment.
+                            as soon as payment is confirmed.
                           </p>
                         ) : trialState?.isSubscriptionActive ? (
                           <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-900">
                             Subscription billing is active and the storefront
                             remains open.
-                            {stripeSubscriptionStatus
-                              ? ` Stripe status: ${stripeSubscriptionStatus}.`
+                            {subscriptionStatus
+                              ? ` Billing status: ${subscriptionStatus}.`
                               : ""}
                           </p>
                         ) : (
                           <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-900">
-                            The store remains open during the trial. When you
-                            are ready, choose a paid plan below and Stripe will
-                            activate billing securely.
+                            Your store remains open during the trial. When you
+                            are ready, choose a paid plan below to activate
+                            billing securely.
                           </p>
                         )}
                         {trialState?.subscriptionStatus === "active" ||
@@ -438,26 +438,26 @@ export default function AdminHeaderTools({
                           <div className="mt-5 rounded-[26px] border border-[#FF6A3D]/20 bg-white p-4 shadow-sm sm:p-5">
                             <div className="grid gap-3 sm:grid-cols-3">
                               <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
-                                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C84F2A]">
                                   Step 1
                                 </p>
-                                <p className="mt-1 text-sm font-black text-[#0E0E10]">
+                                <p className="mt-1 text-sm font-semibold text-[#0E0E10]">
                                   Choose a plan
                                 </p>
                               </div>
                               <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
-                                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C84F2A]">
                                   Step 2
                                 </p>
-                                <p className="mt-1 text-sm font-black text-[#0E0E10]">
+                                <p className="mt-1 text-sm font-semibold text-[#0E0E10]">
                                   Pay securely
                                 </p>
                               </div>
                               <div className="rounded-2xl border border-[#0E0E10]/10 bg-[#FFF7F0] px-4 py-3">
-                                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#C84F2A]">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#C84F2A]">
                                   Step 3
                                 </p>
-                                <p className="mt-1 text-sm font-black text-[#0E0E10]">
+                                <p className="mt-1 text-sm font-semibold text-[#0E0E10]">
                                   Store becomes active
                                 </p>
                               </div>

@@ -76,7 +76,7 @@ function subscriptionStatusText(subscription?: BillingStatusPayload["stripeSubsc
   if (!status) return "Not linked yet";
   if (subscription?.cancelAtPeriodEnd) return "Active — cancellation scheduled";
   if (status === "active") return "Active — renewing";
-  if (status === "trialing") return "Trialing in Stripe";
+  if (status === "trialing") return "Trialing";
   if (status === "past_due") return "Payment needs attention";
   if (status === "unpaid") return "Unpaid";
   if (status === "canceled" || status === "cancelled") return "Cancelled";
@@ -94,12 +94,12 @@ function accessDateLabel(subscription?: BillingStatusPayload["stripeSubscription
 function customerFacingBillingSummary(subscription?: BillingStatusPayload["stripeSubscription"]) {
   const status = String(subscription?.status || "").toLowerCase();
   const accessDate = formatDate(subscription?.currentPeriodEnd);
-  if (!status) return "No Stripe subscription is linked yet. Use this panel after checkout has completed.";
+  if (!status) return "";
   if (subscription?.cancelAtPeriodEnd) return `The store remains active until ${accessDate}. It will not renew after that date unless you keep the subscription active again.`;
   if (status === "active" || status === "trialing") return `The store is active and checkout remains open. The next renewal is ${accessDate}.`;
-  if (status === "past_due" || status === "unpaid") return "Stripe is reporting a payment problem. Check the customer payment method in Stripe before changing store access manually.";
-  if (status === "canceled" || status === "cancelled") return "The Stripe subscription has ended. Paid billing is no longer renewing for this tenant.";
-  return "Stripe returned this subscription status. Check Stripe if the state does not match what you expect.";
+  if (status === "past_due" || status === "unpaid") return "A payment problem needs attention. Check the customer payment method before changing store access manually.";
+  if (status === "canceled" || status === "cancelled") return "The subscription has ended. Paid billing is no longer renewing for this store.";
+  return "The billing provider returned this subscription status. Refresh status if the state does not match what you expect.";
 }
 
 export default function BillingStatusCheck() {
@@ -169,7 +169,7 @@ export default function BillingStatusCheck() {
         <div>
           <p className="text-sm font-black text-[#0E0E10]">Subscription status check</p>
           <p className="mt-1 text-sm leading-6 text-[#5C5F66]">
-            Checks the Stripe subscription, customer-facing renewal/access wording, webhook history, and safe billing actions.
+            Checks subscription status, customer-facing renewal/access wording, payment history, and safe billing actions.
           </p>
         </div>
         <button
@@ -190,22 +190,24 @@ export default function BillingStatusCheck() {
             <div className={`rounded-2xl border px-4 py-3 ${statusClass(payload.localActive)}`}>
               <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Orduva access</p>
               <p className="mt-1 text-lg font-black">{payload.localActive ? "Store active" : "Access not active"}</p>
-              <p className="mt-1 text-xs font-bold">Tenant: {tenant?.subscriptionStatus || "unknown"} · Trial: {tenant?.trialStatus || "unknown"}</p>
+              <p className="mt-1 text-xs font-bold">Store: {tenant?.subscriptionStatus || "unknown"} · Trial: {tenant?.trialStatus || "unknown"}</p>
             </div>
             <div className={`rounded-2xl border px-4 py-3 ${stripeStatusClass(stripeSubscription)}`}>
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Stripe billing</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] opacity-75">Billing</p>
               <p className="mt-1 text-lg font-black">{subscriptionStatusText(stripeSubscription)}</p>
               <p className="mt-1 text-xs font-bold">{endLabel}: {formatDate(stripeSubscription?.currentPeriodEnd)}</p>
             </div>
           </div>
 
-          <div className="mt-3 rounded-2xl border border-[#FFB168]/35 bg-[#FFF7F0] px-4 py-3 text-sm font-bold leading-6 text-[#7A3A1A]">
-            {customerFacingBillingSummary(stripeSubscription)}
-          </div>
+          {customerFacingBillingSummary(stripeSubscription) ? (
+            <div className="mt-3 rounded-2xl border border-[#FFB168]/35 bg-[#FFF7F0] px-4 py-3 text-sm font-bold leading-6 text-[#7A3A1A]">
+              {customerFacingBillingSummary(stripeSubscription)}
+            </div>
+          ) : null}
 
           <div className="mt-3 rounded-2xl border border-[#0E0E10]/10 bg-[#F8FAFC] px-4 py-3 text-xs font-bold leading-5 text-[#5C5F66]">
             <p>Plan: <span className="text-[#0E0E10]">{tenant?.planName || "Not set"}</span></p>
-            <p>Billing provider: <span className="text-[#0E0E10]">{tenant?.billingProvider || "Not set"}</span></p>
+            <p>Billing method: <span className="text-[#0E0E10]">{tenant?.billingProvider || "Not set"}</span></p>
             <p>Customer: <span className="text-[#0E0E10]">{maskId(tenant?.billingCustomerId)}</span> · Subscription: <span className="text-[#0E0E10]">{maskId(tenant?.billingSubscriptionId)}</span></p>
             <p>{endLabel}: <span className="text-[#0E0E10]">{formatDateTime(stripeSubscription?.currentPeriodEnd)}</span></p>
             <p>Checked: <span className="text-[#0E0E10]">{formatDateTime(payload.checkedAt)}</span></p>
@@ -261,7 +263,7 @@ export default function BillingStatusCheck() {
 
           {webhookEvents.length ? (
             <div className="mt-3 rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent Stripe events</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent billing events</p>
               <div className="mt-2 space-y-2">
                 {webhookEvents.slice(0, 4).map((event) => (
                   <div key={event.id} className="rounded-xl bg-[#F8FAFC] px-3 py-2 text-xs font-bold leading-5 text-[#5C5F66]">
@@ -275,7 +277,7 @@ export default function BillingStatusCheck() {
 
           {payments.length ? (
             <div className="mt-3 rounded-2xl border border-[#0E0E10]/10 bg-white px-4 py-3">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent Stripe payments</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[#68707A]">Recent payments</p>
               <div className="mt-2 space-y-2">
                 {payments.map((payment) => (
                   <div key={payment.id} className="rounded-xl bg-[#F8FAFC] px-3 py-2 text-xs font-bold leading-5 text-[#5C5F66]">

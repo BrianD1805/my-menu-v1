@@ -1,4 +1,4 @@
-# Orduva Ver-0.243 Tenant Admin Popup Standard
+# Orduva Ver-0.243A Tenant Admin Popup Standard
 
 This patch applies the approved Tenant Admin desktop popup sizing and placement rules, grey top-right close icon, right-aligned sticky footer actions, and reusable popup CSS classes for future Tenant Admin popups.
 
@@ -26,14 +26,14 @@ Overwrite patch for Orduva Tenant Admin Settings UX corrections.
 ## SQL
 No Supabase SQL required.
 
-## Ver-0.243
+## Ver-0.243A
 
 Desktop storefront popup correction. No Supabase SQL required.
 
 
-## Ver-0.243 note
+## Ver-0.243A note
 Active Billing popup close-button sizing, desktop spacing, and Stripe next-payment countdown fixes. No SQL required.
 
-## Ver-0.243 note
+## Ver-0.243A note
 
 Active Billing popup desktop sizing cap increased so the modal can use the reduced desktop overlay padding. No SQL required.

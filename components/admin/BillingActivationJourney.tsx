@@ -36,7 +36,7 @@ function intervalLabel(interval: BillingInterval) {
 }
 
 function planButtonText(planName: string, selected: boolean, loading: boolean) {
-  if (loading && selected) return "Opening Stripe Checkout…";
+  if (loading && selected) return "Opening secure checkout…";
   if (selected) return `Continue with ${planName}`;
   return `Select ${planName} Plan`;
 }
@@ -80,13 +80,13 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
     const checkoutWindow = window.open("about:blank", "_blank");
     if (checkoutWindow) {
       checkoutWindow.opener = null;
-      checkoutWindow.document.title = "Opening Stripe Checkout…";
-      checkoutWindow.document.body.innerHTML = '<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:32px;line-height:1.5;color:#1F2328"><strong>Opening secure Stripe Checkout…</strong><br />You can return to Orduva in the original tab.</div>';
+      checkoutWindow.document.title = "Opening secure checkout…";
+      checkoutWindow.document.body.innerHTML = '<div style="font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:32px;line-height:1.5;color:#1F2328"><strong>Opening secure checkout…</strong><br />You can return to Orduva in the original tab.</div>';
     }
 
     try {
       if (!checkoutWindow) {
-        throw new Error("Your browser blocked the Stripe checkout pop-up. Please allow pop-ups for Orduva and try again.");
+        throw new Error("Your browser blocked the secure checkout pop-up. Please allow pop-ups for Orduva and try again.");
       }
       const response = await fetch("/api/billing/stripe/checkout", {
         method: "POST",
@@ -100,13 +100,13 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
       });
       const data = (await response.json().catch(() => ({}))) as CheckoutResponse;
       if (!response.ok || !data.checkoutUrl) {
-        throw new Error(data.error || "Stripe checkout could not be started.");
+        throw new Error(data.error || "Secure checkout could not be started.");
       }
       checkoutWindow.location.href = data.checkoutUrl;
       setOpened(true);
     } catch (err) {
       if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
-      setError(err instanceof Error ? err.message : "Stripe checkout could not be started.");
+      setError(err instanceof Error ? err.message : "Secure checkout could not be started.");
     } finally {
       setLoadingPlan(null);
     }
@@ -152,7 +152,7 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
                 Choose your paid plan.
               </h1>
               <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-[#5F625F] sm:text-lg">
-                Select the catalogue size, currency and billing frequency that fits this business. Stripe handles payment securely, and Orduva reactivates the store automatically once billing is confirmed.
+                Select the catalogue size, currency and billing frequency that fits this business. Payment is handled securely, and Orduva reactivates the store automatically once billing is confirmed.
               </p>
             </div>
           </section>
@@ -160,12 +160,12 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
           <section className="border-t border-[#51372D]/12 bg-white/76 px-5 py-7 sm:px-7 lg:px-9 lg:py-9">
             <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
               <div className="rounded-[26px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-5 shadow-[0_14px_34px_rgba(81,55,45,0.07)]">
-                <p className="text-sm font-black text-[#14110F]">Secure Stripe billing</p>
-                <p className="mt-2 text-sm leading-6 text-[#667069]">Choose a monthly or yearly subscription and complete payment through Stripe Checkout.</p>
+                <p className="text-sm font-black text-[#14110F]">Secure billing</p>
+                <p className="mt-2 text-sm leading-6 text-[#667069]">Choose a monthly or yearly subscription and complete payment through secure checkout.</p>
               </div>
               <div className="rounded-[26px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-5 shadow-[0_14px_34px_rgba(81,55,45,0.07)]">
                 <p className="text-sm font-black text-[#14110F]">Store activation</p>
-                <p className="mt-2 text-sm leading-6 text-[#667069]">Once Stripe confirms payment, Orduva updates the store to active and customer checkout opens again.</p>
+                <p className="mt-2 text-sm leading-6 text-[#667069]">Once payment is confirmed, Orduva updates the store to active and customer checkout opens again.</p>
               </div>
               <div className="rounded-[26px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-5 shadow-[0_14px_34px_rgba(81,55,45,0.07)]">
                 <p className="text-sm font-black text-[#14110F]">Manage subscription online</p>
@@ -181,7 +181,7 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
                   <p className="text-xs font-black uppercase tracking-[0.24em] text-[#B74A16]">Billing plans</p>
                   <h2 className="mt-2 text-3xl font-black tracking-tight text-[#14110F] sm:text-4xl">Select a paid plan.</h2>
                   <p className="mt-3 max-w-3xl text-sm leading-7 text-[#667069] sm:text-base">
-                    Choose the store size, currency and billing frequency. Payment is taken securely by Stripe today.
+                    Choose the store size, currency and billing frequency. Payment is taken securely today.
                   </p>
                 </div>
                 <div className="rounded-[28px] border border-[#E8D8C8]/90 bg-[#FFF8EF] p-3 shadow-[0_14px_34px_rgba(81,55,45,0.07)]">
@@ -194,7 +194,7 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
                       className="min-h-11 rounded-2xl border border-[#E8D8C8] bg-white px-4 py-2 text-sm font-black text-[#14110F] outline-none transition focus:border-[#F97316] focus:ring-2 focus:ring-[#F97316]/15"
                     >
                       {PRICING_CURRENCIES.map((currency) => (
-                        <option key={currency.code} value={currency.code}>{currency.code} — {currency.shortLabel}</option>
+                        <option key={currency.code} value={currency.code}>{currency.code}</option>
                       ))}
                     </select>
                   </div>
@@ -214,7 +214,7 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
                       <span className={`relative z-10 flex w-1/2 items-center justify-center rounded-full px-3 py-2 transition ${billingInterval === "yearly" ? "text-white" : "text-[#5F625F]"}`}>Yearly -{YEARLY_DISCOUNT_PERCENT}%</span>
                     </button>
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-[#667069]">Showing {selectedCurrency.label}. You can change this manually.</p>
+                  <p className="mt-2 text-xs leading-5 text-[#667069]">Showing {selectedCurrency.code}. You can change this manually.</p>
                 </div>
               </div>
 
@@ -247,7 +247,7 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
                       </div>
                       <ul className="mt-4 space-y-2.5 text-sm leading-6 text-[#4B514C] sm:mt-5 sm:space-y-3">
                         <li className="flex gap-2"><span className="font-black text-[#F97316]">✓</span><span>{plan.productLimitLabel}</span></li>
-                        <li className="flex gap-2"><span className="font-black text-[#F97316]">✓</span><span>Secure Stripe subscription billing</span></li>
+                        <li className="flex gap-2"><span className="font-black text-[#F97316]">✓</span><span>Secure subscription billing</span></li>
                         <li className="flex gap-2"><span className="font-black text-[#F97316]">✓</span><span>Customer accounts, favourites, Buy Again and admin order flow</span></li>
                       </ul>
                       <button
@@ -258,7 +258,7 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
                       >
                         {planButtonText(plan.name, selected, loading)}
                       </button>
-                      <p className="mt-3 text-center text-xs text-[#667069]">Payment opens securely in Stripe Checkout.</p>
+                      <p className="mt-3 text-center text-xs text-[#667069]">Payment opens securely.</p>
                     </article>
                   );
                 })}
@@ -266,7 +266,7 @@ export default function BillingActivationJourney({ mode = "page" }: Props) {
 
               {opened ? (
                 <p className="mx-auto mt-5 max-w-3xl rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold leading-6 text-emerald-900">
-                  Stripe Checkout opened in a new window. Complete payment there, then return to Orduva for the updated billing status.
+                  Secure checkout opened in a new window. Complete payment there, then return to Orduva for the updated billing status.
                 </p>
               ) : null}
               {error ? (
