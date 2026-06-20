@@ -121,7 +121,7 @@ function emptyDraft(defaultCategoryId: string): DraftState {
 }
 
 function modalShellClassName() {
-  return "flex w-full max-w-[885px] flex-col overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]";
+  return "orduva-admin-popup-shell";
 }
 
 function normalizeVariantRows(
@@ -990,10 +990,10 @@ export default function ProductManager({
       </div>
 
       {searchOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]">
+        <div className="orduva-admin-popup-overlay z-50">
           <div className="flex min-h-0 w-full items-center justify-center">
-            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
-              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/70 px-5 pb-5 pt-5 sm:px-6 lg:px-8">
+            <div className="orduva-admin-popup-shell">
+              <div className="orduva-admin-popup-header">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -1011,7 +1011,7 @@ export default function ProductManager({
                   <button
                     type="button"
                     onClick={() => setSearchOpen(false)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm transition hover:text-slate-900"
+                    className="orduva-admin-popup-close-icon"
                     aria-label="Close search"
                   >
                     ×
@@ -1165,12 +1165,12 @@ export default function ProductManager({
       ) : null}
 
       {modalOpen && activeDraft ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]">
+        <div className="orduva-admin-popup-overlay z-50">
           <div className="flex min-h-0 w-full items-center justify-center">
             <div
-              className={`${modalShellClassName()} max-h-[calc(100dvh-150px)]`}
+              className={modalShellClassName()}
             >
-              <div className="relative border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/60 px-5 pb-6 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-7 lg:pt-7">
+              <div className="orduva-admin-popup-header">
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -1190,7 +1190,7 @@ export default function ProductManager({
                   <button
                     type="button"
                     onClick={requestCloseEditor}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                    className="orduva-admin-popup-close-icon"
                     aria-label="Close editor"
                   >
                     ×
@@ -1198,7 +1198,7 @@ export default function ProductManager({
                 </div>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8 xl:py-7">
+              <div className="orduva-admin-popup-body">
                 <div className="space-y-5">
                   <div className="space-y-5 rounded-[26px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6">
                     <div>
@@ -2207,8 +2207,8 @@ export default function ProductManager({
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="orduva-admin-popup-footer">
+                <div className="orduva-admin-popup-footer-actions md:items-center">
                   <button
                     type="button"
                     onClick={requestCloseEditor}
@@ -2249,8 +2249,8 @@ export default function ProductManager({
       ) : null}
 
       {confirmCloseOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 px-[35px] py-[75px] backdrop-blur-[2px]">
-          <div className="max-h-[calc(100dvh-150px)] w-full max-w-md overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.25)]">
+        <div className="orduva-admin-popup-overlay z-[80]">
+          <div className="orduva-admin-popup-shell sm:max-w-md">
             <div className="relative border-b border-slate-100 px-6 pb-5 pt-6">
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-300 via-slate-500 to-red-300" />
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">

@@ -128,9 +128,9 @@ export default function OrderQueuePopup({
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-3 sm:p-6">
-          <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
+        <div className="orduva-admin-popup-overlay z-50">
+          <div className="orduva-admin-popup-shell">
+            <div className="orduva-admin-popup-header">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Order queue</p>
                 <h3 className="mt-1 text-xl font-bold text-slate-900">{label}</h3>
@@ -141,14 +141,14 @@ export default function OrderQueuePopup({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="admin-pressable inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="admin-pressable orduva-admin-popup-close-icon"
                 aria-label="Close order queue"
               >
                 ×
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+            <div className="orduva-admin-popup-body">
               {!orders.length ? (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
                   No orders in this queue right now.

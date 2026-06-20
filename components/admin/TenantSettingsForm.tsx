@@ -5400,7 +5400,7 @@ export default function TenantSettingsForm({
               <button
                 type="button"
                 onClick={() => setMobileThemeModal(null)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-bold text-slate-500 shadow-sm"
+                className="orduva-admin-popup-close-icon h-10 w-10"
                 aria-label="Close popup"
               >
                 ×
@@ -6750,14 +6750,14 @@ function SettingsMenuModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-[#0F172A]/55 px-[35px] py-[75px] backdrop-blur-[3px]"
+      className="orduva-admin-popup-overlay z-[110]"
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[calc(100dvh-150px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-[#DCE5E1] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.34)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-[#336699] before:via-[#0F766E] before:to-[#5EEAD4]"
+        className="orduva-admin-popup-shell"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-[#DCE5E1] bg-white px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="orduva-admin-popup-header">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#0F766E]">
@@ -6773,7 +6773,7 @@ function SettingsMenuModal({
             <button
               type="button"
               onClick={onClose}
-              className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-2xl font-light leading-none text-white shadow-sm transition hover:bg-slate-800"
+              className="orduva-admin-popup-close-icon"
               aria-label="Close settings menu"
             >
               ×
@@ -6781,7 +6781,7 @@ function SettingsMenuModal({
           </div>
         </div>
 
-        <div className="overflow-y-auto px-4 pb-7 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
+        <div className="orduva-admin-popup-body">
           <div className="grid gap-3">
             {SETTINGS_MENU_ITEMS.map((item) => (
               <SettingsMenuItemButton
@@ -6809,11 +6809,11 @@ function SettingsMenuModal({
             ))}
           </div>
 
-          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+          <div className="orduva-admin-popup-footer-actions mt-5 border-t border-slate-100 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+              className="orduva-admin-popup-close-button"
             >
               Close menu
             </button>
@@ -6892,14 +6892,14 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-[#0F172A]/55 px-[35px] py-[75px] backdrop-blur-[3px]"
+      className="orduva-admin-popup-overlay z-[110]"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[calc(100dvh-150px)] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)]"
+        className="orduva-admin-popup-shell"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 shrink-0 border-b border-[#9fbfdf] bg-[#9fbfdf]/95 px-4 pb-4 pt-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:pt-6">
+        <div className="orduva-admin-popup-header">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">
@@ -6916,7 +6916,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="sticky top-4 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-2xl font-light leading-none text-white shadow-sm transition hover:bg-slate-800"
+              className="orduva-admin-popup-close-icon"
               aria-label="Close Stripe setup guide"
             >
               ×
@@ -6924,7 +6924,7 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="overflow-y-auto px-4 pb-7 pt-5 sm:px-6 sm:pb-8 sm:pt-6">
+        <div className="orduva-admin-popup-body">
           <div className="rounded-[22px] border border-orange-200 bg-orange-50 p-4 text-sm leading-6 text-orange-950">
             <strong>Keep this separate:</strong> these must be the tenant's own
             Stripe keys. Do not paste the Orduva owner Stripe keys here, because
@@ -7021,11 +7021,11 @@ function StripeKeyGuideModal({ onClose }: { onClose: () => void }) {
             </ul>
           </div>
 
-          <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+          <div className="orduva-admin-popup-footer-actions mt-5 border-t border-slate-100 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+              className="orduva-admin-popup-close-button"
             >
               Close guide
             </button>

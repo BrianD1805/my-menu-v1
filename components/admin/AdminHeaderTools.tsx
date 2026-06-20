@@ -306,7 +306,7 @@ export default function AdminHeaderTools({
       {mounted && modal
         ? createPortal(
             <div
-              className={`fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#0E0E10]/55 px-[35px] py-[75px] backdrop-blur-[3px] ${isActiveBillingPopup ? "sm:px-[10px] sm:py-[25px]" : ""}`}
+              className="orduva-admin-popup-overlay"
               role="dialog"
               aria-modal="true"
             >
@@ -321,7 +321,7 @@ export default function AdminHeaderTools({
                   <button
                     type="button"
                     onClick={() => setModal(null)}
-                    className="admin-pressable absolute right-3 top-3 z-20 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0E0E10] text-2xl font-light leading-none text-white shadow-[0_12px_26px_rgba(14,14,16,0.25)] transition hover:bg-[#252528]"
+                    className="admin-pressable orduva-admin-popup-close-icon absolute right-3 top-3 z-20"
                     aria-label="Close billing activation"
                   >
                     ×
@@ -332,9 +332,9 @@ export default function AdminHeaderTools({
                 </section>
               ) : (
                 <section
-                  className={`relative mx-auto flex max-h-[calc(100dvh-150px)] w-full max-w-[760px] flex-col overflow-hidden rounded-[30px] border border-emerald-900/10 bg-[#F7FAF8] text-[#1F2328] shadow-[0_28px_80px_rgba(14,14,16,0.30)] before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-emerald-900 before:via-emerald-600 before:to-teal-400 ${isActiveBillingPopup ? "sm:max-h-[calc(100dvh-50px)] sm:max-w-[1040px]" : ""}`}
+                  className="orduva-admin-popup-shell"
                 >
-                  <div className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-emerald-900/10 bg-[#F7FAF8]/95 px-5 py-5 shadow-[0_10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-7">
+                  <div className="orduva-admin-popup-header">
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-800">
                         {modal === "checklist"
@@ -350,14 +350,14 @@ export default function AdminHeaderTools({
                     <button
                       type="button"
                       onClick={() => setModal(null)}
-                      className="admin-pressable inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#0E0E10] text-2xl font-light leading-none text-white transition hover:bg-[#252528]"
+                      className="admin-pressable orduva-admin-popup-close-icon"
                       aria-label="Close popup"
                     >
                       ×
                     </button>
                   </div>
 
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-7 sm:py-6">
+                  <div className="orduva-admin-popup-body">
                     {modal === "checklist" ? (
                       <AdminLaunchChecklist
                         tenantSlug={tenantSlug || undefined}
@@ -474,14 +474,16 @@ export default function AdminHeaderTools({
                       </div>
                     )}
                   </div>
-                  <div className="sticky bottom-0 z-10 shrink-0 border-t border-emerald-900/10 bg-[#F7FAF8]/95 px-5 py-4 shadow-[0_-10px_28px_rgba(15,23,42,0.06)] backdrop-blur sm:px-7">
+                  <div className="orduva-admin-popup-footer">
+                    <div className="orduva-admin-popup-footer-actions">
                     <button
                       type="button"
                       onClick={() => setModal(null)}
-                      className={`admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white transition hover:bg-[#252528] ${isActiveBillingPopup ? "w-full sm:mx-auto sm:w-[180px]" : "w-full"}`}
+                      className="admin-pressable orduva-admin-popup-close-button"
                     >
                       Close
                     </button>
+                    </div>
                   </div>
                 </section>
               )}

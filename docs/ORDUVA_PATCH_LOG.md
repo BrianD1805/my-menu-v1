@@ -571,6 +571,17 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept the change scoped to the Active Billing popup and version references only.
 - No SQL required.
 
+
+## Ver-0.243 — Tenant Admin popup sizing, placement, button and close icon
+
+- Applied the approved Active Billing desktop popup size/placement as the Tenant Admin popup standard.
+- Added reusable Tenant Admin popup CSS classes in `app/globals.css`.
+- Updated existing Tenant Admin popups to use the shared overlay, shell, header, body and footer treatment.
+- Changed top-right popup close icons to a grey-on-white control instead of a black control.
+- Moved sticky-footer close/action controls to the right on desktop.
+- Documented the exact popup rules for future builds.
+- No Supabase SQL required.
+
 ## Ver-0.242B — Active Billing popup actual desktop size fix
 
 - Increased the desktop Active Billing popup panel cap so it actually uses the extra room created by the reduced overlay padding.

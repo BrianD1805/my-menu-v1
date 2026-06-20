@@ -58,9 +58,9 @@ export default function OrderDetailViewer({
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/45 p-0 sm:items-center sm:p-6">
-          <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-t-[28px] border border-slate-200 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.28)] sm:rounded-[28px]">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
+        <div className="orduva-admin-popup-overlay z-50">
+          <div className="orduva-admin-popup-shell">
+            <div className="orduva-admin-popup-header">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Order viewer</p>
                 <h3 className="mt-1 text-xl font-bold text-slate-900">Order {order.id}</h3>
@@ -69,14 +69,14 @@ export default function OrderDetailViewer({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="admin-pressable inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="admin-pressable orduva-admin-popup-close-icon"
                 aria-label="Close order viewer"
               >
                 ×
               </button>
             </div>
 
-            <div className="max-h-[calc(92vh-88px)] overflow-y-auto px-5 py-5 sm:px-6">
+            <div className="orduva-admin-popup-body">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Customer</p>

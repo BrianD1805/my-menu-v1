@@ -84,9 +84,9 @@ export default function OrderStatusForm({ orderId, currentStatus }: Props) {
       </div>
 
       {pickerOpen ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/45 p-3 sm:p-6">
-          <div className="w-full max-w-md overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.28)]">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
+        <div className="orduva-admin-popup-overlay z-[70]">
+          <div className="orduva-admin-popup-shell sm:max-w-md">
+            <div className="orduva-admin-popup-header">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Update status</p>
                 <h3 className="mt-1 text-xl font-bold text-slate-900">Select order status</h3>
@@ -94,14 +94,14 @@ export default function OrderStatusForm({ orderId, currentStatus }: Props) {
               <button
                 type="button"
                 onClick={() => setPickerOpen(false)}
-                className="admin-pressable inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="admin-pressable orduva-admin-popup-close-icon"
                 aria-label="Close status picker"
               >
                 ×
               </button>
             </div>
 
-            <div className="max-h-[70vh] overflow-y-auto px-4 py-4 pb-6">
+            <div className="orduva-admin-popup-body">
               <div className="space-y-2">
                 {OPTIONS.map((option) => (
                   <button
