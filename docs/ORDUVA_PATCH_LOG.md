@@ -560,3 +560,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Updated the active billing countdown to refresh while the popup is open.
 - Removed the duplicate Open storefront control from the Account mobile menu footer; the Account menu item remains available once.
 - No SQL required.
+
+
+## Ver-0.242A — Active billing popup countdown and sizing fixes
+
+- Reduced the desktop-only Active Billing popup outer spacing to give the modal more useful room.
+- Changed the bottom Close button on the Active Billing popup from full-width to a 180px desktop button while preserving mobile usability.
+- Reworked the Active Billing countdown so it uses the linked Stripe subscription current period end instead of the old trial end date.
+- Added live billing-status refresh while the Active Billing popup is open so the next payment information can populate and update.
+- Kept the change scoped to the Active Billing popup and version references only.
+- No SQL required.

@@ -14,6 +14,26 @@ type ChecklistPayload = { items?: ChecklistItem[]; dismissed?: boolean } | null;
 type ModalKind = "checklist" | "trial" | "activation" | null;
 type HeaderToolsMode = "both" | "checklist" | "billing";
 
+type StripeBillingStatusPayload = {
+  ok?: boolean;
+  checkedAt?: string;
+  stripeSubscription?: {
+    id?: string;
+    status?: string;
+    currentPeriodStart?: string | null;
+    currentPeriodEnd?: string | null;
+    cancelAtPeriodEnd?: boolean;
+    cancelAt?: string | null;
+  } | null;
+  tenant?: {
+    billingSubscriptionId?: string | null;
+    billingProvider?: string | null;
+    subscriptionStatus?: string | null;
+    trialStatus?: string | null;
+  } | null;
+  error?: string;
+};
+
 function formatTrialDate(value?: string | null) {
   if (!value) return "Date unavailable";
   const date = new Date(value);
@@ -25,19 +45,29 @@ function formatTrialDate(value?: string | null) {
   });
 }
 
-function billingCountdown(trial?: TenantTrialState | null, now = Date.now()) {
-  if (!trial) return "Billing date unavailable";
-  const base = trial.trialEndsAt ? new Date(trial.trialEndsAt) : null;
-  const due =
-    base && Number.isFinite(base.getTime()) && base.getTime() > now
-      ? base
-      : null;
-  if (!due) return "Next billing date unavailable";
-  const ms = Math.max(0, due.getTime() - now);
+function billingCountdown(nextBillingDate?: string | null, now = Date.now()) {
+  if (!nextBillingDate) return "Next billing date unavailable";
+  const due = new Date(nextBillingDate);
+  if (!Number.isFinite(due.getTime())) return "Next billing date unavailable";
+  const ms = due.getTime() - now;
+  if (ms <= 0) return "Payment due now";
   const days = Math.floor(ms / 86400000);
   const hours = Math.floor((ms % 86400000) / 3600000);
   const minutes = Math.floor((ms % 3600000) / 60000);
   return `${days} days ${hours} hours ${minutes} minutes`;
+}
+
+function formatBillingDateTime(value?: string | null) {
+  if (!value) return "Unavailable";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "Unavailable";
+  return date.toLocaleString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function trialShortLabel(trial?: TenantTrialState | null) {
@@ -112,6 +142,9 @@ export default function AdminHeaderTools({
   const [modal, setModal] = useState<ModalKind>(null);
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [billingStatus, setBillingStatus] =
+    useState<StripeBillingStatusPayload | null>(null);
+  const [billingStatusLoading, setBillingStatusLoading] = useState(false);
 
   async function loadChecklistSummary() {
     try {
@@ -130,6 +163,29 @@ export default function AdminHeaderTools({
       setPayload(null);
     } finally {
       setLoadingChecklist(false);
+    }
+  }
+
+  async function loadBillingStatus() {
+    if (!trialState?.isSubscriptionActive) return;
+    try {
+      setBillingStatusLoading(true);
+      const response = await fetch("/api/billing/stripe/status", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+      const data = (await response.json().catch(() => null)) as
+        | StripeBillingStatusPayload
+        | null;
+      if (!response.ok || !data?.ok) {
+        setBillingStatus(data || null);
+        return;
+      }
+      setBillingStatus(data);
+    } catch {
+      setBillingStatus(null);
+    } finally {
+      setBillingStatusLoading(false);
     }
   }
 
@@ -163,6 +219,13 @@ export default function AdminHeaderTools({
     };
   }, [modal]);
 
+  useEffect(() => {
+    if (modal !== "trial" || !trialState?.isSubscriptionActive) return;
+    void loadBillingStatus();
+    const refresh = window.setInterval(() => void loadBillingStatus(), 5 * 60000);
+    return () => window.clearInterval(refresh);
+  }, [modal, trialState?.isSubscriptionActive]);
+
   const checklistSummary = useMemo(() => {
     const items = payload?.items || [];
     const total = items.length || 9;
@@ -172,6 +235,13 @@ export default function AdminHeaderTools({
   const showChecklistButton =
     mode !== "billing" && !loadingChecklist && !payload?.dismissed;
   const showBillingButton = mode !== "checklist";
+  const isActiveBillingPopup =
+    modal === "trial" && Boolean(trialState?.isSubscriptionActive);
+  const nextBillingDate =
+    billingStatus?.stripeSubscription?.currentPeriodEnd ||
+    billingStatus?.stripeSubscription?.cancelAt ||
+    null;
+  const stripeSubscriptionStatus = billingStatus?.stripeSubscription?.status || null;
 
   return (
     <>
@@ -236,7 +306,7 @@ export default function AdminHeaderTools({
       {mounted && modal
         ? createPortal(
             <div
-              className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#0E0E10]/55 px-[35px] py-[75px] backdrop-blur-[3px]"
+              className={`fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#0E0E10]/55 px-[35px] py-[75px] backdrop-blur-[3px] ${isActiveBillingPopup ? "sm:px-[10px] sm:py-[25px]" : ""}`}
               role="dialog"
               aria-modal="true"
             >
@@ -310,7 +380,7 @@ export default function AdminHeaderTools({
                             </p>
                             <p className="mt-2 text-base font-semibold text-[#0E0E10]">
                               {trialState?.isSubscriptionActive
-                                ? "Open billing below"
+                                ? formatBillingDateTime(nextBillingDate)
                                 : formatTrialDate(trialState?.trialEndsAt)}
                             </p>
                           </div>
@@ -329,11 +399,14 @@ export default function AdminHeaderTools({
                               Next payment countdown
                             </p>
                             <p className="mt-2 text-2xl font-semibold tracking-tight">
-                              {billingCountdown(trialState, now)}
+                              {billingStatusLoading && !nextBillingDate
+                                ? "Checking Stripe billing..."
+                                : billingCountdown(nextBillingDate, now)}
                             </p>
                             <p className="mt-1 text-sm leading-6 text-emerald-900/75">
-                              Estimated time remaining before the next
-                              subscription payment is due.
+                              {nextBillingDate
+                                ? `Next billing date: ${formatBillingDateTime(nextBillingDate)}.`
+                                : "Stripe has not returned the next billing date yet. Use Check billing status below to refresh the Stripe link."}
                             </p>
                           </div>
                         ) : null}
@@ -347,6 +420,9 @@ export default function AdminHeaderTools({
                           <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-900">
                             Subscription billing is active and the storefront
                             remains open.
+                            {stripeSubscriptionStatus
+                              ? ` Stripe status: ${stripeSubscriptionStatus}.`
+                              : ""}
                           </p>
                         ) : (
                           <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium leading-6 text-emerald-900">
@@ -400,7 +476,7 @@ export default function AdminHeaderTools({
                     <button
                       type="button"
                       onClick={() => setModal(null)}
-                      className="admin-pressable inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white transition hover:bg-[#252528]"
+                      className={`admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white transition hover:bg-[#252528] ${isActiveBillingPopup ? "w-full sm:mx-auto sm:w-[180px]" : "w-full"}`}
                     >
                       Close
                     </button>

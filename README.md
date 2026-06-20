@@ -14,3 +14,7 @@ No Supabase SQL required.
 ## Ver-0.242A
 
 Desktop storefront popup correction. No Supabase SQL required.
+
+
+## Ver-0.242A note
+Active Billing popup close-button sizing, desktop spacing, and Stripe next-payment countdown fixes. No SQL required.

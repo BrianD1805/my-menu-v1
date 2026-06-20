@@ -16,3 +16,7 @@ No Supabase SQL required.
 - Rewards, Offers, Favourites and Buy Again desktop popup wrappers now follow the product details popup size standard.
 - Favourites and Buy Again internal strip layouts remain unchanged; only the popup wrapper/close handling was corrected.
 - No Supabase SQL required.
+
+
+## Ver-0.242A note
+Active Billing popup close-button sizing, desktop spacing, and Stripe next-payment countdown fixes. No SQL required.
