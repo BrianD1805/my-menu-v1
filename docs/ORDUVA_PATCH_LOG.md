@@ -1,5 +1,13 @@
 # Orduva Patch Log
 
+## Ver-0.244 — Storefront popup cart animation and policy footer links
+
+- Raised the add-to-cart flying product animation layer so Favourites and Buy Again popup add buttons show the same visible movement to the popup cart button as the product details popup.
+- Kept the Favourites and Buy Again popup layout unchanged.
+- Moved store policy links to the storefront contact/footer panel underneath the contact icons.
+- Removed the store policy links from the Orduva affiliate/referral footer block so affiliate links stay separate from store policies.
+- No Supabase SQL required.
+
 ## Ver-0.243A — Tenant admin popup close icon and billing wording fixes
 
 - Re-anchored Tenant Admin popup close icons to the right-hand side using the shared popup rule set.
@@ -82,8 +90,6 @@
 - Rebuilt favicon/PWA icons from the supplied artwork without altering the white canvas.
 - Updated service worker/cache version and install guidance.
 - No SQL required.
-
-# Orduva Patch Log
 
 This is the rolling patch log for the Orduva SaaS Ordering project.
 

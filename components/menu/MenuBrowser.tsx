@@ -2373,7 +2373,7 @@ export default function MenuBrowser({
   return (
     <div className="space-y-5 sm:space-y-6">
       <div
-        className="pointer-events-none fixed inset-0 z-[80] overflow-hidden"
+        className="pointer-events-none fixed inset-0 z-[220] overflow-hidden"
         aria-hidden="true"
       >
         {flyingItems.map((item) => {
@@ -3983,7 +3983,7 @@ export default function MenuBrowser({
         );
       })}
 
-      {footerIconLinks.length ? (
+      {footerIconLinks.length || privacyPolicyShowOnStorefront !== false || termsOfServiceShowOnStorefront !== false ? (
         <section
           className="rounded-[28px] border px-5 py-5 text-center shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
           style={{
@@ -3992,19 +3992,29 @@ export default function MenuBrowser({
             color: footerText,
           }}
         >
-          <div
-            className="mx-auto flex w-full max-w-[244px] flex-wrap items-center justify-center gap-3 sm:max-w-[256px]"
-            aria-label="Store footer links"
-          >
-            {footerIconLinks.map((link) => (
-              <FooterIcon
-                key={link.label}
-                label={link.label}
-                href={link.href || null}
-              >
-                {link.icon}
-              </FooterIcon>
-            ))}
+          {footerIconLinks.length ? (
+            <div
+              className="mx-auto flex w-full max-w-[244px] flex-wrap items-center justify-center gap-3 sm:max-w-[256px]"
+              aria-label="Store contact links"
+            >
+              {footerIconLinks.map((link) => (
+                <FooterIcon
+                  key={link.label}
+                  label={link.label}
+                  href={link.href || null}
+                >
+                  {link.icon}
+                </FooterIcon>
+              ))}
+            </div>
+          ) : null}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-600">
+            {privacyPolicyShowOnStorefront !== false ? (
+              <a href="/privacy-policy" className="underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900">Privacy Policy</a>
+            ) : null}
+            {termsOfServiceShowOnStorefront !== false ? (
+              <a href="/terms-of-service" className="underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900">Terms of Service</a>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -4086,14 +4096,6 @@ export default function MenuBrowser({
             <span className="inline-flex rounded-[4px] border border-slate-200 bg-white px-1.5 py-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
               {version.replace("Ver: ", "V ")}
             </span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-600">
-            {privacyPolicyShowOnStorefront !== false ? (
-              <a href="/privacy-policy" className="underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900">Privacy Policy</a>
-            ) : null}
-            {termsOfServiceShowOnStorefront !== false ? (
-              <a href="/terms-of-service" className="underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900">Terms of Service</a>
-            ) : null}
           </div>
           <a
             href="/admin/login"
