@@ -129,44 +129,8 @@ export default function EarlyStorefrontPreloader() {
         dangerouslySetInnerHTML={{
           __html: `
             (function(){
-              function normaliseHex(value){
-                if (typeof value !== 'string') return '';
-                var trimmed = value.trim().toUpperCase();
-                return /^#[0-9A-F]{6}$/.test(trimmed) ? trimmed : '';
-              }
-              function hexToRgb(hex){
-                var safe = normaliseHex(hex).replace('#','');
-                if (!safe) return null;
-                return { r: parseInt(safe.slice(0,2),16), g: parseInt(safe.slice(2,4),16), b: parseInt(safe.slice(4,6),16) };
-              }
-              function applyStoredAccent(){
-                try {
-                  var best = '';
-                  var pathname = String(window.location && window.location.pathname || '').toLowerCase();
-                  for (var i = 0; i < window.localStorage.length; i += 1) {
-                    var key = window.localStorage.key(i) || '';
-                    if (key.indexOf('orduva_storefront_payload_') !== 0) continue;
-                    var parsed = JSON.parse(window.localStorage.getItem(key) || '{}');
-                    var payload = parsed && parsed.payload;
-                    var settings = payload && payload.settings;
-                    var theme = settings && settings.storefrontTheme;
-                    var candidate = normaliseHex(theme && (theme.storefrontSplashAccent || theme.storefrontMainLogoColor)) || normaliseHex(settings && settings.accentColor);
-                    if (!candidate) continue;
-                    if (!best) best = candidate;
-                    var slug = payload && payload.tenant && payload.tenant.slug;
-                    if (slug && pathname.indexOf(String(slug).toLowerCase()) >= 0) { best = candidate; break; }
-                  }
-                  var rgb = hexToRgb(best);
-                  if (!rgb) return;
-                  var root = document.getElementById('orduva-early-preloader');
-                  if (!root) return;
-                  root.style.setProperty('--orduva-preloader-accent', best);
-                  root.style.setProperty('--orduva-preloader-accent-soft', 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.20)');
-                  root.style.setProperty('--orduva-preloader-accent-faint', 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.10)');
-                  root.style.setProperty('--orduva-preloader-label', best);
-                } catch(e) {}
-              }
-              applyStoredAccent();
+              // Do not read localStorage or mutate this React-owned preloader before hydration.
+              // The selected storefront logo colour is applied after hydration by StorefrontClientLoader.
               var startedAt = Date.now();
               var minimumMs = 2000;
               var hideTimer = null;

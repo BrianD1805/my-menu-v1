@@ -1,13 +1,4 @@
 
-## Ver-0.246A — Logo colour picker popup polish
-
-- Changed the Logo colours panel from a full grid of every logo colour into three clear choices: Main, Popup, and Loading.
-- Each choice now opens a logo colour picker popup so the store owner selects only the colour needed for that role.
-- Fixed logo hex colour chips so they wrap within the Theme presets card instead of spilling outside the panel.
-- Added click-to-copy behaviour to logo hex chips and Suggested Colours hex fields.
-- Patch type: touched-files-only ZIP.
-
-
 ## Ver-0.246 — Theme presets logo colour controls
 
 - Added actual logo-palette hex colours with square colour swatches in Theme presets.
@@ -635,3 +626,12 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Scoped the change to the Active Billing popup sizing and version references only.
 - No SQL required.
 
+
+
+## Ver-0.246C - Storefront hydration preparing shell fix
+
+- Patch type: touched-files-only ZIP.
+- Fixed the remaining storefront hydration mismatch by making the React preparing shell fully static on the first server/client render.
+- Removed logo-colour and cached-payload styling from the first-render loading shell.
+- Store-specific theme colours are applied only after the storefront payload is loaded and the live storefront renders.
+- No Supabase SQL required.
