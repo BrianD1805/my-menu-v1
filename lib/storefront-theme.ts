@@ -118,6 +118,9 @@ export const STOREFRONT_THEME_KEYS = [
   "footerBackground",
   "footerText",
   "footerBadgeBackground",
+  "storefrontMainLogoColor",
+  "storefrontPopupTopEffect",
+  "storefrontSplashAccent",
 ] as const;
 
 export type StorefrontThemeKey = (typeof STOREFRONT_THEME_KEYS)[number];
@@ -290,5 +293,8 @@ export function buildThemeFromCore(input: {
     footerBackground: "#FFFFFF",
     footerText: text,
     footerBadgeBackground: accent,
+    storefrontMainLogoColor: primary,
+    storefrontPopupTopEffect: accent,
+    storefrontSplashAccent: accent,
   };
 }

@@ -13,9 +13,13 @@ export default function EarlyStorefrontPreloader() {
               justify-content: center;
               min-height: 100vh;
               padding: 24px;
+              --orduva-preloader-accent: #ff6a3d;
+              --orduva-preloader-accent-soft: rgba(255,106,61,0.18);
+              --orduva-preloader-accent-faint: rgba(255,106,61,0.10);
+              --orduva-preloader-label: #b74a16;
               background:
-                radial-gradient(circle at 18% 8%, rgba(255,106,61,0.18), transparent 34%),
-                radial-gradient(circle at 82% 18%, rgba(255,177,104,0.20), transparent 34%),
+                radial-gradient(circle at 18% 8%, var(--orduva-preloader-accent-soft), transparent 34%),
+                radial-gradient(circle at 82% 18%, var(--orduva-preloader-accent-faint), transparent 34%),
                 linear-gradient(135deg, #fff7f0 0%, #f5f2ee 54%, #fffaf4 100%);
               color: #111827;
               font-family: Arial, Helvetica, sans-serif;
@@ -39,7 +43,7 @@ export default function EarlyStorefrontPreloader() {
               margin: 0 auto;
               border-radius: 999px;
               background: rgba(255,255,255,0.82);
-              border: 1px solid rgba(255,106,61,0.24);
+              border: 1px solid var(--orduva-preloader-accent-soft);
               box-shadow: 0 22px 58px rgba(15,23,42,0.14);
             }
             #orduva-early-preloader .orduva-early-mark::before,
@@ -50,12 +54,12 @@ export default function EarlyStorefrontPreloader() {
               border-radius: 999px;
             }
             #orduva-early-preloader .orduva-early-mark::before {
-              border: 4px solid rgba(255,106,61,0.13);
+              border: 4px solid var(--orduva-preloader-accent-faint);
             }
             #orduva-early-preloader .orduva-early-mark::after {
               border: 4px solid transparent;
-              border-top-color: #ff6a3d;
-              border-right-color: rgba(255,106,61,0.48);
+              border-top-color: var(--orduva-preloader-accent);
+              border-right-color: var(--orduva-preloader-accent-soft);
               animation: orduvaEarlySpin 0.86s linear infinite;
             }
             #orduva-early-preloader .orduva-early-dot {
@@ -66,8 +70,8 @@ export default function EarlyStorefrontPreloader() {
               height: 10px;
               transform: translate(-50%, -50%);
               border-radius: 999px;
-              background: #ff6a3d;
-              box-shadow: 0 0 0 8px rgba(255,106,61,0.10);
+              background: var(--orduva-preloader-accent);
+              box-shadow: 0 0 0 8px var(--orduva-preloader-accent-faint);
             }
             #orduva-early-preloader .orduva-early-brand {
               margin: 22px 0 0;
@@ -75,7 +79,7 @@ export default function EarlyStorefrontPreloader() {
               font-weight: 900;
               letter-spacing: 0.26em;
               text-transform: uppercase;
-              color: #b74a16;
+              color: var(--orduva-preloader-label);
             }
             #orduva-early-preloader .orduva-early-title {
               margin: 8px 0 0;
@@ -95,7 +99,7 @@ export default function EarlyStorefrontPreloader() {
               width: 7px;
               height: 7px;
               border-radius: 999px;
-              background: #ff6a3d;
+              background: var(--orduva-preloader-accent);
               animation: orduvaEarlyBounce 0.88s ease-in-out infinite;
             }
             #orduva-early-preloader .orduva-early-dots span:nth-child(2) { animation-delay: 0.12s; }
@@ -125,6 +129,44 @@ export default function EarlyStorefrontPreloader() {
         dangerouslySetInnerHTML={{
           __html: `
             (function(){
+              function normaliseHex(value){
+                if (typeof value !== 'string') return '';
+                var trimmed = value.trim().toUpperCase();
+                return /^#[0-9A-F]{6}$/.test(trimmed) ? trimmed : '';
+              }
+              function hexToRgb(hex){
+                var safe = normaliseHex(hex).replace('#','');
+                if (!safe) return null;
+                return { r: parseInt(safe.slice(0,2),16), g: parseInt(safe.slice(2,4),16), b: parseInt(safe.slice(4,6),16) };
+              }
+              function applyStoredAccent(){
+                try {
+                  var best = '';
+                  var pathname = String(window.location && window.location.pathname || '').toLowerCase();
+                  for (var i = 0; i < window.localStorage.length; i += 1) {
+                    var key = window.localStorage.key(i) || '';
+                    if (key.indexOf('orduva_storefront_payload_') !== 0) continue;
+                    var parsed = JSON.parse(window.localStorage.getItem(key) || '{}');
+                    var payload = parsed && parsed.payload;
+                    var settings = payload && payload.settings;
+                    var theme = settings && settings.storefrontTheme;
+                    var candidate = normaliseHex(theme && (theme.storefrontSplashAccent || theme.storefrontMainLogoColor)) || normaliseHex(settings && settings.accentColor);
+                    if (!candidate) continue;
+                    if (!best) best = candidate;
+                    var slug = payload && payload.tenant && payload.tenant.slug;
+                    if (slug && pathname.indexOf(String(slug).toLowerCase()) >= 0) { best = candidate; break; }
+                  }
+                  var rgb = hexToRgb(best);
+                  if (!rgb) return;
+                  var root = document.getElementById('orduva-early-preloader');
+                  if (!root) return;
+                  root.style.setProperty('--orduva-preloader-accent', best);
+                  root.style.setProperty('--orduva-preloader-accent-soft', 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.20)');
+                  root.style.setProperty('--orduva-preloader-accent-faint', 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.10)');
+                  root.style.setProperty('--orduva-preloader-label', best);
+                } catch(e) {}
+              }
+              applyStoredAccent();
               var startedAt = Date.now();
               var minimumMs = 2000;
               var hideTimer = null;

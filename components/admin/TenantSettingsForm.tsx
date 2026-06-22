@@ -592,7 +592,7 @@ function blendHex(hex: string, target: string, amount: number) {
   );
 }
 
-function buildLogoPalettePreset(colours: string[]): ThemePreset {
+function buildLogoPalettePreset(colours: string[], selectedMainColour?: string | null): ThemePreset {
   const unique = Array.from(
     new Set(
       colours.map((colour) => normalizeThemeColor(colour, "")).filter(Boolean),
@@ -627,7 +627,10 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
   const yellowLogoColour = findLogoColour((item) => item.hue > 48 && item.hue <= 75 && item.saturation > 0.18);
   // A logo can contain one very loud colour. Do not let that one colour flood the whole storefront.
   // Use a darker brand colour for structure, then reserve brighter colours for accents and suggestions.
-  const primaryColor = blueLogoColour || greenLogoColour || darkLogoColour || bySaturation[0] || "#0F172A";
+  const selectedLogoMainColour = selectedMainColour
+    ? normalizeThemeColor(selectedMainColour, "")
+    : "";
+  const primaryColor = selectedLogoMainColour || blueLogoColour || greenLogoColour || darkLogoColour || bySaturation[0] || "#0F172A";
   const accentColor = orangeLogoColour || yellowLogoColour || redLogoColour || greenLogoColour || bySaturation.find((colour) => colour !== primaryColor) || "#FF6A3D";
   const secondaryAccent = greenLogoColour || blueLogoColour || accentColor;
   const warningAccent = yellowLogoColour || orangeLogoColour || accentColor;
@@ -640,7 +643,7 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
   return {
     name: LOGO_PALETTE_PRESET_NAME,
     description:
-      "Generated from the uploaded logo. Logo colours are kept available in Suggested colours so you can choose where each one belongs.",
+      "Generated from the uploaded logo. Choose the main logo colour below, then fine-tune custom popup and loading-screen colours.",
     primaryColor,
     accentColor,
     backgroundTint,
@@ -658,6 +661,9 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
       logoPaletteColours: unique,
       selectedPreset: LOGO_PALETTE_PRESET_NAME,
       customised: false,
+      storefrontMainLogoColor: primaryColor,
+      storefrontPopupTopEffect: primaryColor,
+      storefrontSplashAccent: accentColor,
       globalPageBackground: "#FFFFFF",
       globalText: textColor,
       globalSoftText: textColor,
@@ -674,13 +680,13 @@ function buildLogoPalettePreset(colours: string[]): ThemePreset {
       welcomeActionText: primaryColor,
       welcomeActionIconBackground: secondaryAccent,
       welcomeActionBorder: blendHex(primaryColor, "#FFFFFF", 0.65),
-      rewardsPopupTopEdge: secondaryAccent,
+      rewardsPopupTopEdge: primaryColor,
       rewardsPopupHeaderBlend: softTint,
       rewardsPopupHeaderText: primaryColor,
       rewardsPopupLabelText: secondaryAccent,
       rewardsPopupPillBackground: secondaryAccent,
       rewardsPopupButtonBackground: primaryColor,
-      offersPopupTopEdge: strongAccent,
+      offersPopupTopEdge: primaryColor,
       offersPopupHeaderBlend: softTint,
       offersPopupHeaderText: primaryColor,
       offersPopupLabelText: strongAccent,
@@ -1454,6 +1460,9 @@ export default function TenantSettingsForm({
       theme.favouritesAddBackground,
       theme.favouritesRemoveBackground,
       theme.footerBadgeBackground,
+      theme.storefrontMainLogoColor,
+      theme.storefrontPopupTopEffect,
+      theme.storefrontSplashAccent,
       ...extraSuggestedColours,
     ]
       .map((colour) => normalizeThemeColor(String(colour || ""), ""))
@@ -1685,7 +1694,7 @@ export default function TenantSettingsForm({
       setPreviewTarget("welcome");
       setTone("success");
       setMessage(
-        "Generated a suggested logo palette. Review it in Theme presets, then save that section to make it live.",
+        "Generated a logo palette. Choose the main logo colour, popup effect colour and loading-screen colour, then save this section.",
       );
       window.setTimeout(() => {
         themePresetsRef.current?.scrollIntoView({
@@ -1723,6 +1732,75 @@ export default function TenantSettingsForm({
     setTone("info");
     setMessage(
       `Applied ${preset.name}. You can now fine-tune each storefront item before saving.`,
+    );
+  }
+
+
+
+  function applyLogoThemeColour(role: "main" | "popup" | "splash", colour: string) {
+    const nextColour = normalizeThemeColor(colour, "");
+    if (!nextColour) return;
+    setForm((current) => {
+      const currentTheme = normaliseTheme(current.storefrontTheme, current);
+      const logoColours = currentTheme.logoPaletteColours?.length
+        ? currentTheme.logoPaletteColours
+        : logoPalettePreset?.theme.logoPaletteColours || [];
+
+      if (role === "main") {
+        const nextPreset = buildLogoPalettePreset(logoColours.length ? logoColours : [nextColour], nextColour);
+        setLogoPalettePreset(nextPreset);
+        return {
+          ...current,
+          primaryColor: nextPreset.primaryColor,
+          accentColor: nextPreset.accentColor,
+          backgroundTint: nextPreset.backgroundTint,
+          borderColor: nextPreset.borderColor,
+          textColor: nextPreset.textColor,
+          storefrontTheme: {
+            ...currentTheme,
+            ...nextPreset.theme,
+            selectedPreset: LOGO_PALETTE_PRESET_NAME,
+            customised: true,
+            logoPaletteColours: logoColours.length ? logoColours : [nextColour],
+            storefrontMainLogoColor: nextColour,
+            storefrontPopupTopEffect: nextColour,
+            rewardsPopupTopEdge: nextColour,
+            offersPopupTopEdge: nextColour,
+          },
+        };
+      }
+
+      if (role === "popup") {
+        return {
+          ...current,
+          storefrontTheme: {
+            ...currentTheme,
+            selectedPreset: currentTheme.selectedPreset || LOGO_PALETTE_PRESET_NAME,
+            customised: true,
+            storefrontPopupTopEffect: nextColour,
+            rewardsPopupTopEdge: nextColour,
+            offersPopupTopEdge: nextColour,
+          },
+        };
+      }
+
+      return {
+        ...current,
+        storefrontTheme: {
+          ...currentTheme,
+          selectedPreset: currentTheme.selectedPreset || LOGO_PALETTE_PRESET_NAME,
+          customised: true,
+          storefrontSplashAccent: nextColour,
+        },
+      };
+    });
+    setTone("info");
+    setMessage(
+      role === "main"
+        ? `Selected ${nextColour} as the main logo colour.`
+        : role === "popup"
+          ? `Selected ${nextColour} for popup top effects.`
+          : `Selected ${nextColour} for the loading screen.`,
     );
   }
 
@@ -2108,6 +2186,66 @@ export default function TenantSettingsForm({
     );
   }
 
+
+
+  function renderLogoColourControlPanel() {
+    const logoColours = theme.logoPaletteColours?.length
+      ? theme.logoPaletteColours
+      : logoPalettePreset?.theme.logoPaletteColours || [];
+    if (!logoColours.length) return null;
+    const mainColour = normalizeThemeColor(theme.storefrontMainLogoColor, form.primaryColor);
+    const popupColour = normalizeThemeColor(theme.storefrontPopupTopEffect, mainColour);
+    const splashColour = normalizeThemeColor(theme.storefrontSplashAccent, form.accentColor);
+
+    return (
+      <div className="mt-4 rounded-[22px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-black text-slate-950">Logo colours</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">
+              These are the actual hex colours generated from the uploaded logo. Choose a main colour for auto-generated storefront styling, then choose the popup top effect and loading-screen colour.
+            </p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
+            {logoColours.length} colours
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {logoColours.map((colour) => {
+            const isMain = mainColour === colour;
+            const isPopup = popupColour === colour;
+            const isSplash = splashColour === colour;
+            return (
+              <div key={colour} className={`rounded-2xl border bg-slate-50 p-3 ${isMain || isPopup || isSplash ? "border-orange-300 ring-1 ring-orange-100" : "border-slate-200"}`}>
+                <div className="flex items-center gap-3">
+                  <span className="h-9 w-9 shrink-0 rounded-md border border-black/15 shadow-sm" style={{ backgroundColor: colour }} />
+                  <div className="min-w-0">
+                    <p className="font-mono text-sm font-black uppercase text-slate-900">{colour}</p>
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      {[isMain ? "Main" : "", isPopup ? "Popup" : "", isSplash ? "Loading" : ""].filter(Boolean).join(" · ") || "Available"}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-1.5">
+                  <button type="button" onClick={() => applyLogoThemeColour("main", colour)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-800">
+                    Main
+                  </button>
+                  <button type="button" onClick={() => applyLogoThemeColour("popup", colour)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-800">
+                    Popup
+                  </button>
+                  <button type="button" onClick={() => applyLogoThemeColour("splash", colour)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-800">
+                    Loading
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   function renderSuggestedColoursPanel(compact = false) {
     return (
       <div
@@ -2376,7 +2514,7 @@ export default function TenantSettingsForm({
                 : "Custom"}
             </p>
             <p className="mt-1 text-xs leading-5 text-slate-600">
-              Selected presets now populate the full colour list below.
+              Logo-generated presets now show the actual hex colours. Use the Logo colours panel below to choose the main colour, popup top effect and loading-screen colour.
             </p>
           </div>
           <div ref={themePresetsRef} className="grid gap-3 md:grid-cols-2">
@@ -2402,12 +2540,15 @@ export default function TenantSettingsForm({
                               preset.textColor,
                             ]
                         ).map((color) => (
-                          <span
-                            key={color}
-                            className="h-4 w-4 rounded-full border border-black/5"
-                            style={{ backgroundColor: color }}
-                            title={color}
-                          />
+                          <span key={color} className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-1" title={color}>
+                            <span
+                              className="h-4 w-4 rounded-sm border border-black/10"
+                              style={{ backgroundColor: color }}
+                            />
+                            {preset.name === LOGO_PALETTE_PRESET_NAME ? (
+                              <span className="font-mono text-[10px] font-bold uppercase text-slate-700">{color}</span>
+                            ) : null}
+                          </span>
                         ))}
                       </div>
                       {selected ? (
@@ -2431,6 +2572,7 @@ export default function TenantSettingsForm({
             })}
             {!logoPalettePreset ? renderLogoPaletteGeneratorCard() : null}
           </div>
+          {renderLogoColourControlPanel()}
         </Section>
 
         <Section

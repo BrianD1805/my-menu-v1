@@ -1284,9 +1284,13 @@ export default function MenuBrowser({
     rewardTierTheme.currentPillText,
     brandPrimary,
   );
-  const rewardsPopupTopEdge = normalizeThemeColor(
-    rewardTierTheme.topEdge,
+  const popupTopEffectColor = normalizeThemeColor(
+    storefrontTheme?.storefrontPopupTopEffect,
     brandAccent,
+  );
+  const rewardsPopupTopEdge = normalizeThemeColor(
+    storefrontTheme?.rewardsPopupTopEdge,
+    normalizeThemeColor(rewardTierTheme.topEdge, popupTopEffectColor),
   );
   const rewardsPopupLabelText = normalizeThemeColor(
     rewardTierTheme.labelText,
@@ -1375,7 +1379,7 @@ export default function MenuBrowser({
   );
   const offersPopupTopEdge = normalizeThemeColor(
     storefrontTheme?.offersPopupTopEdge,
-    brandAccent,
+    popupTopEffectColor,
   );
   const offersPopupLabelText = normalizeThemeColor(
     storefrontTheme?.offersPopupLabelText,
@@ -3667,7 +3671,7 @@ export default function MenuBrowser({
                 <div
                   className="absolute inset-x-0 top-0 h-1"
                   style={{
-                    background: `linear-gradient(90deg, ${brandAccent}, ${brandPrimary}, ${brandAccent})`,
+                    background: `linear-gradient(90deg, ${popupTopEffectColor}, ${brandPrimary}, ${popupTopEffectColor})`,
                   }}
                 />
                 <div className="flex items-start justify-between gap-4">

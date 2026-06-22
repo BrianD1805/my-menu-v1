@@ -355,6 +355,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const fullPrice = formatMoney(price, money);
   const brandAccent = accentColor || "#C7922F";
   const brandPrimary = primaryColor || "#7B1E22";
+  const popupTopEffectColor = normalizeThemeColor(themeColors?.storefrontPopupTopEffect, brandAccent);
   const productCardBackground = normalizeThemeColor(themeColors?.productCardBackground, "#FFFFFF");
   const productCardBorder = normalizeThemeColor(themeColors?.productCardBorder, "#E2E8F0");
   const productTitle = normalizeThemeColor(themeColors?.productTitle, "#0F172A");
@@ -527,7 +528,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
           <div className="flex min-h-full items-center justify-center">
             <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]" onClick={(event) => event.stopPropagation()}>
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-7">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div
+                  className="absolute inset-x-0 top-0 h-1"
+                  style={{ background: `linear-gradient(90deg, ${popupTopEffectColor}, ${brandPrimary}, ${popupTopEffectColor})` }}
+                />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{variantLabel || "Choose an option"}</p>
@@ -622,7 +626,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
           <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
             <div className="flex max-h-[calc(100dvh-150px)] w-full flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]">
               <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-6 lg:pt-6">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+                <div
+                  className="absolute inset-x-0 top-0 h-1"
+                  style={{ background: `linear-gradient(90deg, ${popupTopEffectColor}, ${brandPrimary}, ${popupTopEffectColor})` }}
+                />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Product details</p>

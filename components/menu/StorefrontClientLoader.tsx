@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MenuBrowser from "@/components/menu/MenuBrowser";
 import type { Category, Product } from "@/lib/types";
-import type { StorefrontTheme } from "@/lib/storefront-theme";
+import { normalizeThemeColor, type StorefrontTheme } from "@/lib/storefront-theme";
 
 type StorefrontSettings = {
   tenantId: string;
@@ -127,8 +127,10 @@ function writeCachedPayload(tenantSlug: string, payload: StorefrontPayload) {
 
 function StorefrontPreparingShell({
   backgroundColor,
+  accentColor,
 }: {
   backgroundColor: string;
+  accentColor: string;
 }) {
   return (
     <main
@@ -141,14 +143,14 @@ function StorefrontPreparingShell({
           className="relative flex h-20 w-20 items-center justify-center"
           aria-hidden="true"
         >
-          <span className="absolute h-20 w-20 rounded-full border border-orange-200/70 bg-white/70 shadow-[0_18px_50px_rgba(15,23,42,0.10)]" />
-          <span className="absolute h-14 w-14 animate-ping rounded-full bg-orange-400/20" />
-          <span className="absolute h-12 w-12 rounded-full border-4 border-orange-100" />
-          <span className="absolute h-12 w-12 animate-spin rounded-full border-4 border-transparent border-t-orange-500 border-r-orange-300" />
-          <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_8px_rgba(249,115,22,0.10)]" />
+          <span className="absolute h-20 w-20 rounded-full border bg-white/70 shadow-[0_18px_50px_rgba(15,23,42,0.10)]" style={{ borderColor: `${accentColor}55` }} />
+          <span className="absolute h-14 w-14 animate-ping rounded-full" style={{ backgroundColor: `${accentColor}22` }} />
+          <span className="absolute h-12 w-12 rounded-full border-4" style={{ borderColor: `${accentColor}18` }} />
+          <span className="absolute h-12 w-12 animate-spin rounded-full border-4 border-transparent" style={{ borderTopColor: accentColor, borderRightColor: `${accentColor}88` }} />
+          <span className="h-2.5 w-2.5 rounded-full shadow-[0_0_0_8px_rgba(249,115,22,0.10)]" style={{ backgroundColor: accentColor }} />
         </div>
-        <p className="mt-5 text-[11px] font-black uppercase tracking-[0.24em] text-orange-700">
-          Orduva
+        <p className="mt-5 text-[11px] font-black uppercase tracking-[0.24em]" style={{ color: accentColor }}>
+          Storefront
         </p>
         <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
           We&apos;re getting things ready.
@@ -160,9 +162,9 @@ function StorefrontPreparingShell({
           className="mt-4 flex items-center justify-center gap-1.5"
           aria-label="Loading"
         >
-          <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.24s]" />
-          <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.12s]" />
-          <span className="h-2 w-2 animate-bounce rounded-full bg-orange-500" />
+          <span className="h-2 w-2 animate-bounce rounded-full [animation-delay:-0.24s]" style={{ backgroundColor: accentColor }} />
+          <span className="h-2 w-2 animate-bounce rounded-full [animation-delay:-0.12s]" style={{ backgroundColor: accentColor }} />
+          <span className="h-2 w-2 animate-bounce rounded-full" style={{ backgroundColor: accentColor }} />
         </div>
       </section>
     </main>
@@ -299,6 +301,16 @@ export default function StorefrontClientLoader({
       "#F8F4F0",
     [settings],
   );
+  const splashAccentColor = useMemo(
+    () =>
+      normalizeThemeColor(
+        settings?.storefrontTheme?.storefrontSplashAccent,
+        settings?.storefrontTheme?.storefrontMainLogoColor ||
+          settings?.accentColor ||
+          "#FF6A3D",
+      ),
+    [settings],
+  );
 
   useEffect(() => {
     if (!payload || !settings || typeof window === "undefined") return;
@@ -325,7 +337,7 @@ export default function StorefrontClientLoader({
       />
     );
   if (!payload || !settings)
-    return <StorefrontPreparingShell backgroundColor={pageBackground} />;
+    return <StorefrontPreparingShell backgroundColor={pageBackground} accentColor={splashAccentColor} />;
 
   return (
     <main

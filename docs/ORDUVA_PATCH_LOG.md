@@ -1,3 +1,13 @@
+
+## Ver-0.246 — Theme presets logo colour controls
+
+- Added actual logo-palette hex colours with square colour swatches in Theme presets.
+- Added selectable logo colour roles: Main, Popup top effect, and Loading screen.
+- Main logo colour now regenerates the storefront colour theme without letting one colour flood every surface.
+- Popup top effect colour is applied to storefront popup top accents.
+- Storefront loading/preparing splash now uses the selected logo colour where available.
+- Patch type: touched-files-only ZIP.
+
 ## Ver-0.245 — Order update notification wording and desktop registration fixes
 
 - Clarified the storefront order updates popup so customers understand notifications are per device and that a previously allowed phone can also receive updates.
