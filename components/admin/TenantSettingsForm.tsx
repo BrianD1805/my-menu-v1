@@ -967,6 +967,7 @@ export default function TenantSettingsForm({
         : null,
     );
   const [generatingLogoPalette, setGeneratingLogoPalette] = useState(false);
+  const [logoColourPickerRole, setLogoColourPickerRole] = useState<"main" | "popup" | "splash" | null>(null);
   const previewPanelRef = useRef<HTMLDivElement | null>(null);
   const themePresetsRef = useRef<HTMLDivElement | null>(null);
   const suggestedColoursRef = useRef<HTMLDivElement | null>(null);
@@ -1794,6 +1795,7 @@ export default function TenantSettingsForm({
         },
       };
     });
+    setLogoColourPickerRole(null);
     setTone("info");
     setMessage(
       role === "main"
@@ -2188,6 +2190,75 @@ export default function TenantSettingsForm({
 
 
 
+  function getLogoColourRoleMeta(role: "main" | "popup" | "splash") {
+    if (role === "main") {
+      return {
+        title: "Main storefront colour",
+        label: "Main",
+        help: "Used to auto-generate the main storefront colour scheme.",
+      };
+    }
+    if (role === "popup") {
+      return {
+        title: "Popup top effect colour",
+        label: "Popup",
+        help: "Used for the top colour effect on storefront popups.",
+      };
+    }
+    return {
+      title: "Loading screen colour",
+      label: "Loading",
+      help: "Used on the storefront loading / getting ready screen.",
+    };
+  }
+
+  function renderLogoColourPickerPopup(logoColours: string[]) {
+    if (!logoColourPickerRole) return null;
+    const meta = getLogoColourRoleMeta(logoColourPickerRole);
+    return (
+      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/55 px-6 py-10 backdrop-blur-sm">
+        <div className="w-full max-w-2xl overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]">
+          <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-white px-5 py-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-orange-700">
+                Logo colour picker
+              </p>
+              <h3 className="mt-1 text-xl font-black text-slate-950">{meta.title}</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-600">{meta.help}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLogoColourPickerRole(null)}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl font-bold text-slate-500 shadow-sm transition hover:border-slate-400 hover:text-slate-800"
+              aria-label="Close logo colour picker"
+            >
+              ×
+            </button>
+          </div>
+          <div className="max-h-[calc(100dvh-260px)] overflow-y-auto px-5 py-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {logoColours.map((colour) => (
+                <button
+                  type="button"
+                  key={`${logoColourPickerRole}-${colour}`}
+                  onClick={() => applyLogoThemeColour(logoColourPickerRole, colour)}
+                  className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left transition hover:-translate-y-[1px] hover:border-orange-300 hover:bg-white hover:shadow-sm"
+                >
+                  <span className="h-12 w-12 shrink-0 rounded-lg border border-black/15 shadow-sm" style={{ backgroundColor: colour }} />
+                  <span className="min-w-0">
+                    <span className="block break-all font-mono text-sm font-black uppercase text-slate-950">{colour}</span>
+                    <span className="mt-0.5 block text-xs font-semibold text-slate-500">Use for {meta.label}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
   function renderLogoColourControlPanel() {
     const logoColours = theme.logoPaletteColours?.length
       ? theme.logoPaletteColours
@@ -2196,53 +2267,52 @@ export default function TenantSettingsForm({
     const mainColour = normalizeThemeColor(theme.storefrontMainLogoColor, form.primaryColor);
     const popupColour = normalizeThemeColor(theme.storefrontPopupTopEffect, mainColour);
     const splashColour = normalizeThemeColor(theme.storefrontSplashAccent, form.accentColor);
+    const roleRows: Array<{ role: "main" | "popup" | "splash"; colour: string }> = [
+      { role: "main", colour: mainColour },
+      { role: "popup", colour: popupColour },
+      { role: "splash", colour: splashColour },
+    ];
 
     return (
-      <div className="mt-4 rounded-[22px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-black text-slate-950">Logo colours</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">
-              These are the actual hex colours generated from the uploaded logo. Choose a main colour for auto-generated storefront styling, then choose the popup top effect and loading-screen colour.
-            </p>
+      <>
+        <div className="mt-4 rounded-[22px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-black text-slate-950">Logo colours</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                Choose the three logo colours used for the generated storefront theme. Click a row to open the logo colour picker.
+              </p>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
+              {logoColours.length} colours
+            </span>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
-            {logoColours.length} colours
-          </span>
-        </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {logoColours.map((colour) => {
-            const isMain = mainColour === colour;
-            const isPopup = popupColour === colour;
-            const isSplash = splashColour === colour;
-            return (
-              <div key={colour} className={`rounded-2xl border bg-slate-50 p-3 ${isMain || isPopup || isSplash ? "border-orange-300 ring-1 ring-orange-100" : "border-slate-200"}`}>
-                <div className="flex items-center gap-3">
-                  <span className="h-9 w-9 shrink-0 rounded-md border border-black/15 shadow-sm" style={{ backgroundColor: colour }} />
-                  <div className="min-w-0">
-                    <p className="font-mono text-sm font-black uppercase text-slate-900">{colour}</p>
-                    <p className="text-[11px] font-semibold text-slate-500">
-                      {[isMain ? "Main" : "", isPopup ? "Popup" : "", isSplash ? "Loading" : ""].filter(Boolean).join(" · ") || "Available"}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-1.5">
-                  <button type="button" onClick={() => applyLogoThemeColour("main", colour)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-800">
-                    Main
-                  </button>
-                  <button type="button" onClick={() => applyLogoThemeColour("popup", colour)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-800">
-                    Popup
-                  </button>
-                  <button type="button" onClick={() => applyLogoThemeColour("splash", colour)} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-bold text-slate-700 transition hover:border-orange-300 hover:text-orange-800">
-                    Loading
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {roleRows.map(({ role, colour }) => {
+              const meta = getLogoColourRoleMeta(role);
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setLogoColourPickerRole(role)}
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left transition hover:-translate-y-[1px] hover:border-orange-300 hover:bg-white hover:shadow-sm"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <span className="h-11 w-11 shrink-0 rounded-lg border border-black/15 shadow-sm" style={{ backgroundColor: colour }} />
+                    <span className="min-w-0">
+                      <span className="block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{meta.label}</span>
+                      <span className="block break-all font-mono text-sm font-black uppercase text-slate-950">{colour}</span>
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xl font-black text-slate-400">›</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+        {renderLogoColourPickerPopup(logoColours)}
+      </>
     );
   }
 
@@ -2280,8 +2350,10 @@ export default function TenantSettingsForm({
                   value={colour}
                   readOnly
                   onFocus={(event) => event.currentTarget.select()}
-                  className="min-w-0 w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-3 pr-10 font-mono text-xs font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:bg-white"
+                  onClick={() => void copySuggestedColour(colour, compact)}
+                  className="min-w-0 w-full cursor-copy rounded-full border border-slate-200 bg-slate-50 py-2 pl-3 pr-10 font-mono text-xs font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:bg-white"
                   aria-label={`Suggested colour ${colour}`}
+                  title={`Click to copy ${colour}`}
                 />
                 <button
                   type="button"
@@ -2528,7 +2600,7 @@ export default function TenantSettingsForm({
                     className={`rounded-[20px] border bg-white p-3 text-left transition hover:-translate-y-[1px] ${selected ? "border-orange-400 ring-2 ring-orange-200" : "border-slate-200 hover:border-slate-300"}`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
                         {(preset.name === LOGO_PALETTE_PRESET_NAME &&
                         preset.theme.logoPaletteColours?.length
                           ? preset.theme.logoPaletteColours.slice(0, 7)
@@ -2540,7 +2612,7 @@ export default function TenantSettingsForm({
                               preset.textColor,
                             ]
                         ).map((color) => (
-                          <span key={color} className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-1" title={color}>
+                          <span key={color} onClick={(event) => { event.stopPropagation(); void copySuggestedColour(color, false); }} className="inline-flex max-w-full min-w-0 cursor-copy items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-1.5 py-1 text-left" title={`Copy ${color}`} role="button" tabIndex={0}>
                             <span
                               className="h-4 w-4 rounded-sm border border-black/10"
                               style={{ backgroundColor: color }}

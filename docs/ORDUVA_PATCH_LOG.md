@@ -1,4 +1,13 @@
 
+## Ver-0.246A — Logo colour picker popup polish
+
+- Changed the Logo colours panel from a full grid of every logo colour into three clear choices: Main, Popup, and Loading.
+- Each choice now opens a logo colour picker popup so the store owner selects only the colour needed for that role.
+- Fixed logo hex colour chips so they wrap within the Theme presets card instead of spilling outside the panel.
+- Added click-to-copy behaviour to logo hex chips and Suggested Colours hex fields.
+- Patch type: touched-files-only ZIP.
+
+
 ## Ver-0.246 — Theme presets logo colour controls
 
 - Added actual logo-palette hex colours with square colour swatches in Theme presets.
