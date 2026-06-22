@@ -138,6 +138,17 @@ export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & {
   welcomeBannerOverlayOpacity?: number;
   welcomeBannerFit?: StorefrontBannerFit;
   welcomeTextAlign?: StorefrontTextAlign;
+  welcomePanelBackground?: string;
+  welcomePanelOpacity?: number;
+  mobileWelcomeUseSame?: boolean;
+  mobileWelcomeBannerEnabled?: boolean;
+  mobileWelcomeBannerImageUrl?: string;
+  mobileWelcomeBannerOverlayColor?: string;
+  mobileWelcomeBannerOverlayOpacity?: number;
+  mobileWelcomeBannerFit?: StorefrontBannerFit;
+  mobileWelcomeTextAlign?: StorefrontTextAlign;
+  mobileWelcomePanelBackground?: string;
+  mobileWelcomePanelOpacity?: number;
   aboutUsEnabled?: boolean;
   aboutUsImageUrl?: string;
   aboutUsTitle?: string;
@@ -145,6 +156,14 @@ export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & {
   aboutUsTextAlign?: StorefrontTextAlign;
   aboutUsBackground?: string;
   aboutUsTextColor?: string;
+  mobileAboutUsUseSame?: boolean;
+  mobileAboutUsEnabled?: boolean;
+  mobileAboutUsImageUrl?: string;
+  mobileAboutUsTitle?: string;
+  mobileAboutUsBody?: string;
+  mobileAboutUsTextAlign?: StorefrontTextAlign;
+  mobileAboutUsBackground?: string;
+  mobileAboutUsTextColor?: string;
 };
 
 export function isHexColor(value: unknown): value is string {
@@ -202,6 +221,23 @@ export function normalizeStorefrontTheme(value: unknown): StorefrontTheme | null
   if (welcomeBannerFit) output.welcomeBannerFit = welcomeBannerFit;
   const welcomeTextAlign = normalizeTextAlign(input.welcomeTextAlign);
   if (welcomeTextAlign) output.welcomeTextAlign = welcomeTextAlign;
+  if (isHexColor(input.welcomePanelBackground)) output.welcomePanelBackground = String(input.welcomePanelBackground).trim().toUpperCase();
+  const welcomePanelOpacity = normalizeOverlayOpacity(input.welcomePanelOpacity);
+  if (typeof welcomePanelOpacity === "number") output.welcomePanelOpacity = welcomePanelOpacity;
+  if (typeof input.mobileWelcomeUseSame === "boolean") output.mobileWelcomeUseSame = input.mobileWelcomeUseSame;
+  if (typeof input.mobileWelcomeBannerEnabled === "boolean") output.mobileWelcomeBannerEnabled = input.mobileWelcomeBannerEnabled;
+  const mobileWelcomeBannerImageUrl = normalizeStoredText(input.mobileWelcomeBannerImageUrl, 800);
+  if (mobileWelcomeBannerImageUrl) output.mobileWelcomeBannerImageUrl = mobileWelcomeBannerImageUrl;
+  if (isHexColor(input.mobileWelcomeBannerOverlayColor)) output.mobileWelcomeBannerOverlayColor = String(input.mobileWelcomeBannerOverlayColor).trim().toUpperCase();
+  const mobileWelcomeBannerOverlayOpacity = normalizeOverlayOpacity(input.mobileWelcomeBannerOverlayOpacity);
+  if (typeof mobileWelcomeBannerOverlayOpacity === "number") output.mobileWelcomeBannerOverlayOpacity = mobileWelcomeBannerOverlayOpacity;
+  const mobileWelcomeBannerFit = normalizeBannerFit(input.mobileWelcomeBannerFit);
+  if (mobileWelcomeBannerFit) output.mobileWelcomeBannerFit = mobileWelcomeBannerFit;
+  const mobileWelcomeTextAlign = normalizeTextAlign(input.mobileWelcomeTextAlign);
+  if (mobileWelcomeTextAlign) output.mobileWelcomeTextAlign = mobileWelcomeTextAlign;
+  if (isHexColor(input.mobileWelcomePanelBackground)) output.mobileWelcomePanelBackground = String(input.mobileWelcomePanelBackground).trim().toUpperCase();
+  const mobileWelcomePanelOpacity = normalizeOverlayOpacity(input.mobileWelcomePanelOpacity);
+  if (typeof mobileWelcomePanelOpacity === "number") output.mobileWelcomePanelOpacity = mobileWelcomePanelOpacity;
 
   if (typeof input.aboutUsEnabled === "boolean") output.aboutUsEnabled = input.aboutUsEnabled;
   const aboutUsImageUrl = normalizeStoredText(input.aboutUsImageUrl, 800);
@@ -214,6 +250,18 @@ export function normalizeStorefrontTheme(value: unknown): StorefrontTheme | null
   if (aboutUsTextAlign) output.aboutUsTextAlign = aboutUsTextAlign;
   if (isHexColor(input.aboutUsBackground)) output.aboutUsBackground = String(input.aboutUsBackground).trim().toUpperCase();
   if (isHexColor(input.aboutUsTextColor)) output.aboutUsTextColor = String(input.aboutUsTextColor).trim().toUpperCase();
+  if (typeof input.mobileAboutUsUseSame === "boolean") output.mobileAboutUsUseSame = input.mobileAboutUsUseSame;
+  if (typeof input.mobileAboutUsEnabled === "boolean") output.mobileAboutUsEnabled = input.mobileAboutUsEnabled;
+  const mobileAboutUsImageUrl = normalizeStoredText(input.mobileAboutUsImageUrl, 800);
+  if (mobileAboutUsImageUrl) output.mobileAboutUsImageUrl = mobileAboutUsImageUrl;
+  const mobileAboutUsTitle = normalizeStoredText(input.mobileAboutUsTitle, 120);
+  if (mobileAboutUsTitle) output.mobileAboutUsTitle = mobileAboutUsTitle;
+  const mobileAboutUsBody = normalizeStoredText(input.mobileAboutUsBody, 1600);
+  if (mobileAboutUsBody) output.mobileAboutUsBody = mobileAboutUsBody;
+  const mobileAboutUsTextAlign = normalizeTextAlign(input.mobileAboutUsTextAlign);
+  if (mobileAboutUsTextAlign) output.mobileAboutUsTextAlign = mobileAboutUsTextAlign;
+  if (isHexColor(input.mobileAboutUsBackground)) output.mobileAboutUsBackground = String(input.mobileAboutUsBackground).trim().toUpperCase();
+  if (isHexColor(input.mobileAboutUsTextColor)) output.mobileAboutUsTextColor = String(input.mobileAboutUsTextColor).trim().toUpperCase();
 
   return Object.keys(output).length ? output : null;
 }

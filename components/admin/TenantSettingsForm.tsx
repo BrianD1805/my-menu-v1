@@ -947,6 +947,8 @@ export default function TenantSettingsForm({
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [uploadingWelcomeBanner, setUploadingWelcomeBanner] = useState(false);
   const [uploadingAboutImage, setUploadingAboutImage] = useState(false);
+  const [uploadingMobileWelcomeBanner, setUploadingMobileWelcomeBanner] = useState(false);
+  const [uploadingMobileAboutImage, setUploadingMobileAboutImage] = useState(false);
   const [previewTarget, setPreviewTarget] = useState<PreviewTarget>("welcome");
   const [customSuggestedHex, setCustomSuggestedHex] = useState("#FFFFFF");
   const [extraSuggestedColours, setExtraSuggestedColours] = useState<string[]>(
@@ -1653,12 +1655,21 @@ export default function TenantSettingsForm({
   async function uploadStorefrontThemeAsset(
     file: File,
     kind: "welcome-banner" | "about-us",
+    targetKey?: keyof StorefrontTheme,
+    customLabel?: string,
   ) {
     const isWelcomeBanner = kind === "welcome-banner";
-    const setUploading = isWelcomeBanner
-      ? setUploadingWelcomeBanner
-      : setUploadingAboutImage;
-    const label = isWelcomeBanner ? "welcome banner" : "About us image";
+    const resolvedTargetKey =
+      targetKey || (isWelcomeBanner ? "welcomeBannerImageUrl" : "aboutUsImageUrl");
+    const setUploading =
+      resolvedTargetKey === "mobileWelcomeBannerImageUrl"
+        ? setUploadingMobileWelcomeBanner
+        : resolvedTargetKey === "mobileAboutUsImageUrl"
+          ? setUploadingMobileAboutImage
+          : isWelcomeBanner
+            ? setUploadingWelcomeBanner
+            : setUploadingAboutImage;
+    const label = customLabel || (isWelcomeBanner ? "welcome banner" : "About us image");
     setUploading(true);
     setTone("info");
     setMessage(`Uploading ${label}...`);
@@ -1674,10 +1685,7 @@ export default function TenantSettingsForm({
       const payload = await response.json();
       if (!response.ok)
         throw new Error(payload.error || `Failed to upload ${label}`);
-      updateStorefrontThemeSetting(
-        isWelcomeBanner ? "welcomeBannerImageUrl" : "aboutUsImageUrl",
-        payload.url || "",
-      );
+      updateStorefrontThemeSetting(resolvedTargetKey, payload.url || "");
       const successMessage = payload.message || `${label} uploaded. Save this section to publish it.`;
       setTone("success");
       setMessage(successMessage);
@@ -2712,17 +2720,17 @@ export default function TenantSettingsForm({
           dirty={themeDirty}
           saving={saving}
         >
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="space-y-5">
             <div className="rounded-[24px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-black text-slate-950">Welcome background banner</p>
+                  <p className="text-sm font-black text-slate-950">Desktop welcome background</p>
                   <p className="mt-1 text-xs leading-5 text-slate-600">
-                    Add a premium welcome-screen image with a readable colour overlay.
+                    Desktop hero image, overlay, readable text panel and alignment.
                   </p>
                 </div>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">
-                  Hero
+                  Desktop
                 </span>
               </div>
 
@@ -2731,214 +2739,147 @@ export default function TenantSettingsForm({
                   label="Use welcome background image"
                   help="When switched on, the uploaded banner appears behind the welcome text on the storefront."
                   checked={theme.welcomeBannerEnabled === true}
-                  onChange={(checked) =>
-                    updateStorefrontThemeSetting("welcomeBannerEnabled", checked)
-                  }
+                  onChange={(checked) => updateStorefrontThemeSetting("welcomeBannerEnabled", checked)}
                 />
               </div>
 
-              <div className="mt-4 space-y-4">
-                {theme.welcomeBannerImageUrl ? (
-                  <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100">
-                    <img
-                      src={theme.welcomeBannerImageUrl}
-                      alt="Welcome banner preview"
-                      className="h-44 w-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex min-h-36 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">
-                    No welcome banner uploaded yet.
-                  </div>
-                )}
-                <UploadField
-                  label={theme.welcomeBannerImageUrl ? "Change welcome banner" : "Upload welcome banner"}
-                  saved={Boolean(theme.welcomeBannerImageUrl)}
-                  busy={uploadingWelcomeBanner}
-                  accept="image/png,image/jpeg,image/webp"
-                  help="PNG, JPG or WebP. Upload saves the image; then save this Theme section to publish it."
-                  onFile={(file) => uploadStorefrontThemeAsset(file, "welcome-banner")}
-                />
-
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Image fit</span>
-                  <select
-                    value={theme.welcomeBannerFit || "cover"}
-                    onChange={(event) => updateStorefrontThemeSetting("welcomeBannerFit", event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  >
-                    <option value="cover">Fill snug / crop edges</option>
-                    <option value="contain">Show full image / fit inside</option>
-                  </select>
-                </label>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Overlay colour</span>
-                    <div className="mt-2 grid grid-cols-[48px_1fr] gap-2">
-                      <input
-                        type="color"
-                        value={normalizeThemeColor(theme.welcomeBannerOverlayColor, "#000000")}
-                        onChange={(event) => updateStorefrontThemeSetting("welcomeBannerOverlayColor", event.target.value.toUpperCase())}
-                        className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1"
-                        aria-label="Welcome banner overlay colour"
-                      />
-                      <input
-                        value={normalizeThemeColor(theme.welcomeBannerOverlayColor, "#000000")}
-                        onChange={(event) => updateStorefrontThemeSetting("welcomeBannerOverlayColor", event.target.value.toUpperCase())}
-                        className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                      />
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <div className="space-y-4">
+                  {theme.welcomeBannerImageUrl ? (
+                    <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100">
+                      <img src={theme.welcomeBannerImageUrl} alt="Desktop welcome banner preview" className="h-44 w-full object-cover" />
                     </div>
-                  </label>
+                  ) : (
+                    <div className="flex min-h-36 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">
+                      No desktop welcome banner uploaded yet.
+                    </div>
+                  )}
+                  <UploadField
+                    label={theme.welcomeBannerImageUrl ? "Change desktop welcome banner" : "Upload desktop welcome banner"}
+                    saved={Boolean(theme.welcomeBannerImageUrl)}
+                    busy={uploadingWelcomeBanner}
+                    accept="image/png,image/jpeg,image/webp"
+                    help="Upload a wide desktop image. Save this Theme section to publish it."
+                    onFile={(file) => uploadStorefrontThemeAsset(file, "welcome-banner", "welcomeBannerImageUrl", "desktop welcome banner")}
+                  />
                   <label className="block">
-                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Overlay strength</span>
-                    <input
-                      type="range"
-                      min="0"
-                      max="0.85"
-                      step="0.05"
-                      value={typeof theme.welcomeBannerOverlayOpacity === "number" ? theme.welcomeBannerOverlayOpacity : 0.45}
-                      onChange={(event) => updateStorefrontThemeSetting("welcomeBannerOverlayOpacity", Number(event.target.value))}
-                      className="mt-5 w-full accent-orange-500"
-                    />
-                    <span className="mt-1 block text-xs font-semibold text-slate-500">
-                      {Math.round((typeof theme.welcomeBannerOverlayOpacity === "number" ? theme.welcomeBannerOverlayOpacity : 0.45) * 100)}% overlay
-                    </span>
+                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Image fit</span>
+                    <select
+                      value={theme.welcomeBannerFit || "cover"}
+                      onChange={(event) => updateStorefrontThemeSetting("welcomeBannerFit", event.target.value)}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                    >
+                      <option value="cover">Fill snug / crop edges</option>
+                      <option value="contain">Show full image / fit inside</option>
+                    </select>
                   </label>
                 </div>
 
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Welcome text alignment</span>
-                  <select
-                    value={theme.welcomeTextAlign || "center"}
-                    onChange={(event) => updateStorefrontThemeSetting("welcomeTextAlign", event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                  >
-                    <option value="left">Left</option>
-                    <option value="center">Centre</option>
-                    <option value="right">Right</option>
-                  </select>
-                </label>
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Overlay colour</span>
+                      <div className="mt-2 grid grid-cols-[48px_1fr] gap-2">
+                        <input type="color" value={normalizeThemeColor(theme.welcomeBannerOverlayColor, "#000000")} onChange={(event) => updateStorefrontThemeSetting("welcomeBannerOverlayColor", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" aria-label="Welcome banner overlay colour" />
+                        <input value={normalizeThemeColor(theme.welcomeBannerOverlayColor, "#000000")} onChange={(event) => updateStorefrontThemeSetting("welcomeBannerOverlayColor", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" />
+                      </div>
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Overlay strength</span>
+                      <input type="range" min="0" max="0.85" step="0.05" value={typeof theme.welcomeBannerOverlayOpacity === "number" ? theme.welcomeBannerOverlayOpacity : 0.45} onChange={(event) => updateStorefrontThemeSetting("welcomeBannerOverlayOpacity", Number(event.target.value))} className="mt-5 w-full accent-orange-500" />
+                      <span className="mt-1 block text-xs font-semibold text-slate-500">{Math.round((typeof theme.welcomeBannerOverlayOpacity === "number" ? theme.welcomeBannerOverlayOpacity : 0.45) * 100)}% overlay</span>
+                    </label>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text panel colour</span>
+                      <div className="mt-2 grid grid-cols-[48px_1fr] gap-2">
+                        <input type="color" value={normalizeThemeColor(theme.welcomePanelBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("welcomePanelBackground", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" aria-label="Welcome text panel colour" />
+                        <input value={normalizeThemeColor(theme.welcomePanelBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("welcomePanelBackground", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" />
+                      </div>
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text panel transparency</span>
+                      <input type="range" min="0.25" max="1" step="0.05" value={typeof theme.welcomePanelOpacity === "number" ? theme.welcomePanelOpacity : 0.9} onChange={(event) => updateStorefrontThemeSetting("welcomePanelOpacity", Number(event.target.value))} className="mt-5 w-full accent-orange-500" />
+                      <span className="mt-1 block text-xs font-semibold text-slate-500">{Math.round((typeof theme.welcomePanelOpacity === "number" ? theme.welcomePanelOpacity : 0.9) * 100)}% solid</span>
+                    </label>
+                  </div>
+                  <label className="block">
+                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Welcome text alignment</span>
+                    <select value={theme.welcomeTextAlign || "center"} onChange={(event) => updateStorefrontThemeSetting("welcomeTextAlign", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100">
+                      <option value="left">Left</option>
+                      <option value="center">Centre</option>
+                      <option value="right">Right</option>
+                    </select>
+                  </label>
+                </div>
               </div>
             </div>
 
             <div className="rounded-[24px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-black text-slate-950">About us section</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-600">
-                    Add a premium story block with an image and paragraph text before store products.
-                  </p>
+                  <p className="text-sm font-black text-slate-950">Mobile welcome background</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Upload a phone-shaped image, or tick Use same to reuse the desktop welcome settings.</p>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">
-                  Before products
-                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Mobile</span>
               </div>
-
               <div className="mt-4 rounded-[20px] border border-slate-200 bg-slate-50/70 p-3">
-                <ToggleRow
-                  label="Show About us on storefront"
-                  help="When switched on, this section appears before the product list."
-                  checked={theme.aboutUsEnabled === true}
-                  onChange={(checked) =>
-                    updateStorefrontThemeSetting("aboutUsEnabled", checked)
-                  }
-                />
+                <ToggleRow label="Use same as desktop welcome" help="Reuses the desktop image, overlay, panel colour and alignment on mobile." checked={theme.mobileWelcomeUseSame !== false} onChange={(checked) => updateStorefrontThemeSetting("mobileWelcomeUseSame", checked)} />
+              </div>
+              {theme.mobileWelcomeUseSame === false ? (
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div className="space-y-4">
+                    <ToggleRow label="Use mobile welcome background image" help="When switched on, the mobile banner is used on phone-sized screens." checked={theme.mobileWelcomeBannerEnabled === true} onChange={(checked) => updateStorefrontThemeSetting("mobileWelcomeBannerEnabled", checked)} />
+                    {theme.mobileWelcomeBannerImageUrl ? (
+                      <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100"><img src={theme.mobileWelcomeBannerImageUrl} alt="Mobile welcome banner preview" className="h-56 w-full object-cover" /></div>
+                    ) : (
+                      <div className="flex min-h-44 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">No mobile welcome banner uploaded yet.</div>
+                    )}
+                    <UploadField label={theme.mobileWelcomeBannerImageUrl ? "Change mobile welcome banner" : "Upload mobile welcome banner"} saved={Boolean(theme.mobileWelcomeBannerImageUrl)} busy={uploadingMobileWelcomeBanner} accept="image/png,image/jpeg,image/webp" help="Upload a taller mobile image. Save this Theme section to publish it." onFile={(file) => uploadStorefrontThemeAsset(file, "welcome-banner", "mobileWelcomeBannerImageUrl", "mobile welcome banner")} />
+                    <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Image fit</span><select value={theme.mobileWelcomeBannerFit || "cover"} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomeBannerFit", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"><option value="cover">Fill snug / crop edges</option><option value="contain">Show full image / fit inside</option></select></label>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Overlay colour</span><div className="mt-2 grid grid-cols-[48px_1fr] gap-2"><input type="color" value={normalizeThemeColor(theme.mobileWelcomeBannerOverlayColor, "#000000")} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomeBannerOverlayColor", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" /><input value={normalizeThemeColor(theme.mobileWelcomeBannerOverlayColor, "#000000")} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomeBannerOverlayColor", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" /></div></label>
+                      <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Overlay strength</span><input type="range" min="0" max="0.85" step="0.05" value={typeof theme.mobileWelcomeBannerOverlayOpacity === "number" ? theme.mobileWelcomeBannerOverlayOpacity : 0.45} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomeBannerOverlayOpacity", Number(event.target.value))} className="mt-5 w-full accent-orange-500" /><span className="mt-1 block text-xs font-semibold text-slate-500">{Math.round((typeof theme.mobileWelcomeBannerOverlayOpacity === "number" ? theme.mobileWelcomeBannerOverlayOpacity : 0.45) * 100)}% overlay</span></label>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text panel colour</span><div className="mt-2 grid grid-cols-[48px_1fr] gap-2"><input type="color" value={normalizeThemeColor(theme.mobileWelcomePanelBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomePanelBackground", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" /><input value={normalizeThemeColor(theme.mobileWelcomePanelBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomePanelBackground", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" /></div></label>
+                      <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text panel transparency</span><input type="range" min="0.25" max="1" step="0.05" value={typeof theme.mobileWelcomePanelOpacity === "number" ? theme.mobileWelcomePanelOpacity : 0.9} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomePanelOpacity", Number(event.target.value))} className="mt-5 w-full accent-orange-500" /><span className="mt-1 block text-xs font-semibold text-slate-500">{Math.round((typeof theme.mobileWelcomePanelOpacity === "number" ? theme.mobileWelcomePanelOpacity : 0.9) * 100)}% solid</span></label>
+                    </div>
+                    <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Welcome text alignment</span><select value={theme.mobileWelcomeTextAlign || "center"} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomeTextAlign", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></label>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-2">
+              <div className="rounded-[24px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:p-5">
+                <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-black text-slate-950">Desktop About us</p><p className="mt-1 text-xs leading-5 text-slate-600">Image and story block shown before products on desktop.</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Desktop</span></div>
+                <div className="mt-4 rounded-[20px] border border-slate-200 bg-slate-50/70 p-3"><ToggleRow label="Show About us on storefront" help="When switched on, this section appears before the product list." checked={theme.aboutUsEnabled === true} onChange={(checked) => updateStorefrontThemeSetting("aboutUsEnabled", checked)} /></div>
+                <div className="mt-4 space-y-4">
+                  {theme.aboutUsImageUrl ? <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100"><img src={theme.aboutUsImageUrl} alt="Desktop About us preview" className="h-44 w-full object-cover" /></div> : <div className="flex min-h-36 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">No desktop About us image uploaded yet.</div>}
+                  <UploadField label={theme.aboutUsImageUrl ? "Change desktop About us image" : "Upload desktop About us image"} saved={Boolean(theme.aboutUsImageUrl)} busy={uploadingAboutImage} accept="image/png,image/jpeg,image/webp" help="Upload saves the image; then save this Theme section to publish it." onFile={(file) => uploadStorefrontThemeAsset(file, "about-us", "aboutUsImageUrl", "desktop About us image")} />
+                  <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Title</span><input value={theme.aboutUsTitle || ""} onChange={(event) => updateStorefrontThemeSetting("aboutUsTitle", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" placeholder="About us" /></label>
+                  <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">About text</span><textarea value={theme.aboutUsBody || ""} onChange={(event) => updateStorefrontThemeSetting("aboutUsBody", event.target.value)} rows={7} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" placeholder="Write one or two paragraphs about the store. Line breaks are kept on the storefront." /></label>
+                  <div className="grid gap-3 sm:grid-cols-2"><label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text alignment</span><select value={theme.aboutUsTextAlign || "left"} onChange={(event) => updateStorefrontThemeSetting("aboutUsTextAlign", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></label><label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text colour</span><div className="mt-2 grid grid-cols-[48px_1fr] gap-2"><input type="color" value={normalizeThemeColor(theme.aboutUsTextColor, form.textColor)} onChange={(event) => updateStorefrontThemeSetting("aboutUsTextColor", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" /><input value={normalizeThemeColor(theme.aboutUsTextColor, form.textColor)} onChange={(event) => updateStorefrontThemeSetting("aboutUsTextColor", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" /></div></label></div>
+                  <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Panel background</span><div className="mt-2 grid grid-cols-[48px_1fr] gap-2"><input type="color" value={normalizeThemeColor(theme.aboutUsBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("aboutUsBackground", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" /><input value={normalizeThemeColor(theme.aboutUsBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("aboutUsBackground", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" /></div></label>
+                </div>
               </div>
 
-              <div className="mt-4 space-y-4">
-                {theme.aboutUsImageUrl ? (
-                  <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100">
-                    <img
-                      src={theme.aboutUsImageUrl}
-                      alt="About us preview"
-                      className="h-44 w-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex min-h-36 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">
-                    No About us image uploaded yet.
-                  </div>
-                )}
-                <UploadField
-                  label={theme.aboutUsImageUrl ? "Change About us image" : "Upload About us image"}
-                  saved={Boolean(theme.aboutUsImageUrl)}
-                  busy={uploadingAboutImage}
-                  accept="image/png,image/jpeg,image/webp"
-                  help="PNG, JPG or WebP. Upload saves the image; then save this Theme section to publish it."
-                  onFile={(file) => uploadStorefrontThemeAsset(file, "about-us")}
-                />
-
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Title</span>
-                  <input
-                    value={theme.aboutUsTitle || ""}
-                    onChange={(event) => updateStorefrontThemeSetting("aboutUsTitle", event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    placeholder="About us"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">About text</span>
-                  <textarea
-                    value={theme.aboutUsBody || ""}
-                    onChange={(event) => updateStorefrontThemeSetting("aboutUsBody", event.target.value)}
-                    rows={7}
-                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    placeholder="Write one or two paragraphs about the store. Line breaks are kept on the storefront."
-                  />
-                </label>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text alignment</span>
-                    <select
-                      value={theme.aboutUsTextAlign || "left"}
-                      onChange={(event) => updateStorefrontThemeSetting("aboutUsTextAlign", event.target.value)}
-                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    >
-                      <option value="left">Left</option>
-                      <option value="center">Centre</option>
-                      <option value="right">Right</option>
-                    </select>
-                  </label>
-                  <label className="block">
-                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text colour</span>
-                    <div className="mt-2 grid grid-cols-[48px_1fr] gap-2">
-                      <input
-                        type="color"
-                        value={normalizeThemeColor(theme.aboutUsTextColor, form.textColor)}
-                        onChange={(event) => updateStorefrontThemeSetting("aboutUsTextColor", event.target.value.toUpperCase())}
-                        className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1"
-                        aria-label="About us text colour"
-                      />
-                      <input
-                        value={normalizeThemeColor(theme.aboutUsTextColor, form.textColor)}
-                        onChange={(event) => updateStorefrontThemeSetting("aboutUsTextColor", event.target.value.toUpperCase())}
-                        className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                      />
-                    </div>
-                  </label>
-                </div>
-
-                <label className="block">
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Panel background</span>
-                  <div className="mt-2 grid grid-cols-[48px_1fr] gap-2">
-                    <input
-                      type="color"
-                      value={normalizeThemeColor(theme.aboutUsBackground, "#FFFFFF")}
-                      onChange={(event) => updateStorefrontThemeSetting("aboutUsBackground", event.target.value.toUpperCase())}
-                      className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1"
-                      aria-label="About us background colour"
-                    />
-                    <input
-                      value={normalizeThemeColor(theme.aboutUsBackground, "#FFFFFF")}
-                      onChange={(event) => updateStorefrontThemeSetting("aboutUsBackground", event.target.value.toUpperCase())}
-                      className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                    />
-                  </div>
-                </label>
+              <div className="rounded-[24px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:p-5">
+                <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-black text-slate-950">Mobile About us</p><p className="mt-1 text-xs leading-5 text-slate-600">Separate phone image and text, or tick Use same to reuse desktop About us.</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Mobile</span></div>
+                <div className="mt-4 rounded-[20px] border border-slate-200 bg-slate-50/70 p-3"><ToggleRow label="Use same as desktop About us" help="Reuses the desktop About us image, text, colours and visibility on mobile." checked={theme.mobileAboutUsUseSame !== false} onChange={(checked) => updateStorefrontThemeSetting("mobileAboutUsUseSame", checked)} /></div>
+                {theme.mobileAboutUsUseSame === false ? <div className="mt-4 space-y-4">
+                  <ToggleRow label="Show mobile About us on storefront" help="When switched on, this mobile section appears before the product list on phone-sized screens." checked={theme.mobileAboutUsEnabled === true} onChange={(checked) => updateStorefrontThemeSetting("mobileAboutUsEnabled", checked)} />
+                  {theme.mobileAboutUsImageUrl ? <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100"><img src={theme.mobileAboutUsImageUrl} alt="Mobile About us preview" className="h-56 w-full object-cover" /></div> : <div className="flex min-h-44 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">No mobile About us image uploaded yet.</div>}
+                  <UploadField label={theme.mobileAboutUsImageUrl ? "Change mobile About us image" : "Upload mobile About us image"} saved={Boolean(theme.mobileAboutUsImageUrl)} busy={uploadingMobileAboutImage} accept="image/png,image/jpeg,image/webp" help="Upload saves the image; then save this Theme section to publish it." onFile={(file) => uploadStorefrontThemeAsset(file, "about-us", "mobileAboutUsImageUrl", "mobile About us image")} />
+                  <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Mobile title</span><input value={theme.mobileAboutUsTitle || ""} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsTitle", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" placeholder="About us" /></label>
+                  <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Mobile About text</span><textarea value={theme.mobileAboutUsBody || ""} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsBody", event.target.value)} rows={7} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" placeholder="Write the mobile About us wording. Leave empty only if you do not want text." /></label>
+                  <div className="grid gap-3 sm:grid-cols-2"><label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text alignment</span><select value={theme.mobileAboutUsTextAlign || "left"} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsTextAlign", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></label><label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Text colour</span><div className="mt-2 grid grid-cols-[48px_1fr] gap-2"><input type="color" value={normalizeThemeColor(theme.mobileAboutUsTextColor, form.textColor)} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsTextColor", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" /><input value={normalizeThemeColor(theme.mobileAboutUsTextColor, form.textColor)} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsTextColor", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" /></div></label></div>
+                  <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Panel background</span><div className="mt-2 grid grid-cols-[48px_1fr] gap-2"><input type="color" value={normalizeThemeColor(theme.mobileAboutUsBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsBackground", event.target.value.toUpperCase())} className="h-12 w-full rounded-2xl border border-slate-200 bg-white p-1" /><input value={normalizeThemeColor(theme.mobileAboutUsBackground, "#FFFFFF")} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsBackground", event.target.value.toUpperCase())} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm font-bold uppercase text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" /></div></label>
+                </div> : null}
               </div>
             </div>
           </div>

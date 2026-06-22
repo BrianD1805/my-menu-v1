@@ -231,6 +231,11 @@ function hexToRgb(hex: string) {
   };
 }
 
+function hexToRgba(hex: string, alpha = 1) {
+  const { r, g, b } = hexToRgb(normalizeThemeColor(hex, "#FFFFFF"));
+  return `rgba(${r}, ${g}, ${b}, ${Math.min(1, Math.max(0, alpha))})`;
+}
+
 function rgbToHex(r: number, g: number, b: number) {
   return `#${[r, g, b]
     .map((value) =>
@@ -1131,6 +1136,7 @@ export default function MenuBrowser({
   const [welcomeCustomerName, setWelcomeCustomerName] = useState<string | null>(
     null,
   );
+  const [isMobileStorefront, setIsMobileStorefront] = useState(false);
   const [customerRewards, setCustomerRewards] =
     useState<CustomerRewardSummary | null>(null);
   const [rewardsModalOpen, setRewardsModalOpen] = useState(false);
@@ -1187,6 +1193,17 @@ export default function MenuBrowser({
     storefrontTheme?.headerButtonBorder,
     brandAccent,
   );
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateMobileState = () => setIsMobileStorefront(mediaQuery.matches);
+    updateMobileState();
+    mediaQuery.addEventListener("change", updateMobileState);
+    return () => mediaQuery.removeEventListener("change", updateMobileState);
+  }, []);
+
+  const useMobileWelcome = isMobileStorefront && storefrontTheme?.mobileWelcomeUseSame === false;
+  const useMobileAboutUs = isMobileStorefront && storefrontTheme?.mobileAboutUsUseSame === false;
+
   const welcomeBackground = normalizeThemeColor(
     storefrontTheme?.welcomeBackground,
     "#FFFFFF",
@@ -1229,40 +1246,86 @@ export default function MenuBrowser({
     storefrontTheme?.welcomeActionBorder,
     "#FFFFFF",
   );
+  const effectiveWelcomeBannerImageUrl = useMobileWelcome
+    ? storefrontTheme?.mobileWelcomeBannerImageUrl || ""
+    : storefrontTheme?.welcomeBannerImageUrl || "";
   const welcomeBannerEnabled =
-    storefrontTheme?.welcomeBannerEnabled === true &&
-    Boolean(storefrontTheme?.welcomeBannerImageUrl);
+    (useMobileWelcome
+      ? storefrontTheme?.mobileWelcomeBannerEnabled === true
+      : storefrontTheme?.welcomeBannerEnabled === true) &&
+    Boolean(effectiveWelcomeBannerImageUrl);
   const welcomeBannerOverlayColor = normalizeThemeColor(
-    storefrontTheme?.welcomeBannerOverlayColor,
+    useMobileWelcome
+      ? storefrontTheme?.mobileWelcomeBannerOverlayColor
+      : storefrontTheme?.welcomeBannerOverlayColor,
     "#000000",
   );
-  const welcomeBannerOverlayOpacity =
-    typeof storefrontTheme?.welcomeBannerOverlayOpacity === "number"
-      ? Math.min(0.9, Math.max(0, storefrontTheme.welcomeBannerOverlayOpacity))
-      : 0.45;
+  const welcomeBannerOverlayOpacity = (() => {
+    const value = useMobileWelcome
+      ? storefrontTheme?.mobileWelcomeBannerOverlayOpacity
+      : storefrontTheme?.welcomeBannerOverlayOpacity;
+    return typeof value === "number" ? Math.min(0.9, Math.max(0, value)) : 0.45;
+  })();
   const welcomeBannerFit =
-    storefrontTheme?.welcomeBannerFit === "contain" ? "contain" : "cover";
+    (useMobileWelcome
+      ? storefrontTheme?.mobileWelcomeBannerFit
+      : storefrontTheme?.welcomeBannerFit) === "contain"
+      ? "contain"
+      : "cover";
+  const welcomeTextAlignValue = useMobileWelcome
+    ? storefrontTheme?.mobileWelcomeTextAlign
+    : storefrontTheme?.welcomeTextAlign;
   const welcomeTextAlign =
-    storefrontTheme?.welcomeTextAlign === "left" ||
-    storefrontTheme?.welcomeTextAlign === "right" ||
-    storefrontTheme?.welcomeTextAlign === "center"
-      ? storefrontTheme.welcomeTextAlign
+    welcomeTextAlignValue === "left" ||
+    welcomeTextAlignValue === "right" ||
+    welcomeTextAlignValue === "center"
+      ? welcomeTextAlignValue
       : "center";
+  const welcomePanelBackground = normalizeThemeColor(
+    useMobileWelcome
+      ? storefrontTheme?.mobileWelcomePanelBackground
+      : storefrontTheme?.welcomePanelBackground,
+    "#FFFFFF",
+  );
+  const welcomePanelOpacityValue = useMobileWelcome
+    ? storefrontTheme?.mobileWelcomePanelOpacity
+    : storefrontTheme?.welcomePanelOpacity;
+  const welcomePanelOpacity =
+    typeof welcomePanelOpacityValue === "number"
+      ? Math.min(1, Math.max(0.25, welcomePanelOpacityValue))
+      : 0.9;
+  const effectiveAboutUsEnabled = useMobileAboutUs
+    ? storefrontTheme?.mobileAboutUsEnabled === true
+    : storefrontTheme?.aboutUsEnabled === true;
+  const effectiveAboutUsImageUrl = useMobileAboutUs
+    ? storefrontTheme?.mobileAboutUsImageUrl || ""
+    : storefrontTheme?.aboutUsImageUrl || "";
+  const effectiveAboutUsTitle = useMobileAboutUs
+    ? storefrontTheme?.mobileAboutUsTitle?.trim() || "About us"
+    : storefrontTheme?.aboutUsTitle?.trim() || "About us";
+  const effectiveAboutUsBody = useMobileAboutUs
+    ? storefrontTheme?.mobileAboutUsBody?.trim() || ""
+    : storefrontTheme?.aboutUsBody?.trim() || "";
   const aboutUsEnabled =
-    storefrontTheme?.aboutUsEnabled === true &&
-    Boolean((storefrontTheme?.aboutUsTitle || storefrontTheme?.aboutUsBody || storefrontTheme?.aboutUsImageUrl || "").trim());
-  const aboutUsTitle = storefrontTheme?.aboutUsTitle?.trim() || "About us";
-  const aboutUsBody = storefrontTheme?.aboutUsBody?.trim() || "";
+    effectiveAboutUsEnabled &&
+    Boolean((effectiveAboutUsTitle || effectiveAboutUsBody || effectiveAboutUsImageUrl || "").trim());
+  const aboutUsTitle = effectiveAboutUsTitle;
+  const aboutUsBody = effectiveAboutUsBody;
+  const aboutUsTextAlignValue = useMobileAboutUs
+    ? storefrontTheme?.mobileAboutUsTextAlign
+    : storefrontTheme?.aboutUsTextAlign;
   const aboutUsTextAlign =
-    storefrontTheme?.aboutUsTextAlign === "center" || storefrontTheme?.aboutUsTextAlign === "right"
-      ? storefrontTheme.aboutUsTextAlign
+    aboutUsTextAlignValue === "center" || aboutUsTextAlignValue === "right"
+      ? aboutUsTextAlignValue
       : "left";
   const aboutUsBackground = normalizeThemeColor(
-    storefrontTheme?.aboutUsBackground,
+    useMobileAboutUs
+      ? storefrontTheme?.mobileAboutUsBackground
+      : storefrontTheme?.aboutUsBackground,
     "#FFFFFF",
   );
   const aboutUsTextColor = normalizeThemeColor(
-    storefrontTheme?.aboutUsTextColor,
+    useMobileAboutUs ? storefrontTheme?.mobileAboutUsTextColor : storefrontTheme?.aboutUsTextColor,
     brandText,
   );
   const rewardsPopupBackground = softerPanelColor(
@@ -2622,7 +2685,7 @@ export default function MenuBrowser({
           textAlign: welcomeTextAlign,
           ...(welcomeBannerEnabled
             ? {
-                backgroundImage: `url(${storefrontTheme?.welcomeBannerImageUrl})`,
+                backgroundImage: `url(${effectiveWelcomeBannerImageUrl})`,
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
                 backgroundSize: welcomeBannerFit,
@@ -2643,8 +2706,13 @@ export default function MenuBrowser({
         <div
           className={
             welcomeBannerEnabled
-              ? "relative z-10 mx-auto max-w-4xl rounded-[24px] border border-white/60 bg-white/90 px-4 py-4 shadow-[0_18px_55px_rgba(15,23,42,0.20)] backdrop-blur-sm sm:px-6 sm:py-5"
+              ? "relative z-10 mx-auto max-w-4xl rounded-[24px] border border-white/60 px-4 py-4 shadow-[0_18px_55px_rgba(15,23,42,0.20)] backdrop-blur-sm sm:px-6 sm:py-5 lg:max-w-[76rem] lg:px-8 lg:py-7"
               : "relative z-10"
+          }
+          style={
+            welcomeBannerEnabled
+              ? { backgroundColor: hexToRgba(welcomePanelBackground, welcomePanelOpacity) }
+              : undefined
           }
         >
         <p
@@ -3976,10 +4044,10 @@ export default function MenuBrowser({
           }}
         >
           <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-stretch">
-            {storefrontTheme?.aboutUsImageUrl ? (
+            {effectiveAboutUsImageUrl ? (
               <div className="min-h-[240px] bg-slate-100 lg:min-h-[360px]">
                 <img
-                  src={storefrontTheme.aboutUsImageUrl}
+                  src={effectiveAboutUsImageUrl}
                   alt={aboutUsTitle}
                   className="h-full w-full object-cover"
                 />

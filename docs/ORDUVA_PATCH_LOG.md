@@ -645,3 +645,14 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - About us renders before the store product category sections when enabled.
 - Extended tenant asset uploads to support welcome banner and About us images without requiring new database columns.
 - Stored the new settings inside the existing storefront theme JSON, so no Supabase SQL is required.
+
+
+## Ver-0.247A - Storefront welcome/About mobile controls and panel sizing
+
+- Patch type: touched-files-only ZIP.
+- Duplicated welcome background controls for mobile while keeping the desktop controls as the desktop source.
+- Duplicated About us controls for mobile while keeping the desktop controls as the desktop source.
+- Added Use same controls so mobile can reuse desktop welcome/About data without re-entering it.
+- Added welcome text panel colour transparency control.
+- Enlarged the desktop welcome text panel by about 35% when a welcome background image is active.
+- No Supabase SQL required.
