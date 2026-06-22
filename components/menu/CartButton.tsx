@@ -90,6 +90,31 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
     return registration.pushManager.getSubscription();
   }
 
+  async function createSubscriptionForThisDevice(registration: ServiceWorkerRegistration) {
+    const existing = await registration.pushManager.getSubscription();
+    if (existing) return existing;
+
+    const subscribe = () => registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    });
+
+    try {
+      return await subscribe();
+    } catch {
+      // Desktop browsers can keep a stale push registration after a permission/VAPID change.
+      // Clear it once and retry so customers do not see the raw browser "Registration failed" error.
+      const stale = await registration.pushManager.getSubscription().catch(() => null);
+      if (stale) await stale.unsubscribe().catch(() => false);
+      await registration.update().catch(() => undefined);
+      try {
+        return await subscribe();
+      } catch {
+        throw new Error("This browser could not register for order updates. Please check this browser's notification setting, or continue to checkout without desktop notifications.");
+      }
+    }
+  }
+
   async function getCustomerSession(): Promise<CustomerSession | null> {
     try {
       const response = await fetch("/api/customer/auth/me", { cache: "no-store" });
@@ -188,17 +213,11 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
       }
 
       const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      const subscription =
-        existing ||
-        (await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        }));
+      const subscription = await createSubscriptionForThisDevice(registration);
 
       await saveSubscription(subscription);
-      setMessage("Order updates are on for this device.");
-      window.setTimeout(() => goToCart(), 350);
+      setMessage("Order updates are on for this device. If your phone was already registered, that phone can also receive updates for this order.");
+      window.setTimeout(() => goToCart(), 650);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not turn on order updates. You can still continue to checkout.");
     } finally {
@@ -301,9 +320,9 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
         >
           <div
             className="overflow-hidden rounded-[30px] border border-white/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.26)]"
-            style={{ width: "min(calc(100vw - 70px), 28rem)", maxWidth: "28rem", maxHeight: "calc(100dvh - 150px)", margin: "0 auto" }}
+            style={{ width: "min(calc(100vw - 70px), 32.2rem)", maxWidth: "32.2rem", maxHeight: "calc(100dvh - 110px)", margin: "0 auto" }}
           >
-            <div className="modal-scroll relative max-h-[calc(100dvh-150px)] overflow-y-auto px-5 pb-8 pt-6 sm:px-6 sm:pb-9">
+            <div className="modal-scroll relative overflow-y-auto px-6 pb-8 pt-6 sm:px-8 sm:pb-9" style={{ maxHeight: "calc(100dvh - 110px)" }}>
               <button
                 type="button"
                 onClick={() => setReminderOpen(false)}
@@ -322,9 +341,9 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
 
               <div className="mt-5 text-center">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: brandAccent }}>Order updates</p>
-                <h2 id="order-updates-title" className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Stay updated on your order</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  We can send a quick notification when your order is accepted, prepared, ready, or delivered.
+                <h2 id="order-updates-title" className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Stay updated on your order</h2>
+                <p className="mt-3 text-base leading-7 text-slate-600">
+                  Allow notifications on this browser to receive updates here. If you already allowed updates on your phone, your phone can also receive updates for this order.
                 </p>
               </div>
 
@@ -342,7 +361,7 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
                   className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(15,23,42,0.16)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-65"
                   style={{ backgroundColor: brandPrimary }}
                 >
-                  {busy ? "Turning on updates…" : "Enable order updates"}
+                  {busy ? "Turning on updates…" : "Enable updates on this device"}
                 </button>
                 <button
                   type="button"
@@ -354,7 +373,7 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
               </div>
 
               <p className="mt-4 text-center text-xs leading-5 text-slate-500">
-                You only need to allow this once on this device. You can still order without notifications.
+                Notifications are per device. You can still order without turning them on here.
               </p>
             </div>
           </div>
@@ -364,5 +383,6 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
     </>
   );
 });
+
 
 export default CartButton;

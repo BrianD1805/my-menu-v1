@@ -1,3 +1,12 @@
+## Ver-0.245 — Order update notification wording and desktop registration fixes
+
+- Clarified the storefront order updates popup so customers understand notifications are per device and that a previously allowed phone can also receive updates.
+- Enlarged the order updates popup by roughly 15% and increased available height to avoid unnecessary desktop scrolling.
+- Added safer push subscription retry handling for stale desktop browser registrations, replacing raw push-service errors with customer-friendly wording.
+- Updated the checkout order-updates card with the same per-device wording and retry handling.
+- Forced the checkout confirmation screen to scroll to the top after an order is placed so it no longer renders halfway down the page.
+- No Supabase SQL required.
+
 # Orduva Patch Log
 
 ## Ver-0.244 — Storefront popup cart animation and policy footer links

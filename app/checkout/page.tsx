@@ -296,6 +296,13 @@ export default function CheckoutPage() {
   const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
 
   useEffect(() => {
+    if (!successState) return;
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
+  }, [successState?.orderId]);
+
+  useEffect(() => {
     async function loadCustomerAccount() {
       setCustomerAccountLoading(true);
       const startedAt = performance.now();

@@ -95,6 +95,29 @@ export default function CustomerPushNotificationsCard({
     void relinkCurrentOrderIfNeeded();
   }, [tenantSlug, orderId, customerPhone, customerName, customerAccountId]);
 
+  async function createSubscriptionForThisDevice(registration: ServiceWorkerRegistration) {
+    const existing = await registration.pushManager.getSubscription();
+    if (existing) return existing;
+
+    const subscribe = () => registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    });
+
+    try {
+      return await subscribe();
+    } catch {
+      const stale = await registration.pushManager.getSubscription().catch(() => null);
+      if (stale) await stale.unsubscribe().catch(() => false);
+      await registration.update().catch(() => undefined);
+      try {
+        return await subscribe();
+      } catch {
+        throw new Error("This browser could not register for order updates. Please check this browser's notification setting, or keep this page open to follow your order.");
+      }
+    }
+  }
+
   async function enablePush() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || typeof Notification === "undefined") {
       setTone("error");
@@ -123,13 +146,7 @@ export default function CustomerPushNotificationsCard({
       }
 
       const registration = await navigator.serviceWorker.ready;
-      const existing = await registration.pushManager.getSubscription();
-      const subscription =
-        existing ||
-        (await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        }));
+      const subscription = await createSubscriptionForThisDevice(registration);
 
       const response = await fetch("/api/customer/push-subscriptions", {
         method: "POST",
@@ -147,7 +164,7 @@ export default function CustomerPushNotificationsCard({
       if (!response.ok) throw new Error(payload.error || "Could not turn on order updates.");
 
       setTone("success");
-      setMessage("Order updates are on for this device.");
+      setMessage("Order updates are on for this device. If your phone was already registered, that phone can also receive updates for this order.");
       await refreshStatus();
     } catch (error) {
       setTone("error");
@@ -203,10 +220,10 @@ export default function CustomerPushNotificationsCard({
           </h3>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
             {notificationsOn
-              ? "You’ll receive updates here when this order is accepted, prepared, ready, or delivered."
+              ? "You’ll receive updates on this device when this order is accepted, prepared, ready, or delivered."
               : denied
-                ? "Notifications are blocked in your browser settings. You can still check your order status here."
-                : "Turn on notifications once and we’ll send order updates to this device."}
+                ? "Notifications are blocked in this browser. If your phone was already registered, updates can still go there; otherwise keep this page open to check progress."
+                : "Notifications are per device. Enable them here for desktop updates, or keep using your phone if that device is already allowed."}
           </p>
         </div>
 
@@ -221,7 +238,7 @@ export default function CustomerPushNotificationsCard({
               disabled={busy || denied}
               className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {busy ? "Working..." : "Enable updates"}
+              {busy ? "Working..." : "Enable updates here"}
             </button>
           )}
         </div>
