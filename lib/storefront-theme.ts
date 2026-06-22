@@ -124,7 +124,28 @@ export const STOREFRONT_THEME_KEYS = [
 ] as const;
 
 export type StorefrontThemeKey = (typeof STOREFRONT_THEME_KEYS)[number];
-export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & { selectedPreset?: string | null; customised?: boolean; logoPaletteColours?: string[]; favouritesCardShadowEnabled?: boolean };
+export type StorefrontBannerFit = "cover" | "contain";
+export type StorefrontTextAlign = "left" | "center" | "right";
+
+export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & {
+  selectedPreset?: string | null;
+  customised?: boolean;
+  logoPaletteColours?: string[];
+  favouritesCardShadowEnabled?: boolean;
+  welcomeBannerEnabled?: boolean;
+  welcomeBannerImageUrl?: string;
+  welcomeBannerOverlayColor?: string;
+  welcomeBannerOverlayOpacity?: number;
+  welcomeBannerFit?: StorefrontBannerFit;
+  welcomeTextAlign?: StorefrontTextAlign;
+  aboutUsEnabled?: boolean;
+  aboutUsImageUrl?: string;
+  aboutUsTitle?: string;
+  aboutUsBody?: string;
+  aboutUsTextAlign?: StorefrontTextAlign;
+  aboutUsBackground?: string;
+  aboutUsTextColor?: string;
+};
 
 export function isHexColor(value: unknown): value is string {
   return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value.trim());
@@ -132,6 +153,24 @@ export function isHexColor(value: unknown): value is string {
 
 export function normalizeThemeColor(value: unknown, fallback = "#FFFFFF") {
   return isHexColor(value) ? value.trim().toUpperCase() : fallback;
+}
+
+function normalizeStoredText(value: unknown, maxLength: number) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function normalizeOverlayOpacity(value: unknown) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return undefined;
+  return Math.min(0.9, Math.max(0, numberValue));
+}
+
+function normalizeBannerFit(value: unknown): StorefrontBannerFit | undefined {
+  return value === "cover" || value === "contain" ? value : undefined;
+}
+
+function normalizeTextAlign(value: unknown): StorefrontTextAlign | undefined {
+  return value === "left" || value === "center" || value === "right" ? value : undefined;
 }
 
 export function normalizeStorefrontTheme(value: unknown): StorefrontTheme | null {
@@ -152,6 +191,29 @@ export function normalizeStorefrontTheme(value: unknown): StorefrontTheme | null
       .filter(isHexColor);
     if (colours.length) output.logoPaletteColours = Array.from(new Set(colours)).slice(0, 12);
   }
+
+  if (typeof input.welcomeBannerEnabled === "boolean") output.welcomeBannerEnabled = input.welcomeBannerEnabled;
+  const welcomeBannerImageUrl = normalizeStoredText(input.welcomeBannerImageUrl, 800);
+  if (welcomeBannerImageUrl) output.welcomeBannerImageUrl = welcomeBannerImageUrl;
+  if (isHexColor(input.welcomeBannerOverlayColor)) output.welcomeBannerOverlayColor = String(input.welcomeBannerOverlayColor).trim().toUpperCase();
+  const welcomeBannerOverlayOpacity = normalizeOverlayOpacity(input.welcomeBannerOverlayOpacity);
+  if (typeof welcomeBannerOverlayOpacity === "number") output.welcomeBannerOverlayOpacity = welcomeBannerOverlayOpacity;
+  const welcomeBannerFit = normalizeBannerFit(input.welcomeBannerFit);
+  if (welcomeBannerFit) output.welcomeBannerFit = welcomeBannerFit;
+  const welcomeTextAlign = normalizeTextAlign(input.welcomeTextAlign);
+  if (welcomeTextAlign) output.welcomeTextAlign = welcomeTextAlign;
+
+  if (typeof input.aboutUsEnabled === "boolean") output.aboutUsEnabled = input.aboutUsEnabled;
+  const aboutUsImageUrl = normalizeStoredText(input.aboutUsImageUrl, 800);
+  if (aboutUsImageUrl) output.aboutUsImageUrl = aboutUsImageUrl;
+  const aboutUsTitle = normalizeStoredText(input.aboutUsTitle, 120);
+  if (aboutUsTitle) output.aboutUsTitle = aboutUsTitle;
+  const aboutUsBody = normalizeStoredText(input.aboutUsBody, 1600);
+  if (aboutUsBody) output.aboutUsBody = aboutUsBody;
+  const aboutUsTextAlign = normalizeTextAlign(input.aboutUsTextAlign);
+  if (aboutUsTextAlign) output.aboutUsTextAlign = aboutUsTextAlign;
+  if (isHexColor(input.aboutUsBackground)) output.aboutUsBackground = String(input.aboutUsBackground).trim().toUpperCase();
+  if (isHexColor(input.aboutUsTextColor)) output.aboutUsTextColor = String(input.aboutUsTextColor).trim().toUpperCase();
 
   return Object.keys(output).length ? output : null;
 }

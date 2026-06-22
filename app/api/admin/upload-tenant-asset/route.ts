@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    if (!["logo", "favicon"].includes(kind)) {
+    if (!["logo", "favicon", "welcome-banner", "about-us"].includes(kind)) {
       return NextResponse.json({ error: "Invalid asset type" }, { status: 400 });
     }
 
@@ -77,10 +77,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const maxBytes = kind === "logo" ? 3 * 1024 * 1024 : 1024 * 1024;
+    const maxBytes = kind === "favicon" ? 1024 * 1024 : 4 * 1024 * 1024;
     if (file.size > maxBytes) {
       return NextResponse.json(
-        { error: kind === "logo" ? "Logo must be under 3MB." : "Favicon must be under 1MB." },
+        { error: kind === "favicon" ? "Favicon must be under 1MB." : "Image must be under 4MB." },
         { status: 400 }
       );
     }
@@ -109,27 +109,34 @@ export async function POST(req: Request) {
     const { data: publicUrlData } = db.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
     const publicUrl = publicUrlData.publicUrl;
 
-    const settingsPayload = {
-      tenant_id: tenantLookup.tenant.id,
-      ...(kind === "logo" ? { logo_url: publicUrl } : { favicon_url: publicUrl }),
-    };
+    if (kind === "logo" || kind === "favicon") {
+      const settingsPayload = {
+        tenant_id: tenantLookup.tenant.id,
+        ...(kind === "logo" ? { logo_url: publicUrl } : { favicon_url: publicUrl }),
+      };
 
-    const { error: settingsError } = await db
-      .from("tenant_settings")
-      .upsert(settingsPayload, { onConflict: "tenant_id" });
+      const { error: settingsError } = await db
+        .from("tenant_settings")
+        .upsert(settingsPayload, { onConflict: "tenant_id" });
 
-    if (settingsError) {
-      return NextResponse.json(
-        { error: `Image uploaded, but settings could not be saved: ${settingsError.message}` },
-        { status: 500 }
-      );
+      if (settingsError) {
+        return NextResponse.json(
+          { error: `Image uploaded, but settings could not be saved: ${settingsError.message}` },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({
       url: publicUrl,
       storagePath,
-      saved: true,
-      message: kind === "logo" ? "Logo uploaded and saved." : "Favicon uploaded and saved.",
+      saved: kind === "logo" || kind === "favicon",
+      message:
+        kind === "logo"
+          ? "Logo uploaded and saved."
+          : kind === "favicon"
+            ? "Favicon uploaded and saved."
+            : "Image uploaded. Save this settings section to publish it.",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to upload asset";

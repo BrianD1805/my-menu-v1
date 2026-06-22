@@ -1229,6 +1229,42 @@ export default function MenuBrowser({
     storefrontTheme?.welcomeActionBorder,
     "#FFFFFF",
   );
+  const welcomeBannerEnabled =
+    storefrontTheme?.welcomeBannerEnabled === true &&
+    Boolean(storefrontTheme?.welcomeBannerImageUrl);
+  const welcomeBannerOverlayColor = normalizeThemeColor(
+    storefrontTheme?.welcomeBannerOverlayColor,
+    "#000000",
+  );
+  const welcomeBannerOverlayOpacity =
+    typeof storefrontTheme?.welcomeBannerOverlayOpacity === "number"
+      ? Math.min(0.9, Math.max(0, storefrontTheme.welcomeBannerOverlayOpacity))
+      : 0.45;
+  const welcomeBannerFit =
+    storefrontTheme?.welcomeBannerFit === "contain" ? "contain" : "cover";
+  const welcomeTextAlign =
+    storefrontTheme?.welcomeTextAlign === "left" ||
+    storefrontTheme?.welcomeTextAlign === "right" ||
+    storefrontTheme?.welcomeTextAlign === "center"
+      ? storefrontTheme.welcomeTextAlign
+      : "center";
+  const aboutUsEnabled =
+    storefrontTheme?.aboutUsEnabled === true &&
+    Boolean((storefrontTheme?.aboutUsTitle || storefrontTheme?.aboutUsBody || storefrontTheme?.aboutUsImageUrl || "").trim());
+  const aboutUsTitle = storefrontTheme?.aboutUsTitle?.trim() || "About us";
+  const aboutUsBody = storefrontTheme?.aboutUsBody?.trim() || "";
+  const aboutUsTextAlign =
+    storefrontTheme?.aboutUsTextAlign === "center" || storefrontTheme?.aboutUsTextAlign === "right"
+      ? storefrontTheme.aboutUsTextAlign
+      : "left";
+  const aboutUsBackground = normalizeThemeColor(
+    storefrontTheme?.aboutUsBackground,
+    "#FFFFFF",
+  );
+  const aboutUsTextColor = normalizeThemeColor(
+    storefrontTheme?.aboutUsTextColor,
+    brandText,
+  );
   const rewardsPopupBackground = softerPanelColor(
     storefrontTheme?.rewardsPopupBackground,
     "#FFFDF8",
@@ -2578,13 +2614,39 @@ export default function MenuBrowser({
       </div>
 
       <section
-        className="rounded-[28px] border px-5 py-5 text-center ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
+        className="relative overflow-hidden rounded-[28px] border px-5 py-5 ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
         style={{
           backgroundColor: welcomeBackground,
           borderColor: brandAccentBorder,
           boxShadow: `0 16px 36px ${welcomeShadow}22`,
+          textAlign: welcomeTextAlign,
+          ...(welcomeBannerEnabled
+            ? {
+                backgroundImage: `url(${storefrontTheme?.welcomeBannerImageUrl})`,
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: welcomeBannerFit,
+              }
+            : {}),
         }}
       >
+        {welcomeBannerEnabled ? (
+          <div
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundColor: welcomeBannerOverlayColor,
+              opacity: welcomeBannerOverlayOpacity,
+            }}
+            aria-hidden="true"
+          />
+        ) : null}
+        <div
+          className={
+            welcomeBannerEnabled
+              ? "relative z-10 mx-auto max-w-4xl rounded-[24px] border border-white/60 bg-white/90 px-4 py-4 shadow-[0_18px_55px_rgba(15,23,42,0.20)] backdrop-blur-sm sm:px-6 sm:py-5"
+              : "relative z-10"
+          }
+        >
         <p
           className="text-xs font-semibold uppercase tracking-[0.28em]"
           style={{ color: welcomeLabel }}
@@ -2716,6 +2778,7 @@ export default function MenuBrowser({
               Tap the heart on any product to save it here.
             </p>
           ) : null}
+        </div>
         </div>
       </section>
 
@@ -3899,6 +3962,50 @@ export default function MenuBrowser({
                 onPay={openStandalonePayment}
               />
             ))}
+          </div>
+        </section>
+      ) : null}
+
+      {aboutUsEnabled ? (
+        <section
+          className="mb-8 overflow-hidden rounded-[30px] border shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:mb-10"
+          style={{
+            backgroundColor: aboutUsBackground,
+            borderColor: brandBorder,
+            color: aboutUsTextColor,
+          }}
+        >
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-stretch">
+            {storefrontTheme?.aboutUsImageUrl ? (
+              <div className="min-h-[240px] bg-slate-100 lg:min-h-[360px]">
+                <img
+                  src={storefrontTheme.aboutUsImageUrl}
+                  alt={aboutUsTitle}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ) : null}
+            <div
+              className="flex flex-col justify-center px-5 py-7 sm:px-7 sm:py-9 lg:px-10 lg:py-12"
+              style={{ textAlign: aboutUsTextAlign }}
+            >
+              <p
+                className="text-[11px] font-black uppercase tracking-[0.22em]"
+                style={{ color: brandAccent }}
+              >
+                About us
+              </p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl" style={{ color: aboutUsTextColor }}>
+                {aboutUsTitle}
+              </h2>
+              {aboutUsBody ? (
+                <div className="mt-4 space-y-3 text-sm leading-7 sm:text-base">
+                  {aboutUsBody.split(/\n{2,}|\n/).filter(Boolean).map((paragraph, index) => (
+                    <p key={`about-us-${index}`}>{paragraph}</p>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         </section>
       ) : null}

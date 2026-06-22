@@ -635,3 +635,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Removed logo-colour and cached-payload styling from the first-render loading shell.
 - Store-specific theme colours are applied only after the storefront payload is loaded and the live storefront renders.
 - No Supabase SQL required.
+
+## Ver-0.247 - Storefront welcome banner and About us additions
+
+- Patch type: touched-files-only ZIP.
+- Added Theme settings controls for a storefront welcome background banner image.
+- Added overlay colour, overlay strength, image fit and welcome text alignment controls so text stays readable over the image.
+- Added an About us storefront section with image upload, title, paragraph text, alignment, panel background and text colour controls.
+- About us renders before the store product category sections when enabled.
+- Extended tenant asset uploads to support welcome banner and About us images without requiring new database columns.
+- Stored the new settings inside the existing storefront theme JSON, so no Supabase SQL is required.
