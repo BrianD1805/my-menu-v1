@@ -1652,6 +1652,80 @@ export default function TenantSettingsForm({
     }));
   }
 
+  function getThemePixelValue(key: keyof StorefrontTheme, fallback: number) {
+    const value = theme[key];
+    return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  }
+
+  function renderPixelControl(
+    label: string,
+    key: keyof StorefrontTheme,
+    fallback: number,
+    min = 0,
+    max = 900,
+  ) {
+    const value = getThemePixelValue(key, fallback);
+    return (
+      <label className="block">
+        <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</span>
+        <input
+          type="number"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(event) => updateStorefrontThemeSetting(key, Number(event.target.value))}
+          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+        />
+      </label>
+    );
+  }
+
+  function renderPaddingControls(
+    title: string,
+    description: string,
+    keys: { top: keyof StorefrontTheme; right: keyof StorefrontTheme; bottom: keyof StorefrontTheme; left: keyof StorefrontTheme },
+    defaults: { top: number; right: number; bottom: number; left: number },
+  ) {
+    const renderPaddingInput = (label: string, key: keyof StorefrontTheme, fallback: number) => {
+      const value = getThemePixelValue(key, fallback);
+      return (
+        <label className="block w-[92px] min-w-0">
+          <span className="block text-center text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">{label}</span>
+          <input
+            type="number"
+            min={0}
+            max={180}
+            value={value}
+            onChange={(event) => updateStorefrontThemeSetting(key, Number(event.target.value))}
+            className="mt-1 h-11 w-[92px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-center text-xs font-bold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+          />
+        </label>
+      );
+    };
+
+    return (
+      <div className="rounded-[20px] border border-slate-200 bg-slate-50/70 p-3">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-600">{title}</p>
+        <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          {description} Current/default: top {defaults.top}px, right {defaults.right}px, bottom {defaults.bottom}px, left {defaults.left}px.
+        </p>
+        <div className="mt-4 grid grid-cols-[92px_96px_92px] justify-center items-center gap-2 rounded-[18px] border border-dashed border-slate-200 bg-white/80 p-3">
+          <div />
+          {renderPaddingInput("Top", keys.top, defaults.top)}
+          <div />
+          {renderPaddingInput("Left", keys.left, defaults.left)}
+          <div className="flex h-20 w-24 items-center justify-center rounded-[16px] border border-slate-200 bg-gradient-to-br from-white to-slate-50 px-2 text-center text-[9px] font-black uppercase tracking-[0.14em] text-slate-400 shadow-inner">
+            Mock panel
+          </div>
+          {renderPaddingInput("Right", keys.right, defaults.right)}
+          <div />
+          {renderPaddingInput("Bottom", keys.bottom, defaults.bottom)}
+          <div />
+        </div>
+      </div>
+    );
+  }
+
   async function uploadStorefrontThemeAsset(
     file: File,
     kind: "welcome-banner" | "about-us",
@@ -2773,6 +2847,13 @@ export default function TenantSettingsForm({
                       <option value="contain">Show full image / fit inside</option>
                     </select>
                   </label>
+                  {renderPixelControl("Desktop banner height px", "welcomeBannerHeightDesktop", 650, 260, 900)}
+                  {renderPaddingControls(
+                    "Desktop welcome outer padding",
+                    "Controls the welcome banner panel spacing on desktop.",
+                    { top: "welcomePaddingDesktopTop", right: "welcomePaddingDesktopRight", bottom: "welcomePaddingDesktopBottom", left: "welcomePaddingDesktopLeft" },
+                    { top: 40, right: 32, bottom: 40, left: 32 },
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -2838,6 +2919,8 @@ export default function TenantSettingsForm({
                     )}
                     <UploadField label={theme.mobileWelcomeBannerImageUrl ? "Change mobile welcome banner" : "Upload mobile welcome banner"} saved={Boolean(theme.mobileWelcomeBannerImageUrl)} busy={uploadingMobileWelcomeBanner} accept="image/png,image/jpeg,image/webp" help="Upload a taller mobile image. Save this Theme section to publish it." onFile={(file) => uploadStorefrontThemeAsset(file, "welcome-banner", "mobileWelcomeBannerImageUrl", "mobile welcome banner")} />
                     <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Image fit</span><select value={theme.mobileWelcomeBannerFit || "cover"} onChange={(event) => updateStorefrontThemeSetting("mobileWelcomeBannerFit", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"><option value="cover">Fill snug / crop edges</option><option value="contain">Show full image / fit inside</option></select></label>
+                    {renderPixelControl("Mobile banner height px", "mobileWelcomeBannerHeight", 360, 220, 760)}
+                    {renderPaddingControls("Mobile welcome outer padding", "Controls the welcome banner panel spacing on mobile.", { top: "mobileWelcomePaddingTop", right: "mobileWelcomePaddingRight", bottom: "mobileWelcomePaddingBottom", left: "mobileWelcomePaddingLeft" }, { top: 20, right: 20, bottom: 20, left: 20 })}
                   </div>
                   <div className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -2858,6 +2941,9 @@ export default function TenantSettingsForm({
               <div className="rounded-[24px] border border-[#DCE5E1] bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:p-5">
                 <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-black text-slate-950">Desktop About us</p><p className="mt-1 text-xs leading-5 text-slate-600">Image and story block shown before products on desktop.</p></div><span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Desktop</span></div>
                 <div className="mt-4 rounded-[20px] border border-slate-200 bg-slate-50/70 p-3"><ToggleRow label="Show About us on storefront" help="When switched on, this section appears before the product list." checked={theme.aboutUsEnabled === true} onChange={(checked) => updateStorefrontThemeSetting("aboutUsEnabled", checked)} /></div>
+                <div className="mt-4">
+                  {renderPaddingControls("Desktop About us outer padding", "Controls the outer spacing of the About us panel on desktop.", { top: "aboutUsPaddingDesktopTop", right: "aboutUsPaddingDesktopRight", bottom: "aboutUsPaddingDesktopBottom", left: "aboutUsPaddingDesktopLeft" }, { top: 0, right: 0, bottom: 0, left: 0 })}
+                </div>
                 <div className="mt-4 space-y-4">
                   {theme.aboutUsImageUrl ? <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100"><img src={theme.aboutUsImageUrl} alt="Desktop About us preview" className="h-44 w-full object-cover" /></div> : <div className="flex min-h-36 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">No desktop About us image uploaded yet.</div>}
                   <UploadField label={theme.aboutUsImageUrl ? "Change desktop About us image" : "Upload desktop About us image"} saved={Boolean(theme.aboutUsImageUrl)} busy={uploadingAboutImage} accept="image/png,image/jpeg,image/webp" help="Upload saves the image; then save this Theme section to publish it." onFile={(file) => uploadStorefrontThemeAsset(file, "about-us", "aboutUsImageUrl", "desktop About us image")} />
@@ -2873,6 +2959,7 @@ export default function TenantSettingsForm({
                 <div className="mt-4 rounded-[20px] border border-slate-200 bg-slate-50/70 p-3"><ToggleRow label="Use same as desktop About us" help="Reuses the desktop About us image, text, colours and visibility on mobile." checked={theme.mobileAboutUsUseSame !== false} onChange={(checked) => updateStorefrontThemeSetting("mobileAboutUsUseSame", checked)} /></div>
                 {theme.mobileAboutUsUseSame === false ? <div className="mt-4 space-y-4">
                   <ToggleRow label="Show mobile About us on storefront" help="When switched on, this mobile section appears before the product list on phone-sized screens." checked={theme.mobileAboutUsEnabled === true} onChange={(checked) => updateStorefrontThemeSetting("mobileAboutUsEnabled", checked)} />
+                  {renderPaddingControls("Mobile About us outer padding", "Controls the outer spacing of the About us panel on mobile.", { top: "mobileAboutUsPaddingTop", right: "mobileAboutUsPaddingRight", bottom: "mobileAboutUsPaddingBottom", left: "mobileAboutUsPaddingLeft" }, { top: 0, right: 0, bottom: 0, left: 0 })}
                   {theme.mobileAboutUsImageUrl ? <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-slate-100"><img src={theme.mobileAboutUsImageUrl} alt="Mobile About us preview" className="h-56 w-full object-cover" /></div> : <div className="flex min-h-44 items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-xs font-semibold text-slate-500">No mobile About us image uploaded yet.</div>}
                   <UploadField label={theme.mobileAboutUsImageUrl ? "Change mobile About us image" : "Upload mobile About us image"} saved={Boolean(theme.mobileAboutUsImageUrl)} busy={uploadingMobileAboutImage} accept="image/png,image/jpeg,image/webp" help="Upload saves the image; then save this Theme section to publish it." onFile={(file) => uploadStorefrontThemeAsset(file, "about-us", "mobileAboutUsImageUrl", "mobile About us image")} />
                   <label className="block"><span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Mobile title</span><input value={theme.mobileAboutUsTitle || ""} onChange={(event) => updateStorefrontThemeSetting("mobileAboutUsTitle", event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100" placeholder="About us" /></label>

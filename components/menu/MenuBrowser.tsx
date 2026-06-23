@@ -236,6 +236,12 @@ function hexToRgba(hex: string, alpha = 1) {
   return `rgba(${r}, ${g}, ${b}, ${Math.min(1, Math.max(0, alpha))})`;
 }
 
+function pixelSetting(value: unknown, fallback: number, min: number, max: number) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return fallback;
+  return Math.round(Math.min(max, Math.max(min, numberValue)));
+}
+
 function rgbToHex(r: number, g: number, b: number) {
   return `#${[r, g, b]
     .map((value) =>
@@ -1328,6 +1334,35 @@ export default function MenuBrowser({
     useMobileAboutUs ? storefrontTheme?.mobileAboutUsTextColor : storefrontTheme?.aboutUsTextColor,
     brandText,
   );
+  const welcomeBannerHeight = isMobileStorefront
+    ? pixelSetting(storefrontTheme?.mobileWelcomeBannerHeight, 360, 220, 760)
+    : pixelSetting(storefrontTheme?.welcomeBannerHeightDesktop, 650, 260, 900);
+  const welcomePanelPadding = isMobileStorefront
+    ? {
+        paddingTop: pixelSetting(storefrontTheme?.mobileWelcomePaddingTop, 20, 0, 180),
+        paddingRight: pixelSetting(storefrontTheme?.mobileWelcomePaddingRight, 20, 0, 180),
+        paddingBottom: pixelSetting(storefrontTheme?.mobileWelcomePaddingBottom, 20, 0, 180),
+        paddingLeft: pixelSetting(storefrontTheme?.mobileWelcomePaddingLeft, 20, 0, 180),
+      }
+    : {
+        paddingTop: pixelSetting(storefrontTheme?.welcomePaddingDesktopTop, welcomeBannerEnabled ? 40 : 28, 0, 180),
+        paddingRight: pixelSetting(storefrontTheme?.welcomePaddingDesktopRight, 32, 0, 180),
+        paddingBottom: pixelSetting(storefrontTheme?.welcomePaddingDesktopBottom, welcomeBannerEnabled ? 40 : 28, 0, 180),
+        paddingLeft: pixelSetting(storefrontTheme?.welcomePaddingDesktopLeft, 32, 0, 180),
+      };
+  const aboutUsPanelPadding = isMobileStorefront
+    ? {
+        paddingTop: pixelSetting(storefrontTheme?.mobileAboutUsPaddingTop, 0, 0, 180),
+        paddingRight: pixelSetting(storefrontTheme?.mobileAboutUsPaddingRight, 0, 0, 180),
+        paddingBottom: pixelSetting(storefrontTheme?.mobileAboutUsPaddingBottom, 0, 0, 180),
+        paddingLeft: pixelSetting(storefrontTheme?.mobileAboutUsPaddingLeft, 0, 0, 180),
+      }
+    : {
+        paddingTop: pixelSetting(storefrontTheme?.aboutUsPaddingDesktopTop, 0, 0, 180),
+        paddingRight: pixelSetting(storefrontTheme?.aboutUsPaddingDesktopRight, 0, 0, 180),
+        paddingBottom: pixelSetting(storefrontTheme?.aboutUsPaddingDesktopBottom, 0, 0, 180),
+        paddingLeft: pixelSetting(storefrontTheme?.aboutUsPaddingDesktopLeft, 0, 0, 180),
+      };
   const rewardsPopupBackground = softerPanelColor(
     storefrontTheme?.rewardsPopupBackground,
     "#FFFDF8",
@@ -2677,16 +2712,21 @@ export default function MenuBrowser({
       </div>
 
       <section
-        className={`relative overflow-hidden rounded-[28px] border px-5 py-5 ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 ${
-          welcomeBannerEnabled ? "lg:min-h-[520px] lg:py-10" : "lg:py-7"
+        className={`relative overflow-hidden rounded-[28px] border ring-1 ring-slate-200/70 ${
+          welcomeBannerEnabled ? "flex items-center justify-center" : ""
         }`}
         style={{
           backgroundColor: welcomeBackground,
           borderColor: brandAccentBorder,
           boxShadow: `0 16px 36px ${welcomeShadow}22`,
           textAlign: welcomeTextAlign,
+          paddingTop: welcomePanelPadding.paddingTop,
+          paddingRight: welcomePanelPadding.paddingRight,
+          paddingBottom: welcomePanelPadding.paddingBottom,
+          paddingLeft: welcomePanelPadding.paddingLeft,
           ...(welcomeBannerEnabled
             ? {
+                minHeight: welcomeBannerHeight,
                 backgroundImage: `url(${effectiveWelcomeBannerImageUrl})`,
                 backgroundPosition: "center",
                 backgroundRepeat: "no-repeat",
@@ -4043,6 +4083,10 @@ export default function MenuBrowser({
             backgroundColor: aboutUsBackground,
             borderColor: brandBorder,
             color: aboutUsTextColor,
+            paddingTop: aboutUsPanelPadding.paddingTop,
+            paddingRight: aboutUsPanelPadding.paddingRight,
+            paddingBottom: aboutUsPanelPadding.paddingBottom,
+            paddingLeft: aboutUsPanelPadding.paddingLeft,
           }}
         >
           <div className="grid gap-0 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-stretch">

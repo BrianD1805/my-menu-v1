@@ -1,4 +1,11 @@
 
+## Ver-0.247E — Storefront padding mock panel sizing fix
+
+- Made the padding mock panel smaller so left/right/top/bottom controls fit neatly inside the card.
+- Standardised all four px input controls to the same fixed size.
+- Improved spacing around the mock panel without changing storefront rendering logic.
+
+
 ## Ver-0.246 — Theme presets logo colour controls
 
 - Added actual logo-palette hex colours with square colour swatches in Theme presets.
@@ -664,3 +671,22 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added extra top spacing above the About us panel so it does not sit too close to the welcome panel.
 - Reduced the About us title weight to match the calmer storefront title style.
 - No Supabase SQL required.
+
+
+## Ver-0.247C - Storefront welcome/about sizing and padding controls
+
+- Patch type: touched-files-only ZIP.
+- Centred the welcome text panel inside the welcome banner panel.
+- Added desktop and mobile welcome banner height controls in pixels.
+- Added desktop/mobile outer padding controls for welcome panels with current/default values shown for reference.
+- Added desktop/mobile outer padding controls for About us panels with current/default values shown for reference.
+- No Supabase SQL required.
+
+## Ver-0.247D - Storefront welcome/about padding control layout polish
+
+- Patch type: touched-files-only ZIP.
+- Changed Welcome and About us padding controls to sit around a mock panel: top above, left on the left, right on the right, and bottom below.
+- Removed repeated Current/default reference helper text from individual px input fields.
+- Corrected About us padding description wording from outer spacing inside the panel to outer spacing of the panel.
+- No Supabase SQL required.
+

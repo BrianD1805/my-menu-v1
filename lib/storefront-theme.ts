@@ -149,6 +149,24 @@ export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & {
   mobileWelcomeTextAlign?: StorefrontTextAlign;
   mobileWelcomePanelBackground?: string;
   mobileWelcomePanelOpacity?: number;
+  welcomeBannerHeightDesktop?: number;
+  mobileWelcomeBannerHeight?: number;
+  welcomePaddingDesktopTop?: number;
+  welcomePaddingDesktopRight?: number;
+  welcomePaddingDesktopBottom?: number;
+  welcomePaddingDesktopLeft?: number;
+  mobileWelcomePaddingTop?: number;
+  mobileWelcomePaddingRight?: number;
+  mobileWelcomePaddingBottom?: number;
+  mobileWelcomePaddingLeft?: number;
+  aboutUsPaddingDesktopTop?: number;
+  aboutUsPaddingDesktopRight?: number;
+  aboutUsPaddingDesktopBottom?: number;
+  aboutUsPaddingDesktopLeft?: number;
+  mobileAboutUsPaddingTop?: number;
+  mobileAboutUsPaddingRight?: number;
+  mobileAboutUsPaddingBottom?: number;
+  mobileAboutUsPaddingLeft?: number;
   aboutUsEnabled?: boolean;
   aboutUsImageUrl?: string;
   aboutUsTitle?: string;
@@ -182,6 +200,12 @@ function normalizeOverlayOpacity(value: unknown) {
   const numberValue = Number(value);
   if (!Number.isFinite(numberValue)) return undefined;
   return Math.min(0.9, Math.max(0, numberValue));
+}
+
+function normalizePixelNumber(value: unknown, min: number, max: number) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) return undefined;
+  return Math.round(Math.min(max, Math.max(min, numberValue)));
 }
 
 function normalizeBannerFit(value: unknown): StorefrontBannerFit | undefined {
@@ -238,6 +262,34 @@ export function normalizeStorefrontTheme(value: unknown): StorefrontTheme | null
   if (isHexColor(input.mobileWelcomePanelBackground)) output.mobileWelcomePanelBackground = String(input.mobileWelcomePanelBackground).trim().toUpperCase();
   const mobileWelcomePanelOpacity = normalizeOverlayOpacity(input.mobileWelcomePanelOpacity);
   if (typeof mobileWelcomePanelOpacity === "number") output.mobileWelcomePanelOpacity = mobileWelcomePanelOpacity;
+
+  const welcomeBannerHeightDesktop = normalizePixelNumber(input.welcomeBannerHeightDesktop, 260, 900);
+  if (typeof welcomeBannerHeightDesktop === "number") output.welcomeBannerHeightDesktop = welcomeBannerHeightDesktop;
+  const mobileWelcomeBannerHeight = normalizePixelNumber(input.mobileWelcomeBannerHeight, 220, 760);
+  if (typeof mobileWelcomeBannerHeight === "number") output.mobileWelcomeBannerHeight = mobileWelcomeBannerHeight;
+
+  const numericPaddingKeys = [
+    "welcomePaddingDesktopTop",
+    "welcomePaddingDesktopRight",
+    "welcomePaddingDesktopBottom",
+    "welcomePaddingDesktopLeft",
+    "mobileWelcomePaddingTop",
+    "mobileWelcomePaddingRight",
+    "mobileWelcomePaddingBottom",
+    "mobileWelcomePaddingLeft",
+    "aboutUsPaddingDesktopTop",
+    "aboutUsPaddingDesktopRight",
+    "aboutUsPaddingDesktopBottom",
+    "aboutUsPaddingDesktopLeft",
+    "mobileAboutUsPaddingTop",
+    "mobileAboutUsPaddingRight",
+    "mobileAboutUsPaddingBottom",
+    "mobileAboutUsPaddingLeft",
+  ] as const;
+  for (const key of numericPaddingKeys) {
+    const normalized = normalizePixelNumber(input[key], 0, 180);
+    if (typeof normalized === "number") output[key] = normalized;
+  }
 
   if (typeof input.aboutUsEnabled === "boolean") output.aboutUsEnabled = input.aboutUsEnabled;
   const aboutUsImageUrl = normalizeStoredText(input.aboutUsImageUrl, 800);
