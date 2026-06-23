@@ -1,3 +1,19 @@
+
+## Ver-0.250A — PayFast per-item settings build fix
+
+- Fixed the Tenant Admin per-item colours settings route so it passes the new PayFast fields into the shared TenantSettingsForm initial state.
+- Added PayFast merchant key/passphrase secret summary lookup on the per-item colours settings page.
+- No database changes beyond the existing Ver-0.250 PayFast SQL migration.
+
+## Ver-0.250 — PayFast ZAR storefront payments
+
+- Added PayFast as an online payment gateway option for South African ZAR stores.
+- Added Store Admin Settings controls for PayFast Merchant ID, Merchant Key, optional security passphrase, Test/Live mode, setup notes and checkout visibility.
+- Added PayFast redirect, return, ITN webhook and checkout-status routes using the existing pending-payment-intent pattern so orders are created only after PayFast confirms payment.
+- Added PayFast success, cancel and error checkout pages.
+- Updated storefront checkout payment options so PayFast appears first for configured ZAR stores, followed by Ozow and Yoco.
+- Added Supabase SQL for PayFast tenant settings fields and PayFast payment intent references.
+
 ## Ver-0.249A — Ozow settings visibility fix
 
 - Patch type: touched-files-only ZIP.

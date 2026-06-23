@@ -15,7 +15,7 @@ import { normalizeStorefrontTheme } from "@/lib/storefront-theme";
 import { serializeDiscountRules } from "@/lib/discounts";
 
 const SETTINGS_SELECT =
-  "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, privacy_policy_title, privacy_policy_body, privacy_policy_show_on_storefront, terms_of_service_title, terms_of_service_body, terms_of_service_show_on_storefront, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, stripe_customer_secret_key, stripe_customer_webhook_secret, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, yoco_customer_secret_key, yoco_customer_webhook_secret, enable_ozow_customer_payments, ozow_connection_status, ozow_customer_mode, ozow_site_code, ozow_account_label, ozow_setup_notes, ozow_payments_live, ozow_private_key, ozow_api_key, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_consumer_secret, daraja_shortcode, daraja_passkey, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_tax_rate_percent, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode, seo_page_name, seo_meta_description, seo_keywords, seo_canonical_url, seo_structured_data_enabled, google_tracking_id, google_tag_manager_id, invoice_payments_enabled, invoice_payments_section_title, invoice_payments_intro_text, invoice_payments_invoice_enabled, invoice_payments_deposit_enabled, invoice_payments_balance_enabled";
+  "tenant_id, business_display_name, storefront_heading, storefront_subheading, admin_heading_label, logo_url, favicon_url, primary_color, accent_color, background_tint, border_color, text_color, storefront_theme_json, contact_phone, contact_email, contact_whatsapp, contact_address, privacy_policy_title, privacy_policy_body, privacy_policy_show_on_storefront, terms_of_service_title, terms_of_service_body, terms_of_service_show_on_storefront, footer_blurb, footer_notice, show_orduva_referral_ad, social_facebook_url, social_instagram_url, social_tiktok_url, social_x_url, social_website_url, currency_name, currency_code, currency_symbol, currency_display_mode, currency_symbol_position, currency_decimal_places, currency_use_thousands_separator, currency_decimal_separator, currency_thousands_separator, currency_suffix, enable_cash_on_collection, enable_cash_on_delivery, enable_stripe_customer_payments, stripe_connection_status, stripe_customer_payment_mode, stripe_customer_publishable_key, stripe_customer_account_label, stripe_customer_test_mode, stripe_customer_setup_notes, stripe_customer_payments_live, stripe_customer_secret_key, stripe_customer_webhook_secret, enable_yoco_customer_payments, yoco_connection_status, yoco_customer_mode, yoco_customer_account_label, yoco_customer_setup_notes, yoco_customer_webhook_id, yoco_customer_webhook_url, yoco_customer_payments_live, yoco_customer_secret_key, yoco_customer_webhook_secret, enable_ozow_customer_payments, ozow_connection_status, ozow_customer_mode, ozow_site_code, ozow_account_label, ozow_setup_notes, ozow_payments_live, ozow_private_key, ozow_api_key, enable_payfast_customer_payments, payfast_connection_status, payfast_customer_mode, payfast_merchant_id, payfast_merchant_key, payfast_passphrase, payfast_account_label, payfast_setup_notes, payfast_payments_live, enable_mpesa_customer_payments, mpesa_connection_status, mpesa_customer_mode, mpesa_customer_consumer_key, mpesa_customer_consumer_secret, mpesa_customer_ipn_id, mpesa_customer_account_label, mpesa_customer_setup_notes, mpesa_customer_payments_live, enable_daraja_customer_payments, daraja_connection_status, daraja_customer_mode, daraja_consumer_key, daraja_consumer_secret, daraja_shortcode, daraja_passkey, daraja_transaction_type, daraja_account_reference_prefix, daraja_callback_url, daraja_account_label, daraja_setup_notes, daraja_payments_live, rewards_enabled, rewards_program_name, rewards_silver_min_spend, rewards_silver_discount_percent, rewards_gold_min_spend, rewards_gold_discount_percent, rewards_platinum_min_spend, rewards_platinum_discount_percent, discounts_enabled, discount_popup_enabled, discount_popup_title, discount_popup_message, discount_rules, receipt_document_name, receipt_tax_label, receipt_tax_number, receipt_tax_rate_percent, receipt_extra_field_1_enabled, receipt_extra_field_1_label, receipt_extra_field_1_value, receipt_extra_field_2_enabled, receipt_extra_field_2_label, receipt_extra_field_2_value, receipt_footer_message, receipt_brand_image_mode, seo_page_name, seo_meta_description, seo_keywords, seo_canonical_url, seo_structured_data_enabled, google_tracking_id, google_tag_manager_id, invoice_payments_enabled, invoice_payments_section_title, invoice_payments_intro_text, invoice_payments_invoice_enabled, invoice_payments_deposit_enabled, invoice_payments_balance_enabled";
 
 function secretHint(value: unknown) {
   const text = String(value || "").trim();
@@ -461,6 +461,50 @@ export async function PATCH(req: Request) {
       );
     }
 
+    const payfastMerchantId = normalizeOptionalText(body?.payfastMerchantId, 80);
+    const payfastMerchantKeyInput = normalizeLongSecret(body?.payfastMerchantKeyInput);
+    const payfastPassphraseInput = normalizeLongSecret(body?.payfastPassphraseInput);
+    const nextPayfastMode = normalizeOzowMode(body?.payfastCustomerMode);
+    const hasPayfastMerchantKey = Boolean(
+      payfastMerchantKeyInput ||
+      (existingSettings as Record<string, unknown> | null)?.payfast_merchant_key,
+    );
+    const requestedPayfastCustomerPayments =
+      normalizeBoolean(body?.enablePayfastCustomerPayments) ?? false;
+    const payfastCurrencyAllowed =
+      normalizeCurrencyCode(body?.currencyCode) === "ZAR";
+    const payfastCredentialsReady = Boolean(payfastMerchantId && hasPayfastMerchantKey);
+    const requestedPayfastPaymentsLive =
+      normalizeBoolean(body?.payfastPaymentsLive) ?? false;
+    const requestedPayfastStatus = normalizeOzowConnectionStatus(
+      body?.payfastConnectionStatus,
+    );
+    const nextPayfastStatus = payfastCredentialsReady
+      ? requestedPayfastStatus === "not_configured"
+        ? "configured"
+        : requestedPayfastStatus
+      : "not_configured";
+
+    if (requestedPayfastCustomerPayments && !payfastCurrencyAllowed) {
+      return NextResponse.json(
+        {
+          error:
+            "PayFast is currently only enabled for ZAR stores. Change this tenant's currency to ZAR before enabling PayFast.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (requestedPayfastCustomerPayments && !payfastCredentialsReady) {
+      return NextResponse.json(
+        {
+          error:
+            "Add this tenant's PayFast merchant ID and merchant key before enabling PayFast for storefront customers.",
+        },
+        { status: 400 },
+      );
+    }
+
     const mpesaConsumerKey = normalizeOptionalText(
       body?.mpesaCustomerConsumerKey,
       260,
@@ -706,6 +750,26 @@ export async function PATCH(req: Request) {
         requestedOzowPaymentsLive &&
         ozowCurrencyAllowed &&
         ozowCredentialsReady,
+      enable_payfast_customer_payments:
+        requestedPayfastCustomerPayments &&
+        payfastCurrencyAllowed &&
+        payfastCredentialsReady,
+      payfast_connection_status: nextPayfastStatus,
+      payfast_customer_mode: nextPayfastMode,
+      payfast_merchant_id: payfastMerchantId,
+      payfast_account_label: normalizeOptionalText(
+        body?.payfastAccountLabel,
+        120,
+      ),
+      payfast_setup_notes: normalizeOptionalText(
+        body?.payfastSetupNotes,
+        500,
+      ),
+      payfast_payments_live:
+        requestedPayfastCustomerPayments &&
+        requestedPayfastPaymentsLive &&
+        payfastCurrencyAllowed &&
+        payfastCredentialsReady,
       enable_mpesa_customer_payments:
         requestedMpesaCustomerPayments &&
         mpesaCurrencyAllowed &&
@@ -858,6 +922,8 @@ export async function PATCH(req: Request) {
       payload.yoco_customer_webhook_secret = yocoWebhookSecretInput;
     if (ozowPrivateKeyInput) payload.ozow_private_key = ozowPrivateKeyInput;
     if (ozowApiKeyInput) payload.ozow_api_key = ozowApiKeyInput;
+    if (payfastMerchantKeyInput) payload.payfast_merchant_key = payfastMerchantKeyInput;
+    if (payfastPassphraseInput) payload.payfast_passphrase = payfastPassphraseInput;
     if (mpesaConsumerSecretInput)
       payload.mpesa_customer_consumer_secret = mpesaConsumerSecretInput;
     if (darajaConsumerSecretInput)
@@ -892,6 +958,8 @@ export async function PATCH(req: Request) {
             "yoco_customer_webhook_secret",
             "ozow_private_key",
             "ozow_api_key",
+            "payfast_merchant_key",
+            "payfast_passphrase",
             "mpesa_customer_consumer_secret",
             "daraja_consumer_secret",
             "daraja_passkey",
@@ -956,6 +1024,22 @@ export async function PATCH(req: Request) {
         ozow_api_key_hint: secretHint(
           ozowApiKeyInput ||
           (existingSettings as Record<string, unknown> | null)?.ozow_api_key,
+        ),
+        payfast_merchant_key_set: Boolean(
+          payfastMerchantKeyInput ||
+          (existingSettings as Record<string, unknown> | null)?.payfast_merchant_key,
+        ),
+        payfast_merchant_key_hint: secretHint(
+          payfastMerchantKeyInput ||
+          (existingSettings as Record<string, unknown> | null)?.payfast_merchant_key,
+        ),
+        payfast_passphrase_set: Boolean(
+          payfastPassphraseInput ||
+          (existingSettings as Record<string, unknown> | null)?.payfast_passphrase,
+        ),
+        payfast_passphrase_hint: secretHint(
+          payfastPassphraseInput ||
+          (existingSettings as Record<string, unknown> | null)?.payfast_passphrase,
         ),
         mpesa_customer_consumer_secret_set: Boolean(
           mpesaConsumerSecretInput ||

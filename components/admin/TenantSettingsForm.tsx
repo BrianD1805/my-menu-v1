@@ -129,6 +129,19 @@ type FormState = {
   ozowAccountLabel: string;
   ozowSetupNotes: string;
   ozowPaymentsLive: boolean;
+  enablePayfastCustomerPayments: boolean;
+  payfastConnectionStatus: string;
+  payfastCustomerMode: "test" | "live";
+  payfastMerchantId: string;
+  payfastMerchantKeyInput: string;
+  payfastMerchantKeySet: boolean;
+  payfastMerchantKeyHint: string;
+  payfastPassphraseInput: string;
+  payfastPassphraseSet: boolean;
+  payfastPassphraseHint: string;
+  payfastAccountLabel: string;
+  payfastSetupNotes: string;
+  payfastPaymentsLive: boolean;
   enableMpesaCustomerPayments: boolean;
   mpesaConnectionStatus: string;
   mpesaCustomerMode: "test" | "live";
@@ -1308,6 +1321,15 @@ export default function TenantSettingsForm({
     "ozowAccountLabel",
     "ozowSetupNotes",
     "ozowPaymentsLive",
+    "enablePayfastCustomerPayments",
+    "payfastConnectionStatus",
+    "payfastCustomerMode",
+    "payfastMerchantId",
+    "payfastMerchantKeyInput",
+    "payfastPassphraseInput",
+    "payfastAccountLabel",
+    "payfastSetupNotes",
+    "payfastPaymentsLive",
     "enableMpesaCustomerPayments",
     "mpesaConnectionStatus",
     "mpesaCustomerMode",
@@ -1372,6 +1394,20 @@ export default function TenantSettingsForm({
     form.ozowPaymentsLive &&
     ozowCurrencyAllowed &&
     ozowCredentialReady,
+  );
+  const payfastCurrencyAllowed =
+    String(form.currencyCode || "")
+      .trim()
+      .toUpperCase() === "ZAR";
+  const payfastCredentialReady = Boolean(
+    form.payfastMerchantId.trim() &&
+      (form.payfastMerchantKeySet || form.payfastMerchantKeyInput.trim()),
+  );
+  const payfastReadyForCheckout = Boolean(
+    form.enablePayfastCustomerPayments &&
+    form.payfastPaymentsLive &&
+    payfastCurrencyAllowed &&
+    payfastCredentialReady,
   );
   const mpesaCurrencyAllowed =
     String(form.currencyCode || "")
@@ -2124,6 +2160,10 @@ export default function TenantSettingsForm({
         form.ozowPrivateKeySet || Boolean(form.ozowPrivateKeyInput.trim());
       const nextOzowApiKeySet =
         form.ozowApiKeySet || Boolean(form.ozowApiKeyInput.trim());
+      const nextPayfastMerchantKeySet =
+        form.payfastMerchantKeySet || Boolean(form.payfastMerchantKeyInput.trim());
+      const nextPayfastPassphraseSet =
+        form.payfastPassphraseSet || Boolean(form.payfastPassphraseInput.trim());
       const nextMpesaConsumerSecretSet =
         form.mpesaCustomerConsumerSecretSet ||
         Boolean(form.mpesaCustomerConsumerSecretInput.trim());
@@ -2192,6 +2232,26 @@ export default function TenantSettingsForm({
           form.ozowPaymentsLive &&
           nextOzowPrivateKeySet &&
           ozowCurrencyAllowed,
+        payfastConnectionStatus: payfastCredentialReady
+          ? form.payfastConnectionStatus === "not_configured"
+            ? "configured"
+            : form.payfastConnectionStatus || "configured"
+          : "not_configured",
+        payfastMerchantKeyInput: "",
+        payfastMerchantKeySet: nextPayfastMerchantKeySet,
+        payfastMerchantKeyHint: nextPayfastMerchantKeySet
+          ? form.payfastMerchantKeyHint || "saved"
+          : "",
+        payfastPassphraseInput: "",
+        payfastPassphraseSet: nextPayfastPassphraseSet,
+        payfastPassphraseHint: nextPayfastPassphraseSet
+          ? form.payfastPassphraseHint || "saved"
+          : "",
+        payfastPaymentsLive:
+          form.enablePayfastCustomerPayments &&
+          form.payfastPaymentsLive &&
+          nextPayfastMerchantKeySet &&
+          payfastCurrencyAllowed,
         mpesaConnectionStatus: mpesaCredentialReady
           ? form.mpesaConnectionStatus === "not_configured"
             ? "configured"
@@ -2264,6 +2324,15 @@ export default function TenantSettingsForm({
       ozowCustomerMode: value,
       ozowPaymentsLive: false,
       ozowConnectionStatus: "not_configured",
+    }));
+  }
+
+  function setPayfastMode(value: FormState["payfastCustomerMode"]) {
+    setForm((current) => ({
+      ...current,
+      payfastCustomerMode: value,
+      payfastPaymentsLive: false,
+      payfastConnectionStatus: "not_configured",
     }));
   }
 
@@ -4849,7 +4918,7 @@ export default function TenantSettingsForm({
                           : "text-amber-800"
                       }
                     >
-                      ✓ Private key: {form.ozowPrivateKeySet || form.ozowPrivateKeyInput.trim() ? "saved" : "required"}
+                      ✓ Merchant key: {form.ozowPrivateKeySet || form.ozowPrivateKeyInput.trim() ? "saved" : "required"}
                     </p>
                     <p
                       className={
@@ -4903,6 +4972,260 @@ export default function TenantSettingsForm({
                     <span className="mt-1 block text-xs leading-5">
                       When enabled, ZAR storefront customers can choose Ozow and
                       will be sent to Ozow's hosted payment page.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </PaymentGatewayCard>
+
+            <PaymentGatewayCard
+              title="PayFast customer payments"
+              description="Hosted payment checkout for South African ZAR stores."
+              badge={
+                payfastReadyForCheckout
+                  ? "checkout visible"
+                  : form.enablePayfastCustomerPayments
+                    ? form.payfastConnectionStatus
+                    : "not configured"
+              }
+              tone={
+                payfastReadyForCheckout
+                  ? "ready"
+                  : payfastCredentialReady
+                    ? "warning"
+                    : "idle"
+              }
+            >
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="font-black text-slate-950">
+                      PayFast customer payments
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">
+                      Hosted PayFast checkout for South African ZAR stores. Add the
+                      store owner's PayFast Merchant ID and Merchant Key, then switch
+                      PayFast on for customer checkout.
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${payfastReadyForCheckout ? "border-emerald-200 bg-white text-[#0F766E]" : payfastCredentialReady ? "border-amber-200 bg-amber-50 text-amber-800" : "border-slate-200 bg-white text-slate-500"}`}
+                  >
+                    {payfastReadyForCheckout
+                      ? "checkout visible"
+                      : form.enablePayfastCustomerPayments
+                        ? form.payfastConnectionStatus
+                        : "not configured"}
+                  </span>
+                </div>
+
+                {!payfastCurrencyAllowed ? (
+                  <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
+                    PayFast is currently intended for South African Rand stores.
+                    Change the store currency to ZAR before enabling PayFast.
+                  </p>
+                ) : null}
+
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <Field label="PayFast mode">
+                    <select
+                      value={form.payfastCustomerMode}
+                      onChange={(e) =>
+                        setPayfastMode(
+                          e.target.value as FormState["payfastCustomerMode"],
+                        )
+                      }
+                      className="input"
+                    >
+                      <option value="test">Test credentials</option>
+                      <option value="live">Live credentials</option>
+                    </select>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Changing mode hides PayFast at checkout until the saved
+                      credentials are confirmed again.
+                    </p>
+                  </Field>
+                  <Field label="PayFast account label">
+                    <input
+                      value={form.payfastAccountLabel}
+                      onChange={(e) =>
+                        update("payfastAccountLabel", e.target.value)
+                      }
+                      placeholder="Example: ZimZa Express PayFast account"
+                      className="input"
+                    />
+                  </Field>
+                  <Field label="PayFast Merchant ID">
+                    <input
+                      value={form.payfastMerchantId}
+                      onChange={(e) => update("payfastMerchantId", e.target.value)}
+                      placeholder="Store PayFast Merchant ID"
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <Field
+                    label={
+                      form.payfastMerchantKeySet
+                        ? `PayFast merchant key saved (${form.payfastMerchantKeyHint || "saved"})`
+                        : "PayFast merchant key"
+                    }
+                  >
+                    <input
+                      value={form.payfastMerchantKeyInput}
+                      onChange={(e) =>
+                        update("payfastMerchantKeyInput", e.target.value)
+                      }
+                      placeholder={
+                        form.payfastMerchantKeySet
+                          ? "Leave blank to keep saved PayFast merchant key"
+                          : "Merchant Key from the store owner's PayFast portal"
+                      }
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <Field
+                    label={
+                      form.payfastPassphraseSet
+                        ? `PayFast passphrase saved (${form.payfastPassphraseHint || "saved"})`
+                        : "PayFast Security passphrase / optional"
+                    }
+                  >
+                    <input
+                      value={form.payfastPassphraseInput}
+                      onChange={(e) => update("payfastPassphraseInput", e.target.value)}
+                      placeholder={
+                        form.payfastPassphraseSet
+                          ? "Leave blank to keep saved PayFast passphrase"
+                          : "Optional passphrase if provided by PayFast"
+                      }
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <Field label="PayFast notify URL">
+                    <input
+                      value="https://www.orduva.com/api/storefront/payfast/webhook"
+                      readOnly
+                      className="input bg-slate-50 text-slate-600"
+                    />
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Use the deployed Orduva domain for PayFast notifications.
+                      Localhost cannot receive PayFast server notifications.
+                    </p>
+                  </Field>
+                  <div className="md:col-span-2">
+                    <Field label="PayFast setup notes">
+                      <input
+                        value={form.payfastSetupNotes}
+                        onChange={(e) =>
+                          update("payfastSetupNotes", e.target.value)
+                        }
+                        placeholder="Example: Test PayFast Merchant ID saved, waiting for live approval"
+                        className="input"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        PayFast checkout readiness
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                        PayFast appears at checkout only when the store is using ZAR
+                        and the Merchant ID and Merchant Key are saved.
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${payfastReadyForCheckout ? "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]" : "border-amber-200 bg-amber-50 text-amber-800"}`}
+                    >
+                      {payfastReadyForCheckout ? "checkout visible" : "not visible"}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-xs font-bold sm:grid-cols-2">
+                    <p
+                      className={
+                        payfastCurrencyAllowed
+                          ? "text-[#0F766E]"
+                          : "text-amber-800"
+                      }
+                    >
+                      ✓ Store currency: {payfastCurrencyAllowed ? "ZAR" : "Change to ZAR"}
+                    </p>
+                    <p
+                      className={
+                        form.payfastMerchantId.trim()
+                          ? "text-[#0F766E]"
+                          : "text-amber-800"
+                      }
+                    >
+                      ✓ Merchant ID: {form.payfastMerchantId.trim() ? "saved" : "required"}
+                    </p>
+                    <p
+                      className={
+                        form.payfastMerchantKeySet || form.payfastMerchantKeyInput.trim()
+                          ? "text-[#0F766E]"
+                          : "text-amber-800"
+                      }
+                    >
+                      ✓ Merchant key: {form.payfastMerchantKeySet || form.payfastMerchantKeyInput.trim() ? "saved" : "required"}
+                    </p>
+                    <p
+                      className={
+                        form.payfastCustomerMode === "live"
+                          ? "text-[#0F766E]"
+                          : "text-slate-600"
+                      }
+                    >
+                      ✓ Mode: {form.payfastCustomerMode === "live" ? "Live" : "Test"}
+                    </p>
+                  </div>
+                </div>
+
+                <label
+                  className={`mt-4 flex items-start gap-3 rounded-2xl border p-3 text-sm ${payfastCurrencyAllowed && payfastCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.enablePayfastCustomerPayments}
+                    onChange={(e) =>
+                      update("enablePayfastCustomerPayments", e.target.checked)
+                    }
+                    disabled={!payfastCurrencyAllowed || !payfastCredentialReady}
+                    className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                  />
+                  <span>
+                    <strong>Enable PayFast setup for this store</strong>
+                    <span className="mt-1 block text-xs leading-5">
+                      Requires ZAR currency, Merchant ID and saved Merchant Key.
+                      This makes PayFast available to be switched on for checkout.
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  className={`mt-3 flex items-start gap-3 rounded-2xl border p-3 text-sm ${form.enablePayfastCustomerPayments && payfastCurrencyAllowed && payfastCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.payfastPaymentsLive}
+                    onChange={(e) => update("payfastPaymentsLive", e.target.checked)}
+                    disabled={
+                      !form.enablePayfastCustomerPayments ||
+                      !payfastCurrencyAllowed ||
+                      !payfastCredentialReady
+                    }
+                    className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                  />
+                  <span>
+                    <strong>Show PayFast on customer checkout</strong>
+                    <span className="mt-1 block text-xs leading-5">
+                      When enabled, ZAR storefront customers can choose PayFast and
+                      will be sent to PayFast's hosted payment page.
                     </span>
                   </span>
                 </label>

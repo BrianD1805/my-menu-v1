@@ -14,7 +14,7 @@ export default async function AdminSettingsPage() {
       db
         .from("tenant_settings")
         .select(
-          "stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, ozow_private_key, ozow_api_key, mpesa_customer_consumer_secret, daraja_consumer_secret, daraja_passkey",
+          "stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, ozow_private_key, ozow_api_key, payfast_merchant_key, payfast_passphrase, mpesa_customer_consumer_secret, daraja_consumer_secret, daraja_passkey",
         )
         .eq("tenant_id", tenant.id)
         .maybeSingle(),
@@ -40,6 +40,8 @@ export default async function AdminSettingsPage() {
   ).trim();
   const ozowPrivateKey = String(stripeSecrets?.ozow_private_key || "").trim();
   const ozowApiKey = String(stripeSecrets?.ozow_api_key || "").trim();
+  const payfastMerchantKey = String(stripeSecrets?.payfast_merchant_key || "").trim();
+  const payfastPassphrase = String(stripeSecrets?.payfast_passphrase || "").trim();
   const mpesaConsumerSecret = String(
     stripeSecrets?.mpesa_customer_consumer_secret || "",
   ).trim();
@@ -199,6 +201,24 @@ export default async function AdminSettingsPage() {
           ozowAccountLabel: settings?.ozow_account_label || "",
           ozowSetupNotes: settings?.ozow_setup_notes || "",
           ozowPaymentsLive: settings?.ozow_payments_live === true,
+          enablePayfastCustomerPayments:
+            settings?.enable_payfast_customer_payments === true,
+          payfastConnectionStatus:
+            settings?.payfast_connection_status || "not_configured",
+          payfastCustomerMode:
+            settings?.payfast_customer_mode === "live" ? "live" : "test",
+          payfastMerchantId: settings?.payfast_merchant_id || "",
+          payfastMerchantKeyInput: "",
+          payfastMerchantKeySet: Boolean(payfastMerchantKey),
+          payfastMerchantKeyHint: payfastMerchantKey
+            ? `••••${payfastMerchantKey.slice(-4)}`
+            : "",
+          payfastPassphraseInput: "",
+          payfastPassphraseSet: Boolean(payfastPassphrase),
+          payfastPassphraseHint: payfastPassphrase ? `••••${payfastPassphrase.slice(-4)}` : "",
+          payfastAccountLabel: settings?.payfast_account_label || "",
+          payfastSetupNotes: settings?.payfast_setup_notes || "",
+          payfastPaymentsLive: settings?.payfast_payments_live === true,
           enableMpesaCustomerPayments:
             settings?.enable_mpesa_customer_payments === true,
           mpesaConnectionStatus:

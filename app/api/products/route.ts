@@ -151,6 +151,11 @@ export async function GET(req: Request) {
       ozowConnectionStatus:
         settings?.ozow_connection_status || "not_configured",
       ozowPaymentsLive: settings?.ozow_payments_live === true,
+      enablePayfastCustomerPayments:
+        settings?.enable_payfast_customer_payments === true,
+      payfastConnectionStatus:
+        settings?.payfast_connection_status || "not_configured",
+      payfastPaymentsLive: settings?.payfast_payments_live === true,
       enableMpesaCustomerPayments:
         settings?.enable_mpesa_customer_payments === true,
       mpesaConnectionStatus:

@@ -136,6 +136,9 @@ type TenantViewSettings = MoneyFormatSettings & {
   enableOzowCustomerPayments?: boolean;
   ozowConnectionStatus?: string;
   ozowPaymentsLive?: boolean;
+  enablePayfastCustomerPayments?: boolean;
+  payfastConnectionStatus?: string;
+  payfastPaymentsLive?: boolean;
   enableMpesaCustomerPayments?: boolean;
   mpesaConnectionStatus?: string;
   mpesaCustomerPaymentsLive?: boolean;
@@ -152,7 +155,7 @@ type TenantViewSettings = MoneyFormatSettings & {
   preorderDepositPercent?: number | null;
 };
 
-type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "ozow" | "mpesa" | "daraja";
+type PaymentProvider = "cash" | "cod" | "stripe" | "yoco" | "ozow" | "payfast" | "mpesa" | "daraja";
 
 type PaymentOption = {
   id: PaymentProvider;
@@ -230,6 +233,15 @@ function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery"
     });
   }
 
+  if (currencyCode === "ZAR" && providerConfigured(settings.enablePayfastCustomerPayments, settings.payfastConnectionStatus, settings.payfastPaymentsLive === true)) {
+    options.push({
+      id: "payfast",
+      label: "Pay with PayFast",
+      description: "Secure hosted PayFast checkout for South African Rand stores.",
+      online: true,
+    });
+  }
+
   if (currencyCode === "KES" && providerConfigured(settings.enableDarajaCustomerPayments, settings.darajaConnectionStatus, settings.darajaPaymentsLive === true)) {
     options.push({
       id: "daraja",
@@ -267,13 +279,13 @@ function buildPaymentOptions(settings: TenantViewSettings, orderType: "delivery"
   }
 
   const priorityByCurrency: Record<string, PaymentProvider[]> = {
-    KES: ["daraja", "mpesa", "cod", "cash", "stripe", "yoco", "ozow"],
-    ZAR: ["ozow", "yoco", "cod", "cash", "stripe", "daraja", "mpesa"],
+    KES: ["daraja", "mpesa", "cod", "cash", "stripe", "yoco", "ozow", "payfast"],
+    ZAR: ["payfast", "ozow", "yoco", "cod", "cash", "stripe", "daraja", "mpesa"],
     GBP: ["stripe", "cash", "cod", "yoco", "ozow", "daraja", "mpesa"],
     USD: ["stripe", "cash", "cod", "yoco", "ozow", "daraja", "mpesa"],
     EUR: ["stripe", "cash", "cod", "yoco", "ozow", "daraja", "mpesa"],
   };
-  const priority = priorityByCurrency[currencyCode] || ["cash", "cod", "stripe", "yoco", "ozow", "daraja", "mpesa"];
+  const priority = priorityByCurrency[currencyCode] || ["cash", "cod", "stripe", "yoco", "ozow", "payfast", "daraja", "mpesa"];
   return options.sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id));
 }
 
@@ -692,9 +704,9 @@ useEffect(() => {
 
       await saveCheckoutDetailsToProfile();
 
-      if (selectedPaymentOption.online && (data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.ozowCheckoutUrl || data.mpesaCheckoutUrl || data.darajaCheckoutUrl)) {
+      if (selectedPaymentOption.online && (data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.ozowCheckoutUrl || data.payfastCheckoutUrl || data.mpesaCheckoutUrl || data.darajaCheckoutUrl)) {
         setErrorMessage("");
-        window.location.assign(data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.ozowCheckoutUrl || data.darajaCheckoutUrl || data.mpesaCheckoutUrl);
+        window.location.assign(data.stripeCheckoutUrl || data.yocoCheckoutUrl || data.ozowCheckoutUrl || data.payfastCheckoutUrl || data.darajaCheckoutUrl || data.mpesaCheckoutUrl);
         return;
       }
 
