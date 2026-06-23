@@ -1,3 +1,10 @@
+## Ver-0.248 — Store Admin sales overview defaults
+
+- Added Daily, Weekly and Monthly sales overview cards to the Store Admin home page above the main admin panels.
+- Added browser-saved default display controls so the store owner can choose which sales figures appear on the home page.
+- Sales totals use existing order totals and exclude cancelled/refunded/failed orders without changing checkout, payment, stock or receipt logic.
+- Bumped the app version to Ver-0.248.
+
 
 ## Ver-0.247E — Storefront padding mock panel sizing fix
 
@@ -688,5 +695,18 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Changed Welcome and About us padding controls to sit around a mock panel: top above, left on the left, right on the right, and bottom below.
 - Removed repeated Current/default reference helper text from individual px input fields.
 - Corrected About us padding description wording from outer spacing inside the panel to outer spacing of the panel.
+- No Supabase SQL required.
+## Ver-0.248 - Store Admin sales overview
+
+- Patch type: touched-files-only ZIP.
+- Added Daily, Weekly and Monthly sales overview cards to the Store Admin home page before the main panels.
+- Added browser-saved default display selection controls for the sales cards.
+- No Supabase SQL required.
+## Ver-0.248a - Store Admin sales overview display polish
+
+- Patch type: touched-files-only ZIP.
+- Removed the sales overview Show by default selector from the Store Admin home page.
+- Kept all three sales cards visible by default.
+- Locked the card order to Daily, Weekly, Monthly.
 - No Supabase SQL required.
 

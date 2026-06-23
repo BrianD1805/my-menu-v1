@@ -2,6 +2,78 @@ import { requireAdminPageUser } from "@/lib/admin-auth";
 import AdminShell from "@/components/admin/AdminShell";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { calculateTenantTrialState } from "@/lib/trial";
+import { db } from "@/lib/db";
+import { formatMoney } from "@/lib/money";
+import type { MoneyFormatSettings } from "@/lib/money";
+import AdminSalesOverview from "@/components/admin/AdminSalesOverview";
+
+
+type SalesPeriodKey = "daily" | "weekly" | "monthly";
+
+type SalesMetric = {
+  key: SalesPeriodKey;
+  label: string;
+  rangeLabel: string;
+  totalLabel: string;
+  orderCount: number;
+};
+
+type SalesOrderRow = {
+  total: number | string | null;
+  status: string | null;
+  payment_status: string | null;
+  created_at: string;
+};
+
+function startOfToday(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfWeek(date: Date) {
+  const start = startOfToday(date);
+  const day = start.getDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  start.setDate(start.getDate() + mondayOffset);
+  return start;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfDay(date: Date) {
+  const end = startOfToday(date);
+  end.setDate(end.getDate() + 1);
+  return end;
+}
+
+function formatRangeLabel(start: Date, end: Date) {
+  const formatter = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const adjustedEnd = new Date(end.getTime() - 1);
+  if (formatter.format(start) === formatter.format(adjustedEnd)) return formatter.format(start);
+  return `${formatter.format(start)} – ${formatter.format(adjustedEnd)}`;
+}
+
+function isSalesOrder(order: SalesOrderRow) {
+  const status = String(order.status || "").toLowerCase();
+  const paymentStatus = String(order.payment_status || "").toLowerCase();
+  if (["cancelled", "canceled", "refunded"].includes(status)) return false;
+  if (["failed", "cancelled", "canceled", "refunded"].includes(paymentStatus)) return false;
+  return true;
+}
+
+function summariseOrders(orders: SalesOrderRow[], start: Date, end: Date) {
+  const startTime = start.getTime();
+  const endTime = end.getTime();
+  const rows = orders.filter((order) => {
+    const createdTime = new Date(order.created_at).getTime();
+    return Number.isFinite(createdTime) && createdTime >= startTime && createdTime < endTime && isSalesOrder(order);
+  });
+  return {
+    orderCount: rows.length,
+    total: rows.reduce((sum, order) => sum + Number(order.total || 0), 0),
+  };
+}
 
 function ActionCard({
   href,
@@ -43,6 +115,62 @@ export default async function AdminHomePage() {
   const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
   const trialState = calculateTenantTrialState(tenant);
 
+  const now = new Date();
+  const todayStart = startOfToday(now);
+  const tomorrowStart = endOfDay(now);
+  const weekStart = startOfWeek(now);
+  const monthStart = startOfMonth(now);
+
+  const earliestSalesStart = weekStart.getTime() < monthStart.getTime() ? weekStart : monthStart;
+
+  const { data: salesOrders } = await db
+    .from("orders")
+    .select("total,status,payment_status,created_at")
+    .eq("tenant_id", tenant.id)
+    .gte("created_at", earliestSalesStart.toISOString());
+
+  const orderRows = (salesOrders || []) as SalesOrderRow[];
+  const daily = summariseOrders(orderRows, todayStart, tomorrowStart);
+  const weekly = summariseOrders(orderRows, weekStart, tomorrowStart);
+  const monthly = summariseOrders(orderRows, monthStart, tomorrowStart);
+
+  const moneySettings: MoneyFormatSettings = {
+    currencyName: settings?.currency_name,
+    currencyCode: settings?.currency_code,
+    currencySymbol: settings?.currency_symbol,
+    currencyDisplayMode: settings?.currency_display_mode as MoneyFormatSettings["currencyDisplayMode"],
+    currencySymbolPosition: settings?.currency_symbol_position as MoneyFormatSettings["currencySymbolPosition"],
+    currencyDecimalPlaces: settings?.currency_decimal_places,
+    currencyUseThousandsSeparator: settings?.currency_use_thousands_separator,
+    currencyDecimalSeparator: settings?.currency_decimal_separator,
+    currencyThousandsSeparator: settings?.currency_thousands_separator,
+    currencySuffix: settings?.currency_suffix,
+  };
+
+  const salesMetrics: SalesMetric[] = [
+    {
+      key: "daily",
+      label: "Daily",
+      rangeLabel: formatRangeLabel(todayStart, tomorrowStart),
+      totalLabel: formatMoney(daily.total, moneySettings),
+      orderCount: daily.orderCount,
+    },
+    {
+      key: "weekly",
+      label: "Weekly",
+      rangeLabel: formatRangeLabel(weekStart, tomorrowStart),
+      totalLabel: formatMoney(weekly.total, moneySettings),
+      orderCount: weekly.orderCount,
+    },
+    {
+      key: "monthly",
+      label: "Monthly",
+      rangeLabel: formatRangeLabel(monthStart, tomorrowStart),
+      totalLabel: formatMoney(monthly.total, moneySettings),
+      orderCount: monthly.orderCount,
+    },
+  ];
+
   return (
     <AdminShell
       tenantName={branding.adminHeadingLabel}
@@ -56,7 +184,10 @@ export default async function AdminHomePage() {
       accentColor={branding.accentColor}
       trialState={trialState}
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-5">
+        <AdminSalesOverview metrics={salesMetrics} />
+
+        <div className="grid gap-4 md:grid-cols-2">
         <ActionCard
           href="/admin/orders"
           eyebrow="Operations"
@@ -85,6 +216,7 @@ export default async function AdminHomePage() {
           body="Start shaping the business identity, wording, colours, and logo that will flow through this tenant’s storefront and admin."
           toneClass="bg-[#FFF8DD]"
         />
+        </div>
       </div>
     </AdminShell>
   );
