@@ -656,3 +656,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added welcome text panel colour transparency control.
 - Enlarged the desktop welcome text panel by about 35% when a welcome background image is active.
 - No Supabase SQL required.
+
+## Ver-0.247B - Storefront welcome banner and About us spacing polish
+
+- Patch type: touched-files-only ZIP.
+- Enlarged the desktop welcome banner panel by increasing its desktop-only height and padding when a welcome background image is active.
+- Added extra top spacing above the About us panel so it does not sit too close to the welcome panel.
+- Reduced the About us title weight to match the calmer storefront title style.
+- No Supabase SQL required.

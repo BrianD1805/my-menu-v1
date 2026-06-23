@@ -2677,7 +2677,9 @@ export default function MenuBrowser({
       </div>
 
       <section
-        className="relative overflow-hidden rounded-[28px] border px-5 py-5 ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
+        className={`relative overflow-hidden rounded-[28px] border px-5 py-5 ring-1 ring-slate-200/70 sm:px-6 sm:py-6 lg:px-8 ${
+          welcomeBannerEnabled ? "lg:min-h-[520px] lg:py-10" : "lg:py-7"
+        }`}
         style={{
           backgroundColor: welcomeBackground,
           borderColor: brandAccentBorder,
@@ -4036,7 +4038,7 @@ export default function MenuBrowser({
 
       {aboutUsEnabled ? (
         <section
-          className="mb-8 overflow-hidden rounded-[30px] border shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:mb-10"
+          className="mt-5 mb-8 overflow-hidden rounded-[30px] border shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:mb-10"
           style={{
             backgroundColor: aboutUsBackground,
             borderColor: brandBorder,
@@ -4063,7 +4065,7 @@ export default function MenuBrowser({
               >
                 About us
               </p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl" style={{ color: aboutUsTextColor }}>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl" style={{ color: aboutUsTextColor }}>
                 {aboutUsTitle}
               </h2>
               {aboutUsBody ? (
