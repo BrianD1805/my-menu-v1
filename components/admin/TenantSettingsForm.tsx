@@ -116,6 +116,19 @@ type FormState = {
   yocoCustomerAccountLabel: string;
   yocoCustomerSetupNotes: string;
   yocoCustomerPaymentsLive: boolean;
+  enableOzowCustomerPayments: boolean;
+  ozowConnectionStatus: string;
+  ozowCustomerMode: "test" | "live";
+  ozowSiteCode: string;
+  ozowPrivateKeyInput: string;
+  ozowPrivateKeySet: boolean;
+  ozowPrivateKeyHint: string;
+  ozowApiKeyInput: string;
+  ozowApiKeySet: boolean;
+  ozowApiKeyHint: string;
+  ozowAccountLabel: string;
+  ozowSetupNotes: string;
+  ozowPaymentsLive: boolean;
   enableMpesaCustomerPayments: boolean;
   mpesaConnectionStatus: string;
   mpesaCustomerMode: "test" | "live";
@@ -1286,6 +1299,15 @@ export default function TenantSettingsForm({
     "yocoCustomerAccountLabel",
     "yocoCustomerSetupNotes",
     "yocoCustomerPaymentsLive",
+    "enableOzowCustomerPayments",
+    "ozowConnectionStatus",
+    "ozowCustomerMode",
+    "ozowSiteCode",
+    "ozowPrivateKeyInput",
+    "ozowApiKeyInput",
+    "ozowAccountLabel",
+    "ozowSetupNotes",
+    "ozowPaymentsLive",
     "enableMpesaCustomerPayments",
     "mpesaConnectionStatus",
     "mpesaCustomerMode",
@@ -1336,6 +1358,20 @@ export default function TenantSettingsForm({
     form.yocoCustomerPaymentsLive &&
     yocoCurrencyAllowed &&
     yocoCredentialReady,
+  );
+  const ozowCurrencyAllowed =
+    String(form.currencyCode || "")
+      .trim()
+      .toUpperCase() === "ZAR";
+  const ozowCredentialReady = Boolean(
+    form.ozowSiteCode.trim() &&
+      (form.ozowPrivateKeySet || form.ozowPrivateKeyInput.trim()),
+  );
+  const ozowReadyForCheckout = Boolean(
+    form.enableOzowCustomerPayments &&
+    form.ozowPaymentsLive &&
+    ozowCurrencyAllowed &&
+    ozowCredentialReady,
   );
   const mpesaCurrencyAllowed =
     String(form.currencyCode || "")
@@ -2084,6 +2120,10 @@ export default function TenantSettingsForm({
       const nextYocoWebhookSet =
         form.yocoCustomerWebhookSecretSet ||
         Boolean(form.yocoCustomerWebhookSecretInput.trim());
+      const nextOzowPrivateKeySet =
+        form.ozowPrivateKeySet || Boolean(form.ozowPrivateKeyInput.trim());
+      const nextOzowApiKeySet =
+        form.ozowApiKeySet || Boolean(form.ozowApiKeyInput.trim());
       const nextMpesaConsumerSecretSet =
         form.mpesaCustomerConsumerSecretSet ||
         Boolean(form.mpesaCustomerConsumerSecretInput.trim());
@@ -2132,6 +2172,26 @@ export default function TenantSettingsForm({
           form.yocoCustomerPaymentsLive &&
           nextYocoSecretSet &&
           yocoCurrencyAllowed,
+        ozowConnectionStatus: ozowCredentialReady
+          ? form.ozowConnectionStatus === "not_configured"
+            ? "configured"
+            : form.ozowConnectionStatus || "configured"
+          : "not_configured",
+        ozowPrivateKeyInput: "",
+        ozowPrivateKeySet: nextOzowPrivateKeySet,
+        ozowPrivateKeyHint: nextOzowPrivateKeySet
+          ? form.ozowPrivateKeyHint || "saved"
+          : "",
+        ozowApiKeyInput: "",
+        ozowApiKeySet: nextOzowApiKeySet,
+        ozowApiKeyHint: nextOzowApiKeySet
+          ? form.ozowApiKeyHint || "saved"
+          : "",
+        ozowPaymentsLive:
+          form.enableOzowCustomerPayments &&
+          form.ozowPaymentsLive &&
+          nextOzowPrivateKeySet &&
+          ozowCurrencyAllowed,
         mpesaConnectionStatus: mpesaCredentialReady
           ? form.mpesaConnectionStatus === "not_configured"
             ? "configured"
@@ -2195,6 +2255,15 @@ export default function TenantSettingsForm({
       yocoCustomerWebhookSecretHint: "",
       yocoCustomerWebhookId: "",
       yocoCustomerWebhookUrl: "",
+    }));
+  }
+
+  function setOzowMode(value: FormState["ozowCustomerMode"]) {
+    setForm((current) => ({
+      ...current,
+      ozowCustomerMode: value,
+      ozowPaymentsLive: false,
+      ozowConnectionStatus: "not_configured",
     }));
   }
 
@@ -4583,6 +4652,260 @@ export default function TenantSettingsForm({
                     webhook secret before enabling Stripe.
                   </p>
                 ) : null}
+              </div>
+            </PaymentGatewayCard>
+
+            <PaymentGatewayCard
+              title="Ozow customer payments"
+              description="Instant EFT hosted checkout for South African ZAR stores."
+              badge={
+                ozowReadyForCheckout
+                  ? "checkout visible"
+                  : form.enableOzowCustomerPayments
+                    ? form.ozowConnectionStatus
+                    : "not configured"
+              }
+              tone={
+                ozowReadyForCheckout
+                  ? "ready"
+                  : ozowCredentialReady
+                    ? "warning"
+                    : "idle"
+              }
+            >
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="font-black text-slate-950">
+                      Ozow customer payments
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">
+                      Hosted Ozow checkout for South African ZAR stores. Add the
+                      store owner's Ozow SiteCode and Private Key, then switch
+                      Ozow on for customer checkout.
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${ozowReadyForCheckout ? "border-emerald-200 bg-white text-[#0F766E]" : ozowCredentialReady ? "border-amber-200 bg-amber-50 text-amber-800" : "border-slate-200 bg-white text-slate-500"}`}
+                  >
+                    {ozowReadyForCheckout
+                      ? "checkout visible"
+                      : form.enableOzowCustomerPayments
+                        ? form.ozowConnectionStatus
+                        : "not configured"}
+                  </span>
+                </div>
+
+                {!ozowCurrencyAllowed ? (
+                  <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
+                    Ozow is currently intended for South African Rand stores.
+                    Change the store currency to ZAR before enabling Ozow.
+                  </p>
+                ) : null}
+
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <Field label="Ozow mode">
+                    <select
+                      value={form.ozowCustomerMode}
+                      onChange={(e) =>
+                        setOzowMode(
+                          e.target.value as FormState["ozowCustomerMode"],
+                        )
+                      }
+                      className="input"
+                    >
+                      <option value="test">Test credentials</option>
+                      <option value="live">Live credentials</option>
+                    </select>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Changing mode hides Ozow at checkout until the saved
+                      credentials are confirmed again.
+                    </p>
+                  </Field>
+                  <Field label="Ozow account label">
+                    <input
+                      value={form.ozowAccountLabel}
+                      onChange={(e) =>
+                        update("ozowAccountLabel", e.target.value)
+                      }
+                      placeholder="Example: ZimZa Express Ozow account"
+                      className="input"
+                    />
+                  </Field>
+                  <Field label="Ozow SiteCode">
+                    <input
+                      value={form.ozowSiteCode}
+                      onChange={(e) => update("ozowSiteCode", e.target.value)}
+                      placeholder="Store Ozow SiteCode"
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <Field
+                    label={
+                      form.ozowPrivateKeySet
+                        ? `Ozow private key saved (${form.ozowPrivateKeyHint || "saved"})`
+                        : "Ozow private key"
+                    }
+                  >
+                    <input
+                      value={form.ozowPrivateKeyInput}
+                      onChange={(e) =>
+                        update("ozowPrivateKeyInput", e.target.value)
+                      }
+                      placeholder={
+                        form.ozowPrivateKeySet
+                          ? "Leave blank to keep saved Ozow private key"
+                          : "Private Key from the store owner's Ozow portal"
+                      }
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <Field
+                    label={
+                      form.ozowApiKeySet
+                        ? `Ozow API key saved (${form.ozowApiKeyHint || "saved"})`
+                        : "Ozow API key / optional"
+                    }
+                  >
+                    <input
+                      value={form.ozowApiKeyInput}
+                      onChange={(e) => update("ozowApiKeyInput", e.target.value)}
+                      placeholder={
+                        form.ozowApiKeySet
+                          ? "Leave blank to keep saved Ozow API key"
+                          : "Optional API key if provided by Ozow"
+                      }
+                      className="input"
+                      autoComplete="off"
+                    />
+                  </Field>
+                  <Field label="Ozow notify URL">
+                    <input
+                      value="https://www.orduva.com/api/storefront/ozow/webhook"
+                      readOnly
+                      className="input bg-slate-50 text-slate-600"
+                    />
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Use the deployed Orduva domain for Ozow notifications.
+                      Localhost cannot receive Ozow server notifications.
+                    </p>
+                  </Field>
+                  <div className="md:col-span-2">
+                    <Field label="Ozow setup notes">
+                      <input
+                        value={form.ozowSetupNotes}
+                        onChange={(e) =>
+                          update("ozowSetupNotes", e.target.value)
+                        }
+                        placeholder="Example: Test Ozow SiteCode saved, waiting for live approval"
+                        className="input"
+                      />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        Ozow checkout readiness
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                        Ozow appears at checkout only when the store is using ZAR
+                        and the SiteCode and Private Key are saved.
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${ozowReadyForCheckout ? "border-emerald-200 bg-[#EAF3FA] text-[#0F766E]" : "border-amber-200 bg-amber-50 text-amber-800"}`}
+                    >
+                      {ozowReadyForCheckout ? "checkout visible" : "not visible"}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-xs font-bold sm:grid-cols-2">
+                    <p
+                      className={
+                        ozowCurrencyAllowed
+                          ? "text-[#0F766E]"
+                          : "text-amber-800"
+                      }
+                    >
+                      ✓ Store currency: {ozowCurrencyAllowed ? "ZAR" : "Change to ZAR"}
+                    </p>
+                    <p
+                      className={
+                        form.ozowSiteCode.trim()
+                          ? "text-[#0F766E]"
+                          : "text-amber-800"
+                      }
+                    >
+                      ✓ SiteCode: {form.ozowSiteCode.trim() ? "saved" : "required"}
+                    </p>
+                    <p
+                      className={
+                        form.ozowPrivateKeySet || form.ozowPrivateKeyInput.trim()
+                          ? "text-[#0F766E]"
+                          : "text-amber-800"
+                      }
+                    >
+                      ✓ Private key: {form.ozowPrivateKeySet || form.ozowPrivateKeyInput.trim() ? "saved" : "required"}
+                    </p>
+                    <p
+                      className={
+                        form.ozowCustomerMode === "live"
+                          ? "text-[#0F766E]"
+                          : "text-slate-600"
+                      }
+                    >
+                      ✓ Mode: {form.ozowCustomerMode === "live" ? "Live" : "Test"}
+                    </p>
+                  </div>
+                </div>
+
+                <label
+                  className={`mt-4 flex items-start gap-3 rounded-2xl border p-3 text-sm ${ozowCurrencyAllowed && ozowCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.enableOzowCustomerPayments}
+                    onChange={(e) =>
+                      update("enableOzowCustomerPayments", e.target.checked)
+                    }
+                    disabled={!ozowCurrencyAllowed || !ozowCredentialReady}
+                    className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                  />
+                  <span>
+                    <strong>Enable Ozow setup for this store</strong>
+                    <span className="mt-1 block text-xs leading-5">
+                      Requires ZAR currency, SiteCode and saved Private Key.
+                      This makes Ozow available to be switched on for checkout.
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  className={`mt-3 flex items-start gap-3 rounded-2xl border p-3 text-sm ${form.enableOzowCustomerPayments && ozowCurrencyAllowed && ozowCredentialReady ? "border-emerald-200 bg-white text-emerald-900" : "border-slate-200 bg-white text-slate-500"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.ozowPaymentsLive}
+                    onChange={(e) => update("ozowPaymentsLive", e.target.checked)}
+                    disabled={
+                      !form.enableOzowCustomerPayments ||
+                      !ozowCurrencyAllowed ||
+                      !ozowCredentialReady
+                    }
+                    className="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-200 disabled:opacity-50"
+                  />
+                  <span>
+                    <strong>Show Ozow on customer checkout</strong>
+                    <span className="mt-1 block text-xs leading-5">
+                      When enabled, ZAR storefront customers can choose Ozow and
+                      will be sent to Ozow's hosted payment page.
+                    </span>
+                  </span>
+                </label>
               </div>
             </PaymentGatewayCard>
 
@@ -7210,7 +7533,7 @@ const SETTINGS_MENU_ITEMS = [
     id: "storefront-payment-options",
     group: "Payments",
     title: "Storefront payment options",
-    help: "Cash, COD, Stripe, Yoco and future provider setup.",
+    help: "Cash, COD, Stripe, Yoco, Ozow and future provider setup.",
   },
   {
     id: "advanced-currency-display",
@@ -7281,7 +7604,7 @@ const SETTINGS_SECTION_META: Record<
   },
   "storefront-payment-options": {
     group: "Payments",
-    help: "Cash, COD, Stripe and Yoco controls. Payment behaviour is unchanged.",
+    help: "Cash, COD, Stripe, Yoco and Ozow controls. Payment behaviour is unchanged.",
     accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "advanced-currency-display": {

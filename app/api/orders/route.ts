@@ -10,6 +10,7 @@ import { calculateTenantTrialState, TRIAL_EXPIRY_CUSTOMER_MESSAGE } from "@/lib/
 import { getStorefrontPaymentOption } from "@/lib/storefront-payment-options";
 import { createTenantStripeOrderCheckoutIntent } from "@/lib/storefront-stripe";
 import { createTenantYocoOrderCheckoutIntent } from "@/lib/storefront-yoco";
+import { createTenantOzowOrderCheckoutIntent } from "@/lib/storefront-ozow";
 import { createTenantPesapalOrderCheckoutIntent } from "@/lib/storefront-pesapal";
 import { createTenantDarajaStkPushIntent } from "@/lib/storefront-daraja";
 import { calculateRewardDiscount, getCustomerRewardSummary } from "@/lib/rewards";
@@ -352,7 +353,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (selectedPayment.online && !["stripe", "yoco", "mpesa", "daraja"].includes(selectedPayment.id)) {
+    if (selectedPayment.online && !["stripe", "yoco", "ozow", "mpesa", "daraja"].includes(selectedPayment.id)) {
       return NextResponse.json(
         { error: "This online payment provider is not live for this store yet. Please choose another payment option." },
         { status: 400 }
@@ -442,6 +443,51 @@ export async function POST(req: Request) {
         });
       } catch (yocoError) {
         const message = yocoError instanceof Error ? yocoError.message : "Yoco checkout could not be started.";
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
+    }
+
+
+
+    if (selectedPayment.id === "ozow") {
+      const branding = buildTenantBranding(tenant.slug, tenant.name, settings);
+      try {
+        const checkoutIntent = await createTenantOzowOrderCheckoutIntent({
+          req,
+          tenantId: tenant.id,
+          tenantSlug: tenant.slug,
+          tenantName: branding.displayName,
+          customerName: body.customerName.trim(),
+          customerPhone: body.customerPhone.trim(),
+          customerAccountId,
+          customerAddress: body.orderType === "collection" ? null : body.customerAddress?.trim() || null,
+          orderType: body.orderType,
+          notes: body.notes?.trim() || null,
+          items: orderItemsForStorage,
+          total: payableNowTotal,
+          orderTotal: total,
+          preorder: preorderFinancials.hasPreorder ? preorderMetadata : null,
+          currencyCode: branding.currencyCode || settings?.currency_code || "ZAR",
+          paymentMethodLabel: selectedPayment.label,
+          rewards: rewardMetadata,
+          discounts: discountMetadata,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          orderId: null,
+          checkoutId: checkoutIntent.checkoutId,
+          customerAccountId,
+          paymentProvider: selectedPayment.id,
+          paymentMethodLabel: selectedPayment.label,
+          paymentStatus: preorderFinancials.hasPreorder ? "preorder_deposit_checkout_started" : "checkout_started",
+          amountDueNow: payableNowTotal,
+          preorder: preorderFinancials,
+          ozowCheckoutUrl: checkoutIntent.url,
+          ozowTransactionReference: checkoutIntent.transactionReference,
+        });
+      } catch (ozowError) {
+        const message = ozowError instanceof Error ? ozowError.message : "Ozow checkout could not be started.";
         return NextResponse.json({ error: message }, { status: 400 });
       }
     }

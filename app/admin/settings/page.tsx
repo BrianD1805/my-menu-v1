@@ -14,7 +14,7 @@ export default async function AdminSettingsPage() {
       db
         .from("tenant_settings")
         .select(
-          "stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, mpesa_customer_consumer_secret, daraja_consumer_secret, daraja_passkey",
+          "stripe_customer_secret_key, stripe_customer_webhook_secret, yoco_customer_secret_key, yoco_customer_webhook_secret, yoco_customer_webhook_id, yoco_customer_webhook_url, ozow_private_key, ozow_api_key, mpesa_customer_consumer_secret, daraja_consumer_secret, daraja_passkey",
         )
         .eq("tenant_id", tenant.id)
         .maybeSingle(),
@@ -38,6 +38,8 @@ export default async function AdminSettingsPage() {
   const yocoWebhookSecret = String(
     stripeSecrets?.yoco_customer_webhook_secret || "",
   ).trim();
+  const ozowPrivateKey = String(stripeSecrets?.ozow_private_key || "").trim();
+  const ozowApiKey = String(stripeSecrets?.ozow_api_key || "").trim();
   const mpesaConsumerSecret = String(
     stripeSecrets?.mpesa_customer_consumer_secret || "",
   ).trim();
@@ -179,6 +181,24 @@ export default async function AdminSettingsPage() {
           yocoCustomerSetupNotes: settings?.yoco_customer_setup_notes || "",
           yocoCustomerPaymentsLive:
             settings?.yoco_customer_payments_live === true,
+          enableOzowCustomerPayments:
+            settings?.enable_ozow_customer_payments === true,
+          ozowConnectionStatus:
+            settings?.ozow_connection_status || "not_configured",
+          ozowCustomerMode:
+            settings?.ozow_customer_mode === "live" ? "live" : "test",
+          ozowSiteCode: settings?.ozow_site_code || "",
+          ozowPrivateKeyInput: "",
+          ozowPrivateKeySet: Boolean(ozowPrivateKey),
+          ozowPrivateKeyHint: ozowPrivateKey
+            ? `••••${ozowPrivateKey.slice(-4)}`
+            : "",
+          ozowApiKeyInput: "",
+          ozowApiKeySet: Boolean(ozowApiKey),
+          ozowApiKeyHint: ozowApiKey ? `••••${ozowApiKey.slice(-4)}` : "",
+          ozowAccountLabel: settings?.ozow_account_label || "",
+          ozowSetupNotes: settings?.ozow_setup_notes || "",
+          ozowPaymentsLive: settings?.ozow_payments_live === true,
           enableMpesaCustomerPayments:
             settings?.enable_mpesa_customer_payments === true,
           mpesaConnectionStatus:

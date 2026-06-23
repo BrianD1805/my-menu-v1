@@ -1,3 +1,19 @@
+## Ver-0.249A — Ozow settings visibility fix
+
+- Patch type: touched-files-only ZIP.
+- Added the missing Ozow customer payments card into the visible Storefront payment options / Online payment providers section.
+- Added Ozow SiteCode, Private Key, optional API Key, mode, account label, notes, readiness checklist and checkout visibility toggles to the Store Admin Settings UI.
+- No additional Supabase SQL required beyond the Ver-0.249 Ozow SQL migration.
+
+## Ver-0.249 — Ozow ZAR storefront payments
+
+- Added Ozow as an online payment gateway option for South African ZAR stores.
+- Added Store Admin Settings controls for Ozow SiteCode, Private Key, optional API Key, mode, setup notes and checkout visibility.
+- Added Ozow redirect, return, webhook and checkout-status routes using the existing pending-payment-intent pattern so orders are created only after paid confirmation.
+- Added Ozow success, cancel and error checkout pages.
+- Updated storefront checkout payment options so Ozow appears before Yoco for configured ZAR stores.
+- Added Supabase SQL for Ozow tenant settings fields and Ozow payment intent references.
+
 ## Ver-0.248 — Store Admin sales overview defaults
 
 - Added Daily, Weekly and Monthly sales overview cards to the Store Admin home page above the main admin panels.

@@ -146,6 +146,11 @@ export async function GET(req: Request) {
       yocoConnectionStatus:
         settings?.yoco_connection_status || "not_configured",
       yocoCustomerPaymentsLive: settings?.yoco_customer_payments_live === true,
+      enableOzowCustomerPayments:
+        settings?.enable_ozow_customer_payments === true,
+      ozowConnectionStatus:
+        settings?.ozow_connection_status || "not_configured",
+      ozowPaymentsLive: settings?.ozow_payments_live === true,
       enableMpesaCustomerPayments:
         settings?.enable_mpesa_customer_payments === true,
       mpesaConnectionStatus:
