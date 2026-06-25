@@ -23,13 +23,13 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Orduva Admin';
   const options = {
     body: payload.body || 'You have a new admin notification.',
-    icon: payload.icon || '/orduva-notification-icon-192.png',
-    badge: payload.badge || '/orduva-notification-badge-96.png',
+    icon: payload.icon || '/favicon.ico',
     tag: payload.tag || 'orduva-admin-push',
     data: {
       url: payload.url || '/admin/orders',
     },
   };
+  if (payload.badge) options.badge = payload.badge;
 
   event.waitUntil(self.registration.showNotification(title, options));
 });

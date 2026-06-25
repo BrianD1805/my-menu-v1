@@ -148,8 +148,7 @@ export default function AdminPushNotificationsCard() {
       const registration = await navigator.serviceWorker.ready;
       await registration.showNotification("Orduva Admin", {
         body: "Local test notification from the installed admin PWA.",
-        icon: "/orduva-admin-icon-192.png",
-        badge: "/orduva-admin-icon-192.png",
+        icon: "/favicon.ico",
         tag: "orduva-admin-local-test",
         data: { url: "/admin/orders" },
       });

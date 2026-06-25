@@ -770,3 +770,16 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Updated checkout submit loading to use the same Orduva loading graphic/colours for visual consistency.
 - Changed checkout Back to storefront / Back to menu actions from `window.location.href = "/"` full reloads to client-side navigation/back behaviour, so returning to the menu avoids a forced hard page reload where possible.
 - No Supabase SQL required.
+
+## Ver-0.253 - Push notification settings and admin test controls
+
+- Patch type: touched-files-only ZIP.
+- Added a Push notifications section to Store Admin Settings.
+- Added editable title/message text for Store Admin new-order/test pushes and customer order-flow pushes.
+- Added Send push checkboxes so customer order statuses can still be updated without sending a push for that status.
+- Added Store settings admin test push button.
+- Updated push sending to respect the saved notification templates and enabled/disabled flags.
+- Customer pushes now default to the store favicon icon only.
+- Store Admin pushes now default to the Orduva favicon icon only.
+- Updated service workers so notification badge graphics are only included when explicitly supplied, reducing unwanted extra graphics on mobile notifications.
+- Supabase SQL required: SUPABASE_VER_0_253_PUSH_NOTIFICATION_SETTINGS.sql.

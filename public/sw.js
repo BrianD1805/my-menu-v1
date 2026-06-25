@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-222c';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-222c';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-222c';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-253';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-253';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-253';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -204,13 +204,13 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Order update';
   const options = {
     body: payload.body || 'There is an update for your order.',
-    icon: payload.icon || '/orduva-notification-icon-192.png',
-    badge: payload.badge || '/orduva-notification-badge-96.png',
+    icon: payload.icon || '/favicon.ico',
     tag: payload.tag || 'orduva-storefront-push',
     data: {
       url: payload.url || '/',
     },
   };
+  if (payload.badge) options.badge = payload.badge;
 
   event.waitUntil(self.registration.showNotification(title, options));
 });

@@ -1,5 +1,6 @@
 import webpush from "web-push";
 import { db } from "@/lib/db";
+import { buildPushFromSettings, getTenantCustomerPushIcon, inferPushEventType } from "@/lib/push-notification-settings";
 
 type PushPayload = {
   title: string;
@@ -7,7 +8,9 @@ type PushPayload = {
   url?: string;
   tag?: string;
   icon?: string;
-  badge?: string;
+  badge?: string | null;
+  eventType?: string;
+  variables?: Record<string, unknown>;
 };
 
 type AdminSubscriptionRow = {
@@ -65,6 +68,22 @@ function buildSubscription(row: { endpoint: string; p256dh: string; auth: string
       auth: row.auth,
     },
   };
+}
+
+function notificationJsonPayload(payload: PushPayload) {
+  const data: Record<string, unknown> = {
+    title: payload.title,
+    body: payload.body,
+    url: payload.url || "/",
+    tag: payload.tag,
+    icon: payload.icon,
+  };
+
+  // Only include a badge when explicitly supplied. Some Android/Chrome
+  // combinations display badge/large image assets in ways that look like an
+  // extra graphic. Ver-0.253 keeps Orduva pushes icon-only by default.
+  if (payload.badge) data.badge = payload.badge;
+  return JSON.stringify(data);
 }
 
 async function logCustomerPushEvent(input: {
@@ -172,13 +191,10 @@ async function sendRows(tenantId: string, rows: CustomerSubscriptionRow[], paylo
           p256dh: row.p256dh,
           auth: row.auth,
         }),
-        JSON.stringify({
-          title: payload.title,
-          body: payload.body,
+        notificationJsonPayload({
+          ...payload,
           url: payload.url || "/",
           tag: payload.tag || "orduva-customer-order-status",
-          icon: payload.icon || "/orduva-notification-icon-192.png",
-          badge: payload.badge || "/orduva-notification-badge-96.png",
         })
       );
       sent += 1;
@@ -206,6 +222,35 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
   const orderIdFromTag = typeof payload.tag === "string" && payload.tag.startsWith("orduva-order-")
     ? payload.tag.replace("orduva-order-", "")
     : null;
+  const eventType = inferPushEventType("admin", payload);
+  const preparedPush = await buildPushFromSettings({
+    tenantId,
+    audience: "admin",
+    eventType,
+    fallbackTitle: payload.title,
+    fallbackBody: payload.body,
+    variables: { orderId: orderIdFromTag, ...payload.variables },
+  });
+
+  if (!preparedPush.enabled) {
+    await logAdminPushEvent({
+      tenantId,
+      eventType: `${eventType}_disabled_by_settings`,
+      title: "Admin push disabled",
+      body: "This admin push was skipped by Store settings.",
+      status: "skipped",
+      metadata: { orderId: orderIdFromTag, tag: payload.tag || null },
+    });
+    return { ok: true, reason: null, sent: 0, failed: 0, skipped: true };
+  }
+
+  payload = {
+    ...payload,
+    title: preparedPush.title,
+    body: preparedPush.body,
+    icon: "/favicon.ico",
+    badge: null,
+  };
 
   if (!configureWebPush()) {
     const result = { ok: false, reason: "missing_vapid" as const, sent: 0, failed: 0 };
@@ -270,13 +315,10 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
     try {
       await webpush.sendNotification(
         buildSubscription({ endpoint: row.endpoint!, p256dh: row.p256dh!, auth: row.auth! }),
-        JSON.stringify({
-          title: payload.title,
-          body: payload.body,
+        notificationJsonPayload({
+          ...payload,
           url: payload.url || "/admin/orders",
           tag: payload.tag || "orduva-admin-push",
-          icon: payload.icon || "/orduva-notification-icon-192.png",
-          badge: payload.badge || "/orduva-notification-badge-96.png",
         })
       );
       sent += 1;
@@ -318,6 +360,38 @@ export async function sendCustomerPushForOrderWithFallback(
   orderId: string,
   payload: PushPayload
 ): Promise<CustomerPushResult> {
+  const eventType = inferPushEventType("customer", payload);
+  const preparedPush = await buildPushFromSettings({
+    tenantId,
+    audience: "customer",
+    eventType,
+    fallbackTitle: payload.title,
+    fallbackBody: payload.body,
+    variables: { orderId, ...payload.variables },
+  });
+
+  if (!preparedPush.enabled) {
+    const result: CustomerPushResult = { ok: true, reason: null, sent: 0, failed: 0, lookupSource: null };
+    await logCustomerPushEvent({
+      tenantId,
+      orderId,
+      eventType: `${eventType}_disabled_by_settings`,
+      title: "Customer push disabled",
+      body: "This customer push was skipped by Store settings.",
+      status: "skipped",
+      metadata: { ...result, orderId, tag: payload.tag || null },
+    });
+    return result;
+  }
+
+  payload = {
+    ...payload,
+    title: preparedPush.title,
+    body: preparedPush.body,
+    icon: payload.icon || await getTenantCustomerPushIcon(tenantId),
+    badge: null,
+  };
+
   if (!configureWebPush()) {
     const result: CustomerPushResult = { ok: false, reason: "missing_vapid", sent: 0, failed: 0, lookupSource: null };
     await logCustomerPushEvent({
