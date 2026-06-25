@@ -38,7 +38,7 @@ export async function GET(req: Request) {
         totalSubscriptions: 0,
         alertStatus: "error",
         warning: "Admin push health could not be checked. Please test admin push before relying on new order alerts.",
-        permissionHint: "Use an installed admin PWA on phone for the best result.",
+        permissionHint: "Use an installed admin PWA on the phone, then tap Enable admin push on this device so the subscription is saved against this store.",
       },
       { status: 500 }
     );
@@ -61,7 +61,7 @@ export async function GET(req: Request) {
       ? null
       : disabledSubscriptions > 0
         ? "Admin order alerts are currently disabled. You may miss new order notifications until admin push is re-enabled."
-        : "No active admin push device is saved. You may miss new order notifications until admin push is enabled.";
+        : "No active Store Admin push device is saved for this store. Browser permission alone is not enough; open Store settings on the admin phone and tap Enable admin push on this device.";
 
   return NextResponse.json({
     ok: true,
@@ -72,7 +72,7 @@ export async function GET(req: Request) {
     alertStatus,
     warning,
     latestSeenAt,
-    permissionHint: "Use an installed admin PWA on phone for the best result.",
+    permissionHint: "Use an installed admin PWA on the phone, then tap Enable admin push on this device so the subscription is saved against this store.",
   });
 }
 

@@ -1,6 +1,5 @@
 import AdminShell from "@/components/admin/AdminShell";
 import TenantSettingsForm from "@/components/admin/TenantSettingsForm";
-import PushNotificationSettingsPanel from "@/components/admin/PushNotificationSettingsPanel";
 import { requireAdminPageUser } from "@/lib/admin-auth";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { calculateTenantTrialState } from "@/lib/trial";
@@ -66,7 +65,6 @@ export default async function AdminSettingsPage() {
       accentColor={branding.accentColor}
       trialState={trialState}
     >
-      <PushNotificationSettingsPanel />
       <TenantSettingsForm
         tenantName={tenant.name}
         initial={{

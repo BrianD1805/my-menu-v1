@@ -18,7 +18,7 @@ export async function POST(req: Request) {
       result.reason === "missing_vapid"
         ? "VAPID keys are not configured yet."
         : result.reason === "no_subscriptions"
-          ? "No active admin push subscriptions found for this tenant."
+          ? "No active Store Admin push device is saved for this store. Phone permission may be allowed, but you still need to tap Enable admin push on this device in Store settings so Orduva can save the device subscription."
           : "Real push could not be delivered.";
 
     return NextResponse.json({ error: message, ...result }, { status: 400 });

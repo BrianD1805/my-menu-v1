@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import PushNotificationSettingsPanel from "@/components/admin/PushNotificationSettingsPanel";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import {
   Fragment,
@@ -2733,6 +2734,8 @@ export default function TenantSettingsForm({
             />
           </div>
         </Section>
+
+        <PushNotificationSettingsPanel />
 
         <Section
           id="logo-and-favicon"
@@ -7781,6 +7784,12 @@ const SETTINGS_MENU_ITEMS = [
     help: "Show or hide the new client setup checklist.",
   },
   {
+    id: "push-notifications",
+    group: "Notifications",
+    title: "Push notifications",
+    help: "Admin device alerts, customer order-flow pushes and editable wording.",
+  },
+  {
     id: "logo-and-favicon",
     group: "Brand",
     title: "Logo and favicon",
@@ -7873,6 +7882,11 @@ const SETTINGS_SECTION_META: Record<
   "admin-workspace": {
     group: "Workspace",
     help: "Small controls that affect the tenant admin experience.",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
+  },
+  "push-notifications": {
+    group: "Notifications",
+    help: "Admin device alerts, customer order-flow pushes and editable wording.",
     accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "logo-and-favicon": {

@@ -1,3 +1,12 @@
+## Ver-0.253a — Push notification settings UX and device registration fix
+
+- Moved Push notifications into the normal Store settings dropdown flow as its own collapsible section instead of a standalone panel above settings.
+- Changed Push notifications to a single-column layout with Store Admin push controls first and customer order-flow push wording/status controls underneath.
+- Added a bottom Save push notifications button with the same red unsaved-state flow used by other Store settings sections.
+- Added Store Admin device registration controls inside the Push notifications section so allowed browser permission can be converted into a saved push subscription for the current store.
+- Improved the no-subscription error wording to explain that notification permission alone is not enough; the admin device must be enabled/saved for that store.
+- No Supabase SQL required beyond the existing Ver-0.253 push notification settings table.
+
 
 ## Ver-0.250A — PayFast per-item settings build fix
 
