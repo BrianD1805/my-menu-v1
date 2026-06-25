@@ -742,3 +742,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Locked the card order to Daily, Weekly, Monthly.
 - No Supabase SQL required.
 
+## Ver-0.251 - Orders refresh control update
+
+- Patch type: touched-files-only ZIP.
+- Removed the 20-second Orders page auto-refresh timer.
+- Kept a manual Refresh now button for Store Admin orders.
+- Added a one-time refresh when the Orders page becomes visible/focused again.
+- Added helper text: "New order alerts are sent by notification. Use Refresh now if needed."
+- No Supabase SQL required.

@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
-  intervalSeconds?: number;
   currentNewCount?: number;
 };
 
@@ -44,13 +43,13 @@ function playAlertTone() {
   }
 }
 
-export default function LiveOrdersRefresh({ intervalSeconds = 20, currentNewCount = 0 }: Props) {
+export default function LiveOrdersRefresh({ currentNewCount = 0 }: Props) {
   const router = useRouter();
-  const [enabled, setEnabled] = useState(true);
-  const [secondsLeft, setSecondsLeft] = useState(intervalSeconds);
   const [alertVisible, setAlertVisible] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [soundMessage, setSoundMessage] = useState("");
+  const [refreshMessage, setRefreshMessage] = useState("");
+  const lastVisibilityRefreshAt = useRef(0);
 
   const countStorageKey = useMemo(() => "orduva-last-seen-new-order-count", []);
   const soundStorageKey = useMemo(() => "orduva-alert-sound-enabled", []);
@@ -67,28 +66,25 @@ export default function LiveOrdersRefresh({ intervalSeconds = 20, currentNewCoun
   }, [soundStorageKey]);
 
   useEffect(() => {
-    if (!enabled) return;
+    function refreshWhenVisible() {
+      if (document.visibilityState !== "visible") return;
 
-    const tick = window.setInterval(() => {
-      setSecondsLeft((current) => Math.max(current - 1, 0));
-    }, 1000);
+      const now = Date.now();
+      if (now - lastVisibilityRefreshAt.current < 1500) return;
 
-    return () => window.clearInterval(tick);
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!enabled) return;
-    if (secondsLeft > 0) return;
-
-    router.refresh();
-    setSecondsLeft(intervalSeconds);
-  }, [enabled, secondsLeft, intervalSeconds, router]);
-
-  useEffect(() => {
-    if (enabled) {
-      setSecondsLeft(intervalSeconds);
+      lastVisibilityRefreshAt.current = now;
+      router.refresh();
+      setRefreshMessage("Orders refreshed because this page became visible again.");
     }
-  }, [enabled, intervalSeconds]);
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", refreshWhenVisible);
+
+    return () => {
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", refreshWhenVisible);
+    };
+  }, [router]);
 
   useEffect(() => {
     try {
@@ -129,6 +125,11 @@ export default function LiveOrdersRefresh({ intervalSeconds = 20, currentNewCoun
     }
   }
 
+  function refreshNow() {
+    router.refresh();
+    setRefreshMessage("Orders refreshed now.");
+  }
+
   return (
     <div className="space-y-4">
       {alertVisible ? (
@@ -137,7 +138,7 @@ export default function LiveOrdersRefresh({ intervalSeconds = 20, currentNewCoun
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">New order alert</p>
               <p className="mt-2 text-sm font-medium text-amber-900">
-                A new order has come in. It should now be highlighted in the orders list below.
+                A new order has come in. Use Refresh now if the order list has not updated yet.
               </p>
             </div>
 
@@ -156,20 +157,22 @@ export default function LiveOrdersRefresh({ intervalSeconds = 20, currentNewCoun
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Live orders view</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Orders view</p>
               <p className="mt-2 text-sm text-slate-600">
-                {enabled
-                  ? `Auto-refreshing every ${intervalSeconds} seconds. Next refresh in ${secondsLeft}s. New orders waiting: ${currentNewCount}.`
-                  : "Auto-refresh is paused. Resume when you want the orders view to keep checking for new activity."}
+                New order alerts are sent by notification. Use Refresh now if needed.
               </p>
+              <p className="mt-1 text-xs font-medium text-slate-500">
+                This page no longer checks the database every 20 seconds. It refreshes when opened, when you return to it, or when you press Refresh now.
+              </p>
+              {refreshMessage ? <p className="mt-1 text-xs font-medium text-slate-500">{refreshMessage}</p> : null}
             </div>
 
             <button
               type="button"
-              onClick={() => setEnabled((current) => !current)}
+              onClick={refreshNow}
               className="admin-pressable inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
             >
-              {enabled ? "Pause live refresh" : "Resume live refresh"}
+              Refresh now
             </button>
           </div>
 
