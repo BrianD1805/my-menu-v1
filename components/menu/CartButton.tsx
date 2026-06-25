@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, MouseEvent, useEffect, useMemo, useState } from "react";
+import { forwardRef, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { readCart, subscribeToCartUpdates } from "@/lib/cart";
@@ -63,6 +63,9 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
   const [message, setMessage] = useState("");
   const [checkoutNavigating, setCheckoutNavigating] = useState(false);
   const [showCheckoutLoading, setShowCheckoutLoading] = useState(false);
+  const checkoutLoadingStartedAtRef = useRef(0);
+  const checkoutLoadingActiveRef = useRef(false);
+  const checkoutLoadingHideTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const update = (items: StoredCartItem[]) => setCount(getItemCount(items));
@@ -83,14 +86,50 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() || "";
 
   useEffect(() => {
-    if (!checkoutNavigating) {
+    return () => {
+      if (checkoutLoadingHideTimerRef.current) {
+        window.clearTimeout(checkoutLoadingHideTimerRef.current);
+      }
+    };
+  }, []);
+
+  function showCheckoutLoadingNow() {
+    if (checkoutLoadingHideTimerRef.current) {
+      window.clearTimeout(checkoutLoadingHideTimerRef.current);
+      checkoutLoadingHideTimerRef.current = null;
+    }
+    if (checkoutLoadingActiveRef.current) return;
+
+    checkoutLoadingActiveRef.current = true;
+    checkoutLoadingStartedAtRef.current = Date.now();
+    try {
+      window.sessionStorage.setItem(
+        "orduva_checkout_loading_until",
+        String(Date.now() + 2000),
+      );
+    } catch {}
+    setShowCheckoutLoading(true);
+  }
+
+  function finishCheckoutLoadingAfterMinimum(onFinished?: () => void) {
+    const elapsed = Date.now() - checkoutLoadingStartedAtRef.current;
+    const remaining = Math.max(0, 2000 - elapsed);
+
+    const finish = () => {
+      checkoutLoadingHideTimerRef.current = null;
+      checkoutLoadingActiveRef.current = false;
       setShowCheckoutLoading(false);
+      setCheckoutNavigating(false);
+      onFinished?.();
+    };
+
+    if (remaining <= 0) {
+      finish();
       return;
     }
 
-    const timer = window.setTimeout(() => setShowCheckoutLoading(true), 1000);
-    return () => window.clearTimeout(timer);
-  }, [checkoutNavigating]);
+    checkoutLoadingHideTimerRef.current = window.setTimeout(finish, remaining);
+  }
 
   function goToCart() {
     if (typeof window !== "undefined") {
@@ -108,6 +147,7 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
     }
     setReminderOpen(false);
     setCheckoutNavigating(true);
+    showCheckoutLoadingNow();
     router.push(href);
   }
 
@@ -267,13 +307,13 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
     }
 
     setCheckoutNavigating(true);
+    showCheckoutLoadingNow();
 
     try {
       if (await withTimeout(canSkipReminder(), 900, true)) {
         goToCart();
       } else {
-        setCheckoutNavigating(false);
-        setReminderOpen(true);
+        finishCheckoutLoadingAfterMinimum(() => setReminderOpen(true));
       }
     } catch {
       // Never block checkout because a notification status check failed.
@@ -486,44 +526,45 @@ const CartButton = forwardRef<HTMLAnchorElement, Props>(function CartButton(
       {showCheckoutLoading && typeof document !== "undefined"
         ? createPortal(
             <div
-              className="fixed inset-0 z-[9999] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]"
+              className="fixed inset-0 z-[9999] flex items-center justify-center px-[35px] py-[75px]"
               style={{
-                position: "fixed",
-                inset: 0,
-                width: "100vw",
-                minHeight: "100dvh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "75px 35px",
+                background:
+                  "linear-gradient(135deg, #f8f4f0 0%, #f5f2ee 54%, #fffaf4 100%)",
               }}
               role="dialog"
               aria-modal="true"
               aria-labelledby="checkout-loading-title"
             >
-              <div className="w-full max-w-sm rounded-[30px] border border-white/80 bg-white p-7 text-center shadow-[0_32px_90px_rgba(15,23,42,0.28)]">
+              <section className="flex max-w-[320px] flex-col items-center justify-center text-center">
                 <div
-                  className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)]"
-                  style={{
-                    background: `linear-gradient(135deg, ${brandPrimary}, ${brandAccent})`,
-                  }}
+                  className="relative flex h-[78px] w-[78px] items-center justify-center rounded-full border border-orange-200/70 bg-white/80 shadow-[0_22px_58px_rgba(15,23,42,0.14)]"
+                  aria-hidden="true"
                 >
-                  <span
-                    className="h-8 w-8 animate-spin rounded-full border-4 border-white/35 border-t-white"
-                    aria-hidden="true"
-                  />
+                  <span className="absolute h-12 w-12 rounded-full border-4 border-orange-100" />
+                  <span className="absolute h-12 w-12 animate-spin rounded-full border-4 border-transparent border-r-orange-300/70 border-t-orange-500" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_8px_rgba(249,115,22,0.10)]" />
                 </div>
+                <p className="mt-[22px] text-[11px] font-black uppercase tracking-[0.26em] text-orange-700">
+                  Orduva
+                </p>
                 <h2
                   id="checkout-loading-title"
-                  className="mt-5 text-2xl font-semibold tracking-tight text-slate-950"
+                  className="mt-2 text-[25px] font-black leading-tight tracking-[-0.03em] text-slate-950"
                 >
                   Opening checkout…
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Please wait while we load your basket and store payment
-                  options.
+                <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                  Loading your basket and payment options so checkout opens neatly.
                 </p>
-              </div>
+                <div
+                  className="mt-[18px] flex items-center justify-center gap-[7px]"
+                  aria-hidden="true"
+                >
+                  <span className="h-[7px] w-[7px] animate-bounce rounded-full bg-orange-500 [animation-delay:-0.24s]" />
+                  <span className="h-[7px] w-[7px] animate-bounce rounded-full bg-orange-500 [animation-delay:-0.12s]" />
+                  <span className="h-[7px] w-[7px] animate-bounce rounded-full bg-orange-500" />
+                </div>
+              </section>
             </div>,
             document.body,
           )

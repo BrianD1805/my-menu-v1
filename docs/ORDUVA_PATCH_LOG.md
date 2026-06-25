@@ -760,3 +760,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Reordered the checkout layout so the Order summary appears first, followed by signed-in/guest status, then payment method selection.
 - Updated customer-facing wording around checkout steps and store-owned online payment providers.
 - No Supabase SQL required.
+
+## Ver-0.252a - Checkout loading UX and back navigation polish
+
+- Patch type: touched-files-only ZIP.
+- Changed the storefront checkout-opening loader to use the same warm Orduva graphic and orange loading style as the startup "We're getting things ready" screen.
+- Removed the 1-second delay before the checkout-opening loader. It now appears immediately before notification checks run.
+- Kept the checkout-opening loader visible for a minimum of 2 seconds by handing the timing from the cart button to the checkout page, preventing fast-load flashing.
+- Updated checkout submit loading to use the same Orduva loading graphic/colours for visual consistency.
+- Changed checkout Back to storefront / Back to menu actions from `window.location.href = "/"` full reloads to client-side navigation/back behaviour, so returning to the menu avoids a forced hard page reload where possible.
+- No Supabase SQL required.

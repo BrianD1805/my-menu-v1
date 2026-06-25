@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { cartLineKey, clearCart, readCart, writeCart } from "@/lib/cart";
 import { resolveTenantSlugFromHost } from "@/lib/tenant";
 import {
@@ -429,8 +430,62 @@ function buildSavedAddress(customer: CustomerAccount | null) {
     .filter(Boolean)
     .join(", ");
 }
+function CheckoutLoadingOverlay({
+  title,
+  message,
+  labelledBy,
+}: {
+  title: string;
+  message: string;
+  labelledBy: string;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center px-[35px] py-[75px]"
+      style={{
+        background:
+          "linear-gradient(135deg, #f8f4f0 0%, #f5f2ee 54%, #fffaf4 100%)",
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={labelledBy}
+    >
+      <section className="flex max-w-[320px] flex-col items-center justify-center text-center">
+        <div
+          className="relative flex h-[78px] w-[78px] items-center justify-center rounded-full border border-orange-200/70 bg-white/80 shadow-[0_22px_58px_rgba(15,23,42,0.14)]"
+          aria-hidden="true"
+        >
+          <span className="absolute h-12 w-12 rounded-full border-4 border-orange-100" />
+          <span className="absolute h-12 w-12 animate-spin rounded-full border-4 border-transparent border-r-orange-300/70 border-t-orange-500" />
+          <span className="h-2.5 w-2.5 rounded-full bg-orange-500 shadow-[0_0_0_8px_rgba(249,115,22,0.10)]" />
+        </div>
+        <p className="mt-[22px] text-[11px] font-black uppercase tracking-[0.26em] text-orange-700">
+          Orduva
+        </p>
+        <h2
+          id={labelledBy}
+          className="mt-2 text-[25px] font-black leading-tight tracking-[-0.03em] text-slate-950"
+        >
+          {title}
+        </h2>
+        <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+          {message}
+        </p>
+        <div
+          className="mt-[18px] flex items-center justify-center gap-[7px]"
+          aria-hidden="true"
+        >
+          <span className="h-[7px] w-[7px] animate-bounce rounded-full bg-orange-500 [animation-delay:-0.24s]" />
+          <span className="h-[7px] w-[7px] animate-bounce rounded-full bg-orange-500 [animation-delay:-0.12s]" />
+          <span className="h-[7px] w-[7px] animate-bounce rounded-full bg-orange-500" />
+        </div>
+      </section>
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [tenantSlug, setTenantSlug] = useState("");
@@ -452,6 +507,8 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [showCheckoutSubmitLoading, setShowCheckoutSubmitLoading] =
     useState(false);
+  const [showInitialCheckoutLoading, setShowInitialCheckoutLoading] =
+    useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successState, setSuccessState] = useState<SuccessState | null>(null);
   const [tenantSettings, setTenantSettings] = useState<TenantViewSettings>({
@@ -468,17 +525,35 @@ export default function CheckoutPage() {
   }, [successState?.orderId]);
 
   useEffect(() => {
-    if (!loading) {
-      setShowCheckoutSubmitLoading(false);
-      return;
-    }
-
-    const timer = window.setTimeout(
-      () => setShowCheckoutSubmitLoading(true),
-      1000,
-    );
-    return () => window.clearTimeout(timer);
+    setShowCheckoutSubmitLoading(loading);
   }, [loading]);
+
+  useEffect(() => {
+    let timer: number | null = null;
+
+    try {
+      const storedUntil = Number(
+        window.sessionStorage.getItem("orduva_checkout_loading_until") || "0",
+      );
+      const remaining = Math.max(0, storedUntil - Date.now());
+
+      if (remaining > 0) {
+        setShowInitialCheckoutLoading(true);
+        timer = window.setTimeout(() => {
+          setShowInitialCheckoutLoading(false);
+          try {
+            window.sessionStorage.removeItem("orduva_checkout_loading_until");
+          } catch {}
+        }, remaining);
+      } else {
+        window.sessionStorage.removeItem("orduva_checkout_loading_until");
+      }
+    } catch {}
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     async function loadCustomerAccount() {
@@ -914,6 +989,22 @@ export default function CheckoutPage() {
     setErrorMessage("");
   }
 
+  function goBackToStorefront() {
+    try {
+      window.sessionStorage.removeItem("orduva_checkout_loading_until");
+    } catch {}
+
+    try {
+      const referrer = document.referrer ? new URL(document.referrer) : null;
+      if (referrer && referrer.origin === window.location.origin) {
+        router.back();
+        return;
+      }
+    } catch {}
+
+    router.push("/");
+  }
+
   const PAUSE_WHATSAPP_FOR_TESTING = true;
 
   async function saveCheckoutDetailsToProfile() {
@@ -1337,7 +1428,7 @@ export default function CheckoutPage() {
                   <button
                     onClick={() => {
                       resetCheckoutForNewOrder();
-                      window.location.href = "/";
+                      goBackToStorefront();
                     }}
                     className="w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-black"
                   >
@@ -1383,9 +1474,7 @@ export default function CheckoutPage() {
       <div className="mb-5 flex items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => {
-            window.location.href = "/";
-          }}
+          onClick={goBackToStorefront}
           className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           style={{ borderColor: checkoutBorder, color: checkoutPrimary }}
           aria-label="Back to storefront"
@@ -1626,12 +1715,13 @@ export default function CheckoutPage() {
             <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <p className="font-semibold">Checkout is temporarily paused</p>
               <p className="mt-1 leading-6">{checkoutBlockedMessage}</p>
-              <a
-                href="/"
+              <button
+                type="button"
+                onClick={goBackToStorefront}
                 className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-amber-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-amber-950"
               >
                 Back to menu
-              </a>
+              </button>
             </div>
           ) : null}
           {customerAccountLoading ? (
@@ -1944,37 +2034,20 @@ export default function CheckoutPage() {
         </div>
       </div>
 
+      {showInitialCheckoutLoading ? (
+        <CheckoutLoadingOverlay
+          labelledBy="checkout-initial-loading-title"
+          title="Opening checkout…"
+          message="Loading your basket and payment options so checkout opens neatly."
+        />
+      ) : null}
+
       {showCheckoutSubmitLoading ? (
-        <div
-          className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/55 px-[35px] py-[75px] backdrop-blur-[3px]"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="checkout-submit-loading-title"
-        >
-          <div className="w-full max-w-sm rounded-[30px] border border-white/80 bg-white p-7 text-center shadow-[0_28px_90px_rgba(15,23,42,0.34)]">
-            <div
-              className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)]"
-              style={{
-                background: `linear-gradient(135deg, ${checkoutPrimary}, ${checkoutAccent})`,
-              }}
-            >
-              <span
-                className="h-8 w-8 animate-spin rounded-full border-4 border-white/35 border-t-white"
-                aria-hidden="true"
-              />
-            </div>
-            <h2
-              id="checkout-submit-loading-title"
-              className="mt-5 text-2xl font-semibold tracking-tight text-slate-950"
-            >
-              Processing checkout…
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Please wait while we save your order and connect to the selected
-              payment method.
-            </p>
-          </div>
-        </div>
+        <CheckoutLoadingOverlay
+          labelledBy="checkout-submit-loading-title"
+          title="Processing checkout…"
+          message="Please wait while we save your order and connect to the selected payment method."
+        />
       ) : null}
 
       {discountsModalOpen ? (
