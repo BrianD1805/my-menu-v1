@@ -750,3 +750,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added a one-time refresh when the Orders page becomes visible/focused again.
 - Added helper text: "New order alerts are sent by notification. Use Refresh now if needed."
 - No Supabase SQL required.
+
+## Ver-0.252 - Checkout loading and panel order polish
+
+- Patch type: touched-files-only ZIP.
+- Added delayed checkout loading feedback when the storefront cart button opens checkout, so fast loads do not show a popup but slow loads show a clear "Opening checkout…" animation after 1 second.
+- Added delayed checkout submit loading feedback while an order is being saved or an online payment handoff is being prepared.
+- Reduced checkout navigation delay risk by timing out the notification pre-check and continuing to checkout instead of leaving the customer waiting.
+- Reordered the checkout layout so the Order summary appears first, followed by signed-in/guest status, then payment method selection.
+- Updated customer-facing wording around checkout steps and store-owned online payment providers.
+- No Supabase SQL required.
