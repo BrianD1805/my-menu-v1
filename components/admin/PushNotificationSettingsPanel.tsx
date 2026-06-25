@@ -56,6 +56,9 @@ export default function PushNotificationSettingsPanel() {
   const [tone, setTone] = useState<SaveTone>("info");
   const [permission, setPermission] = useState<string>("unsupported");
   const [remoteStatus, setRemoteStatus] = useState<RemoteStatus | null>(null);
+  const [canEnableThisDevice, setCanEnableThisDevice] = useState(false);
+  const [deviceStatusLabel, setDeviceStatusLabel] = useState("Checking this device...");
+  const [statusCheckedAt, setStatusCheckedAt] = useState<string | null>(null);
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() || "";
 
   const dirty = templatesFingerprint(templates) !== savedFingerprint;
@@ -65,6 +68,7 @@ export default function PushNotificationSettingsPanel() {
       const response = await fetch("/api/admin/push-subscriptions", { cache: "no-store" });
       const payload = await response.json();
       setRemoteStatus(payload);
+      setStatusCheckedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
       if (!response.ok && payload?.error) {
         setTone("error");
         setMessage(payload.error);
@@ -101,6 +105,32 @@ export default function PushNotificationSettingsPanel() {
   useEffect(() => {
     void loadTemplates();
   }, []);
+  useEffect(() => {
+    const supported =
+      typeof navigator !== "undefined" &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window &&
+      typeof Notification !== "undefined";
+
+    if (!supported) {
+      setCanEnableThisDevice(false);
+      setDeviceStatusLabel("This browser cannot register for web push notifications.");
+      return;
+    }
+
+    const userAgent = navigator.userAgent || "";
+    const isMobileOrTablet =
+      /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(userAgent) ||
+      (navigator.maxTouchPoints || 0) > 1 && window.matchMedia("(pointer: coarse)").matches;
+
+    setCanEnableThisDevice(isMobileOrTablet);
+    setDeviceStatusLabel(
+      isMobileOrTablet
+        ? "This mobile/tablet device can be saved for Store Admin push alerts."
+        : "Open this section on the Store Admin phone or tablet to enable this device. Desktop can still send a real push test to saved devices."
+    );
+  }, []);
+
 
   const grouped = useMemo(() => {
     return {
@@ -213,24 +243,6 @@ export default function PushNotificationSettingsPanel() {
     }
   }
 
-  async function sendLocalTestNotification() {
-    if (!("serviceWorker" in navigator)) return;
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification("Orduva Admin", {
-        body: "Local test notification from this Store Admin device.",
-        icon: "/favicon.ico",
-        tag: "orduva-admin-local-test",
-        data: { url: "/admin/orders" },
-      });
-      setTone("success");
-      setMessage("Local notification shown on this device. This checks the phone/browser permission only.");
-    } catch {
-      setTone("error");
-      setMessage("Could not show a local notification on this device.");
-    }
-  }
-
   const messageClass = tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-900" : tone === "error" ? "border-rose-200 bg-rose-50 text-rose-900" : "border-slate-200 bg-slate-50 text-slate-700";
 
   function renderTemplateCard(template: PushTemplate, globalIndex: number) {
@@ -322,27 +334,32 @@ export default function PushNotificationSettingsPanel() {
               <p><span className="font-semibold text-slate-900">Saved Store Admin devices:</span> {remoteStatus?.activeSubscriptions ?? 0}</p>
               <p><span className="font-semibold text-slate-900">Disabled devices:</span> {remoteStatus?.disabledSubscriptions ?? 0}</p>
               <p><span className="font-semibold text-slate-900">VAPID keys:</span> {remoteStatus?.vapidConfigured ? "configured" : "missing"}</p>
+              <p><span className="font-semibold text-slate-900">This device:</span> {deviceStatusLabel}</p>
+              {statusCheckedAt ? <p><span className="font-semibold text-slate-900">Status checked:</span> {statusCheckedAt}</p> : null}
               {remoteStatus?.warning ? <p className="font-semibold text-amber-800">{remoteStatus.warning}</p> : null}
             </div>
             {permission === "granted" && (remoteStatus?.activeSubscriptions ?? 0) === 0 ? (
               <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-                Notifications are allowed on the phone, but no active Store Admin push subscription is saved for this store. Tap <strong>Enable admin push on this device</strong>, then send a real push test.
+                {canEnableThisDevice ? (
+                  <>Notifications are allowed on this phone/tablet, but no active Store Admin push subscription is saved for this store. Tap <strong>Enable admin push on this device</strong>, then send a real push test.</>
+                ) : (
+                  <>Notifications are allowed here, but this screen only enables admin push on phones and tablets. Open Store settings on the Store Admin phone/tablet, enable the device there, then use <strong>Send real push test</strong>.</>
+                )}
               </div>
             ) : null}
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <button onClick={() => void enableAdminPushOnThisDevice()} disabled={deviceBusy} type="button" className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60">
-                {deviceBusy ? "Working..." : "Enable admin push on this device"}
-              </button>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {canEnableThisDevice ? (
+                <button onClick={() => void enableAdminPushOnThisDevice()} disabled={deviceBusy} type="button" className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60">
+                  {deviceBusy ? "Working..." : "Enable admin push on this device"}
+                </button>
+              ) : null}
               <button onClick={() => void sendAdminTest()} disabled={testing} type="button" className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-60">
                 {testing ? "Sending..." : "Send real push test"}
               </button>
-              <button onClick={() => void sendLocalTestNotification()} type="button" className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
-                Send local phone test
-              </button>
-              <button onClick={() => void refreshDeviceStatus()} type="button" className="admin-pressable inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
-                Refresh device status
-              </button>
             </div>
+            <p className="mt-3 text-xs leading-5 text-slate-500">
+              Device status is checked automatically when this section opens, after enabling a phone/tablet, and after a real push test.
+            </p>
           </div>
 
           {message ? <div className={`rounded-2xl border px-4 py-3 text-sm ${messageClass}`}>{message}</div> : null}

@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import { db } from "@/lib/db";
-import { buildPushFromSettings, getTenantCustomerPushIcon, inferPushEventType } from "@/lib/push-notification-settings";
+import { buildPushFromSettings, inferPushEventType } from "@/lib/push-notification-settings";
 
 type PushPayload = {
   title: string;
@@ -71,18 +71,16 @@ function buildSubscription(row: { endpoint: string; p256dh: string; auth: string
 }
 
 function notificationJsonPayload(payload: PushPayload) {
+  // Do not send `icon`, `image`, or `badge` in the web-push payload. On Android/Chrome
+  // these can appear as the extra right-hand graphic in the notification card.
+  // Let the browser use the installed app/site favicon on the left only.
   const data: Record<string, unknown> = {
     title: payload.title,
     body: payload.body,
     url: payload.url || "/",
     tag: payload.tag,
-    icon: payload.icon,
   };
 
-  // Only include a badge when explicitly supplied. Some Android/Chrome
-  // combinations display badge/large image assets in ways that look like an
-  // extra graphic. Ver-0.253 keeps Orduva pushes icon-only by default.
-  if (payload.badge) data.badge = payload.badge;
   return JSON.stringify(data);
 }
 
@@ -248,8 +246,6 @@ export async function sendAdminPushForTenant(tenantId: string, payload: PushPayl
     ...payload,
     title: preparedPush.title,
     body: preparedPush.body,
-    icon: "/favicon.ico",
-    badge: null,
   };
 
   if (!configureWebPush()) {
@@ -388,8 +384,6 @@ export async function sendCustomerPushForOrderWithFallback(
     ...payload,
     title: preparedPush.title,
     body: preparedPush.body,
-    icon: payload.icon || await getTenantCustomerPushIcon(tenantId),
-    badge: null,
   };
 
   if (!configureWebPush()) {

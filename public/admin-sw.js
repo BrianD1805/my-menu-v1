@@ -1,3 +1,4 @@
+// Orduva Ver-0.253b admin push notification icon payload cleanup
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
@@ -23,13 +24,11 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Orduva Admin';
   const options = {
     body: payload.body || 'You have a new admin notification.',
-    icon: payload.icon || '/favicon.ico',
     tag: payload.tag || 'orduva-admin-push',
     data: {
       url: payload.url || '/admin/orders',
     },
   };
-  if (payload.badge) options.badge = payload.badge;
 
   event.waitUntil(self.registration.showNotification(title, options));
 });

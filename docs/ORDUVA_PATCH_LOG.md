@@ -792,3 +792,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Store Admin pushes now default to the Orduva favicon icon only.
 - Updated service workers so notification badge graphics are only included when explicitly supplied, reducing unwanted extra graphics on mobile notifications.
 - Supabase SQL required: SUPABASE_VER_0_253_PUSH_NOTIFICATION_SETTINGS.sql.
+
+## Ver-0.253b - Push notification device controls and icon cleanup
+
+- Patch type: touched-files-only ZIP.
+- Hid the Enable admin push on this device button on desktop/laptop browsers. It now only appears on mobile/tablet-style devices that can receive the Store Admin push subscription.
+- Removed the Send local phone test button from the Push notifications settings section.
+- Removed the Refresh device status button; device status is now checked automatically when the section opens, after enabling a phone/tablet, and after sending a real push test.
+- Added clearer device status text so desktop can still send the real push test to saved phones without pretending it is a receiving device.
+- Removed notification icon/badge payloads from admin and customer service-worker notifications so Android/Chrome does not show the extra right-hand graphic. The notification should rely on the installed site/app favicon on the left only.
+- No Supabase SQL required.
