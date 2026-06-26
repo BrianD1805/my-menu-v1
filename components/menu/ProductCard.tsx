@@ -417,7 +417,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             <button type="button" onClick={() => openDetails("product_card_image")} className="block overflow-visible text-left" aria-label={`View details for ${name}`}>
               <div className="relative overflow-visible pt-2">
                 {stockRibbonLabel ? (
-                  <div className="pointer-events-none absolute left-[10px] top-[10px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[12px] sm:top-[12px]"
+                  <div className="pointer-events-none absolute left-[0px] top-[7px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[2px] sm:top-[9px]"
                     style={isPreorderAvailable ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FDE68A", color: "#92400E" } : isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
                   >
                     {stockRibbonLabel}
@@ -633,7 +633,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <div className="relative md:flex md:items-start md:justify-between md:gap-4">
                   <div className="min-w-0 md:pr-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Product details</p>
-                    <h3 className="mt-[33px] max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.65rem,7.2vw,2.5rem)] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2 md:whitespace-normal md:text-[1.8rem]">{name}</h3>
+                    <h3 className="mt-[48px] max-w-full text-[clamp(1.32rem,5.75vw,2rem)] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2 md:text-[1.8rem] md:leading-tight">{name}</h3>
                     <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-hidden md:flex-wrap md:overflow-visible">
                       <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         {formatMoney(price, moneySettings)}
