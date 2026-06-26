@@ -631,15 +631,15 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   style={{ background: `linear-gradient(90deg, ${popupTopEffectColor}, ${brandPrimary}, ${popupTopEffectColor})` }}
                 />
                 <div className="relative md:flex md:items-start md:justify-between md:gap-4">
-                  <div className="min-w-0 pr-[7.2rem] md:pr-0">
+                  <div className="min-w-0 md:pr-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Product details</p>
-                    <h3 className="mt-[18px] text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2">{name}</h3>
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                    <h3 className="mt-[33px] max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[clamp(1.65rem,7.2vw,2.5rem)] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2 md:whitespace-normal md:text-[1.8rem]">{name}</h3>
+                    <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-hidden md:flex-wrap md:overflow-visible">
+                      <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         {formatMoney(price, moneySettings)}
                       </span>
                       {trackedStock && (isOutOfStock || isLowStock) ? (
-                        <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
+                        <span className={`inline-flex shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
                           {isPreorderAvailable ? "Pre-order available" : isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
                         </span>
                       ) : null}

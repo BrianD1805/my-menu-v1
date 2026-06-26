@@ -812,3 +812,11 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added clearer device status text so desktop can still send the real push test to saved phones without pretending it is a receiving device.
 - Removed notification icon/badge payloads from admin and customer service-worker notifications so Android/Chrome does not show the extra right-hand graphic. The notification should rely on the installed site/app favicon on the left only.
 - No Supabase SQL required.
+
+## Ver-0.254a - Product details popup mobile title and price row polish
+
+- Patch type: touched-files-only ZIP.
+- Mobile-only change: forced the Product Details popup price pill and stock/pre-order ribbon to share one row where space allows.
+- Mobile-only change: moved the product title down another 15px so the title can use the full popup width below the cart/close controls.
+- Mobile-only change: kept the product title on one line with safe overflow handling to preserve more vertical room for the description area.
+- No Supabase SQL required.
