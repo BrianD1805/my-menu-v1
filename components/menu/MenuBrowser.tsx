@@ -2901,43 +2901,30 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full items-center justify-center lg:-translate-y-[17px]">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
-              style={{
-                backgroundColor: offersPopupBackground,
-                borderColor: offersPopupCardBorder,
-                color: offersPopupBodyText,
-              }}
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
               onClick={(event) => event.stopPropagation()}
             >
               <div
-                className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6"
-                style={{
-                  background: `linear-gradient(135deg, ${offersPopupHeaderBackground}, ${offersPopupHeaderBlend})`,
-                  borderColor: offersPopupFooterBorder,
-                  color: offersPopupHeaderText,
-                }}
+                className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6"
               >
                 <div
                   className="absolute inset-x-0 top-0 h-1"
-                  style={{ background: `linear-gradient(90deg, ${offersPopupTopEdge}, ${offersPopupHeaderBackground}, ${offersPopupTopEdge})` }}
+                  style={{ background: `linear-gradient(90deg, ${offersPopupTopEdge}, ${brandPrimary}, ${offersPopupTopEdge})` }}
                 />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p
-                      className="text-[11px] font-semibold uppercase tracking-[0.24em]"
-                      style={{ color: offersPopupLabelText }}
+                      className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400"
                     >
                       Offers & discount codes
                     </p>
                     <h3
-                      className="mt-2 text-2xl font-semibold tracking-tight sm:text-[1.8rem]"
-                      style={{ color: offersPopupHeaderText }}
+                      className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]"
                     >
                       {discountPopupTitle || "Today’s offers"}
                     </h3>
                     <p
-                      className="mt-2 text-sm leading-6"
-                      style={{ color: offersPopupBodyText }}
+                      className="mt-2 text-sm leading-6 text-slate-600"
                     >
                       {discountPopupMessage ||
                         "Apply an available offer at checkout."}
@@ -2946,12 +2933,7 @@ export default function MenuBrowser({
                   <button
                     type="button"
                     onClick={() => setDiscountsModalOpen(false)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl shadow-sm transition hover:-translate-y-[1px]"
-                    style={{
-                      backgroundColor: offersPopupCloseBackground,
-                      borderColor: offersPopupFooterBorder,
-                      color: offersPopupCloseText,
-                    }}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:-translate-y-[1px] hover:bg-white hover:text-slate-900"
                     aria-label="Close discounts"
                   >
                     ×
@@ -2962,16 +2944,14 @@ export default function MenuBrowser({
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12 lg:pt-8 xl:px-8 xl:pb-14 xl:pt-8">
                 <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:items-start xl:gap-7">
                   <div
-                    className="rounded-[24px] border p-4 sm:p-5 lg:p-6"
-                    style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder }}
+                    className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6"
                   >
                     <p
-                      className="text-[11px] font-semibold uppercase tracking-[0.22em]"
-                      style={{ color: offersPopupLabelText }}
+                      className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400"
                     >
                       How offers work
                     </p>
-                    <div className="mt-3 text-[15px] leading-7" style={{ color: offersPopupBodyText }}>
+                    <div className="mt-3 text-[15px] leading-7 text-slate-700">
                       <p>
                         Use a discount code at checkout, or tap an available
                         offer where the store allows quick apply.
@@ -2986,8 +2966,7 @@ export default function MenuBrowser({
                   <div className="space-y-4 xl:space-y-5">
                     {!visibleDiscountRules.length ? (
                       <div
-                        className="rounded-[24px] border p-4 text-center text-sm leading-6 sm:p-5 lg:p-6"
-                        style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder, color: offersPopupBodyText }}
+                        className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 text-center text-sm leading-6 text-slate-700 sm:p-5 lg:p-6"
                       >
                         No offers are currently available. Please check again
                         soon.
@@ -2996,22 +2975,21 @@ export default function MenuBrowser({
                     {visibleDiscountRules.map((rule) => (
                       <div
                         key={rule.id}
-                        className="rounded-[24px] border p-4 shadow-sm sm:p-5 lg:p-6"
-                        style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder, color: offersPopupBodyText }}
+                        className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-sm sm:p-5 lg:p-6"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: offersPopupLabelText }}>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
                               {rule.scope === "combo"
                                 ? "Bundle offer"
                                 : rule.scope === "product"
                                   ? "Product offer"
                                   : "Site-wide offer"}
                             </p>
-                            <h4 className="mt-2 text-lg font-semibold tracking-tight" style={{ color: offersPopupHeaderText }}>
+                            <h4 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
                               {rule.name}
                             </h4>
-                            <p className="mt-2 text-sm leading-6" style={{ color: offersPopupBodyText }}>
+                            <p className="mt-2 text-sm leading-6 text-slate-700">
                               {rule.code
                                 ? `Use code ${rule.code} at checkout.`
                                 : "Applies automatically when eligible."}
@@ -3027,7 +3005,7 @@ export default function MenuBrowser({
                           </span>
                         </div>
                         {rule.popupMessage ? (
-                          <p className="mt-3 text-sm leading-6" style={{ color: offersPopupBodyText }}>
+                          <p className="mt-3 text-sm leading-6 text-slate-700">
                             {rule.popupMessage}
                           </p>
                         ) : null}
@@ -3038,21 +3016,15 @@ export default function MenuBrowser({
               </div>
 
               <div
-                className="sticky bottom-0 z-10 border-t px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8"
-                style={{ backgroundColor: offersPopupFooterBackground, borderColor: offersPopupFooterBorder }}
+                className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8"
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                   <button
                     type="button"
                     onClick={() => setDiscountsModalOpen(false)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] lg:px-8"
-                    style={{
-                      backgroundColor: offersPopupButtonBackground,
-                      borderColor: offersPopupButtonBackground,
-                      color: offersPopupButtonText,
-                    }}
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-7 py-3 text-sm font-semibold text-white transition hover:-translate-y-[1px] hover:bg-slate-800 lg:px-8"
                   >
-                    Back to menu
+                    Close
                   </button>
                 </div>
               </div>
@@ -3244,7 +3216,7 @@ export default function MenuBrowser({
                       color: rewardsPopupCloseText,
                     }}
                   >
-                    Back to menu
+                    Close
                   </button>
                   <a
                     href={

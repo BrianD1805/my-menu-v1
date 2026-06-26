@@ -154,7 +154,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
   function productShareUrl() {
     if (typeof window === "undefined") return `/product/${encodeURIComponent(id)}`;
-    return `${window.location.origin}/product/${encodeURIComponent(id)}`;
+    return `${window.location.origin}/p/${encodeURIComponent(id)}`;
   }
 
   async function copyShareText(text: string) {
@@ -176,9 +176,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   async function shareProduct() {
     trackStorefrontEvent("product_share", { source: "product_details_popup" });
     const url = productShareUrl();
-    const cleanDescription = cleanShareDescription(description);
-    const shareDescription = cleanDescription || `Have a look at ${name} on this menu.`;
-    const text = `${shareDescription}\n\n${url}`;
+    const shareDescription = `Have a look at ${name} on this menu.`;
+    const text = `${name}\n${url}`;
 
     setShareStatus("idle");
 
@@ -192,14 +191,14 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
         return;
       }
 
-      await copyShareText(`${name}\n${text}`);
+      await copyShareText(text);
       setShareStatus("copied");
       window.setTimeout(() => setShareStatus("idle"), 2200);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
 
       try {
-        await copyShareText(`${name}\n${text}`);
+        await copyShareText(text);
         setShareStatus("copied");
         window.setTimeout(() => setShareStatus("idle"), 2200);
       } catch {
@@ -417,7 +416,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             <button type="button" onClick={() => openDetails("product_card_image")} className="block overflow-visible text-left" aria-label={`View details for ${name}`}>
               <div className="relative overflow-visible pt-2">
                 {stockRibbonLabel ? (
-                  <div className="pointer-events-none absolute left-[0px] top-[7px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[2px] sm:top-[9px]"
+                  <div className="pointer-events-none absolute left-[-5px] top-[4px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[-3px] sm:top-[6px]"
                     style={isPreorderAvailable ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FDE68A", color: "#92400E" } : isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
                   >
                     {stockRibbonLabel}

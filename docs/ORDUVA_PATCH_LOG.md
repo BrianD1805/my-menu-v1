@@ -830,3 +830,13 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Product home panels change for mobile and desktop: moved only the stock/pre-order ribbon 10px left and 3px up without changing any other product-card element positions.
 - Locked the product home-panel ribbon position for no further editing unless specifically requested.
 - No Supabase SQL required.
+
+## Ver-0.254c - Product ribbon, share link and offers popup polish
+
+- Patch type: touched-files-only ZIP.
+- Product home panels: moved only the stock/pre-order ribbon a further 5px left and 3px up without changing any other product-card element.
+- Product Details popup share: removed the product description from the shared/copied link text so the description does not appear twice.
+- Added a shorter `/p/[productId]` product share route that redirects to the existing shared product page.
+- Restyled the Offers/Discounts popup to follow the Product Details popup standard: softer white panel, light header, top-edge accent, rounded inner cards and dark Close button.
+- No Supabase SQL required.
+
