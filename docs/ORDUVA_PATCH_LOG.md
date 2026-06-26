@@ -1,3 +1,13 @@
+## Ver-0.254 - Product details popup UX polish
+
+- Mobile only: removed the Back to menu button from the product details popup footer because the close icon is already available.
+- Mobile and desktop: added the Share product button with share icon into the footer action row, directly to the left of the Add/Pre-order button.
+- Removed the larger share section that previously appeared above the product description.
+- Mobile only: reduced the product details popup image height by about 35%.
+- Mobile and desktop: kept stock/pre-order ribbon messaging on the same row as the price where space allows.
+- Mobile only: moved the product title down slightly and allowed the title area to use the full row with right padding so it avoids the cart and close buttons.
+- No Supabase SQL required.
+
 ## Ver-0.253a — Push notification settings UX and device registration fix
 
 - Moved Push notifications into the normal Store settings dropdown flow as its own collapsible section instead of a standalone panel above settings.

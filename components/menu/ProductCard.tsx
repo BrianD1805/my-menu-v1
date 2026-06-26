@@ -630,22 +630,22 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   className="absolute inset-x-0 top-0 h-1"
                   style={{ background: `linear-gradient(90deg, ${popupTopEffectColor}, ${brandPrimary}, ${popupTopEffectColor})` }}
                 />
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
+                <div className="relative md:flex md:items-start md:justify-between md:gap-4">
+                  <div className="min-w-0 pr-[7.2rem] md:pr-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Product details</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{name}</h3>
-                    <div className="mt-4">
+                    <h3 className="mt-[18px] text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2">{name}</h3>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
                       <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         {formatMoney(price, moneySettings)}
                       </span>
                       {trackedStock && (isOutOfStock || isLowStock) ? (
-                        <span className={`ml-2 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
+                        <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
                           {isPreorderAvailable ? "Pre-order available" : isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
                         </span>
                       ) : null}
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="absolute right-0 top-0 flex shrink-0 items-center gap-2 md:static">
                     <button
                       ref={modalCartButtonRef}
                       type="button"
@@ -670,9 +670,9 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <div className="grid gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-6">
                   <div ref={modalImageFrameRef} className="overflow-hidden rounded-[24px] bg-slate-100 ring-1 ring-black/5">
                     {hasImage ? (
-                      <img src={imageUrl!} alt={name} className="h-72 w-full object-contain object-center bg-white p-4 sm:h-[22rem] lg:h-[18rem] lg:p-3 xl:h-[19rem]" />
+                      <img src={imageUrl!} alt={name} className="h-[11.7rem] w-full object-contain object-center bg-white p-3 sm:h-[22rem] sm:p-4 lg:h-[18rem] lg:p-3 xl:h-[19rem]" />
                     ) : (
-                      <div className="flex h-72 w-full flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 sm:h-[22rem] lg:h-[18rem] xl:h-[19rem]">
+                      <div className="flex h-[11.7rem] w-full flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 sm:h-[22rem] lg:h-[18rem] xl:h-[19rem]">
                         <div className="mb-2 text-5xl">📦</div>
                         <p className="text-sm font-medium text-slate-600">Image coming soon</p>
                       </div>
@@ -680,27 +680,6 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   </div>
 
                   <div className="space-y-4 lg:space-y-4">
-                    <button
-                      type="button"
-                      onClick={() => void shareProduct()}
-                      className="flex w-full items-center justify-between gap-4 rounded-[24px] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-4 text-left shadow-[0_14px_34px_rgba(15,23,42,0.08)] ring-1 ring-white transition hover:-translate-y-[1px] hover:border-emerald-300 hover:shadow-[0_18px_42px_rgba(15,23,42,0.11)] sm:p-5"
-                      aria-label={`Share ${name}`}
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700">Share this product</span>
-                        <span className="mt-1 block text-sm font-medium leading-6 text-slate-600">Send this item to a friend by WhatsApp, email or messages.</span>
-                      </span>
-                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-800 shadow-[0_12px_26px_rgba(15,23,42,0.10)] ring-1 ring-emerald-100" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="18" cy="5" r="3" />
-                          <circle cx="6" cy="12" r="3" />
-                          <circle cx="18" cy="19" r="3" />
-                          <path d="m8.6 10.6 6.8-4.2" />
-                          <path d="m8.6 13.4 6.8 4.2" />
-                        </svg>
-                      </span>
-                    </button>
-
                     <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Description</p>
                       <div
@@ -715,24 +694,41 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
 
               <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-5 xl:px-8">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="hidden flex-col gap-2 md:flex md:flex-row md:items-center">
                     <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
                   </div>
-                  {isOutOfStock && !isPreorderAvailable ? (
-                    <span className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-7 py-3 text-sm font-semibold text-slate-500 lg:px-8">
-                      Out of stock
-                    </span>
-                  ) : (
+                  <div className="flex w-full items-center gap-3 md:w-auto md:justify-end">
                     <button
                       type="button"
-                      onClick={() => { void addToCart("modal"); }}
-                      disabled={buttonState === "adding"}
-                      className="inline-flex min-h-12 items-center justify-center rounded-xl border bg-white px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-wait disabled:opacity-70 lg:px-8"
-                      style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
+                      onClick={() => void shareProduct()}
+                      className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-[1px] hover:bg-slate-50 md:flex-none lg:px-7"
+                      aria-label={`Share ${name}`}
                     >
-                      {buttonState === "adding" ? "Adding..." : isPreorderAvailable ? "Pre-order" : "Add"}
+                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <path d="m8.6 10.6 6.8-4.2" />
+                        <path d="m8.6 13.4 6.8 4.2" />
+                      </svg>
+                      <span>Share</span>
                     </button>
-                  )}
+                    {isOutOfStock && !isPreorderAvailable ? (
+                      <span className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-500 md:flex-none lg:px-8">
+                        Out of stock
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => { void addToCart("modal"); }}
+                        disabled={buttonState === "adding"}
+                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border bg-white px-5 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-wait disabled:opacity-70 md:flex-none lg:px-8"
+                        style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
+                      >
+                        {buttonState === "adding" ? "Adding..." : isPreorderAvailable ? "Pre-order" : "Add"}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {shareStatus !== "idle" ? (
                   <p className={`mt-3 text-center text-xs font-semibold ${shareStatus === "copied" ? "text-emerald-700" : "text-red-600"}`}>
