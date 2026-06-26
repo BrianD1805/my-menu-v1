@@ -60,6 +60,7 @@ type ProductRow = {
   custom_amount_disable_discounts?: boolean | null;
   preorder_enabled?: boolean | null;
   preorder_when_out_of_stock?: boolean | null;
+  product_requires_variant?: boolean | null;
 };
 
 type DraftState = {
@@ -88,6 +89,7 @@ type DraftState = {
   customAmountDisableDiscounts: boolean;
   preorderEnabled: boolean;
   preorderWhenOutOfStock: boolean;
+  productRequiresVariant: boolean;
 };
 
 function emptyDraft(defaultCategoryId: string): DraftState {
@@ -117,6 +119,7 @@ function emptyDraft(defaultCategoryId: string): DraftState {
     customAmountDisableDiscounts: true,
     preorderEnabled: false,
     preorderWhenOutOfStock: false,
+    productRequiresVariant: false,
   };
 }
 
@@ -394,6 +397,7 @@ export default function ProductManager({
       customAmountDisableDiscounts: draft.customAmountDisableDiscounts === true,
       preorderEnabled: draft.preorderEnabled === true,
       preorderWhenOutOfStock: draft.preorderWhenOutOfStock === true,
+      productRequiresVariant: draft.productRequiresVariant === true,
       variants: draft.variants.map((variant) => ({
         ...variant,
         name: variant.name.trim(),
@@ -515,6 +519,7 @@ export default function ProductManager({
         product.custom_amount_disable_discounts !== false,
       preorderEnabled: product.preorder_enabled === true,
       preorderWhenOutOfStock: product.preorder_when_out_of_stock === true,
+      productRequiresVariant: product.product_requires_variant === true,
     };
     setEditingDraft(draft);
     setOriginalDraftSnapshot(normalizeDraftForCompare(draft));
@@ -567,6 +572,7 @@ export default function ProductManager({
           stockQuantity: newDraft.stockQuantity,
           lowStockThreshold: newDraft.lowStockThreshold,
           variantsEnabled: newDraft.variantsEnabled,
+          productRequiresVariant: newDraft.productRequiresVariant,
           variantLabel: newDraft.variantLabel,
           productVariants: cleanVariantRows(newDraft.variants),
           productType: newDraft.productType,
@@ -624,6 +630,7 @@ export default function ProductManager({
           product.product_variants,
           Number(product.price || 0),
         ),
+        productRequiresVariant: product.product_requires_variant === true,
         productType:
           product.product_type ||
           (product.custom_amount_enabled ? "customer_amount" : "standard"),
@@ -691,6 +698,7 @@ export default function ProductManager({
           stockQuantity: editingDraft.stockQuantity,
           lowStockThreshold: editingDraft.lowStockThreshold,
           variantsEnabled: editingDraft.variantsEnabled,
+          productRequiresVariant: editingDraft.productRequiresVariant,
           variantLabel: editingDraft.variantLabel,
           productVariants: cleanVariantRows(editingDraft.variants),
           productType: editingDraft.productType,
@@ -1421,6 +1429,7 @@ export default function ProductManager({
                                 productType: "customer_amount",
                                 customAmountEnabled: true,
                                 variantsEnabled: false,
+                                productRequiresVariant: false,
                                 stockEnabled: false,
                               })
                             }
@@ -1724,12 +1733,14 @@ export default function ProductManager({
                                 ? setNewDraft((current) => ({
                                     ...current,
                                     variantsEnabled: event.target.checked,
+                                    productRequiresVariant: event.target.checked ? current.productRequiresVariant : false,
                                   }))
                                 : setEditingDraft((current) =>
                                     current
                                       ? {
                                           ...current,
                                           variantsEnabled: event.target.checked,
+                                          productRequiresVariant: event.target.checked ? current.productRequiresVariant : false,
                                         }
                                       : current,
                                   )
@@ -1739,6 +1750,23 @@ export default function ProductManager({
                           Enable variants
                         </label>
                       </div>
+
+                      {activeDraft.variantsEnabled ? (
+                        <label className="mt-4 flex min-h-[64px] items-start gap-3 rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={activeDraft.productRequiresVariant}
+                            onChange={(event) =>
+                              updateActiveDraft({ productRequiresVariant: event.target.checked })
+                            }
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span>
+                            <span className="block font-semibold text-slate-950">Customer must choose a variant</span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">Use this when the base product is only the display item, for example a T-shirt where customers must choose S, M, L or XL before adding to basket.</span>
+                          </span>
+                        </label>
+                      ) : null}
 
                       <div className="mt-4">
                         <FieldLabel>Popup label</FieldLabel>

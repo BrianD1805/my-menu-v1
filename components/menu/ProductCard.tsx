@@ -42,6 +42,7 @@ type Props = {
   stockQuantity?: number | null;
   lowStockThreshold?: number | null;
   variantsEnabled?: boolean | null;
+  productRequiresVariant?: boolean | null;
   variantLabel?: string | null;
   productVariants?: ProductVariant[] | null;
   productType?: string | null;
@@ -77,7 +78,7 @@ function withAlpha(color: string, alphaHex: string, fallback: string) {
   return fallback;
 }
 
-export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, variantsEnabled = false, variantLabel = "Choose an option", productVariants = [], productType = "standard", customAmountEnabled = false, customAmountLabel = "Amount to pay", customAmountReferenceLabel = "Invoice number", customAmountReferenceRequired = true, customAmountMin = 1, customAmountMax = null, customAmountHelpText = "Enter the amount shown on your invoice.", customAmountDisableRewards = true, customAmountDisableDiscounts = true, preorderEnabled = false, preorderWhenOutOfStock = false, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
+export default function ProductCard({ id, name, description, imageUrl, price, tenantSlug, stockEnabled = false, stockQuantity = 0, lowStockThreshold = 5, variantsEnabled = false, productRequiresVariant = false, variantLabel = "Choose an option", productVariants = [], productType = "standard", customAmountEnabled = false, customAmountLabel = "Amount to pay", customAmountReferenceLabel = "Invoice number", customAmountReferenceRequired = true, customAmountMin = 1, customAmountMax = null, customAmountHelpText = "Enter the amount shown on your invoice.", customAmountDisableRewards = true, customAmountDisableDiscounts = true, preorderEnabled = false, preorderWhenOutOfStock = false, moneySettings, accentColor, primaryColor, themeColors, onAddToCartAnimation, isFavourite = false, favouriteBusy = false, onToggleFavourite, initiallyOpen = false }: Props) {
   const [buttonState, setButtonState] = useState<"idle" | "adding" | "added">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [variantPickerOpen, setVariantPickerOpen] = useState(false);
@@ -416,7 +417,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
             <button type="button" onClick={() => openDetails("product_card_image")} className="block overflow-visible text-left" aria-label={`View details for ${name}`}>
               <div className="relative overflow-visible pt-2">
                 {stockRibbonLabel ? (
-                  <div className="pointer-events-none absolute left-[-5px] top-[4px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[-3px] sm:top-[6px]"
+                  <div className="pointer-events-none absolute left-[-8px] top-[1px] z-20 inline-flex max-w-[132px] -rotate-[18deg] items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-center text-[9px] font-semibold uppercase tracking-[0.08em] shadow-[0_10px_24px_rgba(15,23,42,0.14)] backdrop-blur-[2px] sm:left-[-6px] sm:top-[3px]"
                     style={isPreorderAvailable ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FDE68A", color: "#92400E" } : isOutOfStock ? { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FECACA", color: "#B91C1C" } : { backgroundColor: "rgba(255,255,255,0.94)", borderColor: "#FED7AA", color: "#C2410C" }}
                   >
                     {stockRibbonLabel}
@@ -535,24 +536,26 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">{variantLabel || "Choose an option"}</p>
                     <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">{name}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Choose the standard product as shown, or select another available option.</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{productRequiresVariant ? "Choose an available option before adding this product to your basket." : "Choose the standard product as shown, or select another available option."}</p>
                   </div>
                   <button type="button" onClick={() => setVariantPickerOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close variants">×</button>
                 </div>
               </div>
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12">
                 <div className="space-y-3">
-                  <button
-                    type="button"
-                    onClick={() => void addToCart(pendingAddSource, null, true)}
-                    className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-emerald-200 bg-emerald-50/45 px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:bg-emerald-50"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-slate-950">Standard product</span>
-                      <span className="mt-1 block text-xs leading-5 text-slate-500">Add {name} exactly as shown on the menu.</span>
-                    </span>
-                    <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(price, money)}</span>
-                  </button>
+                  {productRequiresVariant ? null : (
+                    <button
+                      type="button"
+                      onClick={() => void addToCart(pendingAddSource, null, true)}
+                      className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-emerald-200 bg-emerald-50/45 px-4 py-4 text-left shadow-sm transition hover:-translate-y-[1px] hover:bg-emerald-50"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-slate-950">Standard product</span>
+                        <span className="mt-1 block text-xs leading-5 text-slate-500">Add {name} exactly as shown on the menu.</span>
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums text-slate-950">{formatMoney(price, money)}</span>
+                    </button>
+                  )}
                   {activeVariants.map((variant) => {
                     const variantPrice = getVariantPrice(Number(price || 0), variant);
                     return (
@@ -632,7 +635,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 <div className="relative md:flex md:items-start md:justify-between md:gap-4">
                   <div className="min-w-0 md:pr-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Product details</p>
-                    <h3 className="mt-[48px] max-w-full text-[clamp(1.32rem,5.75vw,2rem)] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2 md:text-[1.8rem] md:leading-tight">{name}</h3>
+                    <h3 className="mt-[48px] max-w-full text-[clamp(1.06rem,4.6vw,1.6rem)] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2 md:text-[1.8rem] md:leading-tight">{name}</h3>
                     <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-hidden md:flex-wrap md:overflow-visible">
                       <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
                         {formatMoney(price, moneySettings)}

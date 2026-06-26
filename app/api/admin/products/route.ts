@@ -87,6 +87,11 @@ function normalizeVariantsEnabled(value: unknown) {
   return value === true || value === "true" || value === "1" || value === 1;
 }
 
+function normalizeProductRequiresVariant(value: unknown, variantsEnabled: boolean, variantCount: number) {
+  if (!variantsEnabled || variantCount <= 0) return false;
+  return value === true || value === "true" || value === "1" || value === 1;
+}
+
 function normalizeVariantLabel(value: unknown) {
   const text = String(value || "").trim();
   return text || "Choose an option";
@@ -175,6 +180,7 @@ export async function POST(req: Request) {
     const variantsEnabled = normalizeVariantsEnabled(body?.variantsEnabled);
     const variantLabel = normalizeVariantLabel(body?.variantLabel);
     const productVariants = normalizeProductVariants(body?.productVariants);
+    const productRequiresVariant = normalizeProductRequiresVariant(body?.productRequiresVariant, variantsEnabled, productVariants.length);
     const productType = normalizeProductType(body?.productType);
     const customAmountEnabled = productType === "customer_amount" || normalizeActive(body?.customAmountEnabled);
     const customAmountLabel = normalizeShortText(body?.customAmountLabel, "Amount to pay");
@@ -234,6 +240,7 @@ export async function POST(req: Request) {
         stock_quantity: stockQuantity,
         low_stock_threshold: lowStockThreshold,
         variants_enabled: variantsEnabled,
+        product_requires_variant: productRequiresVariant,
         variant_label: variantLabel,
         product_variants: productType === "customer_amount" ? [] : productVariants,
         product_type: productType,
@@ -250,7 +257,7 @@ export async function POST(req: Request) {
         preorder_when_out_of_stock: preorderWhenOutOfStock,
       })
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts, preorder_enabled, preorder_when_out_of_stock",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts, preorder_enabled, preorder_when_out_of_stock, product_requires_variant",
       )
       .single();
 
@@ -290,6 +297,7 @@ export async function PATCH(req: Request) {
     const variantsEnabled = normalizeVariantsEnabled(body?.variantsEnabled);
     const variantLabel = normalizeVariantLabel(body?.variantLabel);
     const productVariants = normalizeProductVariants(body?.productVariants);
+    const productRequiresVariant = normalizeProductRequiresVariant(body?.productRequiresVariant, variantsEnabled, productVariants.length);
     const productType = normalizeProductType(body?.productType);
     const customAmountEnabled = productType === "customer_amount" || normalizeActive(body?.customAmountEnabled);
     const customAmountLabel = normalizeShortText(body?.customAmountLabel, "Amount to pay");
@@ -357,6 +365,7 @@ export async function PATCH(req: Request) {
         stock_quantity: stockQuantity,
         low_stock_threshold: lowStockThreshold,
         variants_enabled: variantsEnabled,
+        product_requires_variant: productRequiresVariant,
         variant_label: variantLabel,
         product_variants: productType === "customer_amount" ? [] : productVariants,
         product_type: productType,
@@ -375,7 +384,7 @@ export async function PATCH(req: Request) {
       .eq("id", productId)
       .eq("tenant_id", tenant.id)
       .select(
-        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts, preorder_enabled, preorder_when_out_of_stock",
+        "id, name, description, image_url, price, is_active, category_id, secondary_category_id, stock_enabled, stock_quantity, low_stock_threshold, variants_enabled, variant_label, product_variants, product_type, custom_amount_enabled, custom_amount_label, custom_amount_reference_label, custom_amount_reference_required, custom_amount_min, custom_amount_max, custom_amount_help_text, custom_amount_disable_rewards, custom_amount_disable_discounts, preorder_enabled, preorder_when_out_of_stock, product_requires_variant",
       )
       .single();
 

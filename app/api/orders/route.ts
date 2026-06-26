@@ -169,6 +169,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Selected product option is no longer available." }, { status: 409 });
       }
 
+      if (!isCustomAmountProduct && product?.product_requires_variant === true && !selectedVariant) {
+        return NextResponse.json({ error: `${product?.name || "This product"} requires an option to be selected.` }, { status: 409 });
+      }
+
       const stock = getVariantStockState(product, selectedVariant);
       const canPreorder = isPreorderProduct(product, selectedVariant);
       if (!canPreorder && stock.tracked && requestedQuantity > stock.available) {
@@ -198,6 +202,10 @@ export async function POST(req: Request) {
 
       if (!isCustomAmountProduct && product.variants_enabled && variants.some((variant: any) => variant?.isActive !== false) && item.variantId && !selectedVariant) {
         throw new Error(`Variant missing: ${item.variantId}`);
+      }
+
+      if (!isCustomAmountProduct && product.product_requires_variant === true && !selectedVariant) {
+        throw new Error(`${product.name} requires an option to be selected.`);
       }
 
       const variantLabel = selectedVariant ? String(product.variant_label || "Option") : null;

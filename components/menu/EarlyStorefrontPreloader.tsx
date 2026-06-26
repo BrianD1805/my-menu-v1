@@ -109,6 +109,19 @@ export default function EarlyStorefrontPreloader() {
               0%, 80%, 100% { transform: translateY(0); opacity: 0.55; }
               40% { transform: translateY(-6px); opacity: 1; }
             }
+            @media (min-width: 720px) {
+              #orduva-early-preloader .orduva-early-card { width: min(620px, 92vw); }
+              #orduva-early-preloader .orduva-early-title {
+                font-size: 34px;
+                line-height: 1.08;
+                white-space: nowrap;
+              }
+              #orduva-early-preloader .orduva-early-copy {
+                max-width: 480px;
+                margin-left: auto;
+                margin-right: auto;
+              }
+            }
             @media (prefers-reduced-motion: reduce) {
               #orduva-early-preloader .orduva-early-mark::after,
               #orduva-early-preloader .orduva-early-dots span { animation: none; }

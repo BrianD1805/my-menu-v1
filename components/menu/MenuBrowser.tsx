@@ -155,6 +155,7 @@ type Product = {
   custom_amount_disable_discounts?: boolean | null;
   preorder_enabled?: boolean | null;
   preorder_when_out_of_stock?: boolean | null;
+  product_requires_variant?: boolean | null;
 };
 
 type InvoicePaymentOption = {
@@ -3846,7 +3847,7 @@ export default function MenuBrowser({
               </div>
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12">
                 <div className="space-y-3">
-                  {(() => {
+                  {variantPickerProduct.product.product_requires_variant === true ? null : (() => {
                     const baseStock = variantStockState(
                       variantPickerProduct.product,
                       null,
@@ -4135,6 +4136,7 @@ export default function MenuBrowser({
                   stockQuantity={product.stock_quantity}
                   lowStockThreshold={product.low_stock_threshold}
                   variantsEnabled={product.variants_enabled}
+                  productRequiresVariant={product.product_requires_variant}
                   variantLabel={product.variant_label}
                   productVariants={product.product_variants}
                   productType={product.product_type}

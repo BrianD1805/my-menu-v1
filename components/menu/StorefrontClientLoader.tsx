@@ -136,7 +136,7 @@ function StorefrontPreparingShell() {
       aria-busy="true"
       className="mx-auto flex min-h-screen max-w-7xl items-center justify-center overflow-x-clip bg-[#F8F4F0] px-4 pb-10 pt-0 sm:px-5 lg:px-6"
     >
-      <section className="flex max-w-[320px] flex-col items-center justify-center text-center">
+      <section className="flex max-w-[320px] flex-col items-center justify-center text-center md:max-w-[620px]">
         <div
           className="relative flex h-20 w-20 items-center justify-center"
           aria-hidden="true"
@@ -150,7 +150,7 @@ function StorefrontPreparingShell() {
         <p className="mt-5 text-[11px] font-black uppercase tracking-[0.24em] text-orange-700">
           Orduva
         </p>
-        <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950">
+        <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-950 md:whitespace-nowrap md:text-[34px]">
           We&apos;re getting things ready.
         </h1>
         <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">

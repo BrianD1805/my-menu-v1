@@ -840,3 +840,21 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Restyled the Offers/Discounts popup to follow the Product Details popup standard: softer white panel, light header, top-edge accent, rounded inner cards and dark Close button.
 - No Supabase SQL required.
 
+
+## Ver-0.255 - Product ribbon, startup loader and variant-required products
+
+- Patch type: touched-files-only ZIP.
+- Product home panels: moved only the stock/pre-order ribbon a further 3px left and 3px up without changing any other product-card element.
+- Desktop startup loader: widened the Orduva preloader card and kept “We’re getting things ready.” on one line on desktop while preserving the mobile layout.
+- Tenant Admin products: added a Product variants option so store owners can mark the base product as display-only and require customers to choose a variant before adding to basket.
+- Storefront variant picker: hides the Standard product option when the product requires a variant.
+- Order API validation now rejects base-product cart lines for products marked as requiring a variant.
+- Supabase SQL required: SUPABASE_VER_0_255_PRODUCT_REQUIRES_VARIANT.sql.
+
+## Ver-0.255A - Product required variant build fix
+
+- Patch type: touched-files-only ZIP.
+- Fixed TypeScript build error in Tenant Admin ProductManager after Ver-0.255.
+- Added the missing `productRequiresVariant` value to the draft created after adding a new product, so the shared DraftState type is complete.
+- No Supabase SQL required for this fix. The Ver-0.255 product_requires_variant SQL is still required if it has not already been run.
+
