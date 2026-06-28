@@ -1364,46 +1364,111 @@ export default function MenuBrowser({
         paddingBottom: pixelSetting(storefrontTheme?.aboutUsPaddingDesktopBottom, 0, 0, 180),
         paddingLeft: pixelSetting(storefrontTheme?.aboutUsPaddingDesktopLeft, 0, 0, 180),
       };
-  const rewardsPopupBackground = softerPanelColor(
-    storefrontTheme?.rewardsPopupBackground,
-    "#FFFDF8",
-    0.55,
+  const defaultPopupBackground = softerPanelColor(
+    storefrontTheme?.defaultPopupBackground ?? storefrontTheme?.rewardsPopupBackground ?? storefrontTheme?.offersPopupBackground,
+    "#FFFFFF",
+    0.35,
   );
-  const rewardsPopupHeaderBackground = softerPanelColor(
-    rewardTierTheme.headerBackground,
-    brandAccent,
-    0.78,
+  const defaultPopupTopEdgeLeft = normalizeThemeColor(
+    storefrontTheme?.defaultPopupTopEdgeLeft,
+    "#FBBF24",
   );
-  const rewardsPopupHeaderBlend = softerPanelColor(
-    rewardTierTheme.headerBlend,
-    brandSurface,
-    0.5,
+  const defaultPopupTopEdgeMiddle = normalizeThemeColor(
+    storefrontTheme?.defaultPopupTopEdgeMiddle,
+    "#334155",
   );
-  const rewardsPopupHeaderText = readableTextFor(
-    rewardsPopupHeaderBackground,
-    rewardTierTheme.headerText,
+  const defaultPopupTopEdgeRight = normalizeThemeColor(
+    storefrontTheme?.defaultPopupTopEdgeRight ?? storefrontTheme?.storefrontPopupTopEffect,
+    "#10B981",
+  );
+  const defaultPopupHeaderBackground = softerPanelColor(
+    storefrontTheme?.defaultPopupHeaderBackground,
+    "#FFFFFF",
+    0.2,
+  );
+  const defaultPopupHeaderBlend = softerPanelColor(
+    storefrontTheme?.defaultPopupHeaderBlend,
+    "#FFFBEB",
+    0.15,
+  );
+  const defaultPopupHeaderSoftEnd = softerPanelColor(
+    storefrontTheme?.defaultPopupHeaderSoftEnd,
+    "#ECFDF5",
+    0.15,
+  );
+  const defaultPopupHeaderText = readableTextFor(
+    defaultPopupHeaderBackground,
+    normalizeThemeColor(storefrontTheme?.defaultPopupHeaderText, "#020617"),
     brandPrimary,
   );
-  const rewardsPopupBodyText = readableTextFor(
-    rewardsPopupBackground,
-    normalizeThemeColor(storefrontTheme?.rewardsPopupBodyText, brandText),
+  const defaultPopupLabelText = normalizeThemeColor(
+    storefrontTheme?.defaultPopupLabelText,
+    "#B45309",
+  );
+  const defaultPopupBodyText = readableTextFor(
+    defaultPopupBackground,
+    normalizeThemeColor(storefrontTheme?.defaultPopupBodyText, brandText),
     brandText,
   );
-  const rewardsPopupCardBackground = softerPanelColor(
-    storefrontTheme?.rewardsPopupCardBackground,
-    brandSurface,
-    0.42,
+  const defaultPopupCardBackground = softerPanelColor(
+    storefrontTheme?.defaultPopupCardBackground,
+    "#FFFBEB",
+    0.2,
   );
+  const defaultPopupCardBorder = normalizeThemeColor(
+    storefrontTheme?.defaultPopupCardBorder,
+    "#FDE68A",
+  );
+  const defaultPopupPillBackground = normalizeThemeColor(
+    storefrontTheme?.defaultPopupPillBackground,
+    brandAccent,
+  );
+  const defaultPopupPillText = readableTextFor(
+    defaultPopupPillBackground,
+    normalizeThemeColor(storefrontTheme?.defaultPopupPillText, "#FFFFFF"),
+    brandPrimary,
+  );
+  const defaultPopupFooterBackground = normalizeThemeColor(
+    storefrontTheme?.defaultPopupFooterBackground,
+    "#FFFFFF",
+  );
+  const defaultPopupFooterBorder = normalizeThemeColor(
+    storefrontTheme?.defaultPopupFooterBorder,
+    "#F1F5F9",
+  );
+  const defaultPopupButtonBackground = normalizeThemeColor(
+    storefrontTheme?.defaultPopupButtonBackground,
+    brandPrimary,
+  );
+  const defaultPopupButtonText = readableTextFor(
+    defaultPopupButtonBackground,
+    normalizeThemeColor(storefrontTheme?.defaultPopupButtonText, "#FFFFFF"),
+    "#FFFFFF",
+  );
+  const defaultPopupButtonOutline = normalizeThemeColor(
+    storefrontTheme?.defaultPopupButtonOutline,
+    defaultPopupFooterBorder,
+  );
+  const defaultPopupCloseBackground = normalizeThemeColor(
+    storefrontTheme?.defaultPopupCloseBackground,
+    "#FFFFFF",
+  );
+  const defaultPopupCloseText = normalizeThemeColor(
+    storefrontTheme?.defaultPopupCloseText,
+    "#475569",
+  );
+  const rewardsPopupBackground = defaultPopupBackground;
+  const rewardsPopupHeaderBackground = defaultPopupHeaderBackground;
+  const rewardsPopupHeaderBlend = defaultPopupHeaderBlend;
+  const rewardsPopupHeaderText = defaultPopupHeaderText;
+  const rewardsPopupBodyText = defaultPopupBodyText;
+  const rewardsPopupCardBackground = defaultPopupCardBackground;
   const rewardsPopupCurrentPanelBackground = softerPanelColor(
     rewardTierTheme.currentPanelBackground,
-    brandSurface,
+    defaultPopupCardBackground,
     0.18,
   );
-  const rewardsPopupCardBorder = blendHex(
-    normalizeThemeColor(storefrontTheme?.rewardsPopupCardBorder, brandBorder),
-    "#FFFFFF",
-    0.28,
-  );
+  const rewardsPopupCardBorder = defaultPopupCardBorder;
   const rewardsPopupCurrentPanelBorder = blendHex(
     rewardTierTheme.currentPanelBorder,
     "#FFFFFF",
@@ -1419,17 +1484,14 @@ export default function MenuBrowser({
     rewardTierTheme.currentPillText,
     brandPrimary,
   );
-  const popupTopEffectColor = normalizeThemeColor(
-    storefrontTheme?.storefrontPopupTopEffect,
-    brandAccent,
-  );
+  const popupTopEffectColor = defaultPopupTopEdgeRight;
   const rewardsPopupTopEdge = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupTopEdge,
-    normalizeThemeColor(rewardTierTheme.topEdge, popupTopEffectColor),
+    rewardTierTheme.topEdge,
+    defaultPopupTopEdgeRight,
   );
   const rewardsPopupLabelText = normalizeThemeColor(
     rewardTierTheme.labelText,
-    brandAccent,
+    defaultPopupLabelText,
   );
   const rewardsPopupProgressBackground = normalizeThemeColor(
     storefrontTheme?.rewardsPopupProgressBackground,
@@ -1439,112 +1501,29 @@ export default function MenuBrowser({
     rewardTierTheme.progressFill,
     brandAccent,
   );
-  const rewardsPopupFooterBackground = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupFooterBackground,
-    rewardsPopupBackground,
-  );
-  const rewardsPopupFooterBorder = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupFooterBorder,
-    rewardsPopupCardBorder,
-  );
-  const rewardsPopupButtonBackground = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupButtonBackground,
-    rewardsPopupPillBackground,
-  );
-  const rewardsPopupButtonText = readableTextFor(
-    rewardsPopupButtonBackground,
-    normalizeThemeColor(storefrontTheme?.rewardsPopupButtonText, "#FFFFFF"),
-    brandPrimary,
-  );
-  const rewardsPopupCloseBackground = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupCloseBackground,
-    "#FFFFFF",
-  );
-  const rewardsPopupCloseText = normalizeThemeColor(
-    storefrontTheme?.rewardsPopupCloseText,
-    brandPrimary,
-  );
-  const offersPopupBackground = softerPanelColor(
-    storefrontTheme?.offersPopupBackground,
-    "#FFFDF8",
-    0.55,
-  );
-  const offersPopupHeaderBackground = softerPanelColor(
-    storefrontTheme?.offersPopupHeaderBackground,
-    brandAccent,
-    0.78,
-  );
-  const offersPopupHeaderBlend = softerPanelColor(
-    storefrontTheme?.offersPopupHeaderBlend,
-    brandSurface,
-    0.5,
-  );
-  const offersPopupHeaderText = readableTextFor(
-    offersPopupHeaderBackground,
-    normalizeThemeColor(storefrontTheme?.offersPopupHeaderText, brandPrimary),
-    brandPrimary,
-  );
-  const offersPopupBodyText = readableTextFor(
-    offersPopupBackground,
-    normalizeThemeColor(storefrontTheme?.offersPopupBodyText, brandText),
-    brandText,
-  );
-  const offersPopupCardBackground = softerPanelColor(
-    storefrontTheme?.offersPopupCardBackground,
-    brandSurface,
-    0.42,
-  );
-  const offersPopupCardBorder = blendHex(
-    normalizeThemeColor(storefrontTheme?.offersPopupCardBorder, brandBorder),
-    "#FFFFFF",
-    0.28,
-  );
-  const offersPopupPillBackground = blendHex(
-    normalizeThemeColor(
-      storefrontTheme?.offersPopupPillBackground,
-      brandAccent,
-    ),
-    "#FFFFFF",
-    0.18,
-  );
-  const offersPopupPillText = readableTextFor(
-    offersPopupPillBackground,
-    normalizeThemeColor(storefrontTheme?.offersPopupPillText, "#FFFFFF"),
-    brandPrimary,
-  );
-  const offersPopupTopEdge = normalizeThemeColor(
-    storefrontTheme?.offersPopupTopEdge,
-    popupTopEffectColor,
-  );
-  const offersPopupLabelText = normalizeThemeColor(
-    storefrontTheme?.offersPopupLabelText,
-    brandAccent,
-  );
-  const offersPopupFooterBackground = normalizeThemeColor(
-    storefrontTheme?.offersPopupFooterBackground,
-    offersPopupBackground,
-  );
-  const offersPopupFooterBorder = normalizeThemeColor(
-    storefrontTheme?.offersPopupFooterBorder,
-    offersPopupCardBorder,
-  );
-  const offersPopupButtonBackground = normalizeThemeColor(
-    storefrontTheme?.offersPopupButtonBackground,
-    offersPopupPillBackground,
-  );
-  const offersPopupButtonText = readableTextFor(
-    offersPopupButtonBackground,
-    normalizeThemeColor(storefrontTheme?.offersPopupButtonText, "#FFFFFF"),
-    brandPrimary,
-  );
-  const offersPopupCloseBackground = normalizeThemeColor(
-    storefrontTheme?.offersPopupCloseBackground,
-    "#FFFFFF",
-  );
-  const offersPopupCloseText = normalizeThemeColor(
-    storefrontTheme?.offersPopupCloseText,
-    brandPrimary,
-  );
+  const rewardsPopupFooterBackground = defaultPopupFooterBackground;
+  const rewardsPopupFooterBorder = defaultPopupFooterBorder;
+  const rewardsPopupButtonBackground = defaultPopupButtonBackground;
+  const rewardsPopupButtonText = defaultPopupButtonText;
+  const rewardsPopupCloseBackground = defaultPopupCloseBackground;
+  const rewardsPopupCloseText = defaultPopupCloseText;
+  const offersPopupBackground = defaultPopupBackground;
+  const offersPopupHeaderBackground = defaultPopupHeaderBackground;
+  const offersPopupHeaderBlend = defaultPopupHeaderBlend;
+  const offersPopupHeaderText = defaultPopupHeaderText;
+  const offersPopupBodyText = defaultPopupBodyText;
+  const offersPopupCardBackground = defaultPopupCardBackground;
+  const offersPopupCardBorder = defaultPopupCardBorder;
+  const offersPopupPillBackground = defaultPopupPillBackground;
+  const offersPopupPillText = defaultPopupPillText;
+  const offersPopupTopEdge = defaultPopupTopEdgeRight;
+  const offersPopupLabelText = defaultPopupLabelText;
+  const offersPopupFooterBackground = defaultPopupFooterBackground;
+  const offersPopupFooterBorder = defaultPopupFooterBorder;
+  const offersPopupButtonBackground = defaultPopupButtonBackground;
+  const offersPopupButtonText = defaultPopupButtonText;
+  const offersPopupCloseBackground = defaultPopupCloseBackground;
+  const offersPopupCloseText = defaultPopupCloseText;
   const footerBackground = normalizeThemeColor(
     storefrontTheme?.footerBackground,
     "#FFFFFF",
@@ -2902,30 +2881,30 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full items-center justify-center lg:-translate-y-[17px]">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]" style={{ backgroundColor: offersPopupBackground, borderColor: offersPopupCardBorder, color: offersPopupBodyText }}
               onClick={(event) => event.stopPropagation()}
             >
               <div
-                className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6"
+                className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6" style={{ background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`, borderColor: defaultPopupFooterBorder }}
               >
                 <div
                   className="absolute inset-x-0 top-0 h-1"
-                  style={{ background: `linear-gradient(90deg, ${offersPopupTopEdge}, ${brandPrimary}, ${offersPopupTopEdge})` }}
+                  style={{ background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})` }}
                 />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p
-                      className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400"
+                      className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: offersPopupLabelText }}
                     >
                       Offers & discount codes
                     </p>
                     <h3
-                      className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]"
+                      className="mt-2 text-2xl font-semibold tracking-tight sm:text-[1.8rem]" style={{ color: offersPopupHeaderText }}
                     >
                       {discountPopupTitle || "Today’s offers"}
                     </h3>
                     <p
-                      className="mt-2 text-sm leading-6 text-slate-600"
+                      className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}
                     >
                       {discountPopupMessage ||
                         "Apply an available offer at checkout."}
@@ -2934,7 +2913,7 @@ export default function MenuBrowser({
                   <button
                     type="button"
                     onClick={() => setDiscountsModalOpen(false)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:-translate-y-[1px] hover:bg-white hover:text-slate-900"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl shadow-sm transition hover:-translate-y-[1px]" style={{ backgroundColor: offersPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: offersPopupCloseText }}
                     aria-label="Close discounts"
                   >
                     ×
@@ -2945,14 +2924,14 @@ export default function MenuBrowser({
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-12 lg:pt-8 xl:px-8 xl:pb-14 xl:pt-8">
                 <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:items-start xl:gap-7">
                   <div
-                    className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-6"
+                    className="rounded-[24px] border p-4 sm:p-5 lg:p-6" style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder }}
                   >
                     <p
-                      className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400"
+                      className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: offersPopupLabelText }}
                     >
                       How offers work
                     </p>
-                    <div className="mt-3 text-[15px] leading-7 text-slate-700">
+                    <div className="mt-3 text-[15px] leading-7" style={{ color: offersPopupBodyText }}>
                       <p>
                         Use a discount code at checkout, or tap an available
                         offer where the store allows quick apply.
@@ -2967,7 +2946,7 @@ export default function MenuBrowser({
                   <div className="space-y-4 xl:space-y-5">
                     {!visibleDiscountRules.length ? (
                       <div
-                        className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 text-center text-sm leading-6 text-slate-700 sm:p-5 lg:p-6"
+                        className="rounded-[24px] border p-4 text-center text-sm leading-6 sm:p-5 lg:p-6" style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder, color: offersPopupBodyText }}
                       >
                         No offers are currently available. Please check again
                         soon.
@@ -2976,21 +2955,21 @@ export default function MenuBrowser({
                     {visibleDiscountRules.map((rule) => (
                       <div
                         key={rule.id}
-                        className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 shadow-sm sm:p-5 lg:p-6"
+                        className="rounded-[24px] border p-4 shadow-sm sm:p-5 lg:p-6" style={{ backgroundColor: offersPopupCardBackground, borderColor: offersPopupCardBorder }}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: offersPopupLabelText }}>
                               {rule.scope === "combo"
                                 ? "Bundle offer"
                                 : rule.scope === "product"
                                   ? "Product offer"
                                   : "Site-wide offer"}
                             </p>
-                            <h4 className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
+                            <h4 className="mt-2 text-lg font-semibold tracking-tight" style={{ color: offersPopupHeaderText }}>
                               {rule.name}
                             </h4>
-                            <p className="mt-2 text-sm leading-6 text-slate-700">
+                            <p className="mt-2 text-sm leading-6" style={{ color: offersPopupBodyText }}>
                               {rule.code
                                 ? `Use code ${rule.code} at checkout.`
                                 : "Applies automatically when eligible."}
@@ -3006,7 +2985,7 @@ export default function MenuBrowser({
                           </span>
                         </div>
                         {rule.popupMessage ? (
-                          <p className="mt-3 text-sm leading-6 text-slate-700">
+                          <p className="mt-3 text-sm leading-6" style={{ color: offersPopupBodyText }}>
                             {rule.popupMessage}
                           </p>
                         ) : null}
@@ -3017,13 +2996,13 @@ export default function MenuBrowser({
               </div>
 
               <div
-                className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8"
+                className="sticky bottom-0 z-10 border-t px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-6 xl:px-8" style={{ backgroundColor: offersPopupFooterBackground, borderColor: offersPopupFooterBorder }}
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
                   <button
                     type="button"
                     onClick={() => setDiscountsModalOpen(false)}
-                    className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-7 py-3 text-sm font-semibold text-white transition hover:-translate-y-[1px] hover:bg-slate-800 lg:px-8"
+                    className="inline-flex min-h-12 items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px] lg:px-8" style={{ backgroundColor: offersPopupButtonBackground, borderColor: defaultPopupButtonOutline, color: offersPopupButtonText }}
                   >
                     Close
                   </button>
@@ -3606,26 +3585,26 @@ export default function MenuBrowser({
         <div className="fixed inset-0 z-[145] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]" role="dialog" aria-modal="true" onClick={() => setPendingPreorderCartLine(null)}>
           <div className="flex min-h-full items-center justify-center">
             <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[26px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]" onClick={(event) => event.stopPropagation()}>
-              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-amber-50 to-emerald-50 px-5 pb-5 pt-5">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-400 via-slate-700 to-emerald-500" />
-                <button type="button" onClick={() => setPendingPreorderCartLine(null)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-xl text-slate-500 shadow-sm" aria-label="Close pre-order notice">×</button>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">Pre-order</p>
-                <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight text-slate-950">Pre-order deposit</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">This item is being sold as a pre-order.</p>
+              <div className="sticky top-0 z-10 border-b px-5 pb-5 pt-5" style={{ background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`, borderColor: defaultPopupFooterBorder }}>
+                <div className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})` }} />
+                <button type="button" onClick={() => setPendingPreorderCartLine(null)} className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border text-xl shadow-sm" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }} aria-label="Close pre-order notice">×</button>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: defaultPopupLabelText }}>Pre-order</p>
+                <h3 className="mt-2 pr-10 text-2xl font-semibold tracking-tight" style={{ color: defaultPopupHeaderText }}>Pre-order deposit</h3>
+                <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>This item is being sold as a pre-order.</p>
               </div>
               <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5">
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-950">
+                <div className="rounded-2xl border px-4 py-4 text-sm leading-6" style={{ backgroundColor: defaultPopupCardBackground, borderColor: defaultPopupCardBorder, color: defaultPopupBodyText }}>
                   You will pay the deposit at checkout now. The remaining balance will be requested when stock arrives, and the order will only be dispatched after the balance is paid.
                 </div>
-                <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
+                <ul className="mt-4 space-y-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
                   <li>• Your original order and invoice stay in your account.</li>
                   <li>• You will receive a notification with a balance-payment link when the stock arrives.</li>
                   <li>• Stock is only reduced after the balance has been marked as paid.</li>
                 </ul>
               </div>
-              <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:flex-row">
-                <button type="button" onClick={() => setPendingPreorderCartLine(null)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700">Cancel</button>
-                <button type="button" onClick={() => { const pending = pendingPreorderCartLine; setPendingPreorderCartLine(null); if (pending) void addCartLine(pending.productId, pending.variant, pending.options, true); }} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white" style={{ backgroundColor: brandPrimary }}>Add pre-order</button>
+              <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t px-5 py-4 sm:flex-row" style={{ backgroundColor: defaultPopupFooterBackground, borderColor: defaultPopupFooterBorder }}>
+                <button type="button" onClick={() => setPendingPreorderCartLine(null)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold" style={{ borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText, backgroundColor: defaultPopupCloseBackground }}>Cancel</button>
+                <button type="button" onClick={() => { const pending = pendingPreorderCartLine; setPendingPreorderCartLine(null); if (pending) void addCartLine(pending.productId, pending.variant, pending.options, true); }} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold" style={{ backgroundColor: defaultPopupButtonBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupButtonText }}>Add pre-order</button>
               </div>
             </div>
           </div>
@@ -3655,7 +3634,7 @@ export default function MenuBrowser({
                     <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
                       {customAmountPickerProduct.product.name}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
                       {customAmountPickerProduct.product
                         .custom_amount_help_text ||
                         "Enter the amount shown on your invoice."}
@@ -3774,7 +3753,7 @@ export default function MenuBrowser({
                 <button
                   type="button"
                   onClick={() => setCustomAmountPickerProduct(null)}
-                  className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
+                  className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold" style={{ borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText, backgroundColor: defaultPopupCloseBackground }}
                 >
                   Cancel
                 </button>
@@ -3817,7 +3796,7 @@ export default function MenuBrowser({
                 <div
                   className="absolute inset-x-0 top-0 h-1"
                   style={{
-                    background: `linear-gradient(90deg, ${popupTopEffectColor}, ${brandPrimary}, ${popupTopEffectColor})`,
+                    background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})`,
                   }}
                 />
                 <div className="flex items-start justify-between gap-4">
@@ -3829,7 +3808,7 @@ export default function MenuBrowser({
                     <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
                       {variantPickerProduct.product.name}
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
                       Choose the standard product as shown, or select another
                       available option.
                     </p>
@@ -4418,7 +4397,7 @@ export default function MenuBrowser({
                     <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
                       Find something quickly
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
                       Search by product name, keyword, or narrow the results to
                       a category.
                     </p>
@@ -4588,7 +4567,7 @@ export default function MenuBrowser({
                                   {categoryName}
                                 </span>
                               </div>
-                              <p className="mt-2 text-sm leading-6 text-slate-600">
+                              <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
                                 {stripHtml(product.description).slice(0, 140) ||
                                   "Freshly prepared and ready to order."}
                               </p>
@@ -4658,7 +4637,7 @@ export default function MenuBrowser({
                     <p className="text-lg font-semibold text-slate-900">
                       No matching products
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
                       Try another search term or switch the category filter.
                     </p>
                   </div>

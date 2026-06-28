@@ -858,3 +858,14 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added the missing `productRequiresVariant` value to the draft created after adding a new product, so the shared DraftState type is complete.
 - No Supabase SQL required for this fix. The Ver-0.255 product_requires_variant SQL is still required if it has not already been run.
 
+
+## Ver-0.256 - Storefront popup management rules
+
+- Patch type: touched-files-only ZIP.
+- Added a new General popup colour group in Tenant Admin Settings → Per-item storefront colours.
+- General popup controls now cover the default storefront popup structure: sticky header, main body, sticky footer, button background, button text and button outline.
+- Moved Rewards and Offers/Discounts popup surfaces to the new General popup styling so they no longer maintain separate popup colour sections.
+- Kept tier-specific Rewards card colours separate for Silver, Gold and Platinum details inside the rewards popup.
+- Renamed the Favourites colour group to Favourites & Buy Again so those two storefront strips remain together under the existing favourites styling exception.
+- Updated storefront rewards/offers/pre-order popup styling to read from the shared default popup colour rules.
+- No Supabase SQL required.

@@ -245,8 +245,8 @@ type PreviewTarget =
   | "global"
   | "header"
   | "welcome"
+  | "generalPopup"
   | "rewards"
-  | "offers"
   | "products"
   | "favourites"
   | "footer";
@@ -377,29 +377,40 @@ const THEME_GROUPS: Array<{
   },
 
   {
-    id: "rewards",
-    title: "Rewards popup colours",
-    description: "Every visible surface used by the customer rewards popup.",
+    id: "generalPopup",
+    title: "General popup",
+    description:
+      "Default storefront popup styling used by pre-order, product, rewards, offers and other storefront popups.",
     fields: [
-      { key: "rewardsPopupBackground", label: "Popup background" },
-      { key: "rewardsPopupTopEdge", label: "Top edge accent" },
-      { key: "rewardsPopupHeaderBackground", label: "Header background" },
-      { key: "rewardsPopupHeaderBlend", label: "Header blend colour" },
-      { key: "rewardsPopupHeaderText", label: "Header title text" },
-      { key: "rewardsPopupLabelText", label: "Small label text" },
-      { key: "rewardsPopupBodyText", label: "Body text" },
-      { key: "rewardsPopupCardBackground", label: "Info card background" },
-      { key: "rewardsPopupCardBorder", label: "Info card border" },
-      { key: "rewardsPopupPillBackground", label: "Reward pill background" },
-      { key: "rewardsPopupPillText", label: "Reward pill text" },
-      { key: "rewardsPopupProgressBackground", label: "Progress track" },
-      { key: "rewardsPopupProgressFill", label: "Progress fill" },
-      { key: "rewardsPopupFooterBackground", label: "Footer background" },
-      { key: "rewardsPopupFooterBorder", label: "Footer border" },
-      { key: "rewardsPopupButtonBackground", label: "Main button background" },
-      { key: "rewardsPopupButtonText", label: "Main button text" },
-      { key: "rewardsPopupCloseBackground", label: "Close button background" },
-      { key: "rewardsPopupCloseText", label: "Close button text" },
+      { key: "defaultPopupBackground", label: "Popup background" },
+      { key: "defaultPopupTopEdgeLeft", label: "Top edge left" },
+      { key: "defaultPopupTopEdgeMiddle", label: "Top edge middle" },
+      { key: "defaultPopupTopEdgeRight", label: "Top edge right" },
+      { key: "defaultPopupHeaderBackground", label: "Sticky header background" },
+      { key: "defaultPopupHeaderBlend", label: "Sticky header blend" },
+      { key: "defaultPopupHeaderSoftEnd", label: "Sticky header soft end" },
+      { key: "defaultPopupHeaderText", label: "Sticky header title text" },
+      { key: "defaultPopupLabelText", label: "Sticky header label text" },
+      { key: "defaultPopupBodyText", label: "Main body text" },
+      { key: "defaultPopupCardBackground", label: "Main body card background" },
+      { key: "defaultPopupCardBorder", label: "Main body card border" },
+      { key: "defaultPopupPillBackground", label: "Pill / badge background" },
+      { key: "defaultPopupPillText", label: "Pill / badge text" },
+      { key: "defaultPopupFooterBackground", label: "Sticky footer background" },
+      { key: "defaultPopupFooterBorder", label: "Sticky footer border" },
+      { key: "defaultPopupButtonBackground", label: "Button background" },
+      { key: "defaultPopupButtonText", label: "Button text" },
+      { key: "defaultPopupButtonOutline", label: "Button outline" },
+      { key: "defaultPopupCloseBackground", label: "Close button background" },
+      { key: "defaultPopupCloseText", label: "Close button text" },
+    ],
+  },
+  {
+    id: "rewards",
+    title: "Rewards tier cards",
+    description:
+      "Tier-specific Silver, Gold and Platinum colours inside the default rewards popup.",
+    fields: [
       { key: "rewardsSilverTopEdge", label: "Silver top edge" },
       { key: "rewardsSilverHeaderBackground", label: "Silver header background" },
       { key: "rewardsSilverHeaderBlend", label: "Silver header blend" },
@@ -433,31 +444,6 @@ const THEME_GROUPS: Array<{
     ],
   },
   {
-    id: "offers",
-    title: "Discount popup colours",
-    description:
-      "Every visible surface used by the offers and discount-code popup.",
-    fields: [
-      { key: "offersPopupBackground", label: "Popup background" },
-      { key: "offersPopupTopEdge", label: "Top edge accent" },
-      { key: "offersPopupHeaderBackground", label: "Header background" },
-      { key: "offersPopupHeaderBlend", label: "Header blend colour" },
-      { key: "offersPopupHeaderText", label: "Header title text" },
-      { key: "offersPopupLabelText", label: "Small label text" },
-      { key: "offersPopupBodyText", label: "Body text" },
-      { key: "offersPopupCardBackground", label: "Offer card background" },
-      { key: "offersPopupCardBorder", label: "Offer card border" },
-      { key: "offersPopupPillBackground", label: "Discount pill background" },
-      { key: "offersPopupPillText", label: "Discount pill text" },
-      { key: "offersPopupFooterBackground", label: "Footer background" },
-      { key: "offersPopupFooterBorder", label: "Footer border" },
-      { key: "offersPopupButtonBackground", label: "Main button background" },
-      { key: "offersPopupButtonText", label: "Main button text" },
-      { key: "offersPopupCloseBackground", label: "Close button background" },
-      { key: "offersPopupCloseText", label: "Close button text" },
-    ],
-  },
-  {
     id: "products",
     title: "Product Cards",
     description:
@@ -486,9 +472,9 @@ const THEME_GROUPS: Array<{
   },
   {
     id: "favourites",
-    title: "Favourites",
+    title: "Favourites & Buy Again",
     description:
-      "The swipeable favourite products strip after the welcome card.",
+      "The swipeable favourite and buy-again product strips after the welcome card.",
     fields: [
       { key: "favouritesBackground", label: "Section background" },
       { key: "favouritesBorder", label: "Section border" },
@@ -707,6 +693,27 @@ function buildLogoPalettePreset(colours: string[], selectedMainColour?: string |
       welcomeActionText: primaryColor,
       welcomeActionIconBackground: secondaryAccent,
       welcomeActionBorder: blendHex(primaryColor, "#FFFFFF", 0.65),
+      defaultPopupBackground: "#FFFFFF",
+      defaultPopupTopEdgeLeft: "#FBBF24",
+      defaultPopupTopEdgeMiddle: "#334155",
+      defaultPopupTopEdgeRight: "#10B981",
+      defaultPopupHeaderBackground: "#FFFFFF",
+      defaultPopupHeaderBlend: "#FFFBEB",
+      defaultPopupHeaderSoftEnd: "#ECFDF5",
+      defaultPopupHeaderText: "#020617",
+      defaultPopupLabelText: "#B45309",
+      defaultPopupBodyText: "#475569",
+      defaultPopupCardBackground: "#FFFBEB",
+      defaultPopupCardBorder: "#FDE68A",
+      defaultPopupPillBackground: secondaryAccent,
+      defaultPopupPillText: "#FFFFFF",
+      defaultPopupFooterBackground: "#FFFFFF",
+      defaultPopupFooterBorder: "#F1F5F9",
+      defaultPopupButtonBackground: primaryColor,
+      defaultPopupButtonText: "#FFFFFF",
+      defaultPopupButtonOutline: blendHex(primaryColor, "#FFFFFF", 0.72),
+      defaultPopupCloseBackground: "#FFFFFF",
+      defaultPopupCloseText: "#475569",
       rewardsPopupTopEdge: primaryColor,
       rewardsPopupHeaderBlend: softTint,
       rewardsPopupHeaderText: primaryColor,
@@ -1979,6 +1986,7 @@ export default function TenantSettingsForm({
             logoPaletteColours: logoColours.length ? logoColours : [nextColour],
             storefrontMainLogoColor: nextColour,
             storefrontPopupTopEffect: nextColour,
+            defaultPopupTopEdgeRight: nextColour,
             rewardsPopupTopEdge: nextColour,
             offersPopupTopEdge: nextColour,
           },
@@ -1993,6 +2001,7 @@ export default function TenantSettingsForm({
             selectedPreset: currentTheme.selectedPreset || LOGO_PALETTE_PRESET_NAME,
             customised: true,
             storefrontPopupTopEffect: nextColour,
+            defaultPopupTopEdgeRight: nextColour,
             rewardsPopupTopEdge: nextColour,
             offersPopupTopEdge: nextColour,
           },
@@ -4192,7 +4201,7 @@ export default function TenantSettingsForm({
                           })
                         }
                         className="input"
-                        placeholder="SAVE10"
+                        placeholder="Pill"
                       />
                     </Field>
                     <Field label="Discount type">
@@ -6672,10 +6681,10 @@ function labelForPreview(target: PreviewTarget) {
   if (target === "global") return "Global page";
   if (target === "header") return "Header";
   if (target === "welcome") return "Welcome card";
-  if (target === "rewards") return "Rewards popup";
-  if (target === "offers") return "Discount popup";
+  if (target === "generalPopup") return "General popup";
+  if (target === "rewards") return "Rewards tier cards";
   if (target === "products") return "Product card";
-  if (target === "favourites") return "Favourites";
+  if (target === "favourites") return "Favourites & Buy Again";
   return "Footer";
 }
 
@@ -6978,15 +6987,15 @@ function PreviewPanel({
               className="overflow-hidden rounded-[18px] border text-xs shadow-sm"
               style={{
                 backgroundColor: normalizeThemeColor(
-                  theme.offersPopupBackground,
+                  theme.defaultPopupBackground,
                   "#FFFFFF",
                 ),
                 borderColor: normalizeThemeColor(
-                  theme.offersPopupCardBorder,
+                  theme.defaultPopupCardBorder,
                   "#D9C7A3",
                 ),
                 color: normalizeThemeColor(
-                  theme.offersPopupBodyText,
+                  theme.defaultPopupBodyText,
                   "#2B2B2B",
                 ),
               }}
@@ -6995,11 +7004,11 @@ function PreviewPanel({
                 className="p-3 font-black"
                 style={{
                   backgroundColor: normalizeThemeColor(
-                    theme.offersPopupHeaderBackground,
+                    theme.defaultPopupHeaderBackground,
                     "#0F172A",
                   ),
                   color: normalizeThemeColor(
-                    theme.offersPopupHeaderText,
+                    theme.defaultPopupHeaderText,
                     "#FFFFFF",
                   ),
                 }}
@@ -7011,26 +7020,26 @@ function PreviewPanel({
                   className="rounded-full px-2 py-1 font-black"
                   style={{
                     backgroundColor: normalizeThemeColor(
-                      theme.offersPopupPillBackground,
+                      theme.defaultPopupPillBackground,
                       "#0F172A",
                     ),
                     color: normalizeThemeColor(
-                      theme.offersPopupPillText,
+                      theme.defaultPopupPillText,
                       "#FFFFFF",
                     ),
                   }}
                 >
-                  SAVE10
+                  Pill
                 </span>
                 <p
                   className="mt-2 rounded-xl border p-2"
                   style={{
                     backgroundColor: normalizeThemeColor(
-                      theme.offersPopupCardBackground,
+                      theme.defaultPopupCardBackground,
                       "#F8F4F0",
                     ),
                     borderColor: normalizeThemeColor(
-                      theme.offersPopupCardBorder,
+                      theme.defaultPopupCardBorder,
                       "#D9C7A3",
                     ),
                   }}
@@ -7191,36 +7200,33 @@ function PreviewPanel({
           </div>
         </div>
       ) : null}
-      {target === "offers" ? (
+      {target === "generalPopup" ? (
         <div
           className="overflow-hidden rounded-[22px] border text-sm shadow-sm"
           style={{
             backgroundColor: normalizeThemeColor(
-              theme.offersPopupBackground,
+              theme.defaultPopupBackground,
               "#FFFFFF",
             ),
             borderColor: normalizeThemeColor(
-              theme.offersPopupCardBorder,
+              theme.defaultPopupCardBorder,
               "#D9C7A3",
             ),
-            color: normalizeThemeColor(theme.offersPopupBodyText, "#2B2B2B"),
+            color: normalizeThemeColor(theme.defaultPopupBodyText, "#2B2B2B"),
           }}
         >
           <div
             className="h-1.5 w-full"
             style={{
-              backgroundColor: normalizeThemeColor(
-                theme.offersPopupTopEdge,
-                "#FF6A3D",
-              ),
+              background: `linear-gradient(90deg, ${normalizeThemeColor(theme.defaultPopupTopEdgeLeft, "#FBBF24")}, ${normalizeThemeColor(theme.defaultPopupTopEdgeMiddle, "#334155")}, ${normalizeThemeColor(theme.defaultPopupTopEdgeRight, "#10B981")})`,
             }}
           />
           <div
             className="p-4"
             style={{
-              background: `linear-gradient(135deg, ${normalizeThemeColor(theme.offersPopupHeaderBackground, "#0F172A")}, ${normalizeThemeColor(theme.offersPopupHeaderBlend, "#334155")})`,
+              background: `linear-gradient(135deg, ${normalizeThemeColor(theme.defaultPopupHeaderBackground, "#FFFFFF")}, ${normalizeThemeColor(theme.defaultPopupHeaderBlend, "#FFFBEB")}, ${normalizeThemeColor(theme.defaultPopupHeaderSoftEnd, "#ECFDF5")})`,
               color: normalizeThemeColor(
-                theme.offersPopupHeaderText,
+                theme.defaultPopupHeaderText,
                 "#FFFFFF",
               ),
             }}
@@ -7229,16 +7235,16 @@ function PreviewPanel({
               className="text-[11px] font-bold uppercase tracking-[0.18em]"
               style={{
                 color: normalizeThemeColor(
-                  theme.offersPopupLabelText,
+                  theme.defaultPopupLabelText,
                   "#FED7AA",
                 ),
               }}
             >
-              Specials and offers
+              Sticky header label
             </p>
-            <h4 className="mt-1 text-lg font-bold">Today&apos;s offers</h4>
+            <h4 className="mt-1 text-lg font-bold">General popup</h4>
             <p className="mt-1 text-xs opacity-90">
-              Preview of the customer discount popup.
+              Preview of the default storefront popup.
             </p>
           </div>
           <div className="space-y-3 p-4">
@@ -7246,46 +7252,46 @@ function PreviewPanel({
               className="rounded-[18px] border p-3"
               style={{
                 backgroundColor: normalizeThemeColor(
-                  theme.offersPopupCardBackground,
+                  theme.defaultPopupCardBackground,
                   "#F8F4F0",
                 ),
                 borderColor: normalizeThemeColor(
-                  theme.offersPopupCardBorder,
+                  theme.defaultPopupCardBorder,
                   "#D9C7A3",
                 ),
               }}
             >
               <div className="flex items-center justify-between gap-3">
-                <span>Weekend discount</span>
+                <span>Main body card</span>
                 <span
                   className="rounded-full px-2.5 py-1 text-xs font-bold"
                   style={{
                     backgroundColor: normalizeThemeColor(
-                      theme.offersPopupPillBackground,
+                      theme.defaultPopupPillBackground,
                       "#0F172A",
                     ),
                     color: normalizeThemeColor(
-                      theme.offersPopupPillText,
+                      theme.defaultPopupPillText,
                       "#FFFFFF",
                     ),
                   }}
                 >
-                  SAVE10
+                  Pill
                 </span>
               </div>
               <p className="mt-2 text-xs">
-                Offer card, pill and body text preview.
+                Default body, card and pill styling preview.
               </p>
             </div>
             <div
               className="flex items-center justify-between gap-3 border-t px-1 pt-3"
               style={{
                 backgroundColor: normalizeThemeColor(
-                  theme.offersPopupFooterBackground,
+                  theme.defaultPopupFooterBackground,
                   "#FFFFFF",
                 ),
                 borderColor: normalizeThemeColor(
-                  theme.offersPopupFooterBorder,
+                  theme.defaultPopupFooterBorder,
                   "#E2E8F0",
                 ),
               }}
@@ -7294,11 +7300,11 @@ function PreviewPanel({
                 className="rounded-xl px-3 py-2 text-xs"
                 style={{
                   backgroundColor: normalizeThemeColor(
-                    theme.offersPopupCloseBackground,
+                    theme.defaultPopupCloseBackground,
                     "#F8FAFC",
                   ),
                   color: normalizeThemeColor(
-                    theme.offersPopupCloseText,
+                    theme.defaultPopupCloseText,
                     "#334155",
                   ),
                 }}
@@ -7309,16 +7315,16 @@ function PreviewPanel({
                 className="rounded-xl px-3 py-2 text-xs font-bold"
                 style={{
                   backgroundColor: normalizeThemeColor(
-                    theme.offersPopupButtonBackground,
+                    theme.defaultPopupButtonBackground,
                     "#0F172A",
                   ),
                   color: normalizeThemeColor(
-                    theme.offersPopupButtonText,
+                    theme.defaultPopupButtonText,
                     "#FFFFFF",
                   ),
                 }}
               >
-                Apply offer
+                Main action
               </span>
             </div>
           </div>
