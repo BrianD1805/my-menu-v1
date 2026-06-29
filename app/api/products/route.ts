@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { startLoadTimer } from "@/lib/load-diagnostics";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { calculateTenantTrialState } from "@/lib/trial";
+import { LIVE_VERSION } from "@/lib/version";
 
 async function getTenant(tenantSlug: string) {
   const tenantTimer = startLoadTimer("api/products tenant lookup");
@@ -89,7 +90,13 @@ export async function GET(req: Request) {
   const trialState = calculateTenantTrialState(tenant);
   totalTimer.end({ tenantSlug });
 
+  const dataCheckedAt = new Date().toISOString();
   const payload = {
+    meta: {
+      appVersion: LIVE_VERSION,
+      dataCheckedAt,
+      startupCheck: true,
+    },
     tenant: {
       id: tenant.id,
       slug: tenant.slug,
@@ -217,7 +224,11 @@ export async function GET(req: Request) {
       // worker/local cache while fresh data is refreshed in the background.
       // Ver-0.231C: invoice/payment settings need to appear immediately after a tenant saves them.
       // Keep browser/edge caching off for this endpoint so storefront settings do not lag behind admin changes.
-      "Cache-Control": "no-store, max-age=0",
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      Pragma: "no-cache",
+      Expires: "0",
+      "X-Orduva-App-Version": LIVE_VERSION,
+      "X-Orduva-Data-Checked-At": dataCheckedAt,
     },
   });
 }

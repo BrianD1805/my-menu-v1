@@ -74,6 +74,11 @@ type StorefrontSettings = {
 };
 
 type StorefrontPayload = {
+  meta?: {
+    appVersion?: string;
+    dataCheckedAt?: string;
+    startupCheck?: boolean;
+  };
   tenant: {
     id: string;
     slug: string;
@@ -84,8 +89,8 @@ type StorefrontPayload = {
   settings: StorefrontSettings;
 };
 
-const STOREFRONT_CACHE_VERSION = "ver-0-232";
-const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 20;
+const STOREFRONT_CACHE_VERSION = "ver-0-258";
+const STOREFRONT_CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 6;
 
 function cacheKeyForTenant(tenantSlug: string) {
   return `orduva_storefront_payload_${STOREFRONT_CACHE_VERSION}_${tenantSlug}`;
@@ -122,6 +127,45 @@ function writeCachedPayload(tenantSlug: string, payload: StorefrontPayload) {
     );
   } catch {
     // Storage can be unavailable in private mode. Storefront still works normally.
+  }
+}
+
+function buildPayloadSignature(payload: StorefrontPayload | null) {
+  if (!payload) return "";
+  try {
+    const products = [...(payload.products || [])]
+      .map((product: any) => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        is_active: product.is_active,
+        category_id: product.category_id,
+        secondary_category_id: product.secondary_category_id,
+        stock_enabled: product.stock_enabled,
+        stock_quantity: product.stock_quantity,
+        low_stock_threshold: product.low_stock_threshold,
+        variants_enabled: product.variants_enabled,
+        product_variants: product.product_variants,
+        product_type: product.product_type,
+        custom_amount_enabled: product.custom_amount_enabled,
+        preorder_enabled: product.preorder_enabled,
+        preorder_when_out_of_stock: product.preorder_when_out_of_stock,
+        product_requires_variant: product.product_requires_variant,
+        image_url: product.image_url,
+        description: product.description,
+      }))
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const categories = [...(payload.categories || [])]
+      .map((category: any) => ({
+        id: category.id,
+        name: category.name,
+        sort_order: category.sort_order,
+      }))
+      .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    const settings = payload.settings || null;
+    return JSON.stringify({ products, categories, settings });
+  } catch {
+    return String(Date.now());
   }
 }
 
@@ -249,11 +293,16 @@ export default function StorefrontClientLoader({
     async function loadStorefront() {
       setError(null);
       try {
+        const startupCheck = Date.now();
         const res = await fetch(
-          `/api/products?tenantSlug=${encodeURIComponent(tenantSlug)}&_v=${STOREFRONT_CACHE_VERSION}`,
+          `/api/products?tenantSlug=${encodeURIComponent(tenantSlug)}&_v=${STOREFRONT_CACHE_VERSION}&_startupCheck=${startupCheck}`,
           {
             cache: "no-store",
             signal: controller.signal,
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
           },
         );
         const data = await res.json().catch(() => ({}));
@@ -266,7 +315,11 @@ export default function StorefrontClientLoader({
           return;
         }
         const nextPayload = data as StorefrontPayload;
-        setPayload(nextPayload);
+        const currentSignature = buildPayloadSignature(payload);
+        const nextSignature = buildPayloadSignature(nextPayload);
+        if (!payload || currentSignature !== nextSignature) {
+          setPayload(nextPayload);
+        }
         writeCachedPayload(tenantSlug, nextPayload);
       } catch (err) {
         if (cancelled) return;

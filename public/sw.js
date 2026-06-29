@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-253b';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-253b';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-253b';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-258';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-258';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-258';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -79,6 +79,29 @@ async function staleWhileRevalidate(request) {
     return response;
   }).catch(() => cached);
   return cached || network;
+}
+
+async function networkFirstNoStore(request) {
+  const cache = await caches.open(STORE_CACHE);
+  try {
+    const liveRequest = new Request(request.url, {
+      method: 'GET',
+      headers: request.headers,
+      mode: request.mode,
+      credentials: request.credentials,
+      redirect: request.redirect,
+      cache: 'no-store',
+    });
+    const response = await fetch(liveRequest);
+    if (response && response.ok) {
+      cache.put(request, response.clone()).catch(() => undefined);
+    }
+    return response;
+  } catch {
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    return fetch(request);
+  }
 }
 
 function normalizedNavigationRequest(request) {
@@ -177,7 +200,9 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname === '/api/products') {
-    event.respondWith(staleWhileRevalidate(request));
+    // Ver-0.258: storefront products/prices/offers must be checked live on every load.
+    // Local cache is only a fallback for genuine offline/network failures.
+    event.respondWith(networkFirstNoStore(request));
     return;
   }
 
@@ -233,4 +258,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.253b storefront push notification icon payload cleanup
+// Orduva Ver-0.258 storefront startup checks: live products/prices/offers on every load

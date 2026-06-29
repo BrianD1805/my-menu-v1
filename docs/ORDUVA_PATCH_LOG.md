@@ -905,3 +905,14 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Updated standalone customer payment/customer amount popups so the sticky header, top edge, label/title text, body, input borders, footer and buttons use the General popup colour set.
 - Kept checkout totals, payment provider amount logic, stock, pre-order logic, receipts, push notifications, database schema and service-worker/PWA files untouched.
 - No Supabase SQL required.
+
+## Ver-0.258 - Storefront startup freshness checks
+
+- Changed storefront local payload cache version to `ver-0-258` so older cached product/menu payloads are not reused after this build.
+- Kept local payload cache for fast opening, but forced a live no-cache startup check against `/api/products` on every storefront load.
+- Added cache-busting startup check parameter and no-cache request headers so product, price, category, offer and storefront settings changes are checked every load.
+- Updated `/api/products` response metadata and headers with the current Orduva app version and data checked timestamp.
+- Changed the storefront service worker so `/api/products` is network-first/no-store, with cache used only as an offline fallback.
+- Bumped storefront service worker cache names to `ver-0-258` so old page/runtime caches are cleaned up.
+- Updated storefront service-worker registration to request updates immediately and reload once when the new worker takes control, helping the visible version number update without repeated manual refreshes.
+- Did not touch checkout, payments, stock, pre-orders, receipts, push notifications or database schema.
