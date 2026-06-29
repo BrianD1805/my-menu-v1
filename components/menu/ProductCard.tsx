@@ -355,9 +355,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const fullPrice = formatMoney(price, money);
   const brandAccent = accentColor || "#C7922F";
   const brandPrimary = primaryColor || "#7B1E22";
+  const defaultPopupBackground = normalizeThemeColor(themeColors?.defaultPopupBackground, "#FFFFFF");
   const defaultPopupTopEdgeLeft = normalizeThemeColor(themeColors?.defaultPopupTopEdgeLeft, "#FBBF24");
   const defaultPopupTopEdgeMiddle = normalizeThemeColor(themeColors?.defaultPopupTopEdgeMiddle, "#334155");
-  const defaultPopupTopEdgeRight = normalizeThemeColor(themeColors?.defaultPopupTopEdgeRight ?? themeColors?.storefrontPopupTopEffect, "#10B981");
+  const defaultPopupTopEdgeRight = normalizeThemeColor(themeColors?.defaultPopupTopEdgeRight, "#10B981");
   const defaultPopupHeaderBackground = normalizeThemeColor(themeColors?.defaultPopupHeaderBackground, "#FFFFFF");
   const defaultPopupHeaderBlend = normalizeThemeColor(themeColors?.defaultPopupHeaderBlend, "#FFFBEB");
   const defaultPopupHeaderSoftEnd = normalizeThemeColor(themeColors?.defaultPopupHeaderSoftEnd, "#ECFDF5");
@@ -366,6 +367,8 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
   const defaultPopupBodyText = normalizeThemeColor(themeColors?.defaultPopupBodyText, "#475569");
   const defaultPopupCardBackground = normalizeThemeColor(themeColors?.defaultPopupCardBackground, "#FFFBEB");
   const defaultPopupCardBorder = normalizeThemeColor(themeColors?.defaultPopupCardBorder, "#FDE68A");
+  const defaultPopupPillBackground = normalizeThemeColor(themeColors?.defaultPopupPillBackground, defaultPopupTopEdgeRight);
+  const defaultPopupPillText = normalizeThemeColor(themeColors?.defaultPopupPillText, "#FFFFFF");
   const defaultPopupFooterBackground = normalizeThemeColor(themeColors?.defaultPopupFooterBackground, "#FFFFFF");
   const defaultPopupFooterBorder = normalizeThemeColor(themeColors?.defaultPopupFooterBorder, "#F1F5F9");
   const defaultPopupButtonBackground = normalizeThemeColor(themeColors?.defaultPopupButtonBackground, brandPrimary);
@@ -604,37 +607,37 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       {customAmountOpen ? (
         <div className="fixed inset-0 z-[125] bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px]" role="dialog" aria-modal="true" onClick={() => setCustomAmountOpen(false)}>
           <div className="flex min-h-full items-center justify-center">
-            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[30px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.30)]" onClick={(event) => event.stopPropagation()}>
-              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-blue-50/60 px-5 pb-5 pt-5 sm:px-7">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-700 via-slate-700 to-emerald-500" />
+            <div className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[30px] border shadow-[0_30px_90px_rgba(15,23,42,0.30)]" style={{ backgroundColor: defaultPopupBackground, borderColor: defaultPopupCardBorder, color: defaultPopupBodyText }} onClick={(event) => event.stopPropagation()}>
+              <div className="sticky top-0 z-10 border-b px-5 pb-5 pt-5 sm:px-7" style={{ background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`, borderColor: defaultPopupFooterBorder }}>
+                <div className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})` }} />
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Customer payment</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{name}</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: defaultPopupLabelText }}>Customer payment</p>
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: defaultPopupHeaderText }}>{name}</h3>
                     <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>{customAmountHelpText || "Enter the amount shown on your invoice."}</p>
                   </div>
-                  <button type="button" onClick={() => setCustomAmountOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm" aria-label="Close payment amount">×</button>
+                  <button type="button" onClick={() => setCustomAmountOpen(false)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl shadow-sm" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }} aria-label="Close payment amount">×</button>
                 </div>
               </div>
-              <div className="modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-6 sm:px-7">
+              <div className="modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-6 sm:px-7" style={{ backgroundColor: defaultPopupBackground }}>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountReferenceLabel || "Invoice number"}{customAmountReferenceRequired !== false ? " *" : ""}</label>
-                  <input value={customAmountReference} onChange={(event) => setCustomAmountReference(event.target.value)} placeholder="e.g. INV-1007" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                  <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>{customAmountReferenceLabel || "Invoice number"}{customAmountReferenceRequired !== false ? " *" : ""}</label>
+                  <input value={customAmountReference} onChange={(event) => setCustomAmountReference(event.target.value)} placeholder="e.g. INV-1007" className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }} />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">{customAmountLabel || "Amount to pay"}</label>
-                  <input type="number" min={Math.max(0, Number(customAmountMin ?? 1))} max={customAmountMax || undefined} step="0.01" value={customAmountValue} onChange={(event) => setCustomAmountValue(event.target.value)} placeholder={formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)} className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
-                  <p className="mt-2 text-xs text-slate-500">{customAmountMax ? `Allowed range: ${formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)} to ${formatMoney(Number(customAmountMax), money)}.` : `Minimum amount: ${formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)}.`}</p>
+                  <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>{customAmountLabel || "Amount to pay"}</label>
+                  <input type="number" min={Math.max(0, Number(customAmountMin ?? 1))} max={customAmountMax || undefined} step="0.01" value={customAmountValue} onChange={(event) => setCustomAmountValue(event.target.value)} placeholder={formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)} className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }} />
+                  <p className="mt-2 text-xs" style={{ color: defaultPopupBodyText }}>{customAmountMax ? `Allowed range: ${formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)} to ${formatMoney(Number(customAmountMax), money)}.` : `Minimum amount: ${formatMoney(Math.max(0, Number(customAmountMin ?? 1)), money)}.`}</p>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">Optional note</label>
-                  <textarea value={customAmountNote} onChange={(event) => setCustomAmountNote(event.target.value)} rows={3} placeholder="Anything the store should know about this payment" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                  <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>Optional note</label>
+                  <textarea value={customAmountNote} onChange={(event) => setCustomAmountNote(event.target.value)} rows={3} placeholder="Anything the store should know about this payment" className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }} />
                 </div>
                 {customAmountError ? <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{customAmountError}</p> : null}
               </div>
-              <div className="sticky bottom-0 flex gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+              <div className="sticky bottom-0 flex gap-3 border-t px-5 py-4 sm:px-7" style={{ backgroundColor: defaultPopupFooterBackground, borderColor: defaultPopupFooterBorder }}>
                 <button type="button" onClick={() => setCustomAmountOpen(false)} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold" style={{ borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText, backgroundColor: defaultPopupCloseBackground }}>Cancel</button>
-                <button type="button" onClick={() => void addCustomAmountToCart()} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white">Add payment</button>
+                <button type="button" onClick={() => void addCustomAmountToCart()} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold" style={{ backgroundColor: defaultPopupButtonBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupButtonText }}>Add payment</button>
               </div>
             </div>
           </div>
@@ -644,22 +647,22 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
       {detailsOpen ? (
         <div className="fixed inset-0 z-50 bg-slate-950/60 px-[35px] py-[75px] backdrop-blur-[2px] lg:px-6 lg:py-6 xl:p-8">
           <div className="flex min-h-full items-center justify-center lg:-translate-y-[10px]">
-            <div className="flex max-h-[calc(100dvh-150px)] w-full flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]">
-              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-6 lg:pt-6">
+            <div className="flex max-h-[calc(100dvh-150px)] w-full flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px] lg:max-h-[calc(100dvh-3rem)] lg:max-w-[885px] lg:rounded-[30px]" style={{ backgroundColor: defaultPopupBackground, borderColor: defaultPopupCardBorder }}>
+              <div className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-6 lg:pt-6" style={{ background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`, borderColor: defaultPopupFooterBorder }}>
                 <div
                   className="absolute inset-x-0 top-0 h-1"
                   style={{ background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})` }}
                 />
                 <div className="relative md:flex md:items-start md:justify-between md:gap-4">
                   <div className="min-w-0 md:pr-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Product details</p>
-                    <h3 className="mt-[48px] max-w-full text-[clamp(1.06rem,4.6vw,1.6rem)] font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-[1.8rem] md:mt-2 md:text-[1.8rem] md:leading-tight">{name}</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: defaultPopupLabelText }}>Product details</p>
+                    <h3 className="mt-[48px] max-w-full text-[clamp(1.06rem,4.6vw,1.6rem)] font-semibold leading-[1.08] tracking-tight sm:text-[1.8rem] md:mt-2 md:text-[1.8rem] md:leading-tight" style={{ color: defaultPopupHeaderText }}>{name}</h3>
                     <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-hidden md:flex-wrap md:overflow-visible">
-                      <span className="inline-flex shrink-0 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                      <span className="inline-flex shrink-0 rounded-full px-4 py-2 text-sm font-semibold ring-1" style={{ backgroundColor: defaultPopupPillBackground, color: defaultPopupPillText, boxShadow: `0 0 0 1px ${defaultPopupCardBorder}` }}>
                         {formatMoney(price, moneySettings)}
                       </span>
                       {trackedStock && (isOutOfStock || isLowStock) ? (
-                        <span className={`inline-flex shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${isOutOfStock ? "bg-red-50 text-red-700 ring-1 ring-red-100" : "bg-orange-50 text-orange-700 ring-1 ring-orange-100"}`}>
+                        <span className="inline-flex shrink-0 rounded-full px-4 py-2 text-sm font-semibold ring-1" style={{ backgroundColor: defaultPopupCardBackground, color: defaultPopupBodyText, boxShadow: `0 0 0 1px ${defaultPopupCardBorder}` }}>
                           {isPreorderAvailable ? "Pre-order available" : isOutOfStock ? "Out of stock" : `Only ${availableStock} left`}
                         </span>
                       ) : null}
@@ -670,7 +673,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       ref={modalCartButtonRef}
                       type="button"
                       onClick={goToCheckout}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-[1px] hover:bg-slate-50 hover:text-slate-950"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold shadow-sm transition hover:-translate-y-[1px]" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }}
                       aria-label={`Go to checkout with ${cartCount} item${cartCount === 1 ? "" : "s"}`}
                       title="Go to checkout"
                     >
@@ -681,16 +684,16 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       </svg>
                       <span>{cartCount}</span>
                     </button>
-                    <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900" aria-label="Close details">×</button>
+                    <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-full border text-xl shadow-sm transition" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }} aria-label="Close details">×</button>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-10 lg:pt-7 xl:px-8">
+              <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-10 pt-6 sm:px-6 sm:pb-11 sm:pt-7 lg:px-7 lg:pb-10 lg:pt-7 xl:px-8" style={{ backgroundColor: defaultPopupBackground }}>
                 <div className="grid gap-5 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-6">
-                  <div ref={modalImageFrameRef} className="overflow-hidden rounded-[24px] bg-slate-100 ring-1 ring-black/5">
+                  <div ref={modalImageFrameRef} className="overflow-hidden rounded-[24px] ring-1" style={{ backgroundColor: defaultPopupCardBackground, borderColor: defaultPopupCardBorder }}>
                     {hasImage ? (
-                      <img src={imageUrl!} alt={name} className="h-[11.7rem] w-full object-contain object-center bg-white p-3 sm:h-[22rem] sm:p-4 lg:h-[18rem] lg:p-3 xl:h-[19rem]" />
+                      <img src={imageUrl!} alt={name} className="h-[11.7rem] w-full object-contain object-center p-3 sm:h-[22rem] sm:p-4 lg:h-[18rem] lg:p-3 xl:h-[19rem]" style={{ backgroundColor: defaultPopupBackground }} />
                     ) : (
                       <div className="flex h-[11.7rem] w-full flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500 sm:h-[22rem] lg:h-[18rem] xl:h-[19rem]">
                         <div className="mb-2 text-5xl">📦</div>
@@ -700,10 +703,10 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                   </div>
 
                   <div className="space-y-4 lg:space-y-4">
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5 lg:p-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Description</p>
+                    <div className="rounded-[24px] border p-4 sm:p-5 lg:p-5" style={{ backgroundColor: defaultPopupCardBackground, borderColor: defaultPopupCardBorder }}>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: defaultPopupLabelText }}>Description</p>
                       <div
-                        className="mt-3 text-[15px] leading-7 text-slate-700 [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_p]:my-3"
+                        className="mt-3 text-[15px] leading-7 [&_h2]:mb-3 [&_h2]:mt-5 [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-lg [&_h3]:font-semibold [&_li]:ml-5 [&_li]:list-disc [&_p]:my-3" style={{ color: defaultPopupBodyText }}
                         dangerouslySetInnerHTML={{ __html: fullDescription }}
                       />
                     </div>
@@ -712,16 +715,16 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                 </div>
               </div>
 
-              <div className="sticky bottom-0 z-10 border-t border-slate-100 bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-5 xl:px-8">
+              <div className="sticky bottom-0 z-10 border-t px-4 py-4 sm:px-6 sm:py-5 lg:px-7 lg:py-5 xl:px-8" style={{ backgroundColor: defaultPopupFooterBackground, borderColor: defaultPopupFooterBorder }}>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="hidden flex-col gap-2 md:flex md:flex-row md:items-center">
-                    <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 lg:px-7">Back to menu</button>
+                    <button type="button" onClick={() => setDetailsOpen(false)} className="inline-flex min-h-12 items-center justify-center rounded-xl border px-6 py-3 text-sm font-medium transition lg:px-7" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }}>Back to menu</button>
                   </div>
                   <div className="flex w-full items-center gap-3 md:w-auto md:justify-end">
                     <button
                       type="button"
                       onClick={() => void shareProduct()}
-                      className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-[1px] hover:bg-slate-50 md:flex-none lg:px-7"
+                      className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition hover:-translate-y-[1px] md:flex-none lg:px-7" style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }}
                       aria-label={`Share ${name}`}
                     >
                       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -734,7 +737,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                       <span>Share</span>
                     </button>
                     {isOutOfStock && !isPreorderAvailable ? (
-                      <span className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-500 md:flex-none lg:px-8">
+                      <span className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold md:flex-none lg:px-8" style={{ backgroundColor: defaultPopupCardBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupBodyText }}>
                         Out of stock
                       </span>
                     ) : (
@@ -743,7 +746,7 @@ export default function ProductCard({ id, name, description, imageUrl, price, te
                         onClick={() => { void addToCart("modal"); }}
                         disabled={buttonState === "adding"}
                         className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border bg-white px-5 py-3 text-sm font-semibold transition hover:-translate-y-[1px] hover:ring-2 disabled:cursor-wait disabled:opacity-70 md:flex-none lg:px-8"
-                        style={{ borderColor: cleanAccentBorder, color: addButtonText, backgroundColor: addButtonBackground, boxShadow: "none", outlineColor: cleanAccentHairline }}
+                        style={{ borderColor: defaultPopupButtonOutline, color: defaultPopupButtonText, backgroundColor: defaultPopupButtonBackground, boxShadow: "none", outlineColor: defaultPopupButtonOutline }}
                       >
                         {buttonState === "adding" ? "Adding..." : isPreorderAvailable ? "Pre-order" : "Add"}
                       </button>

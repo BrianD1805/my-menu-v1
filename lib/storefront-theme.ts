@@ -205,6 +205,35 @@ export type StorefrontTheme = Partial<Record<StorefrontThemeKey, string>> & {
   mobileAboutUsTextColor?: string;
 };
 
+
+export const DEFAULT_STOREFRONT_POPUP_THEME: Partial<Record<StorefrontThemeKey, string>> = {
+  defaultPopupBackground: "#FFFFFF",
+  defaultPopupTopEdgeLeft: "#FBBF24",
+  defaultPopupTopEdgeMiddle: "#334155",
+  defaultPopupTopEdgeRight: "#10B981",
+  defaultPopupHeaderBackground: "#FFFFFF",
+  defaultPopupHeaderBlend: "#FFFBEB",
+  defaultPopupHeaderSoftEnd: "#ECFDF5",
+  defaultPopupHeaderText: "#020617",
+  defaultPopupLabelText: "#B45309",
+  defaultPopupBodyText: "#475569",
+  defaultPopupCardBackground: "#FFFBEB",
+  defaultPopupCardBorder: "#FDE68A",
+  defaultPopupPillBackground: "#10B981",
+  defaultPopupPillText: "#FFFFFF",
+  defaultPopupFooterBackground: "#FFFFFF",
+  defaultPopupFooterBorder: "#F1F5F9",
+  defaultPopupButtonBackground: "#0F172A",
+  defaultPopupButtonText: "#FFFFFF",
+  defaultPopupButtonOutline: "#D9C7A3",
+  defaultPopupCloseBackground: "#FFFFFF",
+  defaultPopupCloseText: "#475569",
+};
+
+export const DEFAULT_STOREFRONT_POPUP_KEYS = Object.keys(
+  DEFAULT_STOREFRONT_POPUP_THEME,
+) as StorefrontThemeKey[];
+
 export function isHexColor(value: unknown): value is string {
   return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value.trim());
 }
@@ -335,6 +364,13 @@ export function normalizeStorefrontTheme(value: unknown): StorefrontTheme | null
   if (mobileAboutUsTextAlign) output.mobileAboutUsTextAlign = mobileAboutUsTextAlign;
   if (isHexColor(input.mobileAboutUsBackground)) output.mobileAboutUsBackground = String(input.mobileAboutUsBackground).trim().toUpperCase();
   if (isHexColor(input.mobileAboutUsTextColor)) output.mobileAboutUsTextColor = String(input.mobileAboutUsTextColor).trim().toUpperCase();
+
+  const hadAnyThemeInput = Object.keys(output).length > 0 || Object.keys(input).some((key) => STOREFRONT_THEME_KEYS.includes(key as StorefrontThemeKey));
+  if (hadAnyThemeInput) {
+    for (const key of DEFAULT_STOREFRONT_POPUP_KEYS) {
+      if (!output[key]) output[key] = DEFAULT_STOREFRONT_POPUP_THEME[key];
+    }
+  }
 
   return Object.keys(output).length ? output : null;
 }

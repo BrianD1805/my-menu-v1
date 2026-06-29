@@ -1365,7 +1365,7 @@ export default function MenuBrowser({
         paddingLeft: pixelSetting(storefrontTheme?.aboutUsPaddingDesktopLeft, 0, 0, 180),
       };
   const defaultPopupBackground = softerPanelColor(
-    storefrontTheme?.defaultPopupBackground ?? storefrontTheme?.rewardsPopupBackground ?? storefrontTheme?.offersPopupBackground,
+    storefrontTheme?.defaultPopupBackground,
     "#FFFFFF",
     0.35,
   );
@@ -1378,7 +1378,7 @@ export default function MenuBrowser({
     "#334155",
   );
   const defaultPopupTopEdgeRight = normalizeThemeColor(
-    storefrontTheme?.defaultPopupTopEdgeRight ?? storefrontTheme?.storefrontPopupTopEffect,
+    storefrontTheme?.defaultPopupTopEdgeRight,
     "#10B981",
   );
   const defaultPopupHeaderBackground = softerPanelColor(
@@ -3033,14 +3033,14 @@ export default function MenuBrowser({
               <div
                 className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6"
                 style={{
-                  background: `linear-gradient(135deg, ${rewardsPopupHeaderBackground}, ${rewardsPopupHeaderBlend})`,
-                  borderColor: rewardsPopupFooterBorder,
-                  color: rewardsPopupHeaderText,
+                  background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`,
+                  borderColor: defaultPopupFooterBorder,
+                  color: defaultPopupHeaderText,
                 }}
               >
                 <div
                   className="absolute inset-x-0 top-0 h-1"
-                  style={{ background: `linear-gradient(90deg, ${rewardsPopupTopEdge}, ${rewardsPopupHeaderBackground}, ${rewardsPopupTopEdge})` }}
+                  style={{ background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})` }}
                 />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
@@ -3621,17 +3621,18 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[28px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[28px] border shadow-[0_30px_90px_rgba(15,23,42,0.28)]"
+              style={{ backgroundColor: defaultPopupBackground, borderColor: defaultPopupCardBorder, color: defaultPopupBodyText }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-blue-50/60 px-5 pb-5 pt-5 sm:px-7">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-700 via-slate-700 to-emerald-500" />
+              <div className="sticky top-0 z-10 border-b px-5 pb-5 pt-5 sm:px-7" style={{ background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`, borderColor: defaultPopupFooterBorder }}>
+                <div className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})` }} />
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: defaultPopupLabelText }}>
                       Customer payment
                     </p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight" style={{ color: defaultPopupHeaderText }}>
                       {customAmountPickerProduct.product.name}
                     </h3>
                     <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
@@ -3643,7 +3644,8 @@ export default function MenuBrowser({
                   <button
                     type="button"
                     onClick={() => setCustomAmountPickerProduct(null)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-slate-500 shadow-sm"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl shadow-sm"
+                    style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }}
                     aria-label="Close payment amount"
                   >
                     ×
@@ -3653,7 +3655,7 @@ export default function MenuBrowser({
               <div className="modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-6 sm:px-7">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>
                       Your name *
                     </label>
                     <input
@@ -3662,11 +3664,12 @@ export default function MenuBrowser({
                         setCustomAmountCustomerName(event.target.value)
                       }
                       placeholder="Full name"
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2"
+                      style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }}
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>
                       Phone number *
                     </label>
                     <input
@@ -3675,12 +3678,13 @@ export default function MenuBrowser({
                         setCustomAmountCustomerPhone(event.target.value)
                       }
                       placeholder="Phone number"
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2"
+                      style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>
                     {customAmountPickerProduct.product
                       .custom_amount_reference_label || "Invoice number"}{" "}
                     *
@@ -3691,11 +3695,12 @@ export default function MenuBrowser({
                       setCustomAmountReference(event.target.value)
                     }
                     placeholder="e.g. INV-1007"
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2"
+                    style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }}
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>
                     {customAmountPickerProduct.product.custom_amount_label ||
                       "Amount to pay"}
                   </label>
@@ -3727,11 +3732,12 @@ export default function MenuBrowser({
                       ),
                       moneySettings,
                     )}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2"
+                    style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }}
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  <label className="mb-2 block text-sm font-semibold" style={{ color: defaultPopupHeaderText }}>
                     Optional note
                   </label>
                   <textarea
@@ -3740,7 +3746,8 @@ export default function MenuBrowser({
                       setCustomAmountNote(event.target.value)
                     }
                     rows={3}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2"
+                    style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupCardBorder, color: defaultPopupHeaderText }}
                   />
                 </div>
                 {customAmountError ? (
@@ -3749,7 +3756,7 @@ export default function MenuBrowser({
                   </p>
                 ) : null}
               </div>
-              <div className="sticky bottom-0 flex gap-3 border-t border-slate-100 bg-white px-5 py-4 sm:px-7">
+              <div className="sticky bottom-0 flex gap-3 border-t px-5 py-4 sm:px-7" style={{ backgroundColor: defaultPopupFooterBackground, borderColor: defaultPopupFooterBorder }}>
                 <button
                   type="button"
                   onClick={() => setCustomAmountPickerProduct(null)}
@@ -3761,7 +3768,8 @@ export default function MenuBrowser({
                   type="button"
                   onClick={startStandaloneCustomerPayment}
                   disabled={customAmountSubmitting}
-                  className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-70"
+                  className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border px-5 py-3 text-sm font-semibold disabled:cursor-wait disabled:opacity-70"
+                  style={{ backgroundColor: defaultPopupButtonBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupButtonText }}
                 >
                   {customAmountSubmitting
                     ? "Opening payment..."
@@ -3783,14 +3791,15 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[720px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              style={{ backgroundColor: defaultPopupBackground, borderColor: defaultPopupCardBorder, color: defaultPopupBodyText }}
               onClick={(event) => event.stopPropagation()}
             >
               <div
                 className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-7"
                 style={{
-                  borderColor: brandBorder,
-                  background: `linear-gradient(135deg, #ffffff 0%, ${brandSurface} 52%, ${blendHex(brandAccent, "#FFFFFF", 0.88)} 100%)`,
+                  borderColor: defaultPopupFooterBorder,
+                  background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`,
                 }}
               >
                 <div
@@ -3801,11 +3810,11 @@ export default function MenuBrowser({
                 />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: defaultPopupLabelText }}>
                       {variantPickerProduct.product.variant_label ||
                         "Choose an option"}
                     </p>
-                    <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                    <h3 className="mt-2 pr-4 text-2xl font-semibold tracking-tight sm:text-[1.8rem]" style={{ color: defaultPopupHeaderText }}>
                       {variantPickerProduct.product.name}
                     </h3>
                     <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
@@ -3816,8 +3825,8 @@ export default function MenuBrowser({
                   <button
                     type="button"
                     onClick={() => setVariantPickerProduct(null)}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-white/95 text-xl shadow-sm transition hover:bg-white"
-                    style={{ borderColor: brandBorder, color: brandPrimary }}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-xl shadow-sm transition hover:-translate-y-[1px]"
+                    style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }}
                     aria-label="Close variants"
                   >
                     ×
@@ -3959,17 +3968,17 @@ export default function MenuBrowser({
                 </div>
               </div>
               <div
-                className="sticky bottom-0 z-10 border-t bg-white px-4 py-4 sm:px-6 sm:py-5 lg:px-7"
-                style={{ borderColor: brandBorder }}
+                className="sticky bottom-0 z-10 border-t px-4 py-4 sm:px-6 sm:py-5 lg:px-7"
+                style={{ backgroundColor: defaultPopupFooterBackground, borderColor: defaultPopupFooterBorder }}
               >
                 <button
                   type="button"
                   onClick={() => setVariantPickerProduct(null)}
                   className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border px-7 py-3 text-sm font-semibold transition hover:-translate-y-[1px]"
                   style={{
-                    borderColor: brandAccent,
-                    backgroundColor: blendHex(brandAccent, "#FFFFFF", 0.88),
-                    color: brandPrimary,
+                    borderColor: defaultPopupButtonOutline,
+                    backgroundColor: defaultPopupCloseBackground,
+                    color: defaultPopupCloseText,
                   }}
                 >
                   Back to menu
@@ -4384,17 +4393,18 @@ export default function MenuBrowser({
         >
           <div className="flex min-h-full items-center justify-center">
             <div
-              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border border-black/5 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              className="flex max-h-[calc(100dvh-150px)] w-full max-w-[1120px] flex-col overflow-hidden rounded-[24px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] sm:rounded-[28px]"
+              style={{ backgroundColor: defaultPopupBackground, borderColor: defaultPopupCardBorder, color: defaultPopupBodyText }}
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="sticky top-0 z-10 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50 to-emerald-50/50 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6">
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-slate-700 to-emerald-400" />
+              <div className="sticky top-0 z-10 border-b px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5 lg:px-8 lg:pb-7 lg:pt-6" style={{ background: `linear-gradient(135deg, ${defaultPopupHeaderBackground}, ${defaultPopupHeaderBlend}, ${defaultPopupHeaderSoftEnd})`, borderColor: defaultPopupFooterBorder }}>
+                <div className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${defaultPopupTopEdgeLeft}, ${defaultPopupTopEdgeMiddle}, ${defaultPopupTopEdgeRight})` }} />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: defaultPopupLabelText }}>
                       Search menu
                     </p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.8rem]">
+                    <h3 className="mt-2 text-2xl font-semibold tracking-tight sm:text-[1.8rem]" style={{ color: defaultPopupHeaderText }}>
                       Find something quickly
                     </h3>
                     <p className="mt-2 text-sm leading-6" style={{ color: defaultPopupBodyText }}>
@@ -4448,7 +4458,8 @@ export default function MenuBrowser({
                     <button
                       type="button"
                       onClick={() => setSearchOpen(false)}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-xl text-slate-500 shadow-sm transition hover:bg-white hover:text-slate-900"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-full border text-xl shadow-sm transition hover:-translate-y-[1px]"
+                      style={{ backgroundColor: defaultPopupCloseBackground, borderColor: defaultPopupButtonOutline, color: defaultPopupCloseText }}
                       aria-label="Close search"
                     >
                       ×

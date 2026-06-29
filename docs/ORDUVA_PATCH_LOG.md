@@ -869,3 +869,39 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Renamed the Favourites colour group to Favourites & Buy Again so those two storefront strips remain together under the existing favourites styling exception.
 - Updated storefront rewards/offers/pre-order popup styling to read from the shared default popup colour rules.
 - No Supabase SQL required.
+
+## Ver-0.256A - Storefront popup default fallback enforcement
+
+- Patch type: touched-files-only ZIP.
+- Made the General popup colour set a real fallback/default for existing stores by auto-filling missing `defaultPopup*` colours from the Pre-order popup style when storefront theme JSON is normalised.
+- Removed old Rewards/Offers popup colour fallback paths from storefront rendering so Rewards and Offers/Discounts now use the General popup colours.
+- Updated additional storefront popups to use the General popup sticky header/body/footer colour rules: Search menu, Variant picker and Customer payment/custom amount popup.
+- Confirmed controlled normal storefront popups: Product Details, Pre-order, Variant picker, Customer payment/custom amount, Search menu, Rewards and Offers/Discounts.
+- Confirmed exception: Favourites & Buy Again remains on the separate existing Favourites & Buy Again colour group.
+- Did not touch checkout, payment providers, stock, pre-order logic, receipts, push notifications, database schema or service worker/PWA files.
+- No Supabase SQL required.
+
+## Ver-0.256B - Checkout offers popup general popup styling
+
+- Patch type: touched-files-only ZIP.
+- Applied the General popup colour/default rules to the checkout View offers / discounts popup.
+- Checkout View offers now uses the shared General popup sticky header, top edge, body cards, sticky footer, button background, button text and button outline colours.
+- Checked checkout-specific popup surfaces: the View offers / discounts modal is now controlled by General popup; checkout loading overlays remain unchanged because they are route/loading status overlays, not storefront offer/customer-action popups.
+- Left Favourites & Buy Again separate under the existing Favourites & Buy Again colour group.
+- Did not touch checkout totals, payment provider amount logic, stock, pre-order logic, receipts, push notifications, database schema or service worker/PWA files.
+- No Supabase SQL required.
+
+## Ver-0.256C - Product details popup default colour enforcement
+- Fixed Product Details / More info popup so it now uses the General popup default colours directly instead of hardcoded white/slate/emerald classes.
+- Applied General popup colours to the Product Details sticky header, label text, title text, body, description card, footer, close/cart controls and footer buttons.
+- Confirmed the reference colours are: top edge #FBBF24 → #334155 → #10B981, header #FFFFFF → #FFFBEB → #ECFDF5, title #020617 and label #B45309.
+- Left Favourites & Buy Again separate.
+- Did not touch checkout totals, payments, stock, pre-orders, receipts, push notifications, database schema or service-worker/PWA files.
+
+## Ver-0.256D - Non-checkout customer payment popup default styling
+
+- Patch type: touched-files-only ZIP.
+- Applied the General popup default colours to the non-checkout customer payment popups.
+- Updated standalone customer payment/customer amount popups so the sticky header, top edge, label/title text, body, input borders, footer and buttons use the General popup colour set.
+- Kept checkout totals, payment provider amount logic, stock, pre-order logic, receipts, push notifications, database schema and service-worker/PWA files untouched.
+- No Supabase SQL required.

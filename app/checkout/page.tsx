@@ -21,6 +21,11 @@ import {
   isPreorderProduct,
   normalizePreorderDepositPercent,
 } from "@/lib/preorders";
+import {
+  DEFAULT_STOREFRONT_POPUP_THEME,
+  normalizeThemeColor,
+  type StorefrontTheme,
+} from "@/lib/storefront-theme";
 
 type CartItem = {
   productId: string;
@@ -188,17 +193,11 @@ type TenantViewSettings = MoneyFormatSettings & {
   discountRules?: DiscountRule[];
   preordersEnabled?: boolean;
   preorderDepositPercent?: number | null;
+  storefrontTheme?: StorefrontTheme | null;
 };
 
 type PaymentProvider =
-  | "cash"
-  | "cod"
-  | "stripe"
-  | "yoco"
-  | "ozow"
-  | "payfast"
-  | "mpesa"
-  | "daraja";
+  "cash" | "cod" | "stripe" | "yoco" | "ozow" | "payfast" | "mpesa" | "daraja";
 
 type PaymentOption = {
   id: PaymentProvider;
@@ -881,6 +880,87 @@ export default function CheckoutPage() {
   const checkoutBackground = tenantSettings.backgroundTint || "#F8F4F0";
   const checkoutBorder = tenantSettings.borderColor || "#D9C7A3";
   const checkoutText = tenantSettings.textColor || "#2B2B2B";
+  const checkoutPopupTheme = tenantSettings.storefrontTheme || {};
+  const checkoutPopupTopEdgeLeft = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupTopEdgeLeft,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupTopEdgeLeft || "#FBBF24",
+  );
+  const checkoutPopupTopEdgeMiddle = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupTopEdgeMiddle,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupTopEdgeMiddle || "#334155",
+  );
+  const checkoutPopupTopEdgeRight = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupTopEdgeRight,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupTopEdgeRight || "#10B981",
+  );
+  const checkoutPopupHeaderBackground = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupHeaderBackground,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupHeaderBackground || "#FFFFFF",
+  );
+  const checkoutPopupHeaderBlend = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupHeaderBlend,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupHeaderBlend || "#FFFBEB",
+  );
+  const checkoutPopupHeaderSoftEnd = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupHeaderSoftEnd,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupHeaderSoftEnd || "#ECFDF5",
+  );
+  const checkoutPopupHeaderText = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupHeaderText,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupHeaderText || "#020617",
+  );
+  const checkoutPopupLabelText = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupLabelText,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupLabelText || "#B45309",
+  );
+  const checkoutPopupBodyText = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupBodyText,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupBodyText || "#475569",
+  );
+  const checkoutPopupCardBackground = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupCardBackground,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupCardBackground || "#FFFBEB",
+  );
+  const checkoutPopupCardBorder = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupCardBorder,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupCardBorder || "#FDE68A",
+  );
+  const checkoutPopupPillBackground = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupPillBackground,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupPillBackground || "#10B981",
+  );
+  const checkoutPopupPillText = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupPillText,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupPillText || "#FFFFFF",
+  );
+  const checkoutPopupFooterBackground = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupFooterBackground,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupFooterBackground || "#FFFFFF",
+  );
+  const checkoutPopupFooterBorder = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupFooterBorder,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupFooterBorder || "#F1F5F9",
+  );
+  const checkoutPopupButtonBackground = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupButtonBackground,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupButtonBackground || "#0F172A",
+  );
+  const checkoutPopupButtonText = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupButtonText,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupButtonText || "#FFFFFF",
+  );
+  const checkoutPopupButtonOutline = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupButtonOutline,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupButtonOutline || "#D9C7A3",
+  );
+  const checkoutPopupCloseBackground = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupCloseBackground,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupCloseBackground || "#FFFFFF",
+  );
+  const checkoutPopupCloseText = normalizeThemeColor(
+    checkoutPopupTheme.defaultPopupCloseText,
+    DEFAULT_STOREFRONT_POPUP_THEME.defaultPopupCloseText || "#475569",
+  );
   const trialState = tenantSettings.trialState || null;
   const checkoutBlockedByTrial = Boolean(
     trialState?.checkoutBlocked || trialState?.isTrialExpired,
@@ -2056,38 +2136,76 @@ export default function CheckoutPage() {
           onClick={() => setDiscountsModalOpen(false)}
         >
           <div
-            className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] bg-white shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl"
+            className="flex max-h-[calc(100dvh-150px)] w-full max-w-md flex-col overflow-hidden rounded-[30px] border shadow-[0_28px_90px_rgba(15,23,42,0.38)] sm:max-w-lg lg:max-w-2xl"
+            style={{
+              backgroundColor: checkoutPopupFooterBackground,
+              borderColor: checkoutPopupButtonOutline,
+            }}
             onClick={(event) => event.stopPropagation()}
           >
             <div
-              className="sticky top-0 z-10 overflow-hidden px-5 py-5 text-white sm:px-7 sm:py-6"
+              className="sticky top-0 z-10 overflow-hidden border-b px-5 py-5 sm:px-7 sm:py-6"
               style={{
-                background: `linear-gradient(135deg, ${checkoutAccent} 0%, ${checkoutPrimary} 100%)`,
+                background: `linear-gradient(135deg, ${checkoutPopupHeaderBackground} 0%, ${checkoutPopupHeaderBlend} 56%, ${checkoutPopupHeaderSoftEnd} 100%)`,
+                borderColor: checkoutPopupFooterBorder,
               }}
             >
+              <div
+                className="absolute inset-x-0 top-0 h-1"
+                style={{
+                  background: `linear-gradient(90deg, ${checkoutPopupTopEdgeLeft} 0%, ${checkoutPopupTopEdgeMiddle} 52%, ${checkoutPopupTopEdgeRight} 100%)`,
+                }}
+              />
               <button
                 type="button"
                 onClick={() => setDiscountsModalOpen(false)}
-                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl font-bold text-white ring-1 ring-white/25"
+                className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border text-2xl font-bold shadow-sm"
+                style={{
+                  backgroundColor: checkoutPopupCloseBackground,
+                  borderColor: checkoutPopupButtonOutline,
+                  color: checkoutPopupCloseText,
+                }}
                 aria-label="Close discounts"
               >
                 ×
               </button>
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/18 text-3xl ring-1 ring-white/30">
+              <div
+                className="inline-flex h-14 w-14 items-center justify-center rounded-2xl text-3xl ring-1"
+                style={{
+                  backgroundColor: checkoutPopupCardBackground,
+                  color: checkoutPopupLabelText,
+                  borderColor: checkoutPopupCardBorder,
+                }}
+              >
                 %
               </div>
-              <p className="mt-4 text-[11px] font-black uppercase tracking-[0.22em] text-white/80">
+              <p
+                className="mt-4 text-[11px] font-black uppercase tracking-[0.22em]"
+                style={{ color: checkoutPopupLabelText }}
+              >
                 Discounts
               </p>
-              <h3 className="mt-1 pr-10 text-2xl font-black tracking-tight">
+              <h3
+                className="mt-1 pr-10 text-2xl font-black tracking-tight"
+                style={{ color: checkoutPopupHeaderText }}
+              >
                 {tenantSettings.discountPopupTitle || "Available offers"}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-white/88">
+              <p
+                className="mt-2 text-sm leading-6"
+                style={{ color: checkoutPopupBodyText }}
+              >
                 {tenantSettings.discountPopupMessage ||
                   "Choose an eligible discount for this basket."}
               </p>
             </div>
-            <div className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-10 pt-7 sm:px-7 sm:pb-12">
+            <div
+              className="modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-7 pt-7 sm:px-7"
+              style={{
+                backgroundColor: checkoutPopupHeaderBackground,
+                color: checkoutPopupBodyText,
+              }}
+            >
               <div className="grid gap-3">
                 {visibleDiscounts.length ? (
                   visibleDiscounts.map(({ rule, amount }) => (
@@ -2098,14 +2216,25 @@ export default function CheckoutPage() {
                         setDiscountCode(rule.code || "");
                         setDiscountsModalOpen(false);
                       }}
-                      className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-left text-sm text-rose-950 transition hover:bg-rose-100"
+                      className="rounded-[22px] border p-4 text-left text-sm transition hover:brightness-[0.98]"
+                      style={{
+                        backgroundColor: checkoutPopupCardBackground,
+                        borderColor: checkoutPopupCardBorder,
+                        color: checkoutPopupBodyText,
+                      }}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-black text-slate-950">
+                          <p
+                            className="font-black"
+                            style={{ color: checkoutPopupHeaderText }}
+                          >
                             {rule.name}
                           </p>
-                          <p className="mt-1 text-xs leading-5 text-rose-900">
+                          <p
+                            className="mt-1 text-xs leading-5"
+                            style={{ color: checkoutPopupBodyText }}
+                          >
                             {rule.scope === "combo"
                               ? "Combination discount"
                               : rule.scope === "product"
@@ -2126,23 +2255,49 @@ export default function CheckoutPage() {
                             </p>
                           )}
                         </div>
-                        <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-rose-800">
+                        <span
+                          className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em]"
+                          style={{
+                            backgroundColor: checkoutPopupPillBackground,
+                            color: checkoutPopupPillText,
+                          }}
+                        >
                           Save {formatMoney(amount, tenantSettings)}
                         </span>
                       </div>
                     </button>
                   ))
                 ) : (
-                  <p className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                  <p
+                    className="rounded-2xl border p-4 text-sm"
+                    style={{
+                      backgroundColor: checkoutPopupCardBackground,
+                      borderColor: checkoutPopupCardBorder,
+                      color: checkoutPopupBodyText,
+                    }}
+                  >
                     No discounts currently apply to this basket. Try adding the
                     eligible product or combination.
                   </p>
                 )}
               </div>
+            </div>
+            <div
+              className="sticky bottom-0 z-10 border-t px-5 py-4 sm:px-7"
+              style={{
+                backgroundColor: checkoutPopupFooterBackground,
+                borderColor: checkoutPopupFooterBorder,
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setDiscountsModalOpen(false)}
-                className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl border px-5 py-3 text-sm font-black"
+                style={{
+                  backgroundColor: checkoutPopupButtonBackground,
+                  borderColor: checkoutPopupButtonOutline,
+                  color: checkoutPopupButtonText,
+                }}
               >
                 Close
               </button>
