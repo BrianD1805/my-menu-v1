@@ -916,3 +916,15 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Bumped storefront service worker cache names to `ver-0-258` so old page/runtime caches are cleaned up.
 - Updated storefront service-worker registration to request updates immediately and reload once when the new worker takes control, helping the visible version number update without repeated manual refreshes.
 - Did not touch checkout, payments, stock, pre-orders, receipts, push notifications or database schema.
+
+## Ver-0.259 - Custom domain add-on foundation
+
+- Patch type: changed/new files only.
+- Added a Store Admin Custom domain add-on section under Settings so store owners can request an external domain and see the fixed monthly add-on pricing.
+- Added currency equivalents for the custom domain add-on: USD 5, ZAR 95, KES 650, GBP 4 and EUR 5 per month.
+- Added a server-side custom domain request API for Store Admins.
+- Added Owner Platform custom domain management page at `/platform/custom-domains` to review requests, track billing status, add owner notes and move requests through requested, pending DNS, approved and active states.
+- Added Stripe add-on environment key references for each currency on the Owner Platform custom domains page.
+- Added a `tenant_custom_domains` table migration with RLS enabled and service_role-only grants.
+- Kept routing/Netlify activation manual for this foundation build because Netlify custom domain alias capacity must be controlled.
+- Did not touch checkout, payments, stock, pre-orders, receipts, push notifications or service-worker/PWA files.

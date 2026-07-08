@@ -51,6 +51,7 @@ const OWNER_MENU_SECTIONS: Array<{ title: string; description: string; links: Ow
     description: "Billing, referrals and affiliate work.",
     links: [
       { href: "/platform/billing", label: "Billing", detail: "Plans and payments" },
+      { href: "/platform/custom-domains", label: "Custom domains", detail: "Paid domain add-ons" },
       { href: "/platform/referrals", label: "Referrals", detail: "Tenant referrals" },
       { href: "/platform/affiliates", label: "Affiliates", detail: "Affiliate applications" },
     ],

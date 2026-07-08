@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-258';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-258';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-258';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-259';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-259';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-259';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -200,7 +200,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname === '/api/products') {
-    // Ver-0.258: storefront products/prices/offers must be checked live on every load.
+    // Ver-0.259: storefront products/prices/offers must be checked live on every load.
     // Local cache is only a fallback for genuine offline/network failures.
     event.respondWith(networkFirstNoStore(request));
     return;
@@ -258,4 +258,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Orduva Ver-0.258 storefront startup checks: live products/prices/offers on every load
+// Orduva Ver-0.259 storefront startup checks: live products/prices/offers on every load

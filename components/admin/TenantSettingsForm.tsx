@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import PushNotificationSettingsPanel from "@/components/admin/PushNotificationSettingsPanel";
+import CustomDomainSettingsPanel from "@/components/admin/CustomDomainSettingsPanel";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import {
   Fragment,
@@ -3916,6 +3917,14 @@ export default function TenantSettingsForm({
               </div>
             </div>
           </div>
+        </Section>
+
+        <Section
+          id="custom-domain-addon"
+          title="Custom domain add-on"
+          showSave={false}
+        >
+          <CustomDomainSettingsPanel currencyCode={form.currencyCode} />
         </Section>
 
         <Section
@@ -7856,6 +7865,12 @@ const SETTINGS_MENU_ITEMS = [
     help: "Page title, meta description, schema, favicon and Google tracking.",
   },
   {
+    id: "custom-domain-addon",
+    group: "Domains",
+    title: "Custom domain add-on",
+    help: "Request a paid custom domain add-on and track approval/DNS status.",
+  },
+  {
     id: "customer-rewards-program",
     group: "Rewards",
     title: "Customer rewards programme",
@@ -7933,6 +7948,11 @@ const SETTINGS_SECTION_META: Record<
   "storefront-seo": {
     group: "SEO",
     help: "Search title, meta description, structured data, favicon and Google tracking.",
+    accent: "border border-slate-200 bg-slate-50 text-slate-700",
+  },
+  "custom-domain-addon": {
+    group: "Domains",
+    help: "Request a paid custom domain add-on and track billing, DNS and owner approval.",
     accent: "border border-slate-200 bg-slate-50 text-slate-700",
   },
   "customer-rewards-program": {

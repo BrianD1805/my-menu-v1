@@ -7,7 +7,7 @@ export default function StorefrontPwaRegistrar() {
     if (typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;
 
-    const reloadFlag = "orduva_storefront_sw_reloaded_for_0_258";
+    const reloadFlag = "orduva_storefront_sw_reloaded_for_0_259";
     const handleControllerChange = () => {
       try {
         if (window.sessionStorage.getItem(reloadFlag) === "1") return;
@@ -23,7 +23,7 @@ export default function StorefrontPwaRegistrar() {
     navigator.serviceWorker
       .register("/sw.js", { scope: "/" })
       .then((registration) => {
-        // Ver-0.258: ask for the newest service worker immediately. The worker
+        // Ver-0.259: ask for the newest service worker immediately. The worker
         // uses new cache names and live /api/products checks so product/price
         // changes and visible version updates do not get stuck behind old caches.
         registration.update().catch(() => undefined);
