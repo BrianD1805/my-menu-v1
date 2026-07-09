@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { CUSTOM_DOMAIN_ADDON_MONTHLY, customDomainAddonPrice, normaliseCustomDomain, type CustomDomainBillingStatus, type CustomDomainStatus } from "@/lib/custom-domain-addon";
-import { formatPlanPrice, getPricingCurrency, type PricingCurrencyCode } from "@/lib/pricing";
+import { useEffect, useState } from "react";
+import { normaliseCustomDomain, type CustomDomainAddonPrice, type CustomDomainBillingStatus, type CustomDomainStatus } from "@/lib/custom-domain-addon";
+import { formatPlanPrice } from "@/lib/pricing";
 
 type DomainRow = {
   id: string;
@@ -23,8 +23,6 @@ type DomainRow = {
   updated_at: string | null;
 };
 
-const CURRENCY_ORDER: PricingCurrencyCode[] = ["USD", "ZAR", "KES", "GBP", "EUR"];
-
 function statusLabel(status: string) {
   return String(status || "requested").replace(/_/g, " ");
 }
@@ -33,18 +31,29 @@ function statusClass(status: string) {
   const clean = String(status || "").toLowerCase();
   if (clean === "active" || clean === "approved") return "border-emerald-200 bg-emerald-50 text-emerald-800";
   if (clean === "rejected" || clean === "disabled") return "border-red-200 bg-red-50 text-red-800";
-  if (clean.includes("pending")) return "border-amber-200 bg-amber-50 text-amber-800";
+  if (clean.includes("pending") || clean === "requested") return "border-amber-200 bg-amber-50 text-amber-800";
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
-function money(amount: number, currencyCode: string) {
-  const currency = getPricingCurrency(currencyCode);
-  return formatPlanPrice(amount, currency.code, { forceDecimals: currency.decimalPlaces > 0 });
+function money(amount: number) {
+  return formatPlanPrice(amount, "USD", { forceDecimals: true });
 }
 
-export default function CustomDomainSettingsPanel({ currencyCode }: { currencyCode: string }) {
+function nextStepText(domain: DomainRow) {
+  if (domain.status === "active") return "Your custom domain is active. Keep your DNS records in place.";
+  if (domain.status === "rejected") return "This request was not approved. Check the Orduva note below.";
+  if (domain.status === "disabled") return "This custom domain has been disabled.";
+  if (domain.billing_status !== "active" && domain.billing_status !== "manual") return "Next step: Orduva will arrange the USD add-on billing through Stripe before DNS activation.";
+  if (domain.status === "pending_dns") return "Next step: update your domain DNS using the records Orduva provides.";
+  if (domain.status === "pending_owner_review") return "Next step: Orduva will check DNS and activate the domain when ready.";
+  if (domain.status === "approved") return "Approved. Orduva will activate the domain once the final DNS and Netlify checks are complete.";
+  return "Request received. Orduva will review the add-on billing and DNS requirements.";
+}
+
+export default function CustomDomainSettingsPanel({ currencyCode: _currencyCode }: { currencyCode: string }) {
   const [domains, setDomains] = useState<DomainRow[]>([]);
   const [dnsTarget, setDnsTarget] = useState("orduva.com");
+  const [price, setPrice] = useState<CustomDomainAddonPrice | null>(null);
   const [domainName, setDomainName] = useState("");
   const [tenantNotes, setTenantNotes] = useState("");
   const [loading, setLoading] = useState(true);
@@ -52,17 +61,16 @@ export default function CustomDomainSettingsPanel({ currencyCode }: { currencyCo
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const selectedPrice = useMemo(() => customDomainAddonPrice(currencyCode), [currencyCode]);
-
   async function load() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/admin/custom-domains?currency=${encodeURIComponent(selectedPrice.currencyCode)}`, { cache: "no-store" });
+      const response = await fetch("/api/admin/custom-domains", { cache: "no-store" });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload?.error || "Could not load custom domain requests.");
       setDomains(payload?.domains || []);
       setDnsTarget(payload?.dnsTarget || "orduva.com");
+      setPrice(payload?.price || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load custom domain requests.");
     } finally {
@@ -72,8 +80,7 @@ export default function CustomDomainSettingsPanel({ currencyCode }: { currencyCo
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPrice.currencyCode]);
+  }, []);
 
   async function requestDomain() {
     setSaving(true);
@@ -84,13 +91,13 @@ export default function CustomDomainSettingsPanel({ currencyCode }: { currencyCo
       const response = await fetch("/api/admin/custom-domains", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domainName: cleanDomain, tenantNotes, currencyCode: selectedPrice.currencyCode }),
+        body: JSON.stringify({ domainName: cleanDomain, tenantNotes }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload?.error || "Could not submit the custom domain request.");
       setDomainName("");
       setTenantNotes("");
-      setMessage("Custom domain request saved. Orduva must approve the add-on and DNS before the domain goes live.");
+      setMessage("Custom domain request saved. Orduva will set up the USD monthly add-on billing before DNS activation.");
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit the custom domain request.");
@@ -99,63 +106,37 @@ export default function CustomDomainSettingsPanel({ currencyCode }: { currencyCo
     }
   }
 
+  const currentLabel = price?.label || "$7.50 / month";
+
   return (
     <div className="grid gap-5">
       <div className="rounded-[24px] border border-[#336699]/20 bg-[#EAF3FA] p-4 text-sm leading-6 text-[#28547D]">
         <p className="text-base font-black text-slate-950">Custom domain add-on</p>
         <p className="mt-1">
-          Stores can request their own domain as a paid Orduva add-on. Pricing starts at <strong>USD $5 / month</strong> or the fixed currency equivalent shown below. Activation is manual while Orduva manages Netlify/custom-domain limits.
+          Stores can request their own external domain as a paid Orduva add-on. The add-on is billed in <strong>USD only</strong> through Stripe and currently costs <strong>{currentLabel}</strong>. Activation is manual while Orduva manages billing, DNS and Netlify domain limits.
         </p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-5">
-          {CURRENCY_ORDER.map((code) => {
-            const amount = CUSTOM_DOMAIN_ADDON_MONTHLY[code];
-            return (
-              <div key={code} className={`rounded-2xl border px-3 py-2 ${code === selectedPrice.currencyCode ? "border-[#336699] bg-white text-[#0E0E10]" : "border-white/60 bg-white/70 text-[#28547D]"}`}>
-                <p className="text-[10px] font-black uppercase tracking-[0.14em]">{code}</p>
-                <p className="mt-1 text-sm font-black">{money(amount, code)} / month</p>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_12px_32px_rgba(15,23,42,0.06)]">
         <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
           <div>
             <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-600" htmlFor="custom-domain-request">Requested domain</label>
-            <input
-              id="custom-domain-request"
-              value={domainName}
-              onChange={(event) => setDomainName(event.target.value)}
-              className="input mt-2"
-              placeholder="example: zimza.store"
-            />
+            <input id="custom-domain-request" value={domainName} onChange={(event) => setDomainName(event.target.value)} className="input mt-2" placeholder="example: zimza.store" />
             <p className="mt-2 text-xs leading-5 text-slate-500">Enter the main domain only. Do not include https://, paths or Orduva subdomains.</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Current add-on price</p>
-            <p className="mt-2 text-2xl font-black text-slate-950">{selectedPrice.label}</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">Billing is monthly and requires owner approval before the custom domain is activated.</p>
+            <p className="mt-2 text-2xl font-black text-slate-950">{currentLabel}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">Monthly USD billing through Stripe. Orduva must approve billing before the custom domain is activated.</p>
           </div>
           <div className="md:col-span-2">
             <label className="text-xs font-black uppercase tracking-[0.16em] text-slate-600" htmlFor="custom-domain-notes">Notes for Orduva</label>
-            <textarea
-              id="custom-domain-notes"
-              value={tenantNotes}
-              onChange={(event) => setTenantNotes(event.target.value)}
-              className="input mt-2 min-h-24 resize-y"
-              placeholder="Who owns the domain, where it is registered, and any setup notes."
-            />
+            <textarea id="custom-domain-notes" value={tenantNotes} onChange={(event) => setTenantNotes(event.target.value)} className="input mt-2 min-h-24 resize-y" placeholder="Who owns the domain, where it is registered, and any setup notes." />
           </div>
         </div>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs leading-5 text-slate-500">Expected DNS target: <strong>{dnsTarget}</strong>. Orduva will confirm exact DNS records after approval.</p>
-          <button
-            type="button"
-            onClick={requestDomain}
-            disabled={saving || !normaliseCustomDomain(domainName)}
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-          >
+          <p className="text-xs leading-5 text-slate-500">Expected DNS target: <strong>{dnsTarget}</strong>. Orduva will confirm exact DNS records after billing approval.</p>
+          <button type="button" onClick={requestDomain} disabled={saving || !normaliseCustomDomain(domainName)} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300">
             {saving ? "Saving request…" : "Request custom domain"}
           </button>
         </div>
@@ -188,7 +169,8 @@ export default function CustomDomainSettingsPanel({ currencyCode }: { currencyCo
                   <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.billing_status)}`}>{statusLabel(domain.billing_status)}</span>
                 </div>
               </div>
-              <p className="mt-3 text-sm font-bold text-slate-700">{money(Number(domain.addon_price_monthly || selectedPrice.amount), domain.addon_price_currency || selectedPrice.currencyCode)} / month</p>
+              <p className="mt-3 text-sm font-bold text-slate-700">{money(Number(domain.addon_price_monthly || price?.amount || 7.5))} / month</p>
+              <p className="mt-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-600"><strong>Next step:</strong> {nextStepText(domain)}</p>
               {domain.owner_notes ? <p className="mt-2 rounded-2xl border border-[#336699]/15 bg-white px-3 py-2 text-xs leading-5 text-[#28547D]"><strong>Orduva note:</strong> {domain.owner_notes}</p> : null}
             </article>
           ))}

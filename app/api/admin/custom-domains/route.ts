@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { requireAdminApiUser } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import {
+  CUSTOM_DOMAIN_ADDON_USD_MONTHLY,
   CUSTOM_DOMAIN_DNS_TARGET,
   customDomainAddonPrice,
   customDomainVerificationToken,
   isValidCustomDomain,
   normaliseCustomDomain,
 } from "@/lib/custom-domain-addon";
-import { normalisePricingCurrencyCode } from "@/lib/pricing";
 
 function jsonNoStore(body: unknown, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
@@ -19,6 +19,17 @@ function jsonNoStore(body: unknown, init?: ResponseInit) {
 function cleanNotes(value: unknown) {
   const text = String(value || "").trim();
   return text ? text.slice(0, 1000) : null;
+}
+
+async function loadAddonPrice() {
+  const { data, error } = await db
+    .from("platform_custom_domain_addon_settings")
+    .select("monthly_price_usd, stripe_price_id")
+    .eq("id", "default")
+    .maybeSingle();
+
+  if (error) return customDomainAddonPrice(CUSTOM_DOMAIN_ADDON_USD_MONTHLY);
+  return customDomainAddonPrice(data?.monthly_price_usd ?? CUSTOM_DOMAIN_ADDON_USD_MONTHLY, data?.stripe_price_id || null);
 }
 
 export async function GET(req: Request) {
@@ -33,10 +44,9 @@ export async function GET(req: Request) {
 
   if (error) return jsonNoStore({ error: "Failed to load custom domain requests." }, { status: 500 });
 
-  const currency = normalisePricingCurrencyCode(new URL(req.url).searchParams.get("currency") || "USD");
   return jsonNoStore({
     ok: true,
-    price: customDomainAddonPrice(currency),
+    price: await loadAddonPrice(),
     dnsTarget: CUSTOM_DOMAIN_DNS_TARGET,
     domains: data || [],
   });
@@ -53,8 +63,7 @@ export async function POST(req: Request) {
       return jsonNoStore({ error: "Enter a valid external domain, for example zimza.store. Do not enter an Orduva subdomain." }, { status: 400 });
     }
 
-    const currencyCode = normalisePricingCurrencyCode(body?.currencyCode || "USD");
-    const price = customDomainAddonPrice(currencyCode);
+    const price = await loadAddonPrice();
     const notes = cleanNotes(body?.tenantNotes);
     const verificationToken = customDomainVerificationToken(auth.tenant.slug, domain);
 
@@ -66,8 +75,9 @@ export async function POST(req: Request) {
         normalized_domain: domain,
         status: "requested",
         billing_status: "addon_pending",
-        addon_price_currency: price.currencyCode,
+        addon_price_currency: "USD",
         addon_price_monthly: price.amount,
+        stripe_price_id: price.stripePriceId || null,
         billing_interval: "monthly",
         requested_by_email: auth.user.email || null,
         tenant_notes: notes,

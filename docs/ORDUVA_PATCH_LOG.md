@@ -928,3 +928,17 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Added a `tenant_custom_domains` table migration with RLS enabled and service_role-only grants.
 - Kept routing/Netlify activation manual for this foundation build because Netlify custom domain alias capacity must be controlled.
 - Did not touch checkout, payments, stock, pre-orders, receipts, push notifications or service-worker/PWA files.
+
+## Ver-0.260 - Custom domain add-on billing and activation flow
+
+- Patch type: changed/new files only.
+- Changed the custom domain add-on to USD-only pricing for simplicity.
+- Set the default custom domain add-on price to USD $7.50 per month.
+- Added Owner Platform price management for the USD monthly add-on amount and Stripe Price ID.
+- Updated Store Admin custom domain wording so tenants see USD monthly billing through Stripe only.
+- Added clearer Store Admin request status and next-step wording for billing, DNS, owner review, approval and activation.
+- Added Owner Platform quick action buttons for billing required, billing active/manual, pending DNS, DNS under review, approved, active, rejected and disabled.
+- Added owner tracking fields for Stripe subscription item and Netlify domain alias reference/notes.
+- Kept Stripe subscription changes and Netlify alias creation manual for now.
+- Did not touch checkout totals, payment provider amount logic, stock, pre-orders, receipts, push notifications or storefront popup styling.
+- Supabase SQL required: `SUPABASE_VER_0_260_CUSTOM_DOMAIN_BILLING_ACTIVATION.sql`.

@@ -1,4 +1,4 @@
-import { formatPlanPrice, getPricingCurrency, type PricingCurrencyCode } from "@/lib/pricing";
+import { formatPlanPrice } from "@/lib/pricing";
 
 export type CustomDomainStatus =
   | "requested"
@@ -18,17 +18,19 @@ export type CustomDomainBillingStatus =
   | "cancelled"
   | "manual";
 
-export const CUSTOM_DOMAIN_ADDON_USD_MONTHLY = 5;
-
-export const CUSTOM_DOMAIN_ADDON_MONTHLY: Record<PricingCurrencyCode, number> = {
-  ZAR: 95,
-  KES: 650,
-  GBP: 4,
-  USD: 5,
-  EUR: 5,
-};
-
+export const CUSTOM_DOMAIN_ADDON_CURRENCY = "USD" as const;
+export const CUSTOM_DOMAIN_ADDON_USD_MONTHLY = 7.5;
 export const CUSTOM_DOMAIN_DNS_TARGET = "orduva.com";
+export const CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY = "STRIPE_PRICE_CUSTOM_DOMAIN_USD_MONTHLY";
+
+export type CustomDomainAddonPrice = {
+  currencyCode: typeof CUSTOM_DOMAIN_ADDON_CURRENCY;
+  amount: number;
+  formatted: string;
+  label: string;
+  stripePriceId?: string | null;
+  stripePriceEnvKey: string;
+};
 
 export function normaliseCustomDomain(value: unknown) {
   let text = String(value || "")
@@ -55,19 +57,22 @@ export function isValidCustomDomain(value: unknown) {
     .every((part) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(part));
 }
 
-export function customDomainAddonPrice(currencyCode: unknown) {
-  const currency = getPricingCurrency(String(currencyCode || "USD"));
-  const amount = CUSTOM_DOMAIN_ADDON_MONTHLY[currency.code] ?? CUSTOM_DOMAIN_ADDON_MONTHLY.USD;
+export function customDomainAddonPrice(monthlyUsd: unknown = CUSTOM_DOMAIN_ADDON_USD_MONTHLY, stripePriceId?: string | null): CustomDomainAddonPrice {
+  const parsed = Number(monthlyUsd);
+  const amount = Number.isFinite(parsed) && parsed > 0 ? parsed : CUSTOM_DOMAIN_ADDON_USD_MONTHLY;
+  const formatted = formatPlanPrice(amount, CUSTOM_DOMAIN_ADDON_CURRENCY, { forceDecimals: true });
   return {
-    currencyCode: currency.code,
+    currencyCode: CUSTOM_DOMAIN_ADDON_CURRENCY,
     amount,
-    formatted: formatPlanPrice(amount, currency.code, { forceDecimals: currency.decimalPlaces > 0 }),
-    label: `${formatPlanPrice(amount, currency.code, { forceDecimals: currency.decimalPlaces > 0 })} / month`,
+    formatted,
+    label: `${formatted} / month`,
+    stripePriceId: stripePriceId || null,
+    stripePriceEnvKey: CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY,
   };
 }
 
-export function customDomainStripePriceEnvKey(currencyCode: PricingCurrencyCode) {
-  return `STRIPE_PRICE_CUSTOM_DOMAIN_${currencyCode}_MONTHLY`;
+export function customDomainStripePriceEnvKey() {
+  return CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY;
 }
 
 export function customDomainVerificationToken(tenantSlug: string, domain: string) {
