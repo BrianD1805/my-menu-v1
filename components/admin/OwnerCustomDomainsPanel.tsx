@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
-import { CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY, type CustomDomainAddonPrice } from "@/lib/custom-domain-addon";
-import { formatPlanPrice } from "@/lib/pricing";
+import { CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY, formatCustomDomainUsdPrice, type CustomDomainAddonPrice } from "@/lib/custom-domain-addon";
 
 type DomainRow = {
   id: string;
@@ -40,7 +39,7 @@ function label(value: string) {
 }
 
 function money(amount: number) {
-  return formatPlanPrice(amount, "USD", { forceDecimals: true });
+  return formatCustomDomainUsdPrice(amount);
 }
 
 function tone(value: string) {
@@ -87,7 +86,7 @@ export default function OwnerCustomDomainsPanel() {
       const settings = payload?.addonSettings as CustomDomainAddonPrice | undefined;
       setDomains(list);
       setAddonSettings(settings || null);
-      setMonthlyPriceUsd(String(settings?.amount ?? 7.5));
+      setMonthlyPriceUsd(Number(settings?.amount ?? 7.5).toFixed(2));
       setStripePriceId(settings?.stripePriceId || "");
       setNotes(Object.fromEntries(list.map((item) => [item.id, item.owner_notes || ""])));
       setStripeItems(Object.fromEntries(list.map((item) => [item.id, item.stripe_subscription_item_id || ""])));
@@ -151,7 +150,8 @@ export default function OwnerCustomDomainsPanel() {
     }
   }
 
-  const currentPrice = addonSettings?.label || `${money(Number(monthlyPriceUsd || 7.5))} / month`;
+  const currentPriceAmount = Number(addonSettings?.amount ?? (monthlyPriceUsd || 7.5));
+  const currentPrice = `${money(currentPriceAmount)} / month`;
 
   return (
     <section className="space-y-5">

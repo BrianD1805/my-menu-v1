@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { normaliseCustomDomain, type CustomDomainAddonPrice, type CustomDomainBillingStatus, type CustomDomainStatus } from "@/lib/custom-domain-addon";
-import { formatPlanPrice } from "@/lib/pricing";
+import { formatCustomDomainUsdPrice, normaliseCustomDomain, type CustomDomainAddonPrice, type CustomDomainBillingStatus, type CustomDomainStatus } from "@/lib/custom-domain-addon";
 
 type DomainRow = {
   id: string;
@@ -36,7 +35,7 @@ function statusClass(status: string) {
 }
 
 function money(amount: number) {
-  return formatPlanPrice(amount, "USD", { forceDecimals: true });
+  return formatCustomDomainUsdPrice(amount);
 }
 
 function nextStepText(domain: DomainRow) {
@@ -106,7 +105,7 @@ export default function CustomDomainSettingsPanel({ currencyCode: _currencyCode 
     }
   }
 
-  const currentLabel = price?.label || "$7.50 / month";
+  const currentLabel = price?.amount ? `${money(Number(price.amount))} / month` : "$7.50 / month";
 
   return (
     <div className="grid gap-5">

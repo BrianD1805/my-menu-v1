@@ -942,3 +942,18 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept Stripe subscription changes and Netlify alias creation manual for now.
 - Did not touch checkout totals, payment provider amount logic, stock, pre-orders, receipts, push notifications or storefront popup styling.
 - Supabase SQL required: `SUPABASE_VER_0_260_CUSTOM_DOMAIN_BILLING_ACTIVATION.sql`.
+
+
+## Ver-0.260A — Custom domain price display precision fix
+
+- Fixed custom domain add-on price formatting so USD $7.50 displays as `$7.50 / month`, not `$8 / month`.
+- Added a dedicated custom-domain USD formatter instead of using the general plan-price formatter, because the main USD plan prices are rounded whole-dollar SaaS prices.
+- Updated Store Admin and Owner Platform custom-domain displays to use the precise monthly add-on amount.
+- No Supabase SQL required.
+
+## Ver-0.260B — Custom domain owner price build fix
+
+- Fixed the Owner Platform custom-domain price display expression so Next.js/SWC no longer fails on mixed nullish coalescing and logical operators.
+- Kept the custom-domain add-on display at `$7.50 / month` with the dedicated USD cents formatter.
+- No Supabase SQL required.
+

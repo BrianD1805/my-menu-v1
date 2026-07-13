@@ -1,5 +1,3 @@
-import { formatPlanPrice } from "@/lib/pricing";
-
 export type CustomDomainStatus =
   | "requested"
   | "billing_pending"
@@ -22,6 +20,13 @@ export const CUSTOM_DOMAIN_ADDON_CURRENCY = "USD" as const;
 export const CUSTOM_DOMAIN_ADDON_USD_MONTHLY = 7.5;
 export const CUSTOM_DOMAIN_DNS_TARGET = "orduva.com";
 export const CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY = "STRIPE_PRICE_CUSTOM_DOMAIN_USD_MONTHLY";
+
+
+export function formatCustomDomainUsdPrice(amount: number) {
+  const parsed = Number(amount);
+  const safeAmount = Number.isFinite(parsed) && parsed > 0 ? parsed : CUSTOM_DOMAIN_ADDON_USD_MONTHLY;
+  return `$${safeAmount.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 export type CustomDomainAddonPrice = {
   currencyCode: typeof CUSTOM_DOMAIN_ADDON_CURRENCY;
@@ -60,7 +65,7 @@ export function isValidCustomDomain(value: unknown) {
 export function customDomainAddonPrice(monthlyUsd: unknown = CUSTOM_DOMAIN_ADDON_USD_MONTHLY, stripePriceId?: string | null): CustomDomainAddonPrice {
   const parsed = Number(monthlyUsd);
   const amount = Number.isFinite(parsed) && parsed > 0 ? parsed : CUSTOM_DOMAIN_ADDON_USD_MONTHLY;
-  const formatted = formatPlanPrice(amount, CUSTOM_DOMAIN_ADDON_CURRENCY, { forceDecimals: true });
+  const formatted = formatCustomDomainUsdPrice(amount);
   return {
     currencyCode: CUSTOM_DOMAIN_ADDON_CURRENCY,
     amount,
