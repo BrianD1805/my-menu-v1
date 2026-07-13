@@ -30,7 +30,8 @@ export type CustomDomainSslStatus =
 
 export const CUSTOM_DOMAIN_ADDON_CURRENCY = "USD" as const;
 export const CUSTOM_DOMAIN_ADDON_USD_MONTHLY = 7.5;
-export const CUSTOM_DOMAIN_DNS_TARGET = "orduva.com";
+export const CUSTOM_DOMAIN_LEGACY_DNS_TARGET = "orduva.com";
+export const CUSTOM_DOMAIN_DNS_TARGET = "orduva.netlify.app";
 export const CUSTOM_DOMAIN_NETLIFY_APEX_TARGET =
   "apex-loadbalancer.netlify.com";
 export const CUSTOM_DOMAIN_NETLIFY_APEX_FALLBACK_A = "75.2.60.5";
@@ -105,6 +106,23 @@ export function customDomainStripePriceEnvKey() {
   return CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY;
 }
 
+export function customDomainEffectiveDnsTarget(value: unknown) {
+  const clean = String(value || "")
+    .trim()
+    .replace(/^https?:\/\//, "")
+    .replace(/^\/\//, "")
+    .split("/")[0]
+    .split("?")[0]
+    .replace(/:\d+$/, "")
+    .replace(/\.$/, "")
+    .toLowerCase();
+
+  if (!clean || clean === CUSTOM_DOMAIN_LEGACY_DNS_TARGET) {
+    return CUSTOM_DOMAIN_DNS_TARGET;
+  }
+  return clean;
+}
+
 export function customDomainVerificationToken(
   tenantSlug: string,
   domain: string,
@@ -123,22 +141,24 @@ export function customDomainDnsRecords(
   dnsTarget: string | null | undefined,
 ) {
   const domain = normaliseCustomDomain(domainName);
-  const target =
-    String(dnsTarget || CUSTOM_DOMAIN_DNS_TARGET).trim() ||
-    CUSTOM_DOMAIN_DNS_TARGET;
+  const target = customDomainEffectiveDnsTarget(dnsTarget);
   return {
     apexHost: "@",
     apexType: "ALIAS / ANAME / flattened CNAME",
     apexValue: CUSTOM_DOMAIN_NETLIFY_APEX_TARGET,
-    apexFallbackType: "A",
+    apexFallbackType: "Fallback A",
     apexFallbackValue: CUSTOM_DOMAIN_NETLIFY_APEX_FALLBACK_A,
     wwwHost: "www",
     wwwType: "CNAME",
     wwwValue: target,
     verificationHost: "_orduva",
-    verificationType: "TXT",
+    verificationType: "Optional TXT",
     displayApexDomain: domain,
     displayWwwDomain: domain ? `www.${domain}` : "www.your-domain.com",
+    netlifyRoutingNote:
+      "For www, use the CNAME target shown here. For the root/apex, use ALIAS/ANAME/flattened CNAME if supported, or the fallback A record only if ALIAS/ANAME is not supported. Do not add both root options.",
+    verificationNote:
+      "This TXT record is optional Orduva ownership/checklist verification only. It does not route the website to Netlify.",
   };
 }
 

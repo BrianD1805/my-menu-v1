@@ -1009,3 +1009,16 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept DNS, Netlify alias, SSL and final Active status manual behind the existing Ver-0.262 activation checklist.
 - Did not touch storefront customer checkout totals, customer payment providers, stock, pre-orders, receipts, push notifications or storefront popup styling.
 - Supabase SQL required: `SUPABASE_VER_0_264_CUSTOM_DOMAIN_STRIPE_CHECKOUT.sql`.
+
+## Ver-0.264A — Custom domain DNS instruction correction
+
+- Patch type: changed/new files only.
+- Corrected the custom-domain Netlify CNAME target from `orduva.com` to `orduva.netlify.app`.
+- Added a legacy fallback so existing custom-domain requests that still have `orduva.com` saved as `dns_target` display the corrected Netlify target without requiring a database update.
+- Clarified that the root/apex domain should use either ALIAS/ANAME/flattened CNAME to `apex-loadbalancer.netlify.com` or the fallback A record `75.2.60.5`, not both.
+- Clarified that `www` should CNAME to the Netlify site hostname.
+- Clarified that the TXT record is optional Orduva ownership/checklist verification only and does not route the website to Netlify.
+- Updated Store Admin and Owner Platform DNS wording/copy rows to reduce registrar setup confusion.
+- Did not touch Stripe billing logic, Netlify API calls, custom-domain resolver/routing, checkout, payments, stock, pre-orders, receipts or push notifications.
+- No Supabase SQL required.
+

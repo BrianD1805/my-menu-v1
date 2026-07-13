@@ -7,6 +7,7 @@ import {
   customDomainActivationBlockers,
   customDomainActivationChecks,
   customDomainDnsRecords,
+  customDomainEffectiveDnsTarget,
   formatCustomDomainUsdPrice,
   isCustomDomainActivationReady,
   type CustomDomainAddonPrice,
@@ -179,7 +180,7 @@ export default function OwnerCustomDomainsPanel() {
   const [domains, setDomains] = useState<DomainRow[]>([]);
   const [addonSettings, setAddonSettings] =
     useState<CustomDomainAddonPrice | null>(null);
-  const [dnsTarget, setDnsTarget] = useState("orduva.com");
+  const [dnsTarget, setDnsTarget] = useState("orduva.netlify.app");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -212,7 +213,7 @@ export default function OwnerCustomDomainsPanel() {
       const settings = payload?.addonSettings as
         CustomDomainAddonPrice | undefined;
       setDomains(list);
-      setDnsTarget(payload?.dnsTarget || "orduva.com");
+      setDnsTarget(payload?.dnsTarget || "orduva.netlify.app");
       setAddonSettings(settings || null);
       setMonthlyPriceUsd(Number(settings?.amount ?? 7.5).toFixed(2));
       setStripePriceId(settings?.stripePriceId || "");
@@ -438,9 +439,12 @@ export default function OwnerCustomDomainsPanel() {
 
       <div className="grid gap-4">
         {visible.map((domain) => {
+          const effectiveDnsTarget = customDomainEffectiveDnsTarget(
+            domain.dns_target || dnsTarget,
+          );
           const records = customDomainDnsRecords(
             domain.domain_name,
-            domain.dns_target || dnsTarget,
+            effectiveDnsTarget,
           );
           const activationInput = {
             billingStatus: domain.billing_status,
@@ -510,8 +514,8 @@ export default function OwnerCustomDomainsPanel() {
                     / month
                   </p>
                   <p>
-                    <strong>DNS target:</strong>{" "}
-                    {domain.dns_target || dnsTarget}
+                    <strong>Netlify www CNAME target:</strong>{" "}
+                    {effectiveDnsTarget}
                   </p>
                   <p className="break-all">
                     <strong>Verification token:</strong>{" "}
@@ -552,6 +556,12 @@ export default function OwnerCustomDomainsPanel() {
                     <p className="text-xs font-black uppercase tracking-[0.14em] text-[#28547D]">
                       Customer DNS records
                     </p>
+                    <p className="mt-1 text-xs font-bold leading-5 text-[#28547D]">
+                      For the root domain, use the ALIAS/ANAME value if supported.
+                      Use the fallback A record only when ALIAS/ANAME is not
+                      supported. Do not ask the customer to add both root records.
+                      The optional TXT record is Orduva verification only.
+                    </p>
                     <div className="mt-3 grid gap-2">
                       <OwnerDnsRow
                         type={records.wwwType}
@@ -572,7 +582,7 @@ export default function OwnerCustomDomainsPanel() {
                         }
                       />
                       <OwnerDnsRow
-                        type={records.apexFallbackType}
+                        type={`${records.apexFallbackType} — only if no ALIAS`}
                         host="@"
                         value={records.apexFallbackValue}
                         copied={copiedDns === `${domain.id}-fallback`}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   customDomainActivationChecks,
   customDomainDnsRecords,
+  customDomainEffectiveDnsTarget,
   formatCustomDomainUsdPrice,
   normaliseCustomDomain,
   type CustomDomainAddonPrice,
@@ -119,7 +120,7 @@ export default function CustomDomainSettingsPanel({
   currencyCode: string;
 }) {
   const [domains, setDomains] = useState<DomainRow[]>([]);
-  const [dnsTarget, setDnsTarget] = useState("orduva.com");
+  const [dnsTarget, setDnsTarget] = useState("orduva.netlify.app");
   const [price, setPrice] = useState<CustomDomainAddonPrice | null>(null);
   const [domainName, setDomainName] = useState("");
   const [tenantNotes, setTenantNotes] = useState("");
@@ -143,7 +144,7 @@ export default function CustomDomainSettingsPanel({
           payload?.error || "Could not load custom domain requests.",
         );
       setDomains(payload?.domains || []);
-      setDnsTarget(payload?.dnsTarget || "orduva.com");
+      setDnsTarget(payload?.dnsTarget || "orduva.netlify.app");
       setPrice(payload?.price || null);
     } catch (err) {
       setError(
@@ -313,8 +314,9 @@ export default function CustomDomainSettingsPanel({
         </div>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs leading-5 text-slate-500">
-            Expected CNAME target: <strong>{dnsTarget}</strong>. Orduva will
-            confirm exact DNS records after billing approval.
+            Netlify CNAME target for www: <strong>{customDomainEffectiveDnsTarget(dnsTarget)}</strong>.
+            The TXT record is optional Orduva ownership verification only and
+            does not route the website.
           </p>
           <button
             type="button"
@@ -364,9 +366,12 @@ export default function CustomDomainSettingsPanel({
             </p>
           ) : null}
           {domains.map((domain) => {
+            const effectiveDnsTarget = customDomainEffectiveDnsTarget(
+              domain.dns_target || dnsTarget,
+            );
             const records = customDomainDnsRecords(
               domain.domain_name,
-              domain.dns_target || dnsTarget,
+              effectiveDnsTarget,
             );
             const showDns =
               domain.billing_status === "active" ||
@@ -397,7 +402,7 @@ export default function CustomDomainSettingsPanel({
                       {domain.domain_name}
                     </p>
                     <p className="mt-1 text-xs font-bold text-slate-500">
-                      DNS target: {domain.dns_target || dnsTarget}
+                      Netlify www CNAME target: {effectiveDnsTarget}
                     </p>
                     {domain.verification_token ? (
                       <p className="mt-1 break-all text-xs font-bold text-slate-500">
@@ -461,8 +466,10 @@ export default function CustomDomainSettingsPanel({
                     </p>
                     <p className="mt-1 text-xs leading-5 text-[#28547D]">
                       Add these records at the company where your domain is
-                      registered. Copy the values exactly. DNS changes can take
-                      time to show globally.
+                      registered. For the root domain, use the ALIAS/ANAME option
+                      if your provider supports it. Use the fallback A record
+                      only when ALIAS/ANAME is not available. Do not add both
+                      root options.
                     </p>
                     <div className="mt-3 grid gap-2 rounded-2xl border border-[#336699]/15 bg-white p-3">
                       {activationChecks.map((check) => (
@@ -499,7 +506,7 @@ export default function CustomDomainSettingsPanel({
                         }
                       />
                       <DnsRow
-                        type="Fallback A"
+                        type={`${records.apexFallbackType} — only if no ALIAS`}
                         host="@"
                         value={records.apexFallbackValue}
                         copied={copiedDns === `${domain.id}-fallback`}
@@ -526,8 +533,11 @@ export default function CustomDomainSettingsPanel({
                       ) : null}
                     </div>
                     <p className="mt-3 rounded-2xl border border-[#336699]/15 bg-white px-3 py-2 text-xs font-bold text-[#28547D]">
-                      After changing DNS, send Orduva a message so we can check
-                      Netlify, SSL and activate the domain.
+                      The optional TXT record is for Orduva ownership/checklist
+                      verification only. Netlify routing is handled by the www
+                      CNAME and root ALIAS/A record. After changing DNS, send
+                      Orduva a message so we can check Netlify, SSL and activate
+                      the domain.
                     </p>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <span
