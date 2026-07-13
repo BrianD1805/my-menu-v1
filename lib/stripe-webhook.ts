@@ -362,12 +362,81 @@ async function finishWebhookEvent(eventId: string, status: "processed" | "ignore
     .eq("id", eventId);
 }
 
+function isCustomDomainAddonMetadata(metadata: Record<string, string>) {
+  return metadata.orduva_flow === "custom_domain_addon" || metadata.addon_type === "custom_domain";
+}
+
+async function updateCustomDomainAddonBilling(input: {
+  customDomainId?: string;
+  tenantId?: string;
+  checkoutSessionId?: string;
+  customerId?: string;
+  subscriptionId?: string;
+  billingStatus: "active" | "past_due" | "cancelled" | "addon_pending";
+  sourceEventId: string;
+}) {
+  const customDomainId = getString(input.customDomainId);
+  if (!customDomainId) throw new Error("Stripe custom-domain webhook is missing custom_domain_id metadata.");
+
+  const { data: current, error: currentError } = await db
+    .from("tenant_custom_domains")
+    .select("id, tenant_id, status, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status")
+    .eq("id", customDomainId)
+    .maybeSingle();
+
+  if (currentError || !current) throw new Error("Could not match Stripe custom-domain webhook to a custom-domain request.");
+  if (input.tenantId && current.tenant_id !== input.tenantId) {
+    throw new Error("Stripe custom-domain webhook tenant metadata does not match the custom-domain request.");
+  }
+
+  const update: Record<string, any> = {
+    billing_status: input.billingStatus,
+    updated_at: new Date().toISOString(),
+    stripe_last_event_id: input.sourceEventId,
+    stripe_billing_checked_at: new Date().toISOString(),
+  };
+  if (input.checkoutSessionId) update.stripe_checkout_session_id = input.checkoutSessionId;
+  if (input.customerId) update.stripe_customer_id = input.customerId;
+  if (input.subscriptionId) update.stripe_subscription_id = input.subscriptionId;
+
+  if (input.billingStatus === "active") {
+    update.status = current.status === "active" ? "active" : "pending_dns";
+    update.dns_apex_record_status = current.dns_apex_record_status === "not_started" ? "pending" : current.dns_apex_record_status;
+    update.dns_www_record_status = current.dns_www_record_status === "not_started" ? "pending" : current.dns_www_record_status;
+    update.netlify_alias_status = current.netlify_alias_status === "not_started" ? "pending" : current.netlify_alias_status;
+    update.ssl_certificate_status = current.ssl_certificate_status === "not_started" ? "pending" : current.ssl_certificate_status;
+    update.owner_notes = "Stripe custom-domain add-on is active. DNS setup and Netlify/SSL checks can continue.";
+  }
+
+  if (input.billingStatus === "cancelled" && current.status === "active") {
+    update.status = "disabled";
+    update.disabled_at = new Date().toISOString();
+    update.owner_notes = "Stripe custom-domain add-on subscription was cancelled. Domain has been disabled until billing is restored.";
+  }
+
+  await db.from("tenant_custom_domains").update(update).eq("id", customDomainId);
+}
+
 async function handleCheckoutCompleted(event: StripeEvent) {
   const object = getStripeObject(event);
   const metadata = checkoutMetadata(object);
-  const tenantId = getString(metadata.tenant_id || object.client_reference_id);
   const customerId = getString(object.customer);
   const subscriptionId = getString(object.subscription);
+
+  if (isCustomDomainAddonMetadata(metadata)) {
+    await updateCustomDomainAddonBilling({
+      customDomainId: metadata.custom_domain_id || getString(object.client_reference_id),
+      tenantId: metadata.tenant_id,
+      checkoutSessionId: getString(object.id),
+      customerId,
+      subscriptionId,
+      billingStatus: "active",
+      sourceEventId: event.id,
+    });
+    return "Custom domain add-on checkout completed and billing marked active.";
+  }
+
+  const tenantId = getString(metadata.tenant_id || object.client_reference_id);
   if (!tenantId) throw new Error("Stripe checkout session completed without tenant_id metadata.");
   await markTenantActive({
     tenantId,
@@ -385,6 +454,19 @@ async function handleInvoicePaid(event: StripeEvent) {
   const metadata = invoiceMetadata(object);
   const subscriptionId = getString(object.subscription || object.parent?.subscription_details?.subscription);
   const customerId = getString(object.customer);
+
+  if (isCustomDomainAddonMetadata(metadata)) {
+    await updateCustomDomainAddonBilling({
+      customDomainId: metadata.custom_domain_id,
+      tenantId: metadata.tenant_id,
+      customerId,
+      subscriptionId,
+      billingStatus: "active",
+      sourceEventId: event.id,
+    });
+    return "Custom domain add-on invoice paid and billing marked active.";
+  }
+
   const tenant = await findTenant({ tenantId: metadata.tenant_id, subscriptionId, customerId });
   if (!tenant?.id) throw new Error("Could not match Stripe invoice to an Orduva tenant.");
 
@@ -422,6 +504,27 @@ async function handleSubscriptionUpdated(event: StripeEvent) {
   const metadata = subscriptionMetadata(object);
   const subscriptionId = getString(object.id);
   const customerId = getString(object.customer);
+
+  if (isCustomDomainAddonMetadata(metadata)) {
+    const stripeStatus = getString(object.status);
+    const billingStatus = ["active", "trialing"].includes(stripeStatus)
+      ? "active"
+      : stripeStatus === "past_due" || stripeStatus === "unpaid"
+        ? "past_due"
+        : stripeStatus === "canceled" || stripeStatus === "cancelled"
+          ? "cancelled"
+          : "addon_pending";
+    await updateCustomDomainAddonBilling({
+      customDomainId: metadata.custom_domain_id,
+      tenantId: metadata.tenant_id,
+      customerId,
+      subscriptionId,
+      billingStatus,
+      sourceEventId: event.id,
+    });
+    return `Custom domain add-on Stripe subscription status updated to ${billingStatus}.`;
+  }
+
   const tenant = await findTenant({ tenantId: metadata.tenant_id, subscriptionId, customerId });
   if (!tenant?.id) throw new Error("Could not match Stripe subscription to an Orduva tenant.");
 
@@ -451,6 +554,19 @@ async function handleSubscriptionDeleted(event: StripeEvent) {
   const metadata = subscriptionMetadata(object);
   const subscriptionId = getString(object.id);
   const customerId = getString(object.customer);
+
+  if (isCustomDomainAddonMetadata(metadata)) {
+    await updateCustomDomainAddonBilling({
+      customDomainId: metadata.custom_domain_id,
+      tenantId: metadata.tenant_id,
+      customerId,
+      subscriptionId,
+      billingStatus: "cancelled",
+      sourceEventId: event.id,
+    });
+    return "Custom domain add-on Stripe subscription deleted and billing marked cancelled.";
+  }
+
   const tenant = await findTenant({ tenantId: metadata.tenant_id, subscriptionId, customerId });
   if (!tenant?.id) throw new Error("Could not match deleted Stripe subscription to an Orduva tenant.");
   await db

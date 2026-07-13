@@ -983,3 +983,29 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept Netlify API calls, DNS changes and SSL provisioning manual.
 - Did not touch checkout totals, customer payment amounts, stock, pre-orders, receipts, push notifications or storefront popup styling.
 - Supabase SQL required: `SUPABASE_VER_0_262_CUSTOM_DOMAIN_DNS_CHECKLIST.sql`.
+
+## Ver-0.263 — Custom domain activation polish
+
+- Patch type: changed/new files only.
+- Added clearer Owner Platform activation checklist wording for custom domains.
+- Added explicit “Cannot activate yet” reason messages so the owner can see exactly which billing, DNS, Netlify or SSL step is blocking activation.
+- Added Owner Platform copy buttons and copied-state feedback for the DNS values shown on each custom-domain request.
+- Improved Store Admin custom-domain instructions with a four-step request/billing/DNS/activation guide.
+- Improved Store Admin DNS setup panel wording and added copied-state feedback for DNS record copy buttons.
+- Reused the existing custom-domain DNS/checklist fields from Ver-0.262.
+- Kept custom-domain routing, Stripe billing, Netlify API calls, checkout, payments, stock, pre-orders, receipts and push notifications unchanged.
+- No Supabase SQL required.
+
+## Ver-0.264 — Stripe custom domain add-on checkout
+
+- Patch type: changed/new files only.
+- Added Stripe Checkout for the USD monthly custom-domain add-on.
+- Store Admin custom-domain requests now show a Pay add-on button when billing is not active/manual.
+- Added admin API route to create a Stripe subscription-mode Checkout Session for the selected custom-domain request.
+- Added custom-domain billing success and cancel pages under Store Admin.
+- Added a Stripe status check endpoint so the success page can verify the returned Checkout Session and mark billing active.
+- Extended Stripe webhook handling so `checkout.session.completed`, `invoice.paid`, `customer.subscription.updated` and `customer.subscription.deleted` events with custom-domain metadata update the custom-domain billing state rather than the main store subscription plan.
+- Added Stripe subscription/customer tracking fields for custom-domain add-ons.
+- Kept DNS, Netlify alias, SSL and final Active status manual behind the existing Ver-0.262 activation checklist.
+- Did not touch storefront customer checkout totals, customer payment providers, stock, pre-orders, receipts, push notifications or storefront popup styling.
+- Supabase SQL required: `SUPABASE_VER_0_264_CUSTOM_DOMAIN_STRIPE_CHECKOUT.sql`.

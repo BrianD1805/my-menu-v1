@@ -38,7 +38,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await db
     .from("tenant_custom_domains")
-    .select("id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status, approved_at, activated_at, created_at, updated_at")
+    .select("id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status, stripe_checkout_session_id, stripe_subscription_id, stripe_customer_id, approved_at, activated_at, created_at, updated_at")
     .eq("tenant_id", auth.tenant.id)
     .order("created_at", { ascending: false });
 

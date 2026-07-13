@@ -14,7 +14,7 @@ const ALLOWED_DNS_STATUS = new Set(["not_started", "not_required", "pending", "c
 const ALLOWED_NETLIFY_STATUS = new Set(["not_started", "pending", "added", "verified", "failed"]);
 const ALLOWED_SSL_STATUS = new Set(["not_started", "pending", "issued", "failed"]);
 
-const DOMAIN_SELECT = "id, tenant_id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, billing_interval, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status, stripe_price_id, stripe_subscription_item_id, stripe_checkout_session_id, netlify_site_id, netlify_domain_alias_id, approved_at, activated_at, disabled_at, created_at, updated_at, tenants(name, slug)";
+const DOMAIN_SELECT = "id, tenant_id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, billing_interval, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status, stripe_price_id, stripe_checkout_session_id, stripe_subscription_id, stripe_subscription_item_id, stripe_customer_id, netlify_site_id, netlify_domain_alias_id, approved_at, activated_at, disabled_at, created_at, updated_at, tenants(name, slug)";
 
 function jsonNoStore(body: unknown, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
@@ -163,6 +163,8 @@ export async function PATCH(req: Request) {
     if (Object.prototype.hasOwnProperty.call(body, "ownerNotes")) payload.owner_notes = cleanText(body?.ownerNotes, 1000);
     if (Object.prototype.hasOwnProperty.call(body, "dnsTarget")) payload.dns_target = cleanText(body?.dnsTarget, 240) || CUSTOM_DOMAIN_DNS_TARGET;
     if (Object.prototype.hasOwnProperty.call(body, "stripeSubscriptionItemId")) payload.stripe_subscription_item_id = cleanText(body?.stripeSubscriptionItemId, 160);
+    if (Object.prototype.hasOwnProperty.call(body, "stripeSubscriptionId")) payload.stripe_subscription_id = cleanText(body?.stripeSubscriptionId, 160);
+    if (Object.prototype.hasOwnProperty.call(body, "stripeCustomerId")) payload.stripe_customer_id = cleanText(body?.stripeCustomerId, 160);
     if (Object.prototype.hasOwnProperty.call(body, "stripeCheckoutSessionId")) payload.stripe_checkout_session_id = cleanText(body?.stripeCheckoutSessionId, 160);
     if (Object.prototype.hasOwnProperty.call(body, "netlifySiteId")) payload.netlify_site_id = cleanText(body?.netlifySiteId, 160);
     if (Object.prototype.hasOwnProperty.call(body, "netlifyDomainAliasId")) payload.netlify_domain_alias_id = cleanText(body?.netlifyDomainAliasId, 160);
