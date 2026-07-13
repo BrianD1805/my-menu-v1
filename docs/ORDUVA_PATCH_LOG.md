@@ -971,3 +971,15 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Updated product share metadata to use the current request host, so custom-domain product links produce the correct canonical/Open Graph URL.
 - Bumped storefront payload cache version to `ver-0-261` so custom-domain resolver changes do not reuse old storefront payloads.
 - No Supabase SQL required. Uses the existing `tenant_custom_domains` table from Ver-0.259/0.260.
+
+## Ver-0.262 — Custom domain DNS / Netlify checklist tools
+
+- Patch type: changed/new files only.
+- Added Owner Platform checklist tools for custom domain DNS, Netlify alias and SSL readiness.
+- Added manual status fields for root/apex DNS, www DNS, Netlify alias and SSL certificate.
+- Added customer-facing DNS instructions in Store Admin once billing/DNS is ready, including CNAME, apex ALIAS/ANAME/flattened CNAME, fallback A record and Orduva verification TXT record.
+- Added copy buttons for DNS values in Store Admin.
+- Added Owner Platform activation guard so a custom domain cannot be marked Active until billing is active/manual, DNS is verified/not-required, Netlify alias is verified and SSL is issued.
+- Kept Netlify API calls, DNS changes and SSL provisioning manual.
+- Did not touch checkout totals, customer payment amounts, stock, pre-orders, receipts, push notifications or storefront popup styling.
+- Supabase SQL required: `SUPABASE_VER_0_262_CUSTOM_DOMAIN_DNS_CHECKLIST.sql`.

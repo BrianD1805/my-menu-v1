@@ -16,11 +16,16 @@ export type CustomDomainBillingStatus =
   | "cancelled"
   | "manual";
 
+export type CustomDomainDnsStatus = "not_started" | "not_required" | "pending" | "configured" | "verified" | "failed";
+export type CustomDomainNetlifyStatus = "not_started" | "pending" | "added" | "verified" | "failed";
+export type CustomDomainSslStatus = "not_started" | "pending" | "issued" | "failed";
+
 export const CUSTOM_DOMAIN_ADDON_CURRENCY = "USD" as const;
 export const CUSTOM_DOMAIN_ADDON_USD_MONTHLY = 7.5;
 export const CUSTOM_DOMAIN_DNS_TARGET = "orduva.com";
+export const CUSTOM_DOMAIN_NETLIFY_APEX_TARGET = "apex-loadbalancer.netlify.com";
+export const CUSTOM_DOMAIN_NETLIFY_APEX_FALLBACK_A = "75.2.60.5";
 export const CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY = "STRIPE_PRICE_CUSTOM_DOMAIN_USD_MONTHLY";
-
 
 export function formatCustomDomainUsdPrice(amount: number) {
   const parsed = Number(amount);
@@ -84,4 +89,40 @@ export function customDomainVerificationToken(tenantSlug: string, domain: string
   const cleanTenant = String(tenantSlug || "store").toLowerCase().replace(/[^a-z0-9-]/g, "-");
   const cleanDomain = normaliseCustomDomain(domain).replace(/[^a-z0-9]+/g, "-").slice(0, 48);
   return `orduva-domain-${cleanTenant}-${cleanDomain}`.slice(0, 120);
+}
+
+export function customDomainDnsRecords(domainName: string, dnsTarget: string | null | undefined) {
+  const domain = normaliseCustomDomain(domainName);
+  const target = String(dnsTarget || CUSTOM_DOMAIN_DNS_TARGET).trim() || CUSTOM_DOMAIN_DNS_TARGET;
+  return {
+    apexHost: "@",
+    apexType: "ALIAS / ANAME / flattened CNAME",
+    apexValue: CUSTOM_DOMAIN_NETLIFY_APEX_TARGET,
+    apexFallbackType: "A",
+    apexFallbackValue: CUSTOM_DOMAIN_NETLIFY_APEX_FALLBACK_A,
+    wwwHost: "www",
+    wwwType: "CNAME",
+    wwwValue: target,
+    verificationHost: "_orduva",
+    verificationType: "TXT",
+    displayApexDomain: domain,
+    displayWwwDomain: domain ? `www.${domain}` : "www.your-domain.com",
+  };
+}
+
+export function isCustomDomainActivationReady(input: {
+  status?: string | null;
+  billingStatus?: string | null;
+  dnsApexRecordStatus?: string | null;
+  dnsWwwRecordStatus?: string | null;
+  netlifyAliasStatus?: string | null;
+  sslCertificateStatus?: string | null;
+}) {
+  const billingOk = input.billingStatus === "active" || input.billingStatus === "manual";
+  const apexOk = input.dnsApexRecordStatus === "verified" || input.dnsApexRecordStatus === "not_required";
+  const wwwOk = input.dnsWwwRecordStatus === "verified" || input.dnsWwwRecordStatus === "not_required";
+  const hasAnyDns = input.dnsApexRecordStatus === "verified" || input.dnsWwwRecordStatus === "verified";
+  const netlifyOk = input.netlifyAliasStatus === "verified";
+  const sslOk = input.sslCertificateStatus === "issued";
+  return Boolean(billingOk && apexOk && wwwOk && hasAnyDns && netlifyOk && sslOk);
 }

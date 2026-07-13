@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import { requirePlatformAccess } from "@/lib/platform-security";
 import { db } from "@/lib/db";
-import { CUSTOM_DOMAIN_ADDON_USD_MONTHLY, CUSTOM_DOMAIN_DNS_TARGET, customDomainAddonPrice } from "@/lib/custom-domain-addon";
+import {
+  CUSTOM_DOMAIN_ADDON_USD_MONTHLY,
+  CUSTOM_DOMAIN_DNS_TARGET,
+  customDomainAddonPrice,
+  isCustomDomainActivationReady,
+} from "@/lib/custom-domain-addon";
 
 const ALLOWED_STATUS = new Set(["requested", "billing_pending", "pending_dns", "pending_owner_review", "approved", "active", "rejected", "disabled"]);
 const ALLOWED_BILLING_STATUS = new Set(["not_started", "addon_pending", "active", "past_due", "cancelled", "manual"]);
+const ALLOWED_DNS_STATUS = new Set(["not_started", "not_required", "pending", "configured", "verified", "failed"]);
+const ALLOWED_NETLIFY_STATUS = new Set(["not_started", "pending", "added", "verified", "failed"]);
+const ALLOWED_SSL_STATUS = new Set(["not_started", "pending", "issued", "failed"]);
+
+const DOMAIN_SELECT = "id, tenant_id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, billing_interval, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status, stripe_price_id, stripe_subscription_item_id, stripe_checkout_session_id, netlify_site_id, netlify_domain_alias_id, approved_at, activated_at, disabled_at, created_at, updated_at, tenants(name, slug)";
 
 function jsonNoStore(body: unknown, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
@@ -34,7 +44,7 @@ async function loadAddonSettings() {
 async function loadDomains() {
   const { data, error } = await db
     .from("tenant_custom_domains")
-    .select("id, tenant_id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, billing_interval, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, stripe_price_id, stripe_subscription_item_id, stripe_checkout_session_id, netlify_site_id, netlify_domain_alias_id, approved_at, activated_at, created_at, updated_at, tenants(name, slug)")
+    .select(DOMAIN_SELECT)
     .order("created_at", { ascending: false })
     .limit(500);
   if (error) throw error;
@@ -106,6 +116,50 @@ export async function PATCH(req: Request) {
       payload.billing_status = nextBillingStatus;
     }
 
+    const dnsApexRecordStatus = String(body?.dnsApexRecordStatus || "").trim().toLowerCase();
+    if (dnsApexRecordStatus) {
+      if (!ALLOWED_DNS_STATUS.has(dnsApexRecordStatus)) return jsonNoStore({ error: "Unsupported apex DNS status." }, { status: 400 });
+      payload.dns_apex_record_status = dnsApexRecordStatus;
+    }
+
+    const dnsWwwRecordStatus = String(body?.dnsWwwRecordStatus || "").trim().toLowerCase();
+    if (dnsWwwRecordStatus) {
+      if (!ALLOWED_DNS_STATUS.has(dnsWwwRecordStatus)) return jsonNoStore({ error: "Unsupported www DNS status." }, { status: 400 });
+      payload.dns_www_record_status = dnsWwwRecordStatus;
+    }
+
+    const netlifyAliasStatus = String(body?.netlifyAliasStatus || "").trim().toLowerCase();
+    if (netlifyAliasStatus) {
+      if (!ALLOWED_NETLIFY_STATUS.has(netlifyAliasStatus)) return jsonNoStore({ error: "Unsupported Netlify alias status." }, { status: 400 });
+      payload.netlify_alias_status = netlifyAliasStatus;
+    }
+
+    const sslCertificateStatus = String(body?.sslCertificateStatus || "").trim().toLowerCase();
+    if (sslCertificateStatus) {
+      if (!ALLOWED_SSL_STATUS.has(sslCertificateStatus)) return jsonNoStore({ error: "Unsupported SSL status." }, { status: 400 });
+      payload.ssl_certificate_status = sslCertificateStatus;
+    }
+
+    if ((payload.status || nextStatus) === "active") {
+      const { data: current, error: currentError } = await db
+        .from("tenant_custom_domains")
+        .select("status, billing_status, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status")
+        .eq("id", id)
+        .maybeSingle();
+      if (currentError || !current) return jsonNoStore({ error: "Could not verify activation checklist." }, { status: 500 });
+      const ready = isCustomDomainActivationReady({
+        status: "active",
+        billingStatus: String(payload.billing_status || current.billing_status || ""),
+        dnsApexRecordStatus: String(payload.dns_apex_record_status || current.dns_apex_record_status || "not_started"),
+        dnsWwwRecordStatus: String(payload.dns_www_record_status || current.dns_www_record_status || "not_started"),
+        netlifyAliasStatus: String(payload.netlify_alias_status || current.netlify_alias_status || "not_started"),
+        sslCertificateStatus: String(payload.ssl_certificate_status || current.ssl_certificate_status || "not_started"),
+      });
+      if (!ready) {
+        return jsonNoStore({ error: "Complete billing, DNS, Netlify alias and SSL checklist before marking the custom domain Active." }, { status: 400 });
+      }
+    }
+
     if (Object.prototype.hasOwnProperty.call(body, "ownerNotes")) payload.owner_notes = cleanText(body?.ownerNotes, 1000);
     if (Object.prototype.hasOwnProperty.call(body, "dnsTarget")) payload.dns_target = cleanText(body?.dnsTarget, 240) || CUSTOM_DOMAIN_DNS_TARGET;
     if (Object.prototype.hasOwnProperty.call(body, "stripeSubscriptionItemId")) payload.stripe_subscription_item_id = cleanText(body?.stripeSubscriptionItemId, 160);
@@ -118,7 +172,7 @@ export async function PATCH(req: Request) {
       .from("tenant_custom_domains")
       .update(payload)
       .eq("id", id)
-      .select("id, tenant_id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, billing_interval, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, stripe_price_id, stripe_subscription_item_id, stripe_checkout_session_id, netlify_site_id, netlify_domain_alias_id, approved_at, activated_at, created_at, updated_at, tenants(name, slug)")
+      .select(DOMAIN_SELECT)
       .single();
 
     if (error || !data) return jsonNoStore({ error: "Failed to update custom domain request." }, { status: 500 });

@@ -2,15 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useOwnerPlatformAccess } from "@/components/admin/OwnerPlatformAccessGate";
-import { CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY, formatCustomDomainUsdPrice, type CustomDomainAddonPrice } from "@/lib/custom-domain-addon";
+import {
+  CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY,
+  customDomainDnsRecords,
+  formatCustomDomainUsdPrice,
+  isCustomDomainActivationReady,
+  type CustomDomainAddonPrice,
+  type CustomDomainBillingStatus,
+  type CustomDomainDnsStatus,
+  type CustomDomainNetlifyStatus,
+  type CustomDomainSslStatus,
+  type CustomDomainStatus,
+} from "@/lib/custom-domain-addon";
 
 type DomainRow = {
   id: string;
   tenant_id: string;
   domain_name: string;
   normalized_domain: string;
-  status: string;
-  billing_status: string;
+  status: CustomDomainStatus;
+  billing_status: CustomDomainBillingStatus;
   addon_price_currency: string;
   addon_price_monthly: number;
   billing_interval: string;
@@ -19,6 +30,10 @@ type DomainRow = {
   owner_notes: string | null;
   dns_target: string | null;
   verification_token: string | null;
+  dns_apex_record_status?: CustomDomainDnsStatus | null;
+  dns_www_record_status?: CustomDomainDnsStatus | null;
+  netlify_alias_status?: CustomDomainNetlifyStatus | null;
+  ssl_certificate_status?: CustomDomainSslStatus | null;
   stripe_price_id?: string | null;
   stripe_subscription_item_id?: string | null;
   stripe_checkout_session_id?: string | null;
@@ -26,13 +41,17 @@ type DomainRow = {
   netlify_domain_alias_id?: string | null;
   approved_at: string | null;
   activated_at: string | null;
+  disabled_at?: string | null;
   created_at: string | null;
   updated_at: string | null;
   tenants?: { name?: string | null; slug?: string | null } | null;
 };
 
-const STATUS_OPTIONS = ["requested", "billing_pending", "pending_dns", "pending_owner_review", "approved", "active", "rejected", "disabled"];
-const BILLING_OPTIONS = ["not_started", "addon_pending", "active", "past_due", "cancelled", "manual"];
+const STATUS_OPTIONS: CustomDomainStatus[] = ["requested", "billing_pending", "pending_dns", "pending_owner_review", "approved", "active", "rejected", "disabled"];
+const BILLING_OPTIONS: CustomDomainBillingStatus[] = ["not_started", "addon_pending", "active", "past_due", "cancelled", "manual"];
+const DNS_OPTIONS: CustomDomainDnsStatus[] = ["not_started", "not_required", "pending", "configured", "verified", "failed"];
+const NETLIFY_OPTIONS: CustomDomainNetlifyStatus[] = ["not_started", "pending", "added", "verified", "failed"];
+const SSL_OPTIONS: CustomDomainSslStatus[] = ["not_started", "pending", "issued", "failed"];
 
 function label(value: string) {
   return String(value || "").replace(/_/g, " ");
@@ -44,25 +63,37 @@ function money(amount: number) {
 
 function tone(value: string) {
   const clean = String(value || "").toLowerCase();
-  if (clean === "active" || clean === "approved" || clean === "manual") return "border-emerald-200 bg-emerald-50 text-emerald-800";
-  if (clean === "rejected" || clean === "disabled" || clean === "cancelled") return "border-red-200 bg-red-50 text-red-800";
-  if (clean.includes("pending") || clean === "requested") return "border-amber-200 bg-amber-50 text-amber-800";
+  if (["active", "approved", "manual", "verified", "issued", "added"].includes(clean)) return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (["rejected", "disabled", "cancelled", "failed"].includes(clean)) return "border-red-200 bg-red-50 text-red-800";
+  if (clean.includes("pending") || clean === "requested" || clean === "configured") return "border-amber-200 bg-amber-50 text-amber-800";
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
-function quickSteps(status: string, billingStatus: string) {
-  if (status === "active") return "Live. Keep Netlify/DNS notes updated.";
-  if (status === "disabled") return "Disabled. Re-enable only after billing and DNS are valid.";
-  if (billingStatus !== "active" && billingStatus !== "manual") return "Start with Stripe billing, then move to DNS.";
-  if (status === "pending_dns") return "Ask store owner to complete DNS records.";
-  if (status === "pending_owner_review") return "Check DNS/Netlify/SSL, then approve or activate.";
+function quickSteps(domain: DomainRow) {
+  if (domain.status === "active") return "Live. Keep Netlify/DNS notes updated.";
+  if (domain.status === "disabled") return "Disabled. Re-enable only after billing and DNS are valid.";
+  if (domain.billing_status !== "active" && domain.billing_status !== "manual") return "Start with Stripe billing, then move to DNS.";
+  if (domain.status === "pending_dns") return "Ask the store owner to complete the DNS records below.";
+  if (domain.status === "pending_owner_review") return "Check DNS, Netlify alias and SSL, then activate when all checks are green.";
   return "Use the action buttons to move this request through billing, DNS, approval and activation.";
+}
+
+function checklistLabel(domain: DomainRow) {
+  const ready = isCustomDomainActivationReady({
+    billingStatus: domain.billing_status,
+    dnsApexRecordStatus: domain.dns_apex_record_status || "not_started",
+    dnsWwwRecordStatus: domain.dns_www_record_status || "not_started",
+    netlifyAliasStatus: domain.netlify_alias_status || "not_started",
+    sslCertificateStatus: domain.ssl_certificate_status || "not_started",
+  });
+  return ready ? "Ready to activate" : "Activation checklist incomplete";
 }
 
 export default function OwnerCustomDomainsPanel() {
   const { platformHeaders } = useOwnerPlatformAccess();
   const [domains, setDomains] = useState<DomainRow[]>([]);
   const [addonSettings, setAddonSettings] = useState<CustomDomainAddonPrice | null>(null);
+  const [dnsTarget, setDnsTarget] = useState("orduva.com");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -72,6 +103,7 @@ export default function OwnerCustomDomainsPanel() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [stripeItems, setStripeItems] = useState<Record<string, string>>({});
   const [netlifyAliases, setNetlifyAliases] = useState<Record<string, string>>({});
+  const [netlifySites, setNetlifySites] = useState<Record<string, string>>({});
   const [monthlyPriceUsd, setMonthlyPriceUsd] = useState("7.50");
   const [stripePriceId, setStripePriceId] = useState("");
 
@@ -85,12 +117,14 @@ export default function OwnerCustomDomainsPanel() {
       const list = (payload?.domains || []) as DomainRow[];
       const settings = payload?.addonSettings as CustomDomainAddonPrice | undefined;
       setDomains(list);
+      setDnsTarget(payload?.dnsTarget || "orduva.com");
       setAddonSettings(settings || null);
       setMonthlyPriceUsd(Number(settings?.amount ?? 7.5).toFixed(2));
       setStripePriceId(settings?.stripePriceId || "");
       setNotes(Object.fromEntries(list.map((item) => [item.id, item.owner_notes || ""])));
       setStripeItems(Object.fromEntries(list.map((item) => [item.id, item.stripe_subscription_item_id || ""])));
       setNetlifyAliases(Object.fromEntries(list.map((item) => [item.id, item.netlify_domain_alias_id || ""])));
+      setNetlifySites(Object.fromEntries(list.map((item) => [item.id, item.netlify_site_id || ""])));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load custom domains.");
     } finally {
@@ -159,9 +193,9 @@ export default function OwnerCustomDomainsPanel() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#336699]">Custom domains</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#0E0E10]">Domain add-on billing & activation</h2>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#0E0E10]">Domain DNS, billing & activation</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5C5F66]">
-              Custom domains are billed in USD only through Stripe. Keep activation manual until Stripe billing, DNS, Netlify alias and SSL checks are complete.
+              Custom domains remain manually controlled. Complete Stripe billing, DNS, Netlify alias and SSL checks before activating a domain.
             </p>
           </div>
           <button type="button" onClick={load} disabled={loading} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#252528] disabled:cursor-wait disabled:opacity-60">
@@ -201,74 +235,121 @@ export default function OwnerCustomDomainsPanel() {
       {!loading && !visible.length ? <p className="rounded-[28px] border border-dashed border-[#0E0E10]/15 bg-white p-6 text-sm font-bold text-[#5C5F66]">No custom domain requests in this view.</p> : null}
 
       <div className="grid gap-4">
-        {visible.map((domain) => (
-          <article key={domain.id} className="overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-white shadow-[0_14px_44px_rgba(14,14,16,0.07)]">
-            <header className="border-b border-[#0E0E10]/10 bg-[#F3F7FA] px-5 py-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0">
-                  <p className="break-all text-xl font-semibold text-[#0E0E10]">{domain.domain_name}</p>
-                  <p className="mt-1 text-sm font-bold text-[#5C5F66]">{domain.tenants?.name || "Store"} · {domain.tenants?.slug || domain.tenant_id}</p>
+        {visible.map((domain) => {
+          const records = customDomainDnsRecords(domain.domain_name, domain.dns_target || dnsTarget);
+          const activationReady = isCustomDomainActivationReady({
+            status: domain.status,
+            billingStatus: domain.billing_status,
+            dnsApexRecordStatus: domain.dns_apex_record_status || "not_started",
+            dnsWwwRecordStatus: domain.dns_www_record_status || "not_started",
+            netlifyAliasStatus: domain.netlify_alias_status || "not_started",
+            sslCertificateStatus: domain.ssl_certificate_status || "not_started",
+          });
+          return (
+            <article key={domain.id} className="overflow-hidden rounded-[30px] border border-[#0E0E10]/10 bg-white shadow-[0_14px_44px_rgba(14,14,16,0.07)]">
+              <header className="border-b border-[#0E0E10]/10 bg-[#F3F7FA] px-5 py-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <p className="break-all text-xl font-semibold text-[#0E0E10]">{domain.domain_name}</p>
+                    <p className="mt-1 text-sm font-bold text-[#5C5F66]">{domain.tenants?.name || "Store"} · {domain.tenants?.slug || domain.tenant_id}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 lg:justify-end">
+                    <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${tone(domain.status)}`}>{label(domain.status)}</span>
+                    <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${tone(domain.billing_status)}`}>{label(domain.billing_status)}</span>
+                    <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${activationReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>{checklistLabel(domain)}</span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2 lg:justify-end">
-                  <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${tone(domain.status)}`}>{label(domain.status)}</span>
-                  <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${tone(domain.billing_status)}`}>{label(domain.billing_status)}</span>
-                </div>
-              </div>
-            </header>
-            <div className="grid gap-4 p-5 lg:grid-cols-[1fr_1fr]">
-              <div className="grid gap-3 text-sm">
-                <p><strong>Price:</strong> {money(Number(domain.addon_price_monthly || addonSettings?.amount || 7.5))} / month</p>
-                <p><strong>DNS target:</strong> {domain.dns_target || "orduva.com"}</p>
-                <p className="break-all"><strong>Verification token:</strong> {domain.verification_token || "Not generated"}</p>
-                <p><strong>Requested by:</strong> {domain.requested_by_email || "Unknown"}</p>
-                <p><strong>Stripe price:</strong> {domain.stripe_price_id || addonSettings?.stripePriceId || CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY}</p>
-                <p><strong>Next step:</strong> {quickSteps(domain.status, domain.billing_status)}</p>
-                {domain.tenant_notes ? <p className="rounded-2xl border border-[#0E0E10]/10 bg-[#F3F7FA] px-3 py-2"><strong>Store note:</strong> {domain.tenant_notes}</p> : null}
-              </div>
-              <div className="grid gap-3">
-                <div className="grid gap-2 rounded-2xl border border-[#0E0E10]/10 bg-[#F3F7FA] p-3">
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Quick actions</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <button type="button" onClick={() => updateDomain(domain.id, { status: "billing_pending", billingStatus: "addon_pending", stripePriceId: addonSettings?.stripePriceId || stripePriceId || null })} className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-800">Mark billing required</button>
-                    <button type="button" onClick={() => updateDomain(domain.id, { billingStatus: "manual", status: "pending_dns" })} className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-800">Billing active/manual</button>
-                    <button type="button" onClick={() => updateDomain(domain.id, { status: "pending_dns" })} className="rounded-2xl border border-[#336699]/20 bg-white px-3 py-2 text-xs font-black text-[#28547D]">Move to DNS</button>
-                    <button type="button" onClick={() => updateDomain(domain.id, { status: "pending_owner_review" })} className="rounded-2xl border border-[#336699]/20 bg-white px-3 py-2 text-xs font-black text-[#28547D]">DNS under review</button>
-                    <button type="button" onClick={() => updateDomain(domain.id, { status: "approved" })} className="rounded-2xl border border-emerald-200 bg-white px-3 py-2 text-xs font-black text-emerald-800">Approve</button>
-                    <button type="button" onClick={() => updateDomain(domain.id, { status: "active", billingStatus: domain.billing_status === "active" ? "active" : "manual" })} className="rounded-2xl bg-emerald-700 px-3 py-2 text-xs font-black text-white">Activate</button>
-                    <button type="button" onClick={() => updateDomain(domain.id, { status: "rejected" })} className="rounded-2xl border border-red-200 bg-white px-3 py-2 text-xs font-black text-red-800">Reject</button>
-                    <button type="button" onClick={() => updateDomain(domain.id, { status: "disabled", billingStatus: "cancelled" })} className="rounded-2xl bg-red-700 px-3 py-2 text-xs font-black text-white">Disable</button>
+              </header>
+              <div className="grid gap-4 p-5 lg:grid-cols-[1fr_1fr]">
+                <div className="grid gap-3 text-sm">
+                  <p><strong>Price:</strong> {money(Number(domain.addon_price_monthly || addonSettings?.amount || 7.5))} / month</p>
+                  <p><strong>DNS target:</strong> {domain.dns_target || dnsTarget}</p>
+                  <p className="break-all"><strong>Verification token:</strong> {domain.verification_token || "Not generated"}</p>
+                  <p><strong>Requested by:</strong> {domain.requested_by_email || "Unknown"}</p>
+                  <p><strong>Stripe price:</strong> {domain.stripe_price_id || addonSettings?.stripePriceId || CUSTOM_DOMAIN_STRIPE_PRICE_ENV_KEY}</p>
+                  <p><strong>Next step:</strong> {quickSteps(domain)}</p>
+                  {domain.tenant_notes ? <p className="rounded-2xl border border-[#0E0E10]/10 bg-[#F3F7FA] px-3 py-2"><strong>Store note:</strong> {domain.tenant_notes}</p> : null}
+
+                  <div className="rounded-2xl border border-[#336699]/20 bg-[#EAF3FA] p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#28547D]">Customer DNS records</p>
+                    <div className="mt-3 grid gap-2 text-xs text-[#0E0E10]">
+                      <p><strong>{records.wwwType}</strong> · Host <strong>{records.wwwHost}</strong> → <span className="break-all font-bold">{records.wwwValue}</span></p>
+                      <p><strong>{records.apexType}</strong> · Host <strong>{records.apexHost}</strong> → <span className="break-all font-bold">{records.apexValue}</span></p>
+                      <p><strong>Fallback only:</strong> {records.apexFallbackType} · Host <strong>@</strong> → <span className="break-all font-bold">{records.apexFallbackValue}</span></p>
+                      <p><strong>{records.verificationType}</strong> · Host <strong>{records.verificationHost}</strong> → <span className="break-all font-bold">{domain.verification_token || "verification token"}</span></p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Domain status
-                    <select value={domain.status} onChange={(event) => updateDomain(domain.id, { status: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
-                      {STATUS_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
-                    </select>
-                  </label>
-                  <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Add-on billing
-                    <select value={domain.billing_status} onChange={(event) => updateDomain(domain.id, { billingStatus: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
-                      {BILLING_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
-                    </select>
-                  </label>
-                </div>
+                <div className="grid gap-3">
+                  <div className="grid gap-2 rounded-2xl border border-[#0E0E10]/10 bg-[#F3F7FA] p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Quick actions</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button type="button" onClick={() => updateDomain(domain.id, { status: "billing_pending", billingStatus: "addon_pending", stripePriceId: addonSettings?.stripePriceId || stripePriceId || null })} className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-800">Mark billing required</button>
+                      <button type="button" onClick={() => updateDomain(domain.id, { billingStatus: "manual", status: "pending_dns" })} className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-800">Billing active/manual</button>
+                      <button type="button" onClick={() => updateDomain(domain.id, { status: "pending_dns", dnsApexRecordStatus: "pending", dnsWwwRecordStatus: "pending", netlifyAliasStatus: "pending", sslCertificateStatus: "pending" })} className="rounded-2xl border border-[#336699]/20 bg-white px-3 py-2 text-xs font-black text-[#28547D]">Move to DNS</button>
+                      <button type="button" onClick={() => updateDomain(domain.id, { status: "pending_owner_review" })} className="rounded-2xl border border-[#336699]/20 bg-white px-3 py-2 text-xs font-black text-[#28547D]">DNS under review</button>
+                      <button type="button" onClick={() => updateDomain(domain.id, { status: "approved" })} className="rounded-2xl border border-emerald-200 bg-white px-3 py-2 text-xs font-black text-emerald-800">Approve</button>
+                      <button type="button" onClick={() => updateDomain(domain.id, { status: "active", billingStatus: domain.billing_status === "active" ? "active" : "manual" })} disabled={!activationReady || savingId === domain.id} className="rounded-2xl bg-emerald-700 px-3 py-2 text-xs font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300">Activate</button>
+                      <button type="button" onClick={() => updateDomain(domain.id, { status: "rejected" })} className="rounded-2xl border border-red-200 bg-white px-3 py-2 text-xs font-black text-red-800">Reject</button>
+                      <button type="button" onClick={() => updateDomain(domain.id, { status: "disabled", billingStatus: "cancelled" })} className="rounded-2xl bg-red-700 px-3 py-2 text-xs font-black text-white">Disable</button>
+                    </div>
+                    {!activationReady ? <p className="text-xs font-bold text-[#5C5F66]">Activate unlocks after billing is active/manual, apex or www DNS is verified, Netlify alias is verified and SSL is issued.</p> : null}
+                  </div>
 
-                <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Stripe subscription item id
-                  <input value={stripeItems[domain.id] || ""} onChange={(event) => setStripeItems((current) => ({ ...current, [domain.id]: event.target.value }))} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-[#0E0E10]" placeholder="si_..." />
-                </label>
-                <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Netlify domain alias id / note
-                  <input value={netlifyAliases[domain.id] || ""} onChange={(event) => setNetlifyAliases((current) => ({ ...current, [domain.id]: event.target.value }))} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-[#0E0E10]" placeholder="Manual Netlify alias reference" />
-                </label>
-                <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Owner notes
-                  <textarea value={notes[domain.id] || ""} onChange={(event) => setNotes((current) => ({ ...current, [domain.id]: event.target.value }))} className="min-h-24 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-[#0E0E10]" placeholder="DNS, Netlify alias, billing and approval notes." />
-                </label>
-                <button type="button" onClick={() => updateDomain(domain.id, { ownerNotes: notes[domain.id] || "", stripeSubscriptionItemId: stripeItems[domain.id] || "", netlifyDomainAliasId: netlifyAliases[domain.id] || "" })} disabled={savingId === domain.id} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white transition hover:bg-[#252528] disabled:cursor-wait disabled:opacity-60">
-                  {savingId === domain.id ? "Saving…" : "Save owner details"}
-                </button>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Domain status
+                      <select value={domain.status} onChange={(event) => updateDomain(domain.id, { status: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
+                        {STATUS_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
+                      </select>
+                    </label>
+                    <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Add-on billing
+                      <select value={domain.billing_status} onChange={(event) => updateDomain(domain.id, { billingStatus: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
+                        {BILLING_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
+                      </select>
+                    </label>
+                    <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Apex/root DNS
+                      <select value={domain.dns_apex_record_status || "not_started"} onChange={(event) => updateDomain(domain.id, { dnsApexRecordStatus: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
+                        {DNS_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
+                      </select>
+                    </label>
+                    <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">WWW DNS
+                      <select value={domain.dns_www_record_status || "not_started"} onChange={(event) => updateDomain(domain.id, { dnsWwwRecordStatus: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
+                        {DNS_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
+                      </select>
+                    </label>
+                    <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Netlify alias
+                      <select value={domain.netlify_alias_status || "not_started"} onChange={(event) => updateDomain(domain.id, { netlifyAliasStatus: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
+                        {NETLIFY_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
+                      </select>
+                    </label>
+                    <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">SSL certificate
+                      <select value={domain.ssl_certificate_status || "not_started"} onChange={(event) => updateDomain(domain.id, { sslCertificateStatus: event.target.value })} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-[#0E0E10]">
+                        {SSL_OPTIONS.map((value) => <option key={value} value={value}>{label(value)}</option>)}
+                      </select>
+                    </label>
+                  </div>
+
+                  <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Stripe subscription item id
+                    <input value={stripeItems[domain.id] || ""} onChange={(event) => setStripeItems((current) => ({ ...current, [domain.id]: event.target.value }))} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-[#0E0E10]" placeholder="si_..." />
+                  </label>
+                  <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Netlify site id / note
+                    <input value={netlifySites[domain.id] || ""} onChange={(event) => setNetlifySites((current) => ({ ...current, [domain.id]: event.target.value }))} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-[#0E0E10]" placeholder="Manual Netlify site reference" />
+                  </label>
+                  <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Netlify domain alias id / note
+                    <input value={netlifyAliases[domain.id] || ""} onChange={(event) => setNetlifyAliases((current) => ({ ...current, [domain.id]: event.target.value }))} className="min-h-11 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-[#0E0E10]" placeholder="Manual Netlify alias reference" />
+                  </label>
+                  <label className="grid gap-1 text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">Owner notes
+                    <textarea value={notes[domain.id] || ""} onChange={(event) => setNotes((current) => ({ ...current, [domain.id]: event.target.value }))} className="min-h-24 rounded-2xl border border-[#0E0E10]/10 bg-white px-3 py-2 text-sm font-semibold normal-case tracking-normal text-[#0E0E10]" placeholder="DNS, Netlify alias, billing and approval notes." />
+                  </label>
+                  <button type="button" onClick={() => updateDomain(domain.id, { ownerNotes: notes[domain.id] || "", stripeSubscriptionItemId: stripeItems[domain.id] || "", netlifySiteId: netlifySites[domain.id] || "", netlifyDomainAliasId: netlifyAliases[domain.id] || "" })} disabled={savingId === domain.id} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#0E0E10] px-5 py-3 text-sm font-black text-white transition hover:bg-[#252528] disabled:cursor-wait disabled:opacity-60">
+                    {savingId === domain.id ? "Saving…" : "Save owner details"}
+                  </button>
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

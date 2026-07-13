@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatCustomDomainUsdPrice, normaliseCustomDomain, type CustomDomainAddonPrice, type CustomDomainBillingStatus, type CustomDomainStatus } from "@/lib/custom-domain-addon";
+import {
+  customDomainDnsRecords,
+  formatCustomDomainUsdPrice,
+  normaliseCustomDomain,
+  type CustomDomainAddonPrice,
+  type CustomDomainBillingStatus,
+  type CustomDomainDnsStatus,
+  type CustomDomainNetlifyStatus,
+  type CustomDomainSslStatus,
+  type CustomDomainStatus,
+} from "@/lib/custom-domain-addon";
 
 type DomainRow = {
   id: string;
@@ -16,6 +26,10 @@ type DomainRow = {
   owner_notes: string | null;
   dns_target: string | null;
   verification_token: string | null;
+  dns_apex_record_status?: CustomDomainDnsStatus | null;
+  dns_www_record_status?: CustomDomainDnsStatus | null;
+  netlify_alias_status?: CustomDomainNetlifyStatus | null;
+  ssl_certificate_status?: CustomDomainSslStatus | null;
   approved_at?: string | null;
   activated_at?: string | null;
   created_at: string | null;
@@ -28,9 +42,9 @@ function statusLabel(status: string) {
 
 function statusClass(status: string) {
   const clean = String(status || "").toLowerCase();
-  if (clean === "active" || clean === "approved") return "border-emerald-200 bg-emerald-50 text-emerald-800";
-  if (clean === "rejected" || clean === "disabled") return "border-red-200 bg-red-50 text-red-800";
-  if (clean.includes("pending") || clean === "requested") return "border-amber-200 bg-amber-50 text-amber-800";
+  if (["active", "approved", "manual", "verified", "issued", "added"].includes(clean)) return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (["rejected", "disabled", "cancelled", "failed"].includes(clean)) return "border-red-200 bg-red-50 text-red-800";
+  if (clean.includes("pending") || clean === "requested" || clean === "configured") return "border-amber-200 bg-amber-50 text-amber-800";
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
@@ -43,10 +57,27 @@ function nextStepText(domain: DomainRow) {
   if (domain.status === "rejected") return "This request was not approved. Check the Orduva note below.";
   if (domain.status === "disabled") return "This custom domain has been disabled.";
   if (domain.billing_status !== "active" && domain.billing_status !== "manual") return "Next step: Orduva will arrange the USD add-on billing through Stripe before DNS activation.";
-  if (domain.status === "pending_dns") return "Next step: update your domain DNS using the records Orduva provides.";
-  if (domain.status === "pending_owner_review") return "Next step: Orduva will check DNS and activate the domain when ready.";
+  if (domain.status === "pending_dns") return "Next step: update your domain DNS using the records below, then tell Orduva when done.";
+  if (domain.status === "pending_owner_review") return "Next step: Orduva is checking DNS, Netlify alias and SSL before activation.";
   if (domain.status === "approved") return "Approved. Orduva will activate the domain once the final DNS and Netlify checks are complete.";
   return "Request received. Orduva will review the add-on billing and DNS requirements.";
+}
+
+function copyText(value: string) {
+  if (typeof navigator !== "undefined" && navigator.clipboard) {
+    navigator.clipboard.writeText(value).catch(() => undefined);
+  }
+}
+
+function DnsRow({ type, host, value }: { type: string; host: string; value: string }) {
+  return (
+    <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 text-xs sm:grid-cols-[90px_90px_1fr_auto] sm:items-center">
+      <span className="font-black uppercase tracking-[0.12em] text-slate-500">{type}</span>
+      <span className="font-bold text-slate-700">{host}</span>
+      <span className="break-all font-semibold text-slate-950">{value}</span>
+      <button type="button" onClick={() => copyText(value)} className="rounded-xl border border-slate-200 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Copy</button>
+    </div>
+  );
 }
 
 export default function CustomDomainSettingsPanel({ currencyCode: _currencyCode }: { currencyCode: string }) {
@@ -112,7 +143,7 @@ export default function CustomDomainSettingsPanel({ currencyCode: _currencyCode 
       <div className="rounded-[24px] border border-[#336699]/20 bg-[#EAF3FA] p-4 text-sm leading-6 text-[#28547D]">
         <p className="text-base font-black text-slate-950">Custom domain add-on</p>
         <p className="mt-1">
-          Stores can request their own external domain as a paid Orduva add-on. The add-on is billed in <strong>USD only</strong> through Stripe and currently costs <strong>{currentLabel}</strong>. Activation is manual while Orduva manages billing, DNS and Netlify domain limits.
+          Stores can request their own external domain as a paid Orduva add-on. The add-on is billed in <strong>USD only</strong> through Stripe and currently costs <strong>{currentLabel}</strong>. Activation is manual while Orduva manages billing, DNS, Netlify and SSL checks.
         </p>
       </div>
 
@@ -134,7 +165,7 @@ export default function CustomDomainSettingsPanel({ currencyCode: _currencyCode 
           </div>
         </div>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs leading-5 text-slate-500">Expected DNS target: <strong>{dnsTarget}</strong>. Orduva will confirm exact DNS records after billing approval.</p>
+          <p className="text-xs leading-5 text-slate-500">Expected CNAME target: <strong>{dnsTarget}</strong>. Orduva will confirm exact DNS records after billing approval.</p>
           <button type="button" onClick={requestDomain} disabled={saving || !normaliseCustomDomain(domainName)} className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300">
             {saving ? "Saving request…" : "Request custom domain"}
           </button>
@@ -155,24 +186,47 @@ export default function CustomDomainSettingsPanel({ currencyCode: _currencyCode 
         </div>
         <div className="mt-4 grid gap-3">
           {!loading && !domains.length ? <p className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm font-bold text-slate-500">No custom domain request has been submitted yet.</p> : null}
-          {domains.map((domain) => (
-            <article key={domain.id} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <p className="break-all text-lg font-black text-slate-950">{domain.domain_name}</p>
-                  <p className="mt-1 text-xs font-bold text-slate-500">DNS target: {domain.dns_target || dnsTarget}</p>
-                  {domain.verification_token ? <p className="mt-1 break-all text-xs font-bold text-slate-500">Verification token: {domain.verification_token}</p> : null}
+          {domains.map((domain) => {
+            const records = customDomainDnsRecords(domain.domain_name, domain.dns_target || dnsTarget);
+            const showDns = domain.billing_status === "active" || domain.billing_status === "manual" || ["pending_dns", "pending_owner_review", "approved", "active"].includes(domain.status);
+            return (
+              <article key={domain.id} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="break-all text-lg font-black text-slate-950">{domain.domain_name}</p>
+                    <p className="mt-1 text-xs font-bold text-slate-500">DNS target: {domain.dns_target || dnsTarget}</p>
+                    {domain.verification_token ? <p className="mt-1 break-all text-xs font-bold text-slate-500">Verification token: {domain.verification_token}</p> : null}
+                  </div>
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                    <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.status)}`}>{statusLabel(domain.status)}</span>
+                    <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.billing_status)}`}>{statusLabel(domain.billing_status)}</span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2 sm:justify-end">
-                  <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.status)}`}>{statusLabel(domain.status)}</span>
-                  <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.billing_status)}`}>{statusLabel(domain.billing_status)}</span>
-                </div>
-              </div>
-              <p className="mt-3 text-sm font-bold text-slate-700">{money(Number(domain.addon_price_monthly || price?.amount || 7.5))} / month</p>
-              <p className="mt-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-600"><strong>Next step:</strong> {nextStepText(domain)}</p>
-              {domain.owner_notes ? <p className="mt-2 rounded-2xl border border-[#336699]/15 bg-white px-3 py-2 text-xs leading-5 text-[#28547D]"><strong>Orduva note:</strong> {domain.owner_notes}</p> : null}
-            </article>
-          ))}
+                <p className="mt-3 text-sm font-bold text-slate-700">{money(Number(domain.addon_price_monthly || price?.amount || 7.5))} / month</p>
+                <p className="mt-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs leading-5 text-slate-600"><strong>Next step:</strong> {nextStepText(domain)}</p>
+                {domain.owner_notes ? <p className="mt-2 rounded-2xl border border-[#336699]/15 bg-white px-3 py-2 text-xs leading-5 text-[#28547D]"><strong>Orduva note:</strong> {domain.owner_notes}</p> : null}
+
+                {showDns ? (
+                  <div className="mt-3 rounded-[20px] border border-[#336699]/20 bg-[#EAF3FA] p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[#28547D]">DNS records to send to your registrar</p>
+                    <p className="mt-1 text-xs leading-5 text-[#28547D]">Add these at the company where your domain is registered. DNS changes can take time to show globally.</p>
+                    <div className="mt-3 grid gap-2">
+                      <DnsRow type={records.wwwType} host={records.wwwHost} value={records.wwwValue} />
+                      <DnsRow type={records.apexType} host={records.apexHost} value={records.apexValue} />
+                      <DnsRow type="Fallback A" host="@" value={records.apexFallbackValue} />
+                      {domain.verification_token ? <DnsRow type={records.verificationType} host={records.verificationHost} value={domain.verification_token} /> : null}
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.dns_apex_record_status || "not_started")}`}>Root DNS: {statusLabel(domain.dns_apex_record_status || "not_started")}</span>
+                      <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.dns_www_record_status || "not_started")}`}>WWW DNS: {statusLabel(domain.dns_www_record_status || "not_started")}</span>
+                      <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.netlify_alias_status || "not_started")}`}>Netlify: {statusLabel(domain.netlify_alias_status || "not_started")}</span>
+                      <span className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.ssl_certificate_status || "not_started")}`}>SSL: {statusLabel(domain.ssl_certificate_status || "not_started")}</span>
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
         </div>
       </div>
     </div>
