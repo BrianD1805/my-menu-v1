@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import StorefrontClientLoader from "@/components/menu/StorefrontClientLoader";
 import { db } from "@/lib/db";
@@ -58,7 +59,10 @@ async function getSharedProduct(productId: string) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { productId } = await params;
   const { tenantSlug, tenant, product } = await getSharedProduct(productId);
-  const origin = `https://${tenantSlug}.orduva.com`;
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host") || `${tenantSlug}.orduva.com`;
+  const protocol = h.get("x-forwarded-proto") || "https";
+  const origin = `${protocol}://${host}`;
   const url = `${origin}/product/${encodeURIComponent(productId)}`;
 
   if (!product || product.is_active === false) {

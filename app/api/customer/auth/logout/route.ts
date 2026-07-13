@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { clearCustomerSession } from "@/lib/customer-auth";
-import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
 
 function redirectTarget(req: Request) {
   const url = new URL(req.url);

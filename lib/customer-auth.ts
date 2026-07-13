@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { resolveTenantSlug, resolveTenantSlugFromRequest, getTenantBySlug } from "@/lib/tenant-server";
+import { resolveTenantSlug, resolveTenantSlugFromRequestAsync, getTenantBySlug } from "@/lib/tenant-server";
 
 export const CUSTOMER_SESSION_COOKIE = "orduva_customer_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -151,7 +151,7 @@ export async function validateCustomerRequestSession(req: Request) {
   const session = readSessionToken(token);
   if (!session) return null;
 
-  const tenantSlug = resolveTenantSlugFromRequest(req);
+  const tenantSlug = await resolveTenantSlugFromRequestAsync(req);
   if (!tenantSlug) return null;
 
   const tenant = await getTenantBySlug(tenantSlug);

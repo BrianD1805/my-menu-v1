@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { CreateOrderInput } from "@/lib/types";
-import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { resolveTenantSlugFromRequestAsync } from "@/lib/tenant-server";
 import { buildWhatsAppAppUrl, buildWhatsAppOrderMessage, buildWhatsAppUrl } from "@/lib/whatsapp";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { enqueueNotificationEvent } from "@/lib/notifications";
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
   let savedCustomerAccountIdForResponse: string | null = null;
   try {
     const body = (await req.json()) as CreateOrderInput;
-    const requestTenantSlug = resolveTenantSlugFromRequest(req);
+    const requestTenantSlug = await resolveTenantSlugFromRequestAsync(req);
 
     if (!requestTenantSlug) {
       return NextResponse.json({ error: "Store could not be resolved from request" }, { status: 400 });

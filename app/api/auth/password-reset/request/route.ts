@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTenantBySlug, resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { getTenantBySlug, resolveTenantSlugFromRequestAsync } from "@/lib/tenant-server";
 import { normalizeAdminTenantSlug } from "@/lib/admin-tenant-context";
 import { db } from "@/lib/db";
 import {
@@ -69,7 +69,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Store address is required for Tenant Admin password reset." }, { status: 400 });
       }
     } else {
-      tenantSlug = resolveTenantSlugFromRequest(req);
+      tenantSlug = await resolveTenantSlugFromRequestAsync(req);
     }
 
     const tenant = await getTenantBySlug(tenantSlug);

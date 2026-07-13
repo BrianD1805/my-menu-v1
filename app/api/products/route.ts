@@ -4,6 +4,8 @@ import { startLoadTimer } from "@/lib/load-diagnostics";
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { calculateTenantTrialState } from "@/lib/trial";
 import { LIVE_VERSION } from "@/lib/version";
+import { resolveTenantSlugFromRequestAsync } from "@/lib/tenant-server";
+import { resolveTenantSlugFromHost } from "@/lib/tenant";
 
 async function getTenant(tenantSlug: string) {
   const tenantTimer = startLoadTimer("api/products tenant lookup");
@@ -43,7 +45,14 @@ async function getTenant(tenantSlug: string) {
 export async function GET(req: Request) {
   const totalTimer = startLoadTimer("api/products total");
   const { searchParams } = new URL(req.url);
-  const tenantSlug = searchParams.get("tenantSlug");
+  const requestedTenantSlug = searchParams.get("tenantSlug")?.trim() || "";
+  const requestHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+  const hostTenantSlug = await resolveTenantSlugFromRequestAsync(req);
+  const syncHostTenantSlug = resolveTenantSlugFromHost(requestHost);
+  const tenantSlug =
+    hostTenantSlug !== syncHostTenantSlug
+      ? hostTenantSlug
+      : requestedTenantSlug || hostTenantSlug;
 
   if (!tenantSlug) {
     return NextResponse.json({ error: "Missing tenantSlug" }, { status: 400 });

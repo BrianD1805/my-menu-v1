@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { resolveTenantSlugFromRequestAsync } from "@/lib/tenant-server";
 import { db } from "@/lib/db";
 import { getTenantSettings, buildTenantBranding } from "@/lib/tenant-settings";
 import { buildStorefrontPaymentOptions } from "@/lib/storefront-payment-options";
@@ -73,7 +73,7 @@ function zeroDiscounts() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const requestTenantSlug = resolveTenantSlugFromRequest(req);
+    const requestTenantSlug = await resolveTenantSlugFromRequestAsync(req);
     if (!requestTenantSlug)
       return NextResponse.json(
         { error: "Tenant could not be resolved from request" },

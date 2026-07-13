@@ -598,18 +598,60 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    try {
+    let cancelled = false;
+
+    async function resolveTenantForCheckout() {
       const savedSlug =
         window.localStorage.getItem("orduva_active_tenant_slug") || "";
       const savedTenantId =
         window.localStorage.getItem("orduva_active_tenant_id") || "";
       const fallbackSlug = resolveTenantSlugFromHost(window.location.host);
+      const optimisticSlug = savedSlug || fallbackSlug;
 
-      setTenantSlug(savedSlug || fallbackSlug);
-      setTenantId(savedTenantId || "");
-    } finally {
-      setTenantResolved(true);
+      if (optimisticSlug) setTenantSlug(optimisticSlug);
+      if (savedTenantId) setTenantId(savedTenantId);
+
+      try {
+        const res = await fetch("/api/storefront/resolve-tenant", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+
+        if (!res.ok && data?.inactiveCustomDomain) {
+          setTenantSlug("");
+          setTenantId("");
+          return;
+        }
+
+        if (res.ok && data?.tenantSlug) {
+          const nextSlug = String(data.tenantSlug || "").trim();
+          const nextTenantId = String(data.tenantId || "").trim();
+          setTenantSlug(nextSlug);
+          setTenantId(nextTenantId);
+          try {
+            window.localStorage.setItem("orduva_active_tenant_slug", nextSlug);
+            if (nextTenantId) {
+              window.localStorage.setItem("orduva_active_tenant_id", nextTenantId);
+            }
+          } catch {}
+        }
+      } catch {
+        // Keep the local tenant fallback so checkout still works if the resolver request is interrupted.
+      } finally {
+        if (!cancelled) setTenantResolved(true);
+      }
     }
+
+    void resolveTenantForCheckout();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

@@ -957,3 +957,17 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Kept the custom-domain add-on display at `$7.50 / month` with the dedicated USD cents formatter.
 - No Supabase SQL required.
 
+
+## Ver-0.261 — Custom domain resolver
+
+- Patch type: changed/new files only.
+- Added active custom-domain storefront resolution using `tenant_custom_domains.normalized_domain`.
+- Active custom domains now resolve to the correct tenant only when status is `active` and billing status is `active` or `manual`.
+- Kept normal tenant subdomains, localhost testing, admin host and Owner Platform routing unchanged.
+- Added `/api/storefront/resolve-tenant` so checkout and customer flows can resolve the correct tenant from the current host.
+- Updated checkout startup tenant resolution so direct visits to checkout on an active custom domain do not fall back to the default store.
+- Updated customer login/signup/session checks, password reset, invoice/custom payment checkout and order creation APIs to use the async custom-domain-aware tenant resolver.
+- Updated `/api/products` so an active custom domain host wins over a stale or incorrect tenantSlug query value.
+- Updated product share metadata to use the current request host, so custom-domain product links produce the correct canonical/Open Graph URL.
+- Bumped storefront payload cache version to `ver-0-261` so custom-domain resolver changes do not reuse old storefront payloads.
+- No Supabase SQL required. Uses the existing `tenant_custom_domains` table from Ver-0.259/0.260.

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getTenantBySlug, resolveTenantSlugFromRequest } from "@/lib/tenant-server";
+import { getTenantBySlug, resolveTenantSlugFromRequestAsync } from "@/lib/tenant-server";
 import { applyCustomerSession, getCustomerByEmail, normalizeCustomerEmail, verifyCustomerPassword } from "@/lib/customer-auth";
 import { getTenantSettings } from "@/lib/tenant-settings";
 import { getCustomerRewardSummary } from "@/lib/rewards";
 
 export async function POST(req: Request) {
-  const tenantSlug = resolveTenantSlugFromRequest(req);
+  const tenantSlug = await resolveTenantSlugFromRequestAsync(req);
   const tenant = await getTenantBySlug(tenantSlug);
   const body = await req.json().catch(() => ({}));
 
