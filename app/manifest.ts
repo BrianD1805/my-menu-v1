@@ -4,25 +4,43 @@ import { getTenantBySlug, isRootPlatformRequest, resolveTenantSlug } from "@/lib
 import { buildTenantBranding, getTenantSettings } from "@/lib/tenant-settings";
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+function isUsableStorefrontIcon(value: string | null | undefined) {
+  const icon = String(value || "").trim();
+  if (!icon) return false;
+  return /\.(png|jpg|jpeg|webp|svg)(?:[?#].*)?$/i.test(icon) || icon.startsWith("https://");
+}
+
+function iconTypeFor(src: string) {
+  if (/\.svg(?:[?#].*)?$/i.test(src)) return "image/svg+xml";
+  if (/\.webp(?:[?#].*)?$/i.test(src)) return "image/webp";
+  if (/\.jpe?g(?:[?#].*)?$/i.test(src)) return "image/jpeg";
+  return "image/png";
+}
+
 function buildStorefrontIcons(icon: string): MetadataRoute.Manifest["icons"] {
   const fallback192 = "/orduva-storefront-icon-192.png";
   const fallback512 = "/orduva-storefront-icon-512.png";
+  const icons: NonNullable<MetadataRoute.Manifest["icons"]> = [];
 
-  if (icon.endsWith(".png")) {
-    return [
-      { src: icon, sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: icon, sizes: "192x192", type: "image/png", purpose: "maskable" },
-      { src: icon, sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: icon, sizes: "512x512", type: "image/png", purpose: "maskable" },
-    ];
+  if (isUsableStorefrontIcon(icon)) {
+    const type = iconTypeFor(icon);
+    icons.push(
+      { src: icon, sizes: "192x192", type, purpose: "any" },
+      { src: icon, sizes: "192x192", type, purpose: "maskable" },
+    );
   }
 
-  return [
+  icons.push(
     { src: fallback192, sizes: "192x192", type: "image/png", purpose: "any" },
     { src: fallback192, sizes: "192x192", type: "image/png", purpose: "maskable" },
     { src: fallback512, sizes: "512x512", type: "image/png", purpose: "any" },
     { src: fallback512, sizes: "512x512", type: "image/png", purpose: "maskable" },
-  ];
+  );
+
+  return icons;
 }
 
 function buildRootPlatformManifest(): MetadataRoute.Manifest {
@@ -130,9 +148,9 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     const icon = branding.faviconUrl || "/orduva-storefront-icon-512.png";
 
     return {
-      id: "/?app=storefront",
+      id: `/?app=storefront&tenant=${encodeURIComponent(String(tenant.slug || tenant.id))}`,
       name: `${branding.displayName} | Orduva Online`,
-      short_name: branding.displayName,
+      short_name: String(branding.displayName || tenant.name || "Store").slice(0, 30),
       description: branding.storefrontSubheading || "Online ordering",
       start_url: "/?source=pwa&app=storefront",
       scope: "/",

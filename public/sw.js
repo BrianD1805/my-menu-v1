@@ -1,6 +1,6 @@
-const STORE_CACHE = 'orduva-storefront-runtime-ver-0-259';
-const STATIC_CACHE = 'orduva-storefront-static-ver-0-259';
-const PAGE_CACHE = 'orduva-storefront-pages-ver-0-259';
+const STORE_CACHE = 'orduva-storefront-runtime-ver-0-265A';
+const STATIC_CACHE = 'orduva-storefront-static-ver-0-265A';
+const PAGE_CACHE = 'orduva-storefront-pages-ver-0-265A';
 
 const CORE_ASSETS = [
   '/orduva-storefront-icon-192.png',
@@ -203,6 +203,12 @@ self.addEventListener('fetch', (event) => {
     // Ver-0.259: storefront products/prices/offers must be checked live on every load.
     // Local cache is only a fallback for genuine offline/network failures.
     event.respondWith(networkFirstNoStore(request));
+    return;
+  }
+
+  if (url.pathname === '/storefront-manifest.webmanifest' || url.pathname === '/manifest.webmanifest') {
+    // Ver-0.265A: custom-domain install prompts need the latest same-origin manifest.
+    event.respondWith(fetch(new Request(request.url, { cache: 'no-store', credentials: request.credentials })).catch(() => fetch(request)));
     return;
   }
 

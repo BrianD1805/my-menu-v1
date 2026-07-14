@@ -1035,3 +1035,17 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Netlify alias and SSL checklist statuses remain manual until Netlify API support is added later.
 - Did not touch Stripe billing, Netlify API calls, custom-domain resolver/routing, checkout, payments, stock, pre-orders, receipts or push notifications.
 - No Supabase SQL required.
+
+## Ver-0.265A — Custom domain PWA manifest fix
+
+- Patch type: changed/new files only.
+- Added a dedicated dynamic storefront manifest route at `/storefront-manifest.webmanifest`.
+- Storefront pages now point to the same-origin dynamic storefront manifest instead of the older generic manifest path.
+- The storefront manifest resolves the current host, including approved active custom domains such as `zimza.store`, and builds the app name, short name, theme colour and start URL for that store.
+- Manifest `start_url` and `scope` stay same-origin and relative so installed custom-domain apps launch back on the custom domain.
+- Added known same-origin 192px and 512px storefront icons to every storefront manifest so Chrome has the required installable icon sizes even when a store favicon is small, remote or cached.
+- Updated storefront PWA registration to force the dynamic storefront manifest link and request the newest service worker.
+- Bumped storefront local payload cache and service-worker cache names to Ver-0.265A so stale PWA/install metadata is cleared.
+- Left Owner Platform and Store Admin manifests separate.
+- Did not touch checkout, payments, stock, pre-orders, receipts, custom-domain billing, DNS checks, Netlify alias logic or SSL checks.
+- No Supabase SQL required.

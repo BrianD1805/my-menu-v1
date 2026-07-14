@@ -9,6 +9,8 @@ import { getTenantBySlug, resolveTenantSlug } from "@/lib/tenant-server";
 import { isSharedAdminHost, normalizeHostname } from "@/lib/admin-host";
 import { buildTenantBranding, getTenantSettings, type TenantSettings } from "@/lib/tenant-settings";
 
+const STOREFRONT_MANIFEST_URL = "/storefront-manifest.webmanifest?v=0.265A";
+
 function buildRootPlatformMetadata(): Metadata {
   return {
     title: "Orduva | Online Ordering Platform",
@@ -163,7 +165,7 @@ function buildStorefrontMetadata(context: StorefrontSeoContext): Metadata {
     title,
     description,
     keywords: splitKeywords(settings?.seo_keywords),
-    manifest: "/manifest.webmanifest",
+    manifest: STOREFRONT_MANIFEST_URL,
     themeColor: branding.primaryColor || "#0E0E10",
     applicationName: branding.displayName,
     alternates: { canonical },
@@ -252,7 +254,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Orduva Online",
     description: "Online ordering",
-    manifest: "/manifest.webmanifest",
+    manifest: STOREFRONT_MANIFEST_URL,
     themeColor: "#0E0E10",
     applicationName: "Orduva",
     icons: {
