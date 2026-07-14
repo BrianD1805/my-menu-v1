@@ -127,6 +127,8 @@ export default function CustomDomainSettingsPanel({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [startingCheckoutId, setStartingCheckoutId] = useState<string | null>(null);
+  const [checkingDnsId, setCheckingDnsId] = useState<string | null>(null);
+  const [dnsCheckResults, setDnsCheckResults] = useState<Record<string, any>>({});
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [copiedDns, setCopiedDns] = useState("");
@@ -216,6 +218,40 @@ export default function CustomDomainSettingsPanel({
           : "Could not start Stripe custom-domain checkout.",
       );
       setStartingCheckoutId(null);
+    }
+  }
+
+
+  async function checkDomainDns(domainId: string) {
+    setCheckingDnsId(domainId);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/custom-domains", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "dns_check", id: domainId }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || "Could not check DNS yet.");
+      }
+      if (payload?.domain) {
+        setDomains((current) =>
+          current.map((item) => (item.id === domainId ? payload.domain : item)),
+        );
+      }
+      if (payload?.dnsCheck) {
+        setDnsCheckResults((current) => ({
+          ...current,
+          [domainId]: payload.dnsCheck,
+        }));
+      }
+      setMessage("DNS check complete. Root and WWW statuses were updated where Orduva could verify the records.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not check DNS yet.");
+    } finally {
+      setCheckingDnsId(null);
     }
   }
 
@@ -391,6 +427,7 @@ export default function CustomDomainSettingsPanel({
               sslCertificateStatus:
                 domain.ssl_certificate_status || "not_started",
             });
+            const dnsCheckResult = dnsCheckResults[domain.id];
             return (
               <article
                 key={domain.id}
@@ -532,13 +569,30 @@ export default function CustomDomainSettingsPanel({
                         />
                       ) : null}
                     </div>
-                    <p className="mt-3 rounded-2xl border border-[#336699]/15 bg-white px-3 py-2 text-xs font-bold text-[#28547D]">
-                      The optional TXT record is for Orduva ownership/checklist
-                      verification only. Netlify routing is handled by the www
-                      CNAME and root ALIAS/A record. After changing DNS, send
-                      Orduva a message so we can check Netlify, SSL and activate
-                      the domain.
-                    </p>
+                    <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-[#336699]/15 bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xs font-bold leading-5 text-[#28547D]">
+                        The optional TXT record is for Orduva ownership/checklist
+                        verification only. After changing DNS, use Check DNS now.
+                        Netlify alias and SSL are still checked manually by Orduva.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => checkDomainDns(domain.id)}
+                        disabled={checkingDnsId === domain.id}
+                        className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#336699] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-[#28547D] disabled:cursor-wait disabled:bg-slate-300"
+                      >
+                        {checkingDnsId === domain.id ? "Checking DNS…" : "Check DNS now"}
+                      </button>
+                    </div>
+                    {dnsCheckResult ? (
+                      <div className="mt-3 grid gap-1 rounded-2xl border border-[#336699]/15 bg-white px-3 py-2 text-xs leading-5 text-[#28547D]">
+                        <p className="font-black uppercase tracking-[0.14em]">Last DNS check</p>
+                        <p>Root/apex: {dnsCheckResult.apex?.status} — {dnsCheckResult.apex?.message}</p>
+                        <p className="break-all">Found: {(dnsCheckResult.apex?.found || []).join(", ") || "No public record found yet"}</p>
+                        <p>WWW: {dnsCheckResult.www?.status} — {dnsCheckResult.www?.message}</p>
+                        <p className="break-all">Found: {(dnsCheckResult.www?.found || []).join(", ") || "No public record found yet"}</p>
+                      </div>
+                    ) : null}
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <span
                         className={`rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] ${statusClass(domain.dns_apex_record_status || "not_started")}`}

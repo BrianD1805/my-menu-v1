@@ -184,6 +184,8 @@ export default function OwnerCustomDomainsPanel() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [checkingDnsId, setCheckingDnsId] = useState<string | null>(null);
+  const [dnsCheckResults, setDnsCheckResults] = useState<Record<string, any>>({});
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("open");
@@ -316,6 +318,38 @@ export default function OwnerCustomDomainsPanel() {
       );
     } finally {
       setSavingId(null);
+    }
+  }
+
+
+  async function checkDomainDns(id: string) {
+    setCheckingDnsId(id);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch("/api/platform/custom-domains", {
+        method: "PATCH",
+        headers: { ...platformHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "dns_check", id }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok)
+        throw new Error(payload?.error || "Could not check custom domain DNS.");
+      if (payload?.domain) {
+        setDomains((current) =>
+          current.map((item) => (item.id === id ? payload.domain : item)),
+        );
+      }
+      if (payload?.dnsCheck) {
+        setDnsCheckResults((current) => ({ ...current, [id]: payload.dnsCheck }));
+      }
+      setMessage("DNS check complete. Root and WWW checklist statuses were updated where Orduva could verify the records.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not check custom domain DNS.",
+      );
+    } finally {
+      setCheckingDnsId(null);
     }
   }
 
@@ -465,6 +499,7 @@ export default function OwnerCustomDomainsPanel() {
           const activationTitle = activationReady
             ? "Activate this custom domain"
             : activationBlockers.join(" ");
+          const dnsCheckResult = dnsCheckResults[domain.id];
           return (
             <article
               key={domain.id}
@@ -659,6 +694,32 @@ export default function OwnerCustomDomainsPanel() {
                     )}
                   </div>
 
+                  {dnsCheckResult ? (
+                    <div className="grid gap-2 rounded-2xl border border-[#336699]/20 bg-white p-3 text-xs leading-5 text-[#28547D]">
+                      <p className="font-black uppercase tracking-[0.14em] text-[#28547D]">
+                        Last DNS check
+                      </p>
+                      <p>
+                        Checked: {new Date(dnsCheckResult.checkedAt).toLocaleString()}
+                      </p>
+                      <p>
+                        <strong>Root/apex:</strong> {dnsCheckResult.apex?.status} — {dnsCheckResult.apex?.message}
+                      </p>
+                      <p className="break-all">
+                        Found: {(dnsCheckResult.apex?.found || []).join(", ") || "No public record found yet"}
+                      </p>
+                      <p>
+                        <strong>WWW:</strong> {dnsCheckResult.www?.status} — {dnsCheckResult.www?.message}
+                      </p>
+                      <p className="break-all">
+                        Found: {(dnsCheckResult.www?.found || []).join(", ") || "No public record found yet"}
+                      </p>
+                      <p className="font-bold text-[#5C5F66]">
+                        Netlify alias and SSL are still manual checks until Netlify API support is added.
+                      </p>
+                    </div>
+                  ) : null}
+
                   <div className="grid gap-2 rounded-2xl border border-[#0E0E10]/10 bg-[#F3F7FA] p-3">
                     <p className="text-xs font-black uppercase tracking-[0.14em] text-[#5C5F66]">
                       Quick actions
@@ -706,6 +767,14 @@ export default function OwnerCustomDomainsPanel() {
                         className="rounded-2xl border border-[#336699]/20 bg-white px-3 py-2 text-xs font-black text-[#28547D]"
                       >
                         Move to DNS
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => checkDomainDns(domain.id)}
+                        disabled={checkingDnsId === domain.id}
+                        className="rounded-2xl border border-[#336699]/20 bg-white px-3 py-2 text-xs font-black text-[#28547D] disabled:cursor-wait disabled:opacity-60"
+                      >
+                        {checkingDnsId === domain.id ? "Checking DNS…" : "Check DNS now"}
                       </button>
                       <button
                         type="button"

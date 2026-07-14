@@ -1022,3 +1022,16 @@ Detailed historical notes for earlier builds are archived in `docs/patch-notes/`
 - Did not touch Stripe billing logic, Netlify API calls, custom-domain resolver/routing, checkout, payments, stock, pre-orders, receipts or push notifications.
 - No Supabase SQL required.
 
+
+## Ver-0.265 — Custom domain DNS auto check
+
+- Patch type: changed/new files only.
+- Added server-side DNS checking for custom-domain requests.
+- Added Owner Platform “Check DNS now” button.
+- Added Store Admin “Check DNS now” button after the store owner has entered DNS records.
+- The server checks root/apex A/ALIAS-style DNS and WWW CNAME/A resolution.
+- Root/apex DNS and WWW DNS checklist statuses are auto-updated to verified, pending or failed where Orduva can verify the records publicly.
+- Existing `not_required` root/www DNS statuses are preserved unless a live verified record is found.
+- Netlify alias and SSL checklist statuses remain manual until Netlify API support is added later.
+- Did not touch Stripe billing, Netlify API calls, custom-domain resolver/routing, checkout, payments, stock, pre-orders, receipts or push notifications.
+- No Supabase SQL required.

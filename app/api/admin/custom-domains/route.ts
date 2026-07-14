@@ -9,6 +9,10 @@ import {
   isValidCustomDomain,
   normaliseCustomDomain,
 } from "@/lib/custom-domain-addon";
+import {
+  checkCustomDomainDnsRecords,
+  preserveNotRequiredDnsStatus,
+} from "@/lib/custom-domain-dns-check";
 
 function jsonNoStore(body: unknown, init?: ResponseInit) {
   const response = NextResponse.json(body, init);
@@ -102,5 +106,69 @@ export async function POST(req: Request) {
     return jsonNoStore({ ok: true, domain: data, price });
   } catch (error) {
     return jsonNoStore({ error: error instanceof Error ? error.message : "Failed to request custom domain." }, { status: 500 });
+  }
+}
+
+
+export async function PATCH(req: Request) {
+  const auth = await requireAdminApiUser(req);
+  if ("error" in auth) return auth.error;
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    if (body?.kind !== "dns_check") {
+      return jsonNoStore({ error: "Unsupported custom domain action." }, { status: 400 });
+    }
+
+    const id = String(body?.id || "").trim();
+    if (!id) {
+      return jsonNoStore({ error: "Custom domain request id is required." }, { status: 400 });
+    }
+
+    const { data: current, error: currentError } = await db
+      .from("tenant_custom_domains")
+      .select("id, tenant_id, domain_name, normalized_domain, dns_target, verification_token, dns_apex_record_status, dns_www_record_status, status, billing_status, addon_price_currency, addon_price_monthly, requested_by_email, tenant_notes, owner_notes, netlify_alias_status, ssl_certificate_status, stripe_checkout_session_id, stripe_subscription_id, stripe_customer_id, approved_at, activated_at, created_at, updated_at")
+      .eq("id", id)
+      .eq("tenant_id", auth.tenant.id)
+      .maybeSingle();
+
+    if (currentError || !current) {
+      return jsonNoStore({ error: "Could not load this store custom domain request." }, { status: 404 });
+    }
+
+    const dnsCheck = await checkCustomDomainDnsRecords({
+      domainName: String(current.domain_name || current.normalized_domain || ""),
+      dnsTarget: current.dns_target || CUSTOM_DOMAIN_DNS_TARGET,
+      verificationToken: current.verification_token || null,
+    });
+
+    const nextApexStatus = preserveNotRequiredDnsStatus(
+      current.dns_apex_record_status,
+      dnsCheck.apex.status,
+    );
+    const nextWwwStatus = preserveNotRequiredDnsStatus(
+      current.dns_www_record_status,
+      dnsCheck.www.status,
+    );
+
+    const { data, error } = await db
+      .from("tenant_custom_domains")
+      .update({
+        dns_apex_record_status: nextApexStatus,
+        dns_www_record_status: nextWwwStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("tenant_id", auth.tenant.id)
+      .select("id, domain_name, normalized_domain, status, billing_status, addon_price_currency, addon_price_monthly, requested_by_email, tenant_notes, owner_notes, dns_target, verification_token, dns_apex_record_status, dns_www_record_status, netlify_alias_status, ssl_certificate_status, stripe_checkout_session_id, stripe_subscription_id, stripe_customer_id, approved_at, activated_at, created_at, updated_at")
+      .single();
+
+    if (error || !data) {
+      return jsonNoStore({ error: "DNS was checked but the checklist could not be updated." }, { status: 500 });
+    }
+
+    return jsonNoStore({ ok: true, domain: data, dnsCheck });
+  } catch (error) {
+    return jsonNoStore({ error: error instanceof Error ? error.message : "Could not check DNS." }, { status: 500 });
   }
 }

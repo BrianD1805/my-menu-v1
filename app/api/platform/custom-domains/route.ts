@@ -7,6 +7,10 @@ import {
   customDomainAddonPrice,
   isCustomDomainActivationReady,
 } from "@/lib/custom-domain-addon";
+import {
+  checkCustomDomainDnsRecords,
+  preserveNotRequiredDnsStatus,
+} from "@/lib/custom-domain-dns-check";
 
 const ALLOWED_STATUS = new Set(["requested", "billing_pending", "pending_dns", "pending_owner_review", "approved", "active", "rejected", "disabled"]);
 const ALLOWED_BILLING_STATUS = new Set(["not_started", "addon_pending", "active", "past_due", "cancelled", "manual"]);
@@ -68,6 +72,54 @@ export async function PATCH(req: Request) {
 
   try {
     const body = await req.json().catch(() => ({}));
+
+
+    if (body?.kind === "dns_check") {
+      const id = cleanText(body?.id, 80);
+      if (!id) return jsonNoStore({ error: "Custom domain request id is required." }, { status: 400 });
+
+      const { data: current, error: currentError } = await db
+        .from("tenant_custom_domains")
+        .select(DOMAIN_SELECT)
+        .eq("id", id)
+        .maybeSingle();
+
+      if (currentError || !current) {
+        return jsonNoStore({ error: "Could not load the custom domain before checking DNS." }, { status: 404 });
+      }
+
+      const dnsCheck = await checkCustomDomainDnsRecords({
+        domainName: String(current.domain_name || current.normalized_domain || ""),
+        dnsTarget: current.dns_target || CUSTOM_DOMAIN_DNS_TARGET,
+        verificationToken: current.verification_token || null,
+      });
+
+      const nextApexStatus = preserveNotRequiredDnsStatus(
+        current.dns_apex_record_status,
+        dnsCheck.apex.status,
+      );
+      const nextWwwStatus = preserveNotRequiredDnsStatus(
+        current.dns_www_record_status,
+        dnsCheck.www.status,
+      );
+
+      const { data, error } = await db
+        .from("tenant_custom_domains")
+        .update({
+          dns_apex_record_status: nextApexStatus,
+          dns_www_record_status: nextWwwStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select(DOMAIN_SELECT)
+        .single();
+
+      if (error || !data) {
+        return jsonNoStore({ error: "DNS was checked but the checklist could not be updated." }, { status: 500 });
+      }
+
+      return jsonNoStore({ ok: true, domain: data, dnsCheck });
+    }
 
     if (body?.kind === "settings") {
       const amount = Number(body?.monthlyPriceUsd);
